@@ -10,10 +10,10 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Dror Meirovich", email = "your.email@example.com"}
+    {name = "Dror Meirovich", email = "dror@drorm.com"}
 ]
 maintainers = [
-    {name = "Dror Meirovich", email = "your.email@example.com"}
+    {name = "Dror Meirovich", email = "dror@drorm.com"}
 ]
 keywords = [
     "feature-selection",
