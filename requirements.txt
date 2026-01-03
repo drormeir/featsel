@@ -8,3 +8,5 @@ seaborn
 tqdm
 optuna
 pyyaml
+pytest
+pytest-cov
