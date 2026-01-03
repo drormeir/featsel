@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include requirements.txt
+recursive-include configs *.yaml *.yml
+recursive-include featsel *.py
+exclude notebooks/*
+exclude datasets/*
+exclude figures/*
+exclude docs/*
+exclude references/*
+prune venv
+prune .git

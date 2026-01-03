@@ -1,6 +1,6 @@
-# Feature Selection for High-Dimensional Data
+# featsel
 
-A machine learning pipeline for feature selection in high-dimensional datasets, with a focus on gene expression data.
+Feature selection pipeline for high-dimensional data with a focus on genomics and bioinformatics.
 
 ## The Problem
 
@@ -29,7 +29,7 @@ The primary use case is predicting breast cancer molecular subtypes from gene ex
 ├── configs/            # Dataset configuration files (YAML)
 ├── docs/               # Report chapters (Markdown)
 ├── notebooks/          # Jupyter notebooks for analysis
-├── src/                # Reusable Python modules
+├── featsel/            # Main Python package
 ├── datasets/           # Input data (one subfolder per dataset)
 ├── figures/            # Generated plots
 └── references/         # Project proposal and papers
@@ -39,8 +39,8 @@ The primary use case is predicting breast cancer molecular subtypes from gene ex
 
 ```bash
 # Clone the repository
-git clone <repo-url>
-cd high-dimensional-feature-selection
+git clone https://github.com/drormeir/featsel.git
+cd featsel
 
 # Create virtual environment
 python -m venv venv
@@ -50,12 +50,17 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+Future PyPI installation (not yet available):
+```bash
+pip install featsel
+```
+
 ## Usage
 
 Run the pipeline with a configuration file:
 
 ```bash
-python -m src.run --config configs/scanb.yaml
+python -m featsel.run --config configs/scanb.yaml
 ```
 
 To use your own dataset, create a config file (see `configs/scanb.yaml` as a template) and a data folder in `datasets/`.
