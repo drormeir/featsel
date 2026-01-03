@@ -1,0 +1,98 @@
+# =============================================================================
+# Dataset Configuration Template
+# =============================================================================
+# Copy this file and modify for your dataset.
+# Required fields are marked with [REQUIRED], others are optional with defaults.
+
+# -----------------------------------------------------------------------------
+# Basic Information
+# -----------------------------------------------------------------------------
+name: "Dataset Name"                    # [REQUIRED] Human-readable name
+description: "Brief description"        # Optional description
+
+# -----------------------------------------------------------------------------
+# File Paths
+# -----------------------------------------------------------------------------
+paths:
+  features: "datasets/<name>/features.csv"   # [REQUIRED] Feature matrix
+  metadata: "datasets/<name>/metadata.csv"   # [REQUIRED] Sample metadata
+
+# -----------------------------------------------------------------------------
+# Column Mappings
+# -----------------------------------------------------------------------------
+sample_id_column: "sample_id"           # [REQUIRED] Column name for sample IDs
+target_column: "target"                 # [REQUIRED] Column name for target variable
+
+# -----------------------------------------------------------------------------
+# Task Configuration
+# -----------------------------------------------------------------------------
+task:
+  # Type of prediction task
+  type: "classification"                # [REQUIRED] classification | regression
+
+  # For classification only: binary or multiclass
+  classification_type: "multiclass"     # binary | multiclass
+
+# -----------------------------------------------------------------------------
+# Target Classes (Classification Only)
+# -----------------------------------------------------------------------------
+# List expected class labels for validation and reporting
+target_classes:                         # Optional but recommended
+  - "class_1"
+  - "class_2"
+  - "class_3"
+
+# -----------------------------------------------------------------------------
+# Data Format
+# -----------------------------------------------------------------------------
+# Feature matrix orientation
+transpose_features: false               # Default: false
+                                        # true  = features.csv has samples as COLUMNS (genes x samples)
+                                        # false = features.csv has samples as ROWS (samples x genes)
+
+separator: ","                          # Default: "," (CSV delimiter)
+
+# -----------------------------------------------------------------------------
+# Alternative Targets (Optional)
+# -----------------------------------------------------------------------------
+# Other prediction targets available in the metadata
+alternative_targets:
+  - column: "other_target"
+    description: "Description of this target"
+    task_type: "classification"         # classification | regression
+    classification_type: "binary"       # binary | multiclass (if classification)
+
+# -----------------------------------------------------------------------------
+# Feature Selection Settings (Optional - can override defaults)
+# -----------------------------------------------------------------------------
+# feature_selection:
+#   methods:
+#     - "variance_threshold"
+#     - "mutual_info"
+#     - "f_test"
+#     - "lasso"
+#     - "random_forest"
+#
+#   # Method-specific parameters
+#   variance_threshold:
+#     threshold: 0.0
+#
+#   mutual_info:
+#     n_neighbors: 3
+#     random_state: 42
+#
+#   lasso:
+#     alpha: 0.01
+#     max_iter: 1000
+#
+#   random_forest:
+#     n_estimators: 100
+#     random_state: 42
+
+# -----------------------------------------------------------------------------
+# Preprocessing Settings (Optional - can override defaults)
+# -----------------------------------------------------------------------------
+# preprocessing:
+#   handle_missing: "drop"              # drop | impute_mean | impute_median
+#   normalize: true                     # Apply feature normalization
+#   normalization_method: "standard"    # standard | minmax | robust
