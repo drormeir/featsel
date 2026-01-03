@@ -98,6 +98,181 @@ class DataLoader:
         """Get list of available target columns."""
         return self.metadata.columns.tolist()
 
+    def analyze_targets(self) -> pd.DataFrame:
+        """
+        Analyze all target variables in metadata and generate comprehensive report.
+
+        For each target column, determines the type (binary, multiclass, or regression)
+        and computes appropriate statistics.
+
+        Returns
+        -------
+        report : pd.DataFrame
+            DataFrame with one row per target variable containing:
+            - target_name: Name of the target column
+            - type: 'binary', 'multiclass', or 'regression'
+            - n_samples: Number of non-null samples
+            - n_missing: Number of missing values
+
+            For classification targets (binary/multiclass):
+            - n_classes: Number of unique classes
+            - classes: List of class labels
+            - class_counts: Count of each class (as string)
+            - balance_ratio: Ratio of smallest to largest class (imbalance metric)
+
+            For regression targets:
+            - mean: Mean value
+            - std: Standard deviation
+            - min: Minimum value
+            - q1: 25th percentile (Q1)
+            - median: 50th percentile (Q2)
+            - q3: 75th percentile (Q3)
+            - max: Maximum value
+
+        Examples
+        --------
+        >>> from featsel import DataLoader
+        >>> loader = DataLoader('configs/scanb.yaml')
+        >>> report = loader.analyze_targets()
+        >>> print(report)
+
+        >>> # Focus on classification targets
+        >>> classification = report[report['type'].isin(['binary', 'multiclass'])]
+        >>> print(classification[['target_name', 'type', 'n_classes', 'balance_ratio']])
+        """
+        results = []
+
+        for col in self.metadata.columns:
+            target = self.metadata[col]
+
+            # Basic stats
+            n_samples = target.notna().sum()
+            n_missing = target.isna().sum()
+
+            # Determine target type
+            target_clean = target.dropna()
+
+            if len(target_clean) == 0:
+                # All missing
+                results.append({
+                    'target_name': col,
+                    'type': 'unknown',
+                    'n_samples': n_samples,
+                    'n_missing': n_missing,
+                    'note': 'All values are missing'
+                })
+                continue
+
+            # Type detection
+            is_numeric = pd.api.types.is_numeric_dtype(target_clean)
+            n_unique = target_clean.nunique()
+
+            if not is_numeric or (is_numeric and n_unique <= 20):
+                # Classification: categorical or numeric with few unique values
+                if n_unique == 2:
+                    target_type = 'binary'
+                else:
+                    target_type = 'multiclass'
+
+                # Classification statistics
+                value_counts = target_clean.value_counts().sort_index()
+                classes = value_counts.index.tolist()
+                counts = value_counts.values
+
+                # Balance ratio (smallest / largest class)
+                balance_ratio = counts.min() / counts.max() if len(counts) > 0 else 1.0
+
+                # Format class counts as string
+                class_counts_str = ', '.join([f"{cls}: {cnt}" for cls, cnt in zip(classes, counts)])
+
+                results.append({
+                    'target_name': col,
+                    'type': target_type,
+                    'n_samples': n_samples,
+                    'n_missing': n_missing,
+                    'n_classes': n_unique,
+                    'classes': str(classes),
+                    'class_counts': class_counts_str,
+                    'balance_ratio': f"{balance_ratio:.3f}"
+                })
+            else:
+                # Regression: numeric with many unique values
+                target_type = 'regression'
+
+                # Regression statistics
+                stats = target_clean.describe()
+
+                results.append({
+                    'target_name': col,
+                    'type': target_type,
+                    'n_samples': n_samples,
+                    'n_missing': n_missing,
+                    'mean': f"{stats['mean']:.3f}",
+                    'std': f"{stats['std']:.3f}",
+                    'min': f"{stats['min']:.3f}",
+                    'q1': f"{stats['25%']:.3f}",
+                    'median': f"{stats['50%']:.3f}",
+                    'q3': f"{stats['75%']:.3f}",
+                    'max': f"{stats['max']:.3f}"
+                })
+
+        return pd.DataFrame(results)
+
+    def print_target_report(self):
+        """
+        Print a formatted report of all target variables.
+
+        This is a convenience method that calls analyze_targets() and prints
+        the results in a readable format with separate sections for classification
+        and regression targets.
+
+        Examples
+        --------
+        >>> from featsel import DataLoader
+        >>> loader = DataLoader('configs/scanb.yaml')
+        >>> loader.print_target_report()
+        """
+        report = self.analyze_targets()
+
+        print("\n" + "=" * 80)
+        print("TARGET VARIABLE ANALYSIS")
+        print("=" * 80)
+
+        # Classification targets
+        classification = report[report['type'].isin(['binary', 'multiclass'])]
+        if not classification.empty:
+            print("\nCLASSIFICATION TARGETS:")
+            print("-" * 80)
+            for _, row in classification.iterrows():
+                print(f"\n{row['target_name']} ({row['type'].upper()})")
+                print(f"  Samples: {row['n_samples']} | Missing: {row['n_missing']}")
+                print(f"  Classes: {row['n_classes']}")
+                print(f"  Distribution: {row['class_counts']}")
+                print(f"  Balance ratio: {row['balance_ratio']} (1.0 = perfectly balanced)")
+
+        # Regression targets
+        regression = report[report['type'] == 'regression']
+        if not regression.empty:
+            print("\nREGRESSION TARGETS:")
+            print("-" * 80)
+            for _, row in regression.iterrows():
+                print(f"\n{row['target_name']}")
+                print(f"  Samples: {row['n_samples']} | Missing: {row['n_missing']}")
+                print(f"  Mean ± Std: {row['mean']} ± {row['std']}")
+                print(f"  Range: [{row['min']}, {row['max']}]")
+                print(f"  Quartiles: Q1={row['q1']}, Median={row['median']}, Q3={row['q3']}")
+
+        # Unknown/problematic targets
+        unknown = report[~report['type'].isin(['binary', 'multiclass', 'regression'])]
+        if not unknown.empty:
+            print("\nPROBLEMATIC TARGETS:")
+            print("-" * 80)
+            for _, row in unknown.iterrows():
+                print(f"\n{row['target_name']}")
+                print(f"  Note: {row.get('note', 'Unknown issue')}")
+
+        print("\n" + "=" * 80)
+
     def __len__(self) -> int:
         """Return number of samples in dataset."""
         return len(self.X)
