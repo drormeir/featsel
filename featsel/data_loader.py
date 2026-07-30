@@ -12,7 +12,7 @@ class DataLoader:
     Dataset loader with PyTorch-style interface and automatic target selection.
 
     Usage:
-        loader = DataLoader('configs/scanb.yaml')
+        loader = DataLoader('configs/scanb_small.yaml')
 
         # Access full dataset
         X = loader.X            # All features
@@ -132,7 +132,7 @@ class DataLoader:
         Examples
         --------
         >>> from featsel import DataLoader
-        >>> loader = DataLoader('configs/scanb.yaml')
+        >>> loader = DataLoader('configs/scanb_small.yaml')
         >>> report = loader.analyze_targets()
         >>> print(report)
 
@@ -229,7 +229,7 @@ class DataLoader:
         Examples
         --------
         >>> from featsel import DataLoader
-        >>> loader = DataLoader('configs/scanb.yaml')
+        >>> loader = DataLoader('configs/scanb_small.yaml')
         >>> loader.print_target_report()
         """
         report = self.analyze_targets()
@@ -406,7 +406,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print("Usage: python data_loader.py <config_path>")
-        print("Example: python data_loader.py configs/scanb.yaml")
+        print("Example: python data_loader.py configs/scanb_small.yaml")
         sys.exit(1)
 
     config_path = sys.argv[1]

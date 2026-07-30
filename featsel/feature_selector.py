@@ -88,7 +88,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     >>> from sklearn.linear_model import LogisticRegression
     >>> from featsel import FeatureSelector, DataLoader
     >>>
-    >>> loader = DataLoader('configs/scanb.yaml')
+    >>> loader = DataLoader('configs/scanb_small.yaml')
     >>> pipe = Pipeline([
     ...     ('select', FeatureSelector(method='mutual_info', n_features=100)),
     ...     ('clf', LogisticRegression())
@@ -109,7 +109,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     Works with DataLoader:
 
     >>> from featsel import DataLoader, FeatureSelector
-    >>> loader = DataLoader('configs/scanb.yaml')
+    >>> loader = DataLoader('configs/scanb_small.yaml')
     >>> selector = FeatureSelector(method='correlation', n_features=50)
     >>> selector.fit(loader.X, loader.y)
     >>> X_selected = selector.transform(loader.X)

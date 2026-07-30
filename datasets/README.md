@@ -13,7 +13,7 @@ datasets/
 
 ## Current Datasets
 
-### SCAN-B Breast Cancer (`scanb/`)
+### SCAN-B Breast Cancer, course version (`scanb_small/`)
 
 Gene expression data from the Sweden Cancerome Analysis Network - Breast.
 
@@ -22,7 +22,18 @@ Gene expression data from the Sweden Cancerome Analysis Network - Breast.
 | `features.csv` | Gene expression matrix (genes x samples) |
 | `metadata.csv` | Sample metadata with PAM50 subtypes, ER status, survival data |
 
-**Config**: `configs/scanb.yaml`
+**Config**: `configs/scanb_small.yaml`
+
+Shape: 9,265 genes x 3,069 samples. This is the pre-filtered version handed out
+with the course and the one all reported results use.
+
+### SCAN-B Breast Cancer, full gene set (`scanb_full/`)
+
+Same cohort, 30,866 genes x 3,069 samples (1.6 GB). Present as symlinks to a copy
+outside the repo. Used only for scaling and timing experiments, not for the
+reported method comparison.
+
+**Config**: `configs/scanb_full.yaml`
 
 **Download**: [TBD - link to be added]
 

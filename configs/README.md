@@ -7,7 +7,8 @@ Dataset-specific configuration files for the feature selection pipeline.
 | File | Description |
 |------|-------------|
 | `template.yaml` | Documented template with all available options |
-| `scanb.yaml` | SCAN-B breast cancer dataset configuration |
+| `scanb_small.yaml` | SCAN-B breast cancer, course version (9,265 genes) |
+| `scanb_full.yaml` | SCAN-B breast cancer, full gene set (30,866 genes), timing runs only |
 
 ## Task Types
 

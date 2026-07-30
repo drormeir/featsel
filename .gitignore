@@ -210,3 +210,6 @@ __marimo__/
 datasets/*/
 !datasets/README.md
 results/
+
+# Claude Code local files (private working notes)
+.claude/

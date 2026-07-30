@@ -2,8 +2,8 @@ name: "SCAN-B Breast Cancer"
 description: "Gene expression data from the Sweden Cancerome Analysis Network - Breast"
 
 paths:
-  features: "datasets/scanb/features.csv"
-  metadata: "datasets/scanb/metadata.csv"
+  features: "datasets/scanb_small/features.csv"
+  metadata: "datasets/scanb_small/metadata.csv"
 
 # Column mappings
 sample_id_column: "samplename"

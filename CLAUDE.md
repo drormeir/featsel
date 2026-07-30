@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Read `SCOPE.md` first.** It defines what is allowed to be built and how to work with Dror. It overrides anything here that looks like an invitation to expand the project (PyPI publishing, future phases, PyTorch integration).
+
 ## Project Overview
 
 `featsel` is a feature selection pipeline for high-dimensional data, focused on genomics and bioinformatics. The primary use case is predicting breast cancer molecular subtypes from gene expression data (thousands of features, relatively few samples). The project is part of an M.Sc. thesis at Reichman University.
@@ -23,10 +25,10 @@ pip install -e ".[dev]"
 ### Running the Pipeline
 ```bash
 # Run with a configuration file
-python -m featsel.data_loader configs/scanb.yaml
+python -m featsel.data_loader configs/scanb_small.yaml
 
 # Test the DataLoader directly
-python featsel/data_loader.py configs/scanb.yaml
+python featsel/data_loader.py configs/scanb_small.yaml
 ```
 
 ### Feature Selection
@@ -34,7 +36,7 @@ python featsel/data_loader.py configs/scanb.yaml
 # Use FeatureSelector in Python scripts or notebooks
 python
 >>> from featsel import DataLoader, FeatureSelector
->>> loader = DataLoader('configs/scanb.yaml')
+>>> loader = DataLoader('configs/scanb_small.yaml')
 >>> selector = FeatureSelector(method='anova_f', n_features=100)
 >>> selector.fit(loader.X, loader.y)
 >>> X_selected = selector.transform(loader.X)
@@ -103,7 +105,7 @@ Each dataset requires a YAML config file specifying:
 - Task type: classification (binary/multiclass) or regression
 - Optional alternative targets available in the metadata
 
-Example: `configs/scanb.yaml` configures the SCAN-B breast cancer dataset with PAM50 subtypes as the primary target, and ER status and survival data as alternative targets.
+Example: `configs/scanb_small.yaml` configures the SCAN-B breast cancer dataset with PAM50 subtypes as the primary target, and ER status and survival data as alternative targets.
 
 ### Dataset Structure
 
@@ -111,7 +113,7 @@ Example: `configs/scanb.yaml` configures the SCAN-B breast cancer dataset with P
 - `features.csv`: Feature matrix with samples as rows and features (genes) as columns, OR transposed (set `transpose_features: true` in config)
 - `metadata.csv`: Sample metadata with target labels and additional clinical variables
 
-**Current dataset: `datasets/scanb/`**
+**Current dataset: `datasets/scanb_small/`**
 - 518MB gene expression matrix with thousands of genes per sample
 - PAM50 molecular subtypes (Basal, LumA, LumB, Her2, Normal) as primary classification target
 - Alternative targets: ER status (binary), survival event (binary), survival time (regression)
@@ -159,7 +161,7 @@ from sklearn.linear_model import LogisticRegression
 from featsel import DataLoader, FeatureSelector
 
 # Load data
-loader = DataLoader('configs/scanb.yaml')
+loader = DataLoader('configs/scanb_small.yaml')
 
 # Create pipeline with feature selection
 pipe = Pipeline([
@@ -207,7 +209,7 @@ selector = FeatureSelector(
 )
 ```
 
-### High-Dimensional Use Case (User's Transfer Learning Scenario)
+### High-Dimensional Use Case (few samples, many features)
 
 For transfer learning with ResNet embeddings where embedding dimension >> sample count:
 
@@ -244,7 +246,7 @@ pipe.fit(X_embeddings, y_disease_labels)
 ```python
 from featsel import DataLoader, FeatureSelector
 
-loader = DataLoader('configs/scanb.yaml')
+loader = DataLoader('configs/scanb_small.yaml')
 
 # Fit feature selection on PAM50 target
 loader.set_target('PAM50')
@@ -262,7 +264,7 @@ loader.set_target('ER')
 ## Important Notes
 
 ### Data Files
-- Data files in `datasets/scanb/` are not tracked in git (large files, potentially sensitive)
+- Data files in `datasets/scanb_small/` are not tracked in git (large files, potentially sensitive)
 - The `features.csv` file is ~519MB, containing full gene expression matrix
 - When working with data loading, test on a subset first to avoid long load times
 

@@ -60,10 +60,10 @@ pip install featsel
 Run the pipeline with a configuration file:
 
 ```bash
-python -m featsel.run --config configs/scanb.yaml
+python -m featsel.run --config configs/scanb_small.yaml
 ```
 
-To use your own dataset, create a config file (see `configs/scanb.yaml` as a template) and a data folder in `datasets/`.
+To use your own dataset, create a config file (see `configs/scanb_small.yaml` as a template) and a data folder in `datasets/`.
 
 ## Datasets
 
@@ -77,7 +77,7 @@ The pipeline is dataset-agnostic. Each dataset needs:
 - PAM50 molecular subtype labels (Basal, LumA, LumB, HER2, Normal)
 - Clinical metadata (ER status, survival data)
 
-**Note**: Data files are not included due to size. Download from [TBD] and place in `datasets/scanb/`.
+**Note**: Data files are not included due to size. Download from [TBD] and place in `datasets/scanb_small/`.
 
 ## Status
 

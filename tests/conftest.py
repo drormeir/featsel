@@ -161,6 +161,6 @@ def scanb_loader():
     """
     from featsel import DataLoader
     try:
-        return DataLoader('configs/scanb.yaml')
+        return DataLoader('configs/scanb_small.yaml')
     except FileNotFoundError:
         pytest.skip("SCAN-B dataset not available")

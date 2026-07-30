@@ -1,0 +1,41 @@
+name: "SCAN-B Breast Cancer (full gene set)"
+description: "Gene expression data from the Sweden Cancerome Analysis Network - Breast"
+
+paths:
+  features: "datasets/scanb_full/features.csv"
+  metadata: "datasets/scanb_full/metadata.csv"
+
+# Column mappings
+sample_id_column: "samplename"
+target_column: "PAM50"
+
+# Task configuration
+task:
+  type: "classification"          # classification | regression
+  classification_type: "multiclass"  # binary | multiclass
+
+# Target classes (for reference/validation)
+target_classes:
+  - "Basal"
+  - "LumA"
+  - "LumB"
+  - "Her2"
+  - "Normal"
+
+# Data format
+transpose_features: true    # Set true if features.csv has samples as columns
+separator: ","
+
+# Optional: alternative targets available in this dataset
+alternative_targets:
+  - column: "ER"
+    description: "Estrogen receptor status"
+    task_type: "classification"
+    classification_type: "binary"
+  - column: "event"
+    description: "Survival event indicator"
+    task_type: "classification"
+    classification_type: "binary"
+  - column: "time"
+    description: "Survival time"
+    task_type: "regression"
