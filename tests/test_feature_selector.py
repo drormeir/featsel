@@ -53,6 +53,63 @@ class TestVarianceThreshold:
         assert X_selected.shape[0] == X.shape[0]
 
 
+class TestRandomSelector:
+    """Tests for RandomSelector, the control baseline."""
+
+    def test_select_exact_count(self, small_classification_data):
+        """Test that exactly n_features are selected."""
+        X, y = small_classification_data
+
+        selector = FeatureSelector(method='random', n_features=5, random_state=42)
+        X_selected = selector.fit_transform(X, y)
+
+        assert X_selected.shape[1] == 5
+        assert X_selected.shape[0] == X.shape[0]
+
+    def test_reproducibility(self, small_classification_data):
+        """Test that the same seed selects the same features."""
+        X, y = small_classification_data
+
+        first = FeatureSelector(method='random', n_features=5, random_state=42)
+        second = FeatureSelector(method='random', n_features=5, random_state=42)
+        first.fit(X, y)
+        second.fit(X, y)
+
+        assert first.selected_features_ == second.selected_features_
+
+    def test_different_seeds_differ(self, small_classification_data):
+        """Test that different seeds select different features."""
+        X, y = small_classification_data
+
+        first = FeatureSelector(method='random', n_features=5, random_state=1)
+        second = FeatureSelector(method='random', n_features=5, random_state=2)
+        first.fit(X, y)
+        second.fit(X, y)
+
+        assert first.selected_features_ != second.selected_features_
+
+    def test_ignores_target(self, small_classification_data):
+        """Test that selection is unchanged when the target is shuffled."""
+        X, y = small_classification_data
+        y_shuffled = pd.Series(np.random.RandomState(0).permutation(y.values), index=y.index)
+
+        with_y = FeatureSelector(method='random', n_features=5, random_state=42)
+        with_shuffled = FeatureSelector(method='random', n_features=5, random_state=42)
+        with_y.fit(X, y)
+        with_shuffled.fit(X, y_shuffled)
+
+        assert with_y.selected_features_ == with_shuffled.selected_features_
+
+    def test_caps_at_available_features(self, small_classification_data):
+        """Test that requesting more features than exist selects all of them."""
+        X, y = small_classification_data
+
+        selector = FeatureSelector(method='random', n_features=X.shape[1] + 10, random_state=42)
+        X_selected = selector.fit_transform(X, y)
+
+        assert X_selected.shape[1] == X.shape[1]
+
+
 class TestANOVAFSelector:
     """Tests for ANOVAFSelector."""
 

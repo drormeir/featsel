@@ -3,6 +3,7 @@ Feature selection methods for high-dimensional data.
 """
 
 from .base import BaseSelector
+from .baseline import RandomSelector
 from .filter import (
     VarianceThreshold,
     ANOVAFSelector,
@@ -12,6 +13,7 @@ from .filter import (
 
 __all__ = [
     'BaseSelector',
+    'RandomSelector',
     'VarianceThreshold',
     'ANOVAFSelector',
     'MutualInfoSelector',

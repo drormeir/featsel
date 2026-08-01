@@ -9,6 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 from typing import Union, List, Dict, Optional
 
 from .selectors import (
+    RandomSelector,
     VarianceThreshold,
     ANOVAFSelector,
     MutualInfoSelector,
@@ -32,6 +33,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         - 'anova_f': ANOVA F-test (classification) or F-test (regression)
         - 'mutual_info': Mutual information with target
         - 'correlation': Correlation-based selection
+        - 'random': Random subset of features (baseline / control)
 
     n_features : int, optional
         Number of features to select. If None, method-specific default is used.
@@ -122,6 +124,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         'anova_f': ANOVAFSelector,
         'mutual_info': MutualInfoSelector,
         'correlation': CorrelationSelector,
+        'random': RandomSelector,
     }
 
     def __init__(
@@ -225,6 +228,10 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
             kwargs['task'] = self.task
             if 'n_neighbors' in self.method_params:
                 kwargs['n_neighbors'] = self.method_params['n_neighbors']
+            if 'random_state' in self.method_params:
+                kwargs['random_state'] = self.method_params['random_state']
+
+        elif method_name == 'random':
             if 'random_state' in self.method_params:
                 kwargs['random_state'] = self.method_params['random_state']
 
