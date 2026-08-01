@@ -240,6 +240,77 @@ class TestCorrelationSelector:
         assert selector.n_features_out_ < 6
 
 
+class TestEmbeddedSelectors:
+    """Tests for the embedded methods: Lasso and tree importance."""
+
+    def test_lasso_select_top_features(self, small_classification_data):
+        """Test selecting a fixed number of features by L1 coefficient."""
+        X, y = small_classification_data
+
+        selector = FeatureSelector(method='lasso', n_features=10, random_state=42)
+        X_selected = selector.fit_transform(X, y)
+
+        assert X_selected.shape[1] == 10
+
+    def test_lasso_chooses_own_count(self, small_classification_data):
+        """Test that without n_features, Lasso keeps only non-zero coefficients."""
+        X, y = small_classification_data
+
+        selector = FeatureSelector(method='lasso', C=0.1, random_state=42)
+        selector.fit(X, y)
+
+        assert 0 < selector.n_features_out_ <= X.shape[1]
+
+    def test_lasso_sparser_with_smaller_C(self, small_classification_data):
+        """Test that stronger regularization keeps fewer features."""
+        X, y = small_classification_data
+
+        weak = FeatureSelector(method='lasso', C=1.0, random_state=42).fit(X, y)
+        strong = FeatureSelector(method='lasso', C=0.05, random_state=42).fit(X, y)
+
+        assert strong.n_features_out_ <= weak.n_features_out_
+
+    def test_lasso_requires_target(self, small_classification_data):
+        """Test that Lasso raises without a target."""
+        X, y = small_classification_data
+
+        with pytest.raises(ValueError):
+            FeatureSelector(method='lasso', n_features=10).fit(X, None)
+
+    def test_tree_importance_select_top_features(self, small_classification_data):
+        """Test selecting a fixed number of features by impurity decrease."""
+        X, y = small_classification_data
+
+        selector = FeatureSelector(
+            method='tree_importance', n_features=10, n_estimators=20, random_state=42
+        )
+        X_selected = selector.fit_transform(X, y)
+
+        assert X_selected.shape[1] == 10
+
+    def test_tree_importance_reproducibility(self, small_classification_data):
+        """Test that the same seed gives the same ranking."""
+        X, y = small_classification_data
+
+        kwargs = dict(method='tree_importance', n_features=10,
+                      n_estimators=20, random_state=42)
+        first = FeatureSelector(**kwargs).fit(X, y)
+        second = FeatureSelector(**kwargs).fit(X, y)
+
+        assert first.selected_features_ == second.selected_features_
+
+    def test_embedded_beats_random_on_informative_data(self, small_classification_data):
+        """Test that embedded methods find informative features more often than chance."""
+        X, y = small_classification_data
+
+        lasso = FeatureSelector(method='lasso', n_features=10, random_state=42).fit(X, y)
+        trees = FeatureSelector(method='tree_importance', n_features=10,
+                                n_estimators=50, random_state=42).fit(X, y)
+
+        overlap = set(lasso.selected_features_) & set(trees.selected_features_)
+        assert len(overlap) >= 2
+
+
 class TestFeatureSelectorAPI:
     """Tests for FeatureSelector main API."""
 
@@ -352,14 +423,25 @@ class TestHighDimensionalData:
         assert len(selector.selected_features_) == 50
 
     def test_lasso_on_high_dim(self, high_dim_data):
-        """Test that FeatureSelector can handle methods not yet implemented."""
+        """Test Lasso selection when features far outnumber samples."""
         X, y = high_dim_data
 
-        # This will fail because we haven't implemented lasso yet
-        # but it tests error handling
-        with pytest.raises(ValueError, match="Unknown method"):
-            selector = FeatureSelector(method='lasso', n_features=50)
-            selector.fit(X, y)
+        selector = FeatureSelector(method='lasso', n_features=50, random_state=42)
+        X_selected = selector.fit_transform(X, y)
+
+        assert X_selected.shape == (X.shape[0], 50)
+
+    def test_lasso_multiclass_on_high_dim(self, high_dim_data):
+        """Test that multiclass targets work despite liblinear being binary-only."""
+        X, _ = high_dim_data
+        y_multi = pd.Series(np.tile([0, 1, 2, 3, 4], X.shape[0] // 5 + 1)[:X.shape[0]],
+                            index=X.index)
+
+        selector = FeatureSelector(method='lasso', n_features=20, random_state=42)
+        selector.fit(X, y_multi)
+
+        assert selector.selector_.coef_.shape[0] == 5
+        assert selector.n_features_out_ == 20
 
 
 class TestMultipleTargets:

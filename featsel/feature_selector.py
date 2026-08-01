@@ -10,6 +10,8 @@ from typing import Union, List, Dict, Optional
 
 from .selectors import (
     RandomSelector,
+    LassoSelector,
+    TreeImportanceSelector,
     VarianceThreshold,
     ANOVAFSelector,
     MutualInfoSelector,
@@ -34,6 +36,8 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         - 'mutual_info': Mutual information with target
         - 'correlation': Correlation-based selection
         - 'random': Random subset of features (baseline / control)
+        - 'lasso': L1-regularized model coefficients (embedded)
+        - 'tree_importance': Random forest impurity importance (embedded)
 
     n_features : int, optional
         Number of features to select. If None, method-specific default is used.
@@ -125,6 +129,8 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         'mutual_info': MutualInfoSelector,
         'correlation': CorrelationSelector,
         'random': RandomSelector,
+        'lasso': LassoSelector,
+        'tree_importance': TreeImportanceSelector,
     }
 
     def __init__(
@@ -234,6 +240,18 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
         elif method_name == 'random':
             if 'random_state' in self.method_params:
                 kwargs['random_state'] = self.method_params['random_state']
+
+        elif method_name == 'lasso':
+            kwargs['task'] = self.task
+            for param in ('C', 'alpha', 'max_iter', 'random_state'):
+                if param in self.method_params:
+                    kwargs[param] = self.method_params[param]
+
+        elif method_name == 'tree_importance':
+            kwargs['task'] = self.task
+            for param in ('n_estimators', 'max_depth', 'random_state', 'n_jobs'):
+                if param in self.method_params:
+                    kwargs[param] = self.method_params[param]
 
         elif method_name == 'correlation':
             if 'target_threshold' in self.method_params:
