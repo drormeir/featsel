@@ -32,6 +32,36 @@ secondary to the ordering between methods and to the gap over the control.
 that is good at small budgets from one that only works when given many
 features. Matched `k` across methods is what makes the random control valid.
 
+### Preprocessing is fixed, not swept
+
+The main grid uses **standardization only**, fit inside the split. Adding a
+preprocessing axis would double or quadruple an already large grid for a
+question that is not one of the four tasks.
+
+Min-max was rejected rather than tested: it is affine per column, exactly like
+standardization, so it changes nothing for anything scale-equivariant - ANOVA
+F, Pearson correlation and tree ensembles give identical results either way.
+It differs only for k-NN and L2-penalised models, and there it is the worse
+choice, because one outlier sets the range and compresses every other sample.
+
+**Side experiment (not in the main grid).** Gaussianizing each column with a
+rank-based normal quantile transform, at one `k` and one train fraction, run
+across all classifiers. The prediction is that shrinkage LDA and k-NN gain,
+because the first assumes Gaussian class densities and the second is dominated
+by heavy tails, while random forest and XGBoost do not move at all, being
+invariant to monotone transforms. It may also *hurt*: the transform is
+rank-based, so it discards the magnitude of a fold change, and its quantiles
+are estimated on the training half only, so at `train_size=0.5` the mapping is
+noisy and out-of-range test values are clipped. A measured check on SCAN-B
+found 96.7% of columns rejecting normality (median excess kurtosis 1.15), so
+there is something for it to fix. Result still unknown: the run was started and
+cancelled.
+
+If preprocessing is ever crossed with the other axes, it must be crossed for
+*every* method, not attached per algorithm. A method carrying its own
+preprocessing confounds the method with its transform, and the comparison stops
+being controlled.
+
 ### Open decisions
 
 - **Per-class selection.** Selecting genes one-vs-rest and taking the union is
