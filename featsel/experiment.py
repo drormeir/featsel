@@ -28,7 +28,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import QuantileTransformer, StandardScaler
 from sklearn.svm import LinearSVC
 
 from .feature_selector import FeatureSelector
@@ -72,8 +72,27 @@ def _fold_metrics(y_true, y_pred):
     }
 
 
+def _make_preprocessor(name, seed):
+    """
+    Build the per-split preprocessing step.
+
+    'standard'        : centre and scale, leaving the shape of each column alone.
+    'quantile_normal' : map each column onto a normal distribution by rank,
+                        which is what ANOVA F and LDA assume and what trees are
+                        invariant to.
+    """
+    if name == 'standard':
+        return StandardScaler()
+    if name == 'quantile_normal':
+        return QuantileTransformer(
+            output_distribution='normal', subsample=100_000, random_state=seed
+        )
+    raise ValueError(f"Unknown preprocess '{name}'. "
+                     "Available: 'standard', 'quantile_normal'")
+
+
 def run_grid(X, y, selectors=None, k_values=None, classifiers=None,
-             n_splits=5, seed=42, verbose=True):
+             n_splits=5, seed=42, preprocess='standard', verbose=True):
     """
     Run the full (selector x k x classifier x fold) grid.
 
@@ -96,6 +115,8 @@ def run_grid(X, y, selectors=None, k_values=None, classifiers=None,
         Number of stratified cross-validation folds.
     seed : int, default=42
         Random seed, used for the splitter, the selectors and the classifiers.
+    preprocess : str, default='standard'
+        Per-split preprocessing: 'standard' or 'quantile_normal'.
     verbose : bool, default=True
         Print progress per fold.
 
@@ -127,7 +148,7 @@ def run_grid(X, y, selectors=None, k_values=None, classifiers=None,
 
         # Preprocessing is part of the fold: fit on train, apply to test.
         imputer = SimpleImputer(strategy='median').fit(X_train)
-        scaler = StandardScaler().fit(imputer.transform(X_train))
+        scaler = _make_preprocessor(preprocess, seed).fit(imputer.transform(X_train))
         X_train = scaler.transform(imputer.transform(X_train))
         X_test = scaler.transform(imputer.transform(X_test))
 
