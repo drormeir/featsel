@@ -25,7 +25,8 @@ secondary to the ordering between methods and to the gap over the control.
 | Classifier | logistic_regression, linear_svm, random_forest, knn, lda_shrinkage, xgboost | How much external selection is worth to a model, given its own regularization. |
 | Task framing | 5-class PAM50, plus five one-vs-rest binary tasks | Whether the best selector differs per subtype; the 5-class number hides this. |
 | Dataset | SCAN-B, plus one non-gene-expression set (task 4, undecided) | Whether conclusions generalize beyond genomics. |
-| Fold | stratified 5-fold, fixed seed | Error bars. |
+| Split | 100 stratified Monte Carlo splits, fixed seed | Error bars. See section 2a. |
+| Train fraction | 0.5, 0.7, 0.9 | Learning curve: does the winning method change when the training set shrinks? |
 
 `k` is swept rather than fixed because a single `k` cannot distinguish a method
 that is good at small budgets from one that only works when given many
@@ -33,17 +34,48 @@ features. Matched `k` across methods is what makes the random control valid.
 
 ### Open decisions
 
-- **Repeats.** Currently one 5-fold split, so error bars are fold noise only,
-  not split noise. Repeated stratified CV would add split noise at 3-5x the
-  runtime. Undecided.
-- **Number of folds.** 5 was chosen for runtime. Kohavi (1995) recommends
-  10-fold stratified for lower bias. Because the study *ranks* methods rather
-  than estimating absolute error, any `k` works as long as it is identical for
-  every method - but if the absolute numbers are to be quoted, 10-fold is the
-  defensible choice.
 - **Per-class selection.** Selecting genes one-vs-rest and taking the union is
   a method variant worth testing, since a 5-class F statistic is dominated by
   the large LumA class. Not yet implemented.
+
+## 2a. Monte Carlo splits instead of k-fold
+
+**Decision.** Replace stratified 5-fold with `StratifiedShuffleSplit`, 100
+splits, at train fractions 0.5, 0.7 and 0.9. Report the **median** across
+splits with an interquartile range, not the mean with a standard deviation.
+
+**Why not k-fold.** k-fold is a structured special case of splitting, not a
+free sample of it. Its test sets are forced to be disjoint, so any two training
+sets in 5-fold share three quarters of their samples and the fold scores are
+strongly correlated. The spread across five folds therefore understates the
+real split-to-split variation, and Bengio and Grandvalet (2004) proved there is
+no unbiased estimator of the variance of k-fold cross-validation. Five or ten
+numbers are in any case too few to characterise a distribution.
+
+Monte Carlo splits do not escape dependence entirely - every split is drawn
+from the same 3069 patients, so training sets still overlap - but the
+dependence is no longer forced by a disjointness constraint, and 100 draws
+give a distribution rather than a handful of points.
+
+**Why the median.** With 100 draws the median is insensitive to the occasional
+degenerate split, and its interquartile range describes the bulk of the
+distribution without assuming symmetry.
+
+**What the interval does and does not mean.** The interval measures *split*
+variance: how much the number moves if the same 3069 patients are re-split. It
+is not a confidence interval over the population of breast cancer patients,
+because every split reuses the same cohort. The report must say this
+explicitly.
+
+**Cost.** 100 splits is 20x the runtime of a single 5-fold run, multiplied
+again by three train fractions. This is the concrete workload that task 3
+(parallel infrastructure) exists to serve, and it is the reason the grid is
+worth parallelizing at all.
+
+**Stability under this scheme.** Kuncheva's index is a pairwise measure, so 5
+folds give only 10 pairs. 100 splits give 4950, which turns the stability
+number from an estimate into a distribution. Pairs may be subsampled if the
+count becomes the bottleneck; if so, the subsample size is reported.
 
 ## 3. Dependent variables
 
@@ -82,20 +114,21 @@ Cost:
 
 These come from `SCOPE.md` 3a and are not negotiable.
 
-- The selector is fit on the training split only, inside the CV loop.
+- The selector is fit on the training split only, inside the resampling loop.
   Selecting on the full dataset before splitting produced near-perfect and
   entirely spurious error rates on microarray data in Ambroise and McLachlan
   (PNAS 2002).
-- Imputation and scaling are also fit inside the fold.
+- Imputation and scaling are also fit inside the split.
 - PAM50 stays five classes in the multiclass framing.
 - The random control is reported in the same table as every other method.
-- Fixed seeds. Stochastic selectors take a **per-fold** seed derived from the
-  global one: a fixed seed across folds would make their measured stability a
+- Fixed seeds. Stochastic selectors take a **per-split** seed derived from the
+  global one: a fixed seed across splits would make their measured stability a
   meaningless 1.0.
 
 ## 5. What the current results show
 
-From the first full grid (random and anova_f only, `results/`):
+From the first full grid (random and anova_f only, stratified 5-fold, before
+the switch to Monte Carlo splits in section 2a, `results/`):
 
 - ANOVA F beats random at every `k` and every classifier.
 - The gap shrinks from ~0.23 macro-F1 at `k=10` to ~0.05 at `k=1000`, because
@@ -112,6 +145,8 @@ From the first full grid (random and anova_f only, `results/`):
 - Ambroise, C. and McLachlan, G. (2002). Selection bias in gene extraction on
   the basis of microarray gene-expression data. *PNAS* 99(10).
 - Bellman, R. (1957). *Dynamic Programming*. Princeton University Press.
+- Bengio, Y. and Grandvalet, Y. (2004). No unbiased estimator of the variance
+  of k-fold cross-validation. *JMLR* 5.
 - Beyer, K., Goldstein, J., Ramakrishnan, R. and Shaft, U. (1999). When is
   "nearest neighbor" meaningful? *ICDT*.
 - Donoho, D. and Jin, J. (2008). Higher criticism thresholding. *PNAS* 105(39).
