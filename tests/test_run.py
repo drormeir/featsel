@@ -13,7 +13,7 @@ import pytest
 import yaml
 from sklearn.datasets import make_classification
 
-from featsel.run import KEY_COLUMNS, load_config, run
+from featsel.run import KEY_COLUMNS, build_tasks, load_config, run
 
 
 @pytest.fixture
@@ -60,9 +60,101 @@ def test_one_row_per_execution(experiment):
     out = run(experiment)
     df = pd.read_csv(out)
 
-    expected = 3 * 1 * 1 * 3 * 2  # splits x train_sizes x preprocess x selector-k x models
+    expected = 1 * 3 * 1 * 1 * 3 * 2  # tasks x splits x train_sizes x preprocess x sel-k x models
     assert len(df) == expected
     assert not df.duplicated(KEY_COLUMNS).any()
+
+
+class TestTaskFraming:
+    """Tests for expanding one target into several classification tasks."""
+
+    def test_multiclass_is_the_target_unchanged(self):
+        """Test that the multiclass framing passes the target through."""
+        y = np.array(['a', 'b', 'c', 'a'])
+        tasks = build_tasks(y, ['multiclass'])
+
+        assert len(tasks) == 1
+        name, y_task, mask = tasks[0]
+        assert name == 'multiclass'
+        np.testing.assert_array_equal(y_task, y)
+        assert mask.all()
+
+    def test_one_vs_rest_gives_one_binary_task_per_class(self):
+        """Test that one-vs-rest yields a binary task per class, using all samples."""
+        y = np.array(['Basal', 'LumA', 'LumA', 'Normal'])
+        tasks = build_tasks(y, ['one_vs_rest'])
+
+        assert [name for name, _, _ in tasks] == ['ovr_Basal', 'ovr_LumA', 'ovr_Normal']
+        for name, y_task, mask in tasks:
+            assert set(np.unique(y_task)) == {name.removeprefix('ovr_'), 'rest'}
+            assert mask.all()
+
+        basal = next(y_task for name, y_task, _ in tasks if name == 'ovr_Basal')
+        np.testing.assert_array_equal(basal, ['Basal', 'rest', 'rest', 'rest'])
+
+    def test_one_vs_one_gives_a_task_per_pair_on_a_subset(self):
+        """Test that one-vs-one yields every pair, restricted to those samples."""
+        y = np.array(['Basal', 'LumA', 'LumA', 'Normal'])
+        tasks = build_tasks(y, ['one_vs_one'])
+
+        assert [name for name, _, _ in tasks] == [
+            'ovo_Basal_vs_LumA', 'ovo_Basal_vs_Normal', 'ovo_LumA_vs_Normal'
+        ]
+        for name, y_task, mask in tasks:
+            expected = set(name.removeprefix('ovo_').split('_vs_'))
+            assert set(np.unique(y_task)) == expected
+            assert mask.sum() == len(y_task)
+            assert not mask.all()  # every pair excludes at least one sample here
+
+        pair = next(t for t in tasks if t[0] == 'ovo_Basal_vs_Normal')
+        np.testing.assert_array_equal(pair[1], ['Basal', 'Normal'])
+
+    def test_one_vs_one_count_is_the_number_of_pairs(self):
+        """Test that five classes give ten pairwise tasks."""
+        y = np.array(['a', 'b', 'c', 'd', 'e'])
+        assert len(build_tasks(y, ['one_vs_one'])) == 10
+
+    def test_framings_combine(self):
+        """Test that all three framings together give 1 + n + n(n-1)/2 tasks."""
+        y = np.array(['a', 'b', 'c'])
+        tasks = build_tasks(y, ['multiclass', 'one_vs_rest', 'one_vs_one'])
+
+        assert len(tasks) == 1 + 3 + 3
+
+    def test_unknown_framing_is_rejected(self):
+        """Test that a typo in the framing list fails loudly."""
+        with pytest.raises(ValueError, match='Unknown task framing'):
+            build_tasks(np.array(['a', 'b']), ['leave_one_out'])
+
+    def test_runner_records_each_task(self, experiment):
+        """Test that every task appears in the CSV and rows do not collide."""
+        experiment['task_framings'] = ['multiclass', 'one_vs_rest']
+        df = pd.read_csv(run(experiment))
+
+        assert set(df.task) == {'multiclass', 'ovr_class0', 'ovr_class1', 'ovr_class2'}
+        assert not df.duplicated(KEY_COLUMNS).any()
+        assert len(df) == 4 * 3 * 1 * 1 * 3 * 2
+
+    def test_binary_tasks_score_differently_from_multiclass(self, experiment):
+        """Test that the binary framings are genuinely different problems."""
+        experiment['task_framings'] = ['multiclass', 'one_vs_rest']
+        df = pd.read_csv(run(experiment))
+
+        by_task = df.groupby('task').accuracy.mean()
+        assert by_task['multiclass'] < by_task.drop('multiclass').max()
+
+    def test_one_vs_one_uses_only_the_two_classes(self, experiment):
+        """Test that pairwise tasks train and validate on a subset of samples."""
+        experiment['task_framings'] = ['multiclass', 'one_vs_one']
+        df = pd.read_csv(run(experiment))
+
+        pairwise = df[df.task.str.startswith('ovo_')]
+        multiclass = df[df.task == 'multiclass']
+
+        assert set(pairwise.task) == {'ovo_class0_vs_class1', 'ovo_class0_vs_class2',
+                                      'ovo_class1_vs_class2'}
+        assert pairwise.n_train.max() < multiclass.n_train.iloc[0]
+        assert not df.duplicated(KEY_COLUMNS).any()
 
 
 def test_metrics_and_axes_recorded(experiment):

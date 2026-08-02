@@ -1,0 +1,42 @@
+# Random-selection baseline across all six framings of the SCAN-B target:
+# the five-class PAM50 problem plus one binary one-vs-rest problem per subtype.
+#
+# This establishes the control level every other selector is measured against.
+# It is not a comparison in itself, so it carries one selector, one train
+# fraction and no preprocessing sweep.
+#
+# Run with: python -m featsel.run --config configs/experiment_baseline.yaml
+
+dataset: "configs/scanb_small.yaml"
+target: "PAM50"
+
+output: "results/baseline_random.csv"
+
+seed: 42
+n_splits: 100
+train_sizes: [0.5]        # a control is only valid against methods at the same fraction
+preprocess: ["standard"]
+
+task_framings:
+  - multiclass            # PAM50 as five classes
+  - one_vs_rest           # 5 tasks: each subtype against the other four
+  - one_vs_one            # 10 tasks: each pair of subtypes, on those samples only
+
+metrics:
+  - accuracy
+  - macro_f1
+  - balanced_accuracy
+  - mcc
+  - g_mean
+
+selectors:
+  - name: random
+    k: [10, 25, 50, 100, 250, 500, 1000]
+
+# One classifier for this first pass. Logistic regression was the strongest
+# model in the earlier grid, so the control level it establishes is the one
+# that matters most. The others are added once this run is understood.
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
