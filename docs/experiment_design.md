@@ -157,18 +157,20 @@ These come from `SCOPE.md` 3a and are not negotiable.
 
 ## 5. What the current results show
 
-From the first full grid (random and anova_f only, stratified 5-fold, before
-the switch to Monte Carlo splits in section 2a, `results/`):
+From `configs/experiment_classifiers.yaml` (random and anova_f only, 12
+Monte Carlo splits at train fraction 0.5, medians over splits):
 
 - ANOVA F beats random at every `k` and every classifier.
-- The gap shrinks from ~0.23 macro-F1 at `k=10` to ~0.05 at `k=1000`, because
-  1000 of 9259 correlated genes already proxies most of the signal. The small
-  `k` end of the curve is the informative one.
-- The gain at large `k` orders the classifiers by how weak their internal
-  regularization is: knn 0.15, random_forest 0.07, linear_svm and
-  logistic_regression ~0.05-0.06, lda_shrinkage 0.01.
-- ANOVA F's selection stability is ~0.95 across folds; random sits at 0 as it
-  must.
+- The gap shrinks from 0.21-0.27 macro-F1 at `k=10` to 0.01-0.14 at `k=1000`,
+  because 1000 of 9259 correlated genes already proxies most of the signal.
+  The small `k` end of the curve is the informative one.
+- The gain at `k=1000` orders the classifiers by how weak their internal
+  regularization is: knn 0.14, random_forest 0.07, linear_svm and
+  logistic_regression 0.04, lda_shrinkage 0.01.
+- ANOVA F's selection stability is ~0.90 across splits; random sits at 0 as
+  it must.
+- Cost: linear_svm took 94% of all model-fitting time (about 24 CPU-minutes
+  per split). It is what makes 100 splits expensive, not the selectors.
 
 ## 6. References
 

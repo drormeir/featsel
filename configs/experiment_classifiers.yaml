@@ -1,0 +1,39 @@
+# How each classifier responds to feature selection as k grows.
+# Feeds notebooks/02_classifier_behaviour.ipynb.
+# Run with: python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs -1
+
+dataset: "scanb_small.yaml"
+target: "PAM50"
+
+output: "../results/experiment_classifiers.csv"
+
+seed: 42
+n_splits: 12             # small run; linear_svm alone takes ~25 CPU-minutes per split
+train_sizes: [0.5]        # same fraction as the random baseline
+preprocess: ["standard"]
+
+selectors:
+  - name: random           # the control every other method must beat
+    k: [10, 25, 50, 100, 250, 500, 1000]
+  - name: anova_f
+    k: [10, 25, 50, 100, 250, 500, 1000]
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
+  - name: linear_svm
+    params:
+      max_iter: 20000
+  - name: random_forest
+    params:
+      n_estimators: 200
+      n_jobs: 1
+  - name: knn
+    params:
+      n_neighbors: 5
+  - name: lda
+    label: lda_shrinkage
+    params:
+      solver: "lsqr"
+      shrinkage: "auto"
