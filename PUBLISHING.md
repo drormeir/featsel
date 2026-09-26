@@ -134,7 +134,7 @@ If "featsel" is taken, choose another name in `pyproject.toml`.
 Make sure `featsel/` is properly structured as a package with `__init__.py`.
 
 ### Dependencies not installing
-Verify `dependencies` list in `pyproject.toml` matches `requirements.txt`.
+Verify the `dependencies` list in `pyproject.toml`; `requirements.txt` only points to it.
 
 ## Useful Commands
 

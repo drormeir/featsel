@@ -12,14 +12,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Environment Setup
 ```bash
-# Activate virtual environment
-source venv/bin/activate
+# Create and activate the virtual environment
+python3.13 -m venv .venv
+source .venv/bin/activate
 
-# Install dependencies
+# Install the package in editable mode with dev tools (same as -e ".[dev]")
 pip install -r requirements.txt
-
-# Install with development dependencies
-pip install -e ".[dev]"
 ```
 
 ### Running the Pipeline
