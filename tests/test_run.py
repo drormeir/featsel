@@ -13,7 +13,8 @@ import pytest
 import yaml
 from sklearn.datasets import make_classification
 
-from featsel.run import KEY_COLUMNS, build_tasks, load_config, run
+from featsel.analysis import kuncheva_index, summarize
+from featsel.run import KEY_COLUMNS, build_tasks, load_config, run, run_config
 
 
 @pytest.fixture
@@ -57,7 +58,7 @@ def experiment(tmp_path):
 
 def test_one_row_per_execution(experiment):
     """Test that the grid produces exactly one row per axis combination."""
-    out = run(experiment)
+    out = run_config(experiment)
     df = pd.read_csv(out)
 
     expected = 1 * 3 * 1 * 1 * 3 * 2  # tasks x splits x train_sizes x preprocess x sel-k x models
@@ -129,7 +130,7 @@ class TestTaskFraming:
     def test_runner_records_each_task(self, experiment):
         """Test that every task appears in the CSV and rows do not collide."""
         experiment['task_framings'] = ['multiclass', 'one_vs_rest']
-        df = pd.read_csv(run(experiment))
+        df = pd.read_csv(run_config(experiment))
 
         assert set(df.task) == {'multiclass', 'ovr_class0', 'ovr_class1', 'ovr_class2'}
         assert not df.duplicated(KEY_COLUMNS).any()
@@ -138,7 +139,7 @@ class TestTaskFraming:
     def test_binary_tasks_score_differently_from_multiclass(self, experiment):
         """Test that the binary framings are genuinely different problems."""
         experiment['task_framings'] = ['multiclass', 'one_vs_rest']
-        df = pd.read_csv(run(experiment))
+        df = pd.read_csv(run_config(experiment))
 
         by_task = df.groupby('task').accuracy.mean()
         assert by_task['multiclass'] < by_task.drop('multiclass').max()
@@ -146,7 +147,7 @@ class TestTaskFraming:
     def test_one_vs_one_uses_only_the_two_classes(self, experiment):
         """Test that pairwise tasks train and validate on a subset of samples."""
         experiment['task_framings'] = ['multiclass', 'one_vs_one']
-        df = pd.read_csv(run(experiment))
+        df = pd.read_csv(run_config(experiment))
 
         pairwise = df[df.task.str.startswith('ovo_')]
         multiclass = df[df.task == 'multiclass']
@@ -159,7 +160,7 @@ class TestTaskFraming:
 
 def test_metrics_and_axes_recorded(experiment):
     """Test that every configured metric and axis lands in the CSV."""
-    df = pd.read_csv(run(experiment))
+    df = pd.read_csv(run_config(experiment))
 
     for column in ['accuracy', 'macro_f1', 'g_mean', *KEY_COLUMNS,
                    'seed', 'n_train', 'n_test', 'n_selected',
@@ -174,7 +175,7 @@ def test_metrics_and_axes_recorded(experiment):
 def test_train_size_is_respected(experiment):
     """Test that train_size sets the split proportions."""
     experiment['train_sizes'] = [0.5]
-    df = pd.read_csv(run(experiment))
+    df = pd.read_csv(run_config(experiment))
 
     assert set(df.n_train) == {60}
     assert set(df.n_test) == {60}
@@ -182,7 +183,7 @@ def test_train_size_is_respected(experiment):
 
 def test_selection_differs_across_splits(experiment):
     """Test that selectors refit per split rather than reusing one selection."""
-    df = pd.read_csv(run(experiment))
+    df = pd.read_csv(run_config(experiment))
 
     for selector in ['random', 'anova_f']:
         picks = df[(df.selector == selector) & (df.k == 5)].selected_indices.unique()
@@ -191,11 +192,11 @@ def test_selection_differs_across_splits(experiment):
 
 def test_resume_completes_without_duplicating(experiment):
     """Test that resuming a truncated run fills the gap exactly once."""
-    out = run(experiment)
+    out = run_config(experiment)
     full = pd.read_csv(out)
 
     full.head(4).to_csv(out, index=False)
-    run(experiment, resume=True)
+    run_config(experiment, resume=True)
     resumed = pd.read_csv(out)
 
     assert len(resumed) == len(full)
@@ -206,10 +207,10 @@ def test_resume_completes_without_duplicating(experiment):
 
 def test_resume_on_complete_run_is_a_noop(experiment):
     """Test that resuming a finished run adds nothing."""
-    out = run(experiment)
+    out = run_config(experiment)
     before = pd.read_csv(out)
 
-    run(experiment, resume=True)
+    run_config(experiment, resume=True)
     after = pd.read_csv(out)
 
     assert len(after) == len(before)
@@ -226,9 +227,44 @@ def test_g_mean_is_zero_when_a_class_is_never_recalled():
     assert _g_mean(y_true, y_true) == pytest.approx(1.0)
 
 
+def test_run_takes_arrays_in_memory(experiment):
+    """Test that run() needs no dataset file and applies config defaults."""
+    X, y = make_classification(n_samples=60, n_features=50, n_informative=5,
+                               n_classes=2, random_state=0)
+    config = {key: experiment[key] for key in ('output', 'selectors', 'models')}
+    config['n_splits'] = 2
+
+    df = pd.read_csv(run(X, y, config))
+
+    assert len(df) == 1 * 2 * 1 * 1 * 3 * 2  # default train size, preprocess, framing
+    assert set(df.train_size) == {0.5}
+
+
+def test_summarize_gives_one_row_per_cell(experiment):
+    """Test that summarize collapses the splits of every cell into one row."""
+    df = pd.read_csv(run_config(experiment))
+    summary = summarize(df)
+
+    assert len(summary) == 3 * 2  # sel-k x models
+    for column in ['macro_f1_median', 'macro_f1_q1', 'macro_f1_q3', 'selection_time_s_median']:
+        assert column in summary.columns
+    assert (summary.macro_f1_q1 <= summary.macro_f1_q3).all()
+
+
+def test_kuncheva_separates_random_from_anova(experiment):
+    """Test that random selection scores near zero and ANOVA F well above it."""
+    df = pd.read_csv(run_config(experiment))
+    stability = kuncheva_index(df, n_total_features=200).set_index(['selector', 'k'])
+
+    assert len(stability) == 3  # sel-k, the model does not change the selection
+    assert (stability.n_pairs == 3).all()  # 3 splits give 3 pairs
+    assert stability.loc[('anova_f', 5), 'consistency_index'] > \
+        stability.loc[('random', 5), 'consistency_index'] + 0.3
+
+
 def test_unknown_model_is_rejected(experiment):
     """Test that a typo in the config fails loudly."""
     experiment['models'] = [{'name': 'no_such_model'}]
 
     with pytest.raises(ValueError, match='Unknown entry'):
-        run(experiment)
+        run_config(experiment)

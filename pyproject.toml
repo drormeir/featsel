@@ -55,6 +55,7 @@ dev = [
     "black>=22.0.0",
     "flake8>=4.0.0",
     "mypy>=0.950",
+    "ruff>=0.5.0",
 ]
 optuna = [
     "optuna>=3.0.0",
@@ -76,3 +77,7 @@ exclude = ["tests*", "docs*", "notebooks*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.yaml", "*.yml"]
+
+[tool.mypy]
+# pandas, scikit-learn, yaml, tqdm and xgboost ship no type stubs.
+ignore_missing_imports = true

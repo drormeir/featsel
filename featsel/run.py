@@ -7,8 +7,11 @@ axes and writes one CSV row per execution, where an execution is a single
 (split, selector, k, classifier) cell.
 
 Rows are appended as they finish, so a killed run can be resumed with --resume
-instead of restarting. Aggregation (median, Q1, Q3) is deliberately left out:
-the CSV is long-format, so any aggregation is a groupby afterwards.
+instead of restarting. Aggregation lives in `featsel.analysis`: the CSV is
+long-format, so any aggregation is a groupby afterwards.
+
+The core, `run(X, y, config)`, takes data already in memory. `run_config`
+loads the dataset named in the config first, and is what the command line uses.
 
 Usage:
     python -m featsel.run --config configs/experiment_scanb.yaml
@@ -160,19 +163,21 @@ def _label(spec):
     return spec.get('label', spec['name'])
 
 
-def load_config(path):
-    """Read the experiment YAML and fill in defaults."""
-    with open(path) as f:
-        config = yaml.safe_load(f)
+DEFAULTS = {
+    'seed': 42,
+    'n_splits': 100,
+    'train_sizes': [0.5],
+    'preprocess': ['standard'],
+    'task_framings': ['multiclass'],
+    'metrics': list(METRICS),
+    'output': 'results/experiment.csv',
+}
 
-    config.setdefault('seed', 42)
-    config.setdefault('n_splits', 100)
-    config.setdefault('train_sizes', [0.5])
-    config.setdefault('preprocess', ['standard'])
-    config.setdefault('task_framings', ['multiclass'])
-    config.setdefault('metrics', list(METRICS))
-    config.setdefault('output', 'results/experiment.csv')
-    return config
+
+def load_config(path):
+    """Read the experiment YAML. Defaults are filled in by run()."""
+    with open(path) as f:
+        return yaml.safe_load(f)
 
 
 def load_dataset(config):
@@ -331,8 +336,8 @@ def print_plan(config, X, y, tasks, target, total):
     n_samples = X.shape[0]
 
     print(f"\n=== {config.get('output')} ===")
-    print(f"Dataset      : {n_samples} samples x {n_features} features, "
-          f"target '{target}'")
+    print(f"Dataset      : {n_samples} samples x {n_features} features"
+          + (f", target '{target}'" if target else ''))
     print(f"Seed         : {config['seed']}")
 
     print(f"Tasks        : {len(tasks)}")
@@ -346,8 +351,8 @@ def print_plan(config, X, y, tasks, target, total):
     for train_size in config['train_sizes']:
         # One-vs-one tasks use fewer samples, so report the range across tasks.
         totals = sorted({int(m.sum()) for _, _, m in tasks})
-        splits = [f"{int(round(train_size * n))} train / "
-                  f"{n - int(round(train_size * n))} validation" for n in totals]
+        splits = [f"{round(train_size * n)} train / "
+                  f"{n - round(train_size * n)} validation" for n in totals]
         if len(splits) == 1:
             print(f"  train_size {train_size}: {splits[0]}")
         else:
@@ -381,9 +386,16 @@ def print_plan(config, X, y, tasks, target, total):
           f"{len(config['models'])} models)\n")
 
 
-def run(config, resume=False):
-    """Run the experiment, appending each finished execution to the output CSV."""
-    X, y, target = load_dataset(config)
+def run(X, y, config, resume=False, target=None):
+    """
+    Run the experiment on data in memory, appending each finished execution to
+    the output CSV.
+
+    X is a samples-by-features array or DataFrame and y the labels. config is
+    the experiment description; its 'dataset' entry, if any, is ignored here.
+    target only labels the printed plan.
+    """
+    config = {**DEFAULTS, **config}
 
     out_path = Path(config['output'])
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -394,24 +406,23 @@ def run(config, resume=False):
         out_path.unlink()
 
     n_k = sum(len(s.get('k', [None])) for s in config['selectors'])
-    tasks = build_tasks(y.values, config['task_framings'])
+    tasks = build_tasks(np.asarray(y), config['task_framings'])
     total = (len(tasks) * config['n_splits'] * len(config['train_sizes'])
              * len(config['preprocess']) * n_k * len(config['models']))
     print_plan(config, X, y, tasks, target, total)
 
     written, start = 0, time.perf_counter()
-    writer, handle = None, None
+    writer = None
+    has_header = out_path.exists() and out_path.stat().st_size > 0
     # The bar counts every execution in the grid, including any skipped by
     # --resume, so its total matches the number printed above.
     progress = tqdm(total=total, initial=len(skip), unit='exec',
                     smoothing=0.05, dynamic_ncols=True)
-    try:
+    with progress, open(out_path, 'a', newline='') as handle:
         for row in iter_rows(X, y, config, skip=skip):
             if writer is None:
-                exists = out_path.exists() and out_path.stat().st_size > 0
-                handle = open(out_path, 'a', newline='')
                 writer = csv.DictWriter(handle, fieldnames=list(row))
-                if not exists:
+                if not has_header:
                     writer.writeheader()
 
             writer.writerow(row)
@@ -422,14 +433,16 @@ def run(config, resume=False):
                 f"{row['task']} {row['selector']} k={row['k']} {row['model']}",
                 refresh=False,
             )
-    finally:
-        progress.close()
-        if handle is not None:
-            handle.close()
 
     print(f"Wrote {written} executions to {out_path} "
           f"in {time.perf_counter() - start:.0f}s")
     return out_path
+
+
+def run_config(config, resume=False):
+    """Load the dataset named in the config, then run the experiment on it."""
+    X, y, target = load_dataset(config)
+    return run(X, y, config, resume=resume, target=target)
 
 
 def main(argv=None):
@@ -447,7 +460,7 @@ def main(argv=None):
     if args.n_splits:
         config['n_splits'] = args.n_splits
 
-    run(config, resume=args.resume)
+    run_config(config, resume=args.resume)
 
 
 if __name__ == '__main__':

@@ -76,9 +76,9 @@ One input is optional: the indices of the truly informative features. Only a
 simulation knows them. When given, the experiment also scores whether each
 selector found them.
 
-Today there are two grid runners with different split protocols
-(`experiment.run_grid` uses k-fold, `run.run` uses Monte Carlo splits). Only
-the second is config-driven, and it reads data from disk only.
+There is one grid runner, `featsel/run.py`, using Monte Carlo splits. Its core
+is `run(X, y, config)`, which takes data in memory. `run_config(config)` loads
+from files and calls it. Stability and summaries live in `featsel/analysis.py`.
 
 ## Design 1: Functions only
 

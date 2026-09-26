@@ -14,8 +14,8 @@ follows the published Donoho and Jin thresholding formulation: per-feature
 p-values from a univariate test, sorted, HC statistic, threshold. It selects
 its own feature count, so `n_features` is ignored for it.
 
-Done means: both appear in `SELECTORS` in `featsel/experiment.py`, the grid
-runs end to end with all six selectors, and `results/` plus the figures in
+Done means: both are listed in `configs/experiment_scanb.yaml`, the grid
+runs end to end with all six selectors through `python -m featsel.run`, and `results/` plus the figures in
 `notebooks/02_classifier_behaviour.ipynb` are regenerated and committed. A bad
 score still counts.
 
