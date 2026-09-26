@@ -7,6 +7,8 @@ validation half into selection, and a resume that neither duplicates nor drops
 work.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -14,7 +16,8 @@ import yaml
 from sklearn.datasets import make_classification
 
 from featsel.analysis import kuncheva_index, summarize
-from featsel.run import KEY_COLUMNS, build_tasks, load_config, run, run_config
+from featsel.metrics import KEY_COLUMNS, g_mean
+from featsel.run import build_tasks, load_config, run, run_config
 
 
 @pytest.fixture
@@ -218,13 +221,11 @@ def test_resume_on_complete_run_is_a_noop(experiment):
 
 def test_g_mean_is_zero_when_a_class_is_never_recalled():
     """Test that G-mean collapses to zero if any class is missed entirely."""
-    from featsel.run import _g_mean
-
     y_true = np.array([0, 0, 1, 1, 2, 2])
     y_pred = np.array([0, 0, 1, 1, 1, 1])  # class 2 never recalled
 
-    assert _g_mean(y_true, y_pred) == pytest.approx(0.0, abs=1e-6)
-    assert _g_mean(y_true, y_true) == pytest.approx(1.0)
+    assert g_mean(y_true, y_pred) == pytest.approx(0.0, abs=1e-6)
+    assert g_mean(y_true, y_true) == pytest.approx(1.0)
 
 
 def test_run_takes_arrays_in_memory(experiment):
@@ -238,6 +239,47 @@ def test_run_takes_arrays_in_memory(experiment):
 
     assert len(df) == 1 * 2 * 1 * 1 * 3 * 2  # default train size, preprocess, framing
     assert set(df.train_size) == {0.5}
+
+
+def test_parallel_run_matches_sequential(experiment, tmp_path):
+    """Test that the number of workers changes nothing but the runtime."""
+    sequential = pd.read_csv(run_config(experiment))
+
+    experiment.update(n_jobs=2, output=str(tmp_path / 'parallel.csv'))
+    parallel = pd.read_csv(run_config(experiment))
+
+    timing = [c for c in sequential.columns if c.endswith(('_time_s', '_peak_mb'))]
+    pd.testing.assert_frame_equal(sequential.drop(columns=timing),
+                                  parallel.drop(columns=timing))
+
+
+def test_truth_records_feature_recovery(experiment):
+    """Test that known informative features yield recall and precision per row."""
+    X, y = make_classification(n_samples=120, n_features=200, n_informative=10,
+                               n_redundant=0, shuffle=False, random_state=0)
+    truth = np.arange(10)  # shuffle=False puts the informative columns first
+    config = {key: experiment[key] for key in ('output', 'selectors', 'models')}
+    config['n_splits'] = 3
+
+    df = pd.read_csv(run(X, y, config, truth=truth))
+
+    assert df.truth_recall.between(0, 1).all()
+    assert df.truth_precision.between(0, 1).all()
+    by_selector = df.groupby('selector').truth_precision.mean()
+    assert by_selector['anova_f'] > by_selector['random']
+
+
+def test_config_paths_are_relative_to_the_config_file(tmp_path, monkeypatch):
+    """Test that dataset and output resolve against the config, not the cwd."""
+    (tmp_path / 'configs').mkdir()
+    path = tmp_path / 'configs' / 'exp.yaml'
+    path.write_text(yaml.safe_dump({'dataset': 'data.yaml', 'output': '../results/out.csv'}))
+    monkeypatch.chdir('/')
+
+    config = load_config(str(path))
+
+    assert Path(config['dataset']).resolve() == tmp_path / 'configs' / 'data.yaml'
+    assert Path(config['output']).resolve() == tmp_path / 'results' / 'out.csv'
 
 
 def test_summarize_gives_one_row_per_cell(experiment):

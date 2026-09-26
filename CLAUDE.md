@@ -98,7 +98,7 @@ The `DataLoader` class:
 **Configuration System: `configs/`**
 
 Each dataset requires a YAML config file specifying:
-- Paths to `features.csv` and `metadata.csv` (relative to project root)
+- Paths to `features.csv` and `metadata.csv` (relative to the config file)
 - `sample_id_column`: Column name to use as sample identifier
 - `target_column`: Default target variable for prediction
 - `transpose_features`: Whether to transpose feature matrix (if samples are columns instead of rows)
@@ -271,7 +271,7 @@ loader.set_target('ER')
 ### Configuration Files
 - YAML configs in `configs/` drive all pipeline behavior
 - `template.yaml` contains full documentation of all available options
-- Always validate paths are relative to the project root, not the config directory
+- Every path in a config is relative to that config file: dataset configs use `../datasets/...`, experiment configs name their dataset config and `../results/...` output the same way
 
 ### Package Installation
 - The package uses modern Python packaging with `pyproject.toml`

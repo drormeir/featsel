@@ -2,9 +2,10 @@
 Data loader module for loading datasets based on YAML configuration.
 """
 
-import yaml
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
+import yaml
 
 
 class DataLoader:
@@ -311,8 +312,8 @@ class DataLoader:
         """Internal method to load and clean dataset."""
         report = {'dataset_name': self.config['name']}
 
-        # Resolve paths relative to config file location
-        config_dir = Path(self.config_path).parent.parent
+        # Resolve paths relative to the config file itself
+        config_dir = Path(self.config_path).parent
         features_path = config_dir / self.config['paths']['features']
         metadata_path = config_dir / self.config['paths']['metadata']
 
@@ -378,7 +379,7 @@ class DataLoader:
         rows_all_nan = X.isnull().all(axis=1)
         report['samples_removed_all_nan'] = int(rows_all_nan.sum())
         if rows_all_nan.any():
-            rows_to_keep = rows_all_nan == False  # noqa: E712
+            rows_to_keep = ~rows_all_nan
             X = X.loc[rows_to_keep]
             metadata = metadata.loc[rows_to_keep]
 
@@ -386,7 +387,7 @@ class DataLoader:
         cols_all_nan = X.isnull().all(axis=0)
         report['features_removed_all_nan'] = int(cols_all_nan.sum())
         if cols_all_nan.any():
-            cols_to_keep = cols_all_nan == False  # noqa: E712
+            cols_to_keep = ~cols_all_nan
             X = X.loc[:, cols_to_keep]
 
         # Remove columns with only one unique value (excluding NaN)
@@ -394,7 +395,7 @@ class DataLoader:
         cols_single_value = nunique <= 1
         report['features_removed_single_value'] = int(cols_single_value.sum())
         if cols_single_value.any():
-            cols_to_keep = cols_single_value == False  # noqa: E712
+            cols_to_keep = ~cols_single_value
             X = X.loc[:, cols_to_keep]
 
         return X, metadata, report
@@ -414,9 +415,9 @@ if __name__ == "__main__":
     # Load using DataLoader class
     loader = DataLoader(config_path)
 
-    print(f"\n=== Loading Report ===")
+    print("\n=== Loading Report ===")
     print(loader.report.to_string())
     print(f"\nAvailable targets: {loader.get_available_targets()}")
     print(f"Current target: {loader.target_column}")
-    print(f"\nFirst 5 samples:")
+    print("\nFirst 5 samples:")
     print(loader.X.head())

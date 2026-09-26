@@ -11,11 +11,11 @@ name: "Dataset Name"                    # [REQUIRED] Human-readable name
 description: "Brief description"        # Optional description
 
 # -----------------------------------------------------------------------------
-# File Paths
+# File Paths (relative to this config file)
 # -----------------------------------------------------------------------------
 paths:
-  features: "datasets/<name>/features.csv"   # [REQUIRED] Feature matrix
-  metadata: "datasets/<name>/metadata.csv"   # [REQUIRED] Sample metadata
+  features: "../datasets/<name>/features.csv"   # [REQUIRED] Feature matrix
+  metadata: "../datasets/<name>/metadata.csv"   # [REQUIRED] Sample metadata
 
 # -----------------------------------------------------------------------------
 # Column Mappings

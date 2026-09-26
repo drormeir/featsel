@@ -7,10 +7,10 @@
 #
 # Run with: python -m featsel.run --config configs/experiment_baseline.yaml
 
-dataset: "configs/scanb_small.yaml"
+dataset: "scanb_small.yaml"
 target: "PAM50"
 
-output: "results/baseline_random.csv"
+output: "../results/baseline_random.csv"
 
 seed: 42
 n_splits: 100

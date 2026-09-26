@@ -60,7 +60,7 @@ method works best, and by how much over picking features at random?
   metric, because the classes are imbalanced.
 - **Stability.** How similar the chosen features are across splits. Measured
   with Kuncheva's index, where random selection scores 0.
-- **Experiment / grid.** Every combination of selector, `k`, model and split,
+- **Grid.** Every combination of selector, `k`, model and split,
   run under one protocol.
 - **Config.** A YAML file that describes an experiment, so it can run from the
   command line.
@@ -106,23 +106,28 @@ featsel run configs/exp.yaml          # = load + evaluate + to_csv
 - Cost: settings travel as long keyword lists. There is no object to reuse
   across datasets.
 
-## Design 2: An `Experiment` object
+## Design 2: One runner, protocol as a config
 
-The protocol is an object. Data is passed in when it runs.
+The protocol is plain data: a dict, or the same thing read from YAML. Data is
+passed in when it runs.
 
 ```python
-exp = Experiment(selectors=['anova_f', 'hc'], k=[10, 50], models=['logreg'],
-                 splits=MonteCarlo(n=100, train_size=0.7), seed=42)
+from featsel.run import load_config, run, run_config
 
-exp.run(X, y, n_jobs=-1)                         # in memory
-exp.run(X, y, truth=true_idx)                    # in memory, ground truth known
-exp.run(*load('configs/scanb.yaml'))             # files
-Experiment.from_yaml('exp.yaml').run(...)        # CLI underneath
+config = {
+    'selectors': [{'name': 'anova_f', 'k': [10, 50]}, {'name': 'higher_criticism'}],
+    'models': [{'name': 'logistic_regression'}],
+    'n_splits': 100, 'train_sizes': [0.7], 'seed': 42, 'n_jobs': -1,
+    'output': 'results/run.csv',
+}
+run(X, y, config)                                # in memory
+run(X, y, config, truth=true_idx)                # in memory, ground truth known
+run_config(load_config('configs/exp.yaml'))      # files; the CLI does this
 ```
 
 - Gain: one protocol can be applied unchanged to many datasets. That is
-  task 4.
-- Cost: one more class to design and document.
+  task 4. Python and the command line share one format.
+- Cost: a typo in the config surfaces when the run starts, not earlier.
 
 ## Design 3: Pure scikit-learn
 
@@ -152,8 +157,8 @@ stability([e['sel'].support_ for e in out['estimator']])
 
 ## Design 4: Dataset objects
 
-Each data source is a class with one common interface. The experiment only
-sees that interface.
+Each data source is a class with one common interface. The runner only sees
+that interface.
 
 ```python
 class Dataset(Protocol):
@@ -166,7 +171,7 @@ class Dataset(Protocol):
 ds = CSVDataset('configs/scanb.yaml')
 ds = ArrayDataset(X, y, name='sim_seed0', true_features=true_idx)
 
-Experiment(...).run(ds, n_jobs=-1)
+run(ds, config)
 ```
 
 - Gain: names, ground truth and metadata travel with the data. Results are
@@ -207,17 +212,37 @@ class MySelector(BaseSelector):
 
 ## Comparison
 
-| Question | 1 Functions | 2 Experiment | 3 sklearn | 4 Dataset objects |
+| Question | 1 Functions | 2 Config runner | 3 sklearn | 4 Dataset objects |
 |---|---|---|---|---|
 | Bare `X, y` in memory | yes | yes | yes | needs a wrapper |
-| Same protocol on many datasets | pass args again | reuse the object | reuse `pipe` + `cv` | reuse the object |
+| Same protocol on many datasets | pass args again | reuse the config | reuse `pipe` + `cv` | reuse the config |
 | Optional ground truth | extra argument | extra argument | manual | field on the dataset |
 | Timing selection separately | yes | yes | workaround | yes |
 | Task 3 has real content | yes | yes | thin | yes |
-| Code to write | least | medium | least | most |
-
-Designs 2 and 4 can be combined: `run` accepts either `X, y` or a `Dataset`.
+| Code to write | least | little | least | most |
 
 ## Decision
 
-Open.
+Design 2, decided 2026-09-26. It is what `featsel/run.py` already is.
+
+- The protocol is a config: a dict in Python, a YAML file on the command
+  line. No class wraps it, because the dict already carries everything.
+- `run(X, y, config, truth=None)` is the core. Data always arrives as `X, y`
+  in memory.
+- `run_config(config)` loads the dataset named in the config and calls `run`.
+  The command line calls `run_config`.
+- Paths in a config file are relative to that file, so the package never
+  assumes this repo's folder layout.
+- Parallelism lives in `run` only: `n_jobs` workers, one split per task.
+
+Rejected:
+
+- Design 1: the same as Design 2 but with the config spread over keyword
+  arguments, so the YAML and Python forms would differ.
+- Design 3: timing selection separately, stability and resume all need
+  workarounds, and task 3 would shrink to setting `n_jobs`.
+- Design 4: in-memory data and simulations are the same case, and ground
+  truth fits as one argument. A dataset class would only wrap `X, y`.
+
+Limits: the config is not validated before the run starts. A typo fails at
+the first split that uses it.

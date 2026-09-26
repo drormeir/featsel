@@ -1,10 +1,10 @@
 # Experiment definition for SCAN-B. Every axis of the study lives here.
 # Run with: python -m featsel.run --config configs/experiment_scanb.yaml
 
-dataset: "configs/scanb_small.yaml"
+dataset: "scanb_small.yaml"
 target: "PAM50"          # omit to use the dataset config's default target
 
-output: "results/experiment_scanb.csv"
+output: "../results/experiment_scanb.csv"
 
 # Resampling: independent Monte Carlo splits, not k-fold. See
 # docs/experiment_design.md section 2a for why.

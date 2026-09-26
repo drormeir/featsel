@@ -15,7 +15,7 @@ loads the dataset named in the config first, and is what the command line uses.
 
 Usage:
     python -m featsel.run --config configs/experiment_scanb.yaml
-    python -m featsel.run --config configs/experiment_scanb.yaml --resume
+    python -m featsel.run --config configs/experiment_scanb.yaml --resume --n-jobs -1
 """
 
 import argparse
@@ -28,17 +28,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yaml
+from joblib import Parallel, delayed
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score,
-    balanced_accuracy_score,
-    f1_score,
-    matthews_corrcoef,
-    recall_score,
-)
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import QuantileTransformer, StandardScaler
@@ -47,29 +41,7 @@ from tqdm.auto import tqdm
 
 from .data_loader import DataLoader
 from .feature_selector import FeatureSelector
-
-
-def _g_mean(y_true, y_pred):
-    """
-    Geometric mean of per-class recalls (Kubat and Matwin, 1997).
-
-    Stricter than macro-F1 on imbalanced targets: it collapses to zero if any
-    single class is never predicted correctly.
-    """
-    recalls = recall_score(y_true, y_pred, average=None, zero_division=0)
-    if np.any(recalls <= 0):
-        return 0.0
-    return float(np.exp(np.mean(np.log(recalls))))
-
-
-# name -> callable(y_true, y_pred) -> float. Add a metric with one line.
-METRICS = {
-    'accuracy': accuracy_score,
-    'macro_f1': lambda t, p: f1_score(t, p, average='macro', zero_division=0),
-    'balanced_accuracy': balanced_accuracy_score,
-    'mcc': matthews_corrcoef,
-    'g_mean': _g_mean,
-}
+from .metrics import KEY_COLUMNS, METRICS
 
 # name -> sklearn estimator class. Parameters come from the config, not here,
 # so adding a classifier is one line plus a config entry.
@@ -95,9 +67,6 @@ PREPROCESSORS = {
         output_distribution='normal', subsample=100_000, random_state=seed
     ),
 }
-
-# Columns that identify an execution. Used to skip finished work on --resume.
-KEY_COLUMNS = ['task', 'split', 'train_size', 'preprocess', 'selector', 'k', 'model']
 
 
 def build_tasks(y, framings):
@@ -170,14 +139,25 @@ DEFAULTS = {
     'preprocess': ['standard'],
     'task_framings': ['multiclass'],
     'metrics': list(METRICS),
-    'output': 'results/experiment.csv',
+    'n_jobs': 1,
 }
 
 
 def load_config(path):
-    """Read the experiment YAML. Defaults are filled in by run()."""
+    """
+    Read the experiment YAML. Defaults are filled in by run().
+
+    The 'dataset' and 'output' paths are relative to the config file, so a
+    config works from any working directory.
+    """
     with open(path) as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+
+    base = Path(path).parent
+    for key in ('dataset', 'output'):
+        if key in config:
+            config[key] = str(base / config[key])
+    return config
 
 
 def load_dataset(config):
@@ -204,7 +184,7 @@ def _done_keys(path):
 
 
 def _selection_rows(X_train, X_test, y_train, y_test, context, config,
-                    metrics, skip):
+                    metrics, skip, truth):
     """
     Yield one row per (selector, k, model) for a single prepared split.
 
@@ -235,6 +215,14 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, config,
 
             support = selector.get_support(indices=True)
             X_train_sel, X_test_sel = X_train[:, support], X_test[:, support]
+
+            recovery = {}
+            if truth is not None:
+                hits = len(np.intersect1d(support, truth))
+                recovery = {
+                    'truth_recall': hits / len(truth),
+                    'truth_precision': hits / len(support) if len(support) else 0.0,
+                }
 
             for model_spec in config['models']:
                 model_name = _label(model_spec)
@@ -269,12 +257,44 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, config,
                     'selector_params': json.dumps(sel_spec.get('params') or {}),
                     'model_params': json.dumps(model_spec.get('params') or {}),
                     'selected_indices': ' '.join(str(i) for i in support),
+                    **recovery,
                 }
                 row.update({name: fn(y_test, y_pred) for name, fn in metrics.items()})
                 yield row
 
 
-def iter_rows(X, y, config, skip=frozenset()):
+def _split_rows(X_task, y_task, train_idx, test_idx, context, config, skip, truth):
+    """
+    Every row of one split. The unit of parallel work.
+
+    A split is independent of every other split and carries its own seed, so
+    the rows are identical whether splits run in sequence or in parallel.
+    """
+    metrics = {name: METRICS[name] for name in config['metrics']}
+    y_train, y_test = y_task[train_idx], y_task[test_idx]
+
+    imputer = SimpleImputer(strategy='median').fit(X_task[train_idx])
+    X_train_imp = imputer.transform(X_task[train_idx])
+    X_test_imp = imputer.transform(X_task[test_idx])
+
+    rows = []
+    for preprocess in config['preprocess']:
+        scaler = PREPROCESSORS[preprocess](context['seed'])
+        if scaler is None:
+            X_train, X_test = X_train_imp, X_test_imp
+        else:
+            scaler.fit(X_train_imp)
+            X_train = scaler.transform(X_train_imp)
+            X_test = scaler.transform(X_test_imp)
+
+        prepared = {**context, 'preprocess': preprocess,
+                    'key': (context['task'], context['split'], context['train_size'], preprocess)}
+        rows.extend(_selection_rows(X_train, X_test, y_train, y_test,
+                                    prepared, config, metrics, skip, truth))
+    return rows
+
+
+def iter_rows(X, y, config, skip=frozenset(), truth=None):
     """
     Yield one result row per execution.
 
@@ -282,52 +302,34 @@ def iter_rows(X, y, config, skip=frozenset()):
     classifier) cell. Selection and preprocessing are fit on the training half
     only, inside the split, so nothing about the validation half leaks into the
     choice of features (Ambroise and McLachlan, PNAS 2002).
+
+    Splits run on config['n_jobs'] worker processes. Rows come back in split
+    order, so the output does not depend on the number of workers.
     """
     seed = config['seed']
-    metrics = {name: METRICS[name] for name in config['metrics']}
-
     X_array = X.values if isinstance(X, pd.DataFrame) else np.asarray(X)
     y_array = y.values if isinstance(y, pd.Series) else np.asarray(y)
 
-    for task_name, y_task, mask in build_tasks(y_array, config['task_framings']):
-        # One-vs-one tasks use only the samples of the two classes involved.
-        X_task = X_array[mask]
+    def jobs():
+        for task_name, y_task, mask in build_tasks(y_array, config['task_framings']):
+            # One-vs-one tasks use only the samples of the two classes involved.
+            X_task = X_array[mask]
 
-        for train_size in config['train_sizes']:
-            splitter = StratifiedShuffleSplit(
-                n_splits=config['n_splits'], train_size=train_size, random_state=seed
-            )
+            for train_size in config['train_sizes']:
+                splitter = StratifiedShuffleSplit(
+                    n_splits=config['n_splits'], train_size=train_size, random_state=seed
+                )
 
-            for split, (train_idx, test_idx) in enumerate(splitter.split(X_task, y_task)):
-                # Every stochastic step in this split derives from one seed, so
-                # the split is reproducible and selectors redraw per split.
-                split_seed = seed + split
+                for split, (train_idx, test_idx) in enumerate(splitter.split(X_task, y_task)):
+                    # Every stochastic step in this split derives from one seed,
+                    # so the split is reproducible and selectors redraw per split.
+                    context = {'task': task_name, 'split': split,
+                               'train_size': train_size, 'seed': seed + split}
+                    yield delayed(_split_rows)(X_task, y_task, train_idx, test_idx,
+                                               context, config, skip, truth)
 
-                y_train, y_test = y_task[train_idx], y_task[test_idx]
-
-                imputer = SimpleImputer(strategy='median').fit(X_task[train_idx])
-                X_train_imp = imputer.transform(X_task[train_idx])
-                X_test_imp = imputer.transform(X_task[test_idx])
-
-                for preprocess in config['preprocess']:
-                    scaler = PREPROCESSORS[preprocess](split_seed)
-                    if scaler is None:
-                        X_train, X_test = X_train_imp, X_test_imp
-                    else:
-                        scaler.fit(X_train_imp)
-                        X_train = scaler.transform(X_train_imp)
-                        X_test = scaler.transform(X_test_imp)
-
-                    context = {
-                        'task': task_name,
-                        'split': split,
-                        'train_size': train_size,
-                        'preprocess': preprocess,
-                        'seed': split_seed,
-                        'key': (task_name, split, train_size, preprocess),
-                    }
-                    yield from _selection_rows(X_train, X_test, y_train, y_test,
-                                               context, config, metrics, skip)
+    for rows in Parallel(n_jobs=config['n_jobs'], return_as='generator')(jobs()):
+        yield from rows
 
 
 def print_plan(config, X, y, tasks, target, total):
@@ -361,6 +363,7 @@ def print_plan(config, X, y, tasks, target, total):
 
     print(f"Preprocess   : {', '.join(config['preprocess'])}")
     print(f"Metrics      : {', '.join(config['metrics'])}")
+    print(f"Workers      : {config['n_jobs']} (parallel over splits)")
 
     print("Selectors    :")
     for spec in config['selectors']:
@@ -386,14 +389,19 @@ def print_plan(config, X, y, tasks, target, total):
           f"{len(config['models'])} models)\n")
 
 
-def run(X, y, config, resume=False, target=None):
+def run(X, y, config, resume=False, target=None, truth=None):
     """
     Run the experiment on data in memory, appending each finished execution to
     the output CSV.
 
     X is a samples-by-features array or DataFrame and y the labels. config is
-    the experiment description; its 'dataset' entry, if any, is ignored here.
-    target only labels the printed plan.
+    the experiment description and must name an 'output' CSV; its 'dataset'
+    entry, if any, is ignored here. target only labels the printed plan.
+
+    truth, when given, holds the column indices of the truly informative
+    features, as a simulation knows them. Each row then also records
+    truth_recall (share of them selected) and truth_precision (share of the
+    selection that is truly informative).
     """
     config = {**DEFAULTS, **config}
 
@@ -419,7 +427,7 @@ def run(X, y, config, resume=False, target=None):
     progress = tqdm(total=total, initial=len(skip), unit='exec',
                     smoothing=0.05, dynamic_ncols=True)
     with progress, open(out_path, 'a', newline='') as handle:
-        for row in iter_rows(X, y, config, skip=skip):
+        for row in iter_rows(X, y, config, skip=skip, truth=truth):
             if writer is None:
                 writer = csv.DictWriter(handle, fieldnames=list(row))
                 if not has_header:
@@ -452,6 +460,8 @@ def main(argv=None):
     parser.add_argument('--resume', action='store_true',
                         help='Skip executions already present in the output CSV')
     parser.add_argument('--n-splits', type=int, help='Override the number of splits')
+    parser.add_argument('--n-jobs', type=int,
+                        help='Worker processes; splits run in parallel. -1 uses every core')
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
@@ -459,6 +469,8 @@ def main(argv=None):
         config['output'] = args.out
     if args.n_splits:
         config['n_splits'] = args.n_splits
+    if args.n_jobs:
+        config['n_jobs'] = args.n_jobs
 
     run_config(config, resume=args.resume)
 

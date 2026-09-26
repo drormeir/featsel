@@ -8,7 +8,7 @@ per (task, split, train size, preprocessing, selector, k, model) execution.
 import numpy as np
 import pandas as pd
 
-from .run import KEY_COLUMNS, METRICS
+from .metrics import KEY_COLUMNS, METRICS
 
 # One experiment cell: every key except the split, which varies inside it.
 CELL_COLUMNS = [c for c in KEY_COLUMNS if c != 'split']
