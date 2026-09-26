@@ -184,30 +184,36 @@ run(ds, config)
 A single selector as a scikit-learn step:
 
 ```python
-from featsel.selectors import HigherCriticism
+from featsel.selectors import HigherCriticismSelector
 
-pipe = make_pipeline(StandardScaler(), HigherCriticism(test='anova'),
+pipe = make_pipeline(StandardScaler(), HigherCriticismSelector(),
                      LogisticRegression())
 pipe.fit(X_train, y_train)
-pipe[1].support_          # boolean mask
-pipe[1].n_selected_       # HC chooses its own k
+pipe[1].get_support()     # boolean mask
+pipe[1].get_support().sum()  # HC chooses its own count
 ```
 
 Transfer learning with embeddings already in memory:
 
 ```python
 emb = backbone(images).detach().numpy()
-sel = ANOVA(k=64).fit(emb, y)
+sel = FeatureSelector.create('ANOVAFSelector', n_features=64).fit(emb, y)
 head = nn.Linear(64, n_classes)
-logits = head(backbone(batch)[:, sel.indices_])
+logits = head(backbone(batch)[:, sel.get_support(indices=True)])
 ```
 
-A custom selector, with no registration:
+A custom selector registers itself by being defined:
 
 ```python
-class MySelector(BaseSelector):
-    def _score(self, X, y):
-        return np.abs(np.corrcoef(X.T, y)[-1, :-1])
+class CorrelationRankSelector(FeatureSelector, aliases='corr_rank'):
+    def fit(self, X, y):
+        scores = np.abs([np.corrcoef(col, y)[0, 1] for col in X.T])
+        self.mask_ = np.zeros(X.shape[1], dtype=bool)
+        self.mask_[np.argsort(scores)[-self.n_features:]] = True
+        return self
+
+    def _get_support_mask(self):
+        return self.mask_
 ```
 
 ## Comparison
@@ -246,3 +252,57 @@ Rejected:
 
 Limits: the config is not validated before the run starts. A typo fails at
 the first split that uses it.
+
+## Selector design
+
+Decided 2026-09-26. Not yet implemented.
+
+**Problem.** Today there are two layers. The selector classes in `selectors/`
+do the work but are not scikit-learn estimators, so they cannot go into a
+scikit-learn `Pipeline` directly. The `FeatureSelector` wrapper picks a class
+by name and forwards parameters through a hand-written whitelist. A parameter
+missing from the whitelist is silently dropped: a typo in a config runs with
+the default and nobody notices. Adding a selector means editing three places.
+
+**Decision.**
+
+- `FeatureSelector` becomes the base class of every selector. It inherits
+  scikit-learn's `BaseEstimator` and `SelectorMixin`. Each subclass writes
+  `fit` and `_get_support_mask`; `transform`, `get_support` and
+  `get_feature_names_out` come from `SelectorMixin`.
+- One instance handles one selection method.
+- Every concrete subclass registers itself automatically, through
+  `__init_subclass__`, under its class name. It may add aliases: a single
+  string or a list. Abstract classes do not register.
+- Names are stored lowercased in one dict, so lookup is case-insensitive. Two
+  classes claiming the same lowercased name raise an error when the second is
+  defined.
+- `FeatureSelector.create(name, **params)` looks the class up and passes the
+  parameters through untouched, so a typo fails in the constructor.
+- Results always record the class name, whatever alias a config used, so runs
+  stay comparable.
+- Selectors call scikit-learn's implementations where they exist (`f_classif`,
+  `mutual_info_classif`, `RFE`, `SelectFromModel`). The package adds what
+  scikit-learn lacks: Higher Criticism and the random control.
+
+**Removed.** The old wrapper, its parameter whitelist, and the union,
+intersection and voting modes for combining methods.
+
+**Rejected.**
+
+- Keeping the wrapper: the silent-drop defect stays.
+- A hand-written name-to-class dict: explicit, but every selector needs a
+  second edit.
+- A short declared name per class (`name = 'anova_f'`) instead of the class
+  name: it only protects against class renames, which aliases also cover.
+- Reimplementing scikit-learn's algorithms: more code to test, and nothing
+  gained over a widely used implementation.
+
+**Limits.**
+
+- The class name is a public identifier. It appears in configs and results
+  files. Renaming a class needs an alias for configs. Old results files keep
+  the old name.
+- A class registers only when its module is imported, so `create` must make
+  sure `featsel.selectors` is loaded.
+- Aliases are added only when a rename actually happens.

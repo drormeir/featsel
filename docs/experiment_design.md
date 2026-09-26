@@ -21,7 +21,7 @@ secondary to the ordering between methods and to the gap over the control.
 | Axis | Values | What it answers |
 |---|---|---|
 | Selector | random (control), anova_f, lasso, tree_importance, plus wrapper and Higher Criticism when implemented | The primary question. |
-| `k` | 10, 25, 50, 100, 250, 500, 1000 | How much of the gain survives as the budget grows. `k=50` is an anchor: PAM50 is a 50-gene signature. |
+| `k` | A percent of the total sample count, up to 100%, plus `k=50` and all features | How much of the gain survives as the budget grows. `k=50` is an anchor: PAM50 is a 50-gene signature. All features is the no-selection reference. See section 2d. |
 | Classifier | logistic_regression, linear_svm, random_forest, knn, lda_shrinkage, xgboost | How much external selection is worth to a model, given its own regularization. |
 | Task framing | 5-class PAM50, plus five one-vs-rest binary tasks | Whether the best selector differs per subtype; the 5-class number hides this. |
 | Dataset | SCAN-B, plus one non-gene-expression set (task 4, undecided) | Whether conclusions generalize beyond genomics. |
@@ -106,6 +106,108 @@ worth parallelizing at all.
 folds give only 10 pairs. 100 splits give 4950, which turns the stability
 number from an estimate into a distribution. Pairs may be subsampled if the
 count becomes the bottleneck; if so, the subsample size is reported.
+
+## 2b. Tuning inside the split: nested Monte Carlo
+
+Decided 2026-09-26.
+
+**Problem.** Regularized models have a strength parameter, such as C. Choosing
+it by test scores makes the test scores optimistic.
+
+**Decision.** Two levels of Monte Carlo splits. Outer splits estimate
+performance. Inside each outer training part, inner stratified Monte Carlo
+splits choose C from a small fixed grid. The model is then refit on the whole
+outer training part with that C, and scored once on the outer test part.
+
+- The selector is fit once per outer training part, not inside each inner
+  split. The inner validation samples then helped choose the genes, which can
+  make the chosen C slightly off. The test part stays untouched, so test scores
+  stay honest.
+- A decision threshold, if tuned, is chosen on the inner splits too.
+- Choosing a "best k" from test scores is the same leak. Report whole curves
+  over `k`. Naming a winning `k` needs inner validation.
+
+**Rejected.**
+
+- k-fold cross-validation, inner or outer: see section 2a.
+- Leave-one-out: a one-patient test set gives no per-split macro-F1, only a
+  pooled number with no spread. Training sets differ by one patient, so
+  stability reads near 1.0 for every method. Its estimate has high variance
+  (Kohavi 1995). It costs 3069 refits per cell.
+- Fixed C with no tuning: valid for ranking selectors, since every selector
+  gets the same model, but C=1 may be poor at large `k`.
+
+**Cost.** About 15 times the model fitting for 5 values of C and 3 inner
+splits.
+
+## 2c. What each run stores
+
+Decided 2026-09-26.
+
+**Problem.** Every metric computed during the run is fixed at run time. A new
+metric means a new run.
+
+**Decision.** Store, for every test patient in every cell, the true label, the
+final model's score, and the threshold that turns the score into a prediction.
+For a binary task that is one score per patient; for the five-class task, one
+per class. Every metric is derived afterwards from these.
+
+- Threshold metrics (accuracy, F1, balanced accuracy, MCC, G-mean) come from
+  the confusion matrix, which the scores and threshold reproduce.
+- Ranking metrics (ROC-AUC, PR-AUC) need the scores themselves.
+- The threshold is 0.5 on a probability or 0 on an SVM decision value, unless
+  tuned as in section 2b.
+
+**Limits.** Scores are not comparable across models: linear SVM gives raw
+decision values, random forest and k-NN coarse probabilities. At 100 splits
+the scores run to tens of millions of numbers, so they need a compact file
+format such as Parquet, not CSV.
+
+## 2d. The feature budget `k`
+
+Decided 2026-09-26.
+
+**Decision.** `k` is given as a percent of the total sample count, so the
+budget scales with the data and is comparable across datasets. It uses the
+total count, not the training count, so `k` stays fixed across train
+fractions. `k=50` is added explicitly, since it is not a round percent of 3069.
+
+**Above the sample count.** Selecting more features than training samples is
+not a useful target: the point of selection here is to get below it. One run
+with all features is kept as the reference, to show whether selection helps the
+model or only makes it smaller. Logistic regression still peaked at the largest
+`k` tested (1000) in section 5, so the curve's peak is not yet known.
+
+## 2e. Speed against plain scikit-learn
+
+Decided 2026-09-26. This is how task 3 is measured.
+
+**Problem.** Most selectors and all models come from scikit-learn. The runner's
+value over plain scikit-learn has to be shown in numbers, not claimed.
+
+**Decision.** Run the same small grid two ways, on the same
+`StratifiedShuffleSplit` splits: plain scikit-learn (`GridSearchCV` or
+`cross_validate`), and the runner on 1 core and on 12. Check that the scores
+are identical. Report wall-clock time, with the speedup split by source:
+
+- parallelism over splits;
+- ranking features once per split and taking every `k` from that ranking,
+  where `GridSearchCV` refits the selector for each `k`;
+- imputation and scaling once per split, shared by every selector and model.
+
+A subset is enough, for example 5 splits, 2 selectors and 3 values of `k`,
+extrapolated to the full design.
+
+**Why it matters.** Extrapolated from the 12-split run, the full design (300
+splits, 6 selectors, nested tuning) needs about 30-35 CPU-hours without linear
+SVM: a day and a half on one core, 3-4 hours on 12. RFE removing one feature
+per round would take about 2300 hours; removing 10% per round and ranking once
+takes about 3. That is the proposal's point that some techniques are
+impractical in this setting.
+
+**Limits.** "Impractical", not "impossible", for most of the grid: 35 hours on
+one core is slow but feasible. Linear SVM with its default dual solver costs
+hundreds of hours; `dual=False` may fix that and is not yet verified.
 
 ## 3. Dependent variables
 
