@@ -272,8 +272,12 @@ the default and nobody notices. Adding a selector means editing three places.
   `get_feature_names_out` come from `SelectorMixin`.
 - One instance handles one selection method.
 - Every concrete subclass registers itself automatically, through
-  `__init_subclass__`, under its class name. It may add aliases: a single
-  string or a list. Abstract classes do not register.
+  `__init_subclass__`, under its class name. It may add aliases as a class
+  keyword, `aliases: None | str | list[str]`, for example
+  `class ANOVAFSelector(FeatureSelector, aliases=['anova', 'anova_f'])`. A
+  keyword is not inherited, so a subclass never re-registers its parent's
+  aliases. An alias equal to the class name is ignored. Abstract classes do
+  not register.
 - Names are stored lowercased in one dict, so lookup is case-insensitive. Two
   classes claiming the same lowercased name raise an error when the second is
   defined.
