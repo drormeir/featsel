@@ -81,4 +81,4 @@ The pipeline is dataset-agnostic. Each dataset needs:
 
 ## Status
 
-This project is part of an M.Sc. thesis at Reichman University, supervised by Dr. Ben Galili.
+This project is an M.Sc. final project at Reichman University, supervised by Dr. Ben Galili.
