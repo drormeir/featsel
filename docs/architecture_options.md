@@ -196,13 +196,16 @@ pipe[1].get_support().sum()  # HC chooses its own count
 Transfer learning with embeddings already in memory:
 
 ```python
+from featsel.selectors import ANOVAFSelector
+
 emb = backbone(images).detach().numpy()
-sel = FeatureSelector.create('ANOVAFSelector', n_features=64).fit(emb, y)
+sel = ANOVAFSelector(n_features=64).fit(emb, y)
 head = nn.Linear(64, n_classes)
 logits = head(backbone(batch)[:, sel.get_support(indices=True)])
 ```
 
-A custom selector registers itself by being defined:
+A new selector registers itself by being defined, in its own subpackage
+`featsel/selectors/corr_rank/`:
 
 ```python
 class CorrelationRankSelector(FeatureSelector, aliases='corr_rank'):
@@ -255,9 +258,17 @@ the first split that uses it.
 
 ## Selector design
 
-Decided 2026-09-26. Not yet implemented.
+Decided 2026-09-26, extended 2026-09-28.
 
-**Problem.** Today there are two layers. The selector classes in `selectors/`
+**Status.**
+
+- Built: self-registration and `create`, on the current base class
+  `BaseSelector`. One subpackage per selector, each with `tests/` and
+  `demos/`.
+- Not built: the base as a scikit-learn estimator, renamed `FeatureSelector`;
+  removal of the old wrapper; the runner naming selectors by class name.
+
+**Problem.** There are two layers. The selector classes in `selectors/`
 do the work but are not scikit-learn estimators, so they cannot go into a
 scikit-learn `Pipeline` directly. The `FeatureSelector` wrapper picks a class
 by name and forwards parameters through a hand-written whitelist. A parameter
@@ -281,13 +292,39 @@ the default and nobody notices. Adding a selector means editing three places.
 - Names are stored lowercased in one dict, so lookup is case-insensitive. Two
   classes claiming the same lowercased name raise an error when the second is
   defined.
-- `FeatureSelector.create(name, **params)` looks the class up and passes the
-  parameters through untouched, so a typo fails in the constructor.
+- In Python, users import the class and make an instance:
+  `ANOVAFSelector(n_features=20)`. A misspelled class name fails at import.
+- `FeatureSelector.create(name, **params)` is only for names that arrive as
+  text, such as a YAML config read by the runner. It looks the class up and
+  passes the parameters through untouched.
 - Results always record the class name, whatever alias a config used, so runs
   stay comparable.
-- Selectors call scikit-learn's implementations where they exist (`f_classif`,
-  `mutual_info_classif`, `RFE`, `SelectFromModel`). The package adds what
-  scikit-learn lacks: Higher Criticism and the random control.
+- How a selector computes its result is its own business. It may wrap
+  scikit-learn, or be its own CPU or GPU implementation. Replacing one with
+  another keeps the class name and parameters, so configs and results do not
+  change.
+- Wrappers by default: ANOVA F, mutual information, variance, correlation,
+  Lasso, tree importance. Own implementations: RFE, which scikit-learn runs
+  sequentially and which dominates cost, and Higher Criticism, which
+  scikit-learn lacks. Any other selector gets its own implementation only if a
+  timing run shows a real gain, checked against scikit-learn's selection.
+
+**Layout.** One subpackage per selector, not per family:
+
+```
+featsel/selectors/
+├── __init__.py          # imports every selector, which registers it
+├── base.py
+└── anova_f/
+    ├── __init__.py      # the class; more files beside it as it grows
+    ├── tests/
+    │   └── test_anova_f.py
+    └── demos/           # notebooks, when one is worth writing
+```
+
+A family (filter, embedded, wrapper) is a label, not shared code, so it gets
+no folder. The random selector lives in `random_selection/`: a folder named
+`random` would shadow the standard library module.
 
 **Removed.** The old wrapper, its parameter whitelist, and the union,
 intersection and voting modes for combining methods.
@@ -299,14 +336,27 @@ intersection and voting modes for combining methods.
   second edit.
 - A short declared name per class (`name = 'anova_f'`) instead of the class
   name: it only protects against class renames, which aliases also cover.
-- Reimplementing scikit-learn's algorithms: more code to test, and nothing
-  gained over a widely used implementation.
+- Reimplementing every scikit-learn algorithm: most selectors cost seconds
+  per split while model fitting costs minutes, so rewriting them gains
+  nothing measurable.
+- Wrapping everything, RFE included: RFE is the one selector whose cost
+  makes the full design impractical.
+- Family files or family folders: a file per family grows unmanageable once
+  a selector has CPU and GPU versions, and a family folder adds nesting
+  without shared code.
+- `create` as the Python entry point: a misspelled name fails only at run
+  time, where an import fails at once.
 
 **Limits.**
 
 - The class name is a public identifier. It appears in configs and results
   files. Renaming a class needs an alias for configs. Old results files keep
   the old name.
-- A class registers only when its module is imported, so `create` must make
-  sure `featsel.selectors` is loaded.
+- A class registers only when its module is imported. `featsel/__init__.py`
+  imports `featsel.selectors`, which imports every selector.
 - Aliases are added only when a rename actually happens.
+- Every selector constructor still accepts `**kwargs`, so a misspelled
+  parameter is silently accepted. This ends with the conversion to
+  scikit-learn estimators, which forbid `**kwargs` in constructors.
+- Selector tests live inside the package. Packaging excludes them, and pytest
+  searches both `tests/` and `featsel/`.
