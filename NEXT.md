@@ -7,8 +7,8 @@ file, and nothing else claims attention while it is open.
 
 **The wrapper and Higher Criticism selectors.**
 
-Add `RFESelector` in `selectors/wrapper.py` and `HigherCriticismSelector` in
-`selectors/higher_criticism.py`, both behind the existing `BaseSelector`
+Add `RFESelector` in `selectors/rfe/` and `HigherCriticismSelector` in
+`selectors/higher_criticism/`, both behind the existing `BaseSelector`
 interface and registered in `FeatureSelector._METHOD_MAP`. Higher Criticism
 follows the published Donoho and Jin thresholding formulation: per-feature
 p-values from a univariate test, sorted, HC statistic, threshold. It selects

@@ -1,13 +1,13 @@
 """
-Baseline feature selection methods.
+Random selection: the control every other selector must beat.
 
-Baselines ignore the data and exist to make the other methods interpretable:
-a selector that does not beat random selection contributed nothing.
+The folder is not named `random`, which would shadow the standard library
+module whenever it lands on the import path.
 """
 
 import numpy as np
 
-from .base import BaseSelector
+from ..base import BaseSelector
 
 
 class RandomSelector(BaseSelector):
@@ -36,7 +36,7 @@ class RandomSelector(BaseSelector):
 
     Examples
     --------
-    >>> from featsel.selectors.baseline import RandomSelector
+    >>> from featsel.selectors import RandomSelector
     >>> import numpy as np
     >>> X = np.random.randn(100, 20)
     >>> selector = RandomSelector(n_features=5, random_state=42)
