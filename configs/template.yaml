@@ -3,6 +3,9 @@
 # =============================================================================
 # Copy this file and modify for your dataset.
 # Required fields are marked with [REQUIRED], others are optional with defaults.
+# Fields marked [DESCRIPTIVE] document the dataset; the code does not read them.
+# Selectors, models, splits and preprocessing belong in an experiment config
+# (see experiment_classifiers.yaml), not here.
 
 # -----------------------------------------------------------------------------
 # Basic Information
@@ -28,7 +31,7 @@ target_column: "target"                 # [REQUIRED] Column name for target vari
 # -----------------------------------------------------------------------------
 task:
   # Type of prediction task
-  type: "classification"                # [REQUIRED] classification | regression
+  type: "classification"                # [DESCRIPTIVE] classification | regression
 
   # For classification only: binary or multiclass
   classification_type: "multiclass"     # binary | multiclass
@@ -37,7 +40,7 @@ task:
 # Target Classes (Classification Only)
 # -----------------------------------------------------------------------------
 # List expected class labels for validation and reporting
-target_classes:                         # Optional but recommended
+target_classes:                         # [DESCRIPTIVE]
   - "class_1"
   - "class_2"
   - "class_3"
@@ -55,44 +58,10 @@ separator: ","                          # Default: "," (CSV delimiter)
 # -----------------------------------------------------------------------------
 # Alternative Targets (Optional)
 # -----------------------------------------------------------------------------
-# Other prediction targets available in the metadata
+# Other prediction targets available in the metadata [DESCRIPTIVE].
+# An experiment config picks one with its `target` key.
 alternative_targets:
   - column: "other_target"
     description: "Description of this target"
     task_type: "classification"         # classification | regression
     classification_type: "binary"       # binary | multiclass (if classification)
-
-# -----------------------------------------------------------------------------
-# Feature Selection Settings (Optional - can override defaults)
-# -----------------------------------------------------------------------------
-# feature_selection:
-#   methods:
-#     - "variance_threshold"
-#     - "mutual_info"
-#     - "f_test"
-#     - "lasso"
-#     - "random_forest"
-#
-#   # Method-specific parameters
-#   variance_threshold:
-#     threshold: 0.0
-#
-#   mutual_info:
-#     n_neighbors: 3
-#     random_state: 42
-#
-#   lasso:
-#     alpha: 0.01
-#     max_iter: 1000
-#
-#   random_forest:
-#     n_estimators: 100
-#     random_state: 42
-
-# -----------------------------------------------------------------------------
-# Preprocessing Settings (Optional - can override defaults)
-# -----------------------------------------------------------------------------
-# preprocessing:
-#   handle_missing: "drop"              # drop | impute_mean | impute_median
-#   normalize: true                     # Apply feature normalization
-#   normalization_method: "standard"    # standard | minmax | robust

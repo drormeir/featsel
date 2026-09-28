@@ -14,7 +14,7 @@ class TestVarianceThreshold:
         """Test that constant features are removed."""
         X, _ = data_with_constant_features
 
-        X_selected = VarianceThreshold(threshold=0.0).fit(X).transform(X)
+        X_selected = VarianceThreshold(threshold=0.0).set_output(transform='pandas').fit(X).transform(X)
 
         # Should remove 3 constant features
         assert X_selected.shape[1] == 12  # 15 - 3 = 12
@@ -24,7 +24,7 @@ class TestVarianceThreshold:
         """Test that low-variance features are removed."""
         X, _ = data_with_constant_features
 
-        X_selected = VarianceThreshold(threshold=0.1).fit(X).transform(X)
+        X_selected = VarianceThreshold(threshold=0.1).set_output(transform='pandas').fit(X).transform(X)
 
         # Should remove 3 constant + 2 low-variance features
         assert X_selected.shape[1] == 10
@@ -32,10 +32,10 @@ class TestVarianceThreshold:
         assert not any('low_var' in name for name in X_selected.columns)
 
     def test_dataframe_preservation(self, small_classification_data):
-        """Test that DataFrame input returns DataFrame output."""
+        """Test that pandas output keeps a DataFrame, as in scikit-learn."""
         X, _ = small_classification_data
 
-        X_selected = VarianceThreshold().fit_transform(X)
+        X_selected = VarianceThreshold().set_output(transform='pandas').fit_transform(X)
 
         assert isinstance(X_selected, pd.DataFrame)
         assert X_selected.shape[0] == X.shape[0]

@@ -30,7 +30,7 @@ metrics:
   - g_mean
 
 selectors:
-  - name: random
+  - name: RandomSelector
     k: [10, 25, 50, 100, 250, 500, 1000]
 
 # One classifier for this first pass. Logistic regression was the strongest

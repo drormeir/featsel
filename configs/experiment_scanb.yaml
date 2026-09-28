@@ -21,17 +21,17 @@ metrics:
   - mcc
   - g_mean
 
-# Feature selectors. 'name' is a FeatureSelector method; 'k' is the sweep.
+# Feature selectors. 'name' is a selector class name (case-insensitive); 'k' is the sweep.
 selectors:
-  - name: random           # the control every other method must beat
+  - name: RandomSelector           # the control every other method must beat
     k: [10, 25, 50, 100, 250, 500, 1000]
-  - name: anova_f
+  - name: ANOVAFSelector
     k: [10, 25, 50, 100, 250, 500, 1000]
-  - name: lasso
+  - name: LassoSelector
     k: [10, 25, 50, 100, 250, 500, 1000]
     params:
       C: 1.0
-  - name: tree_importance
+  - name: TreeImportanceSelector
     k: [10, 25, 50, 100, 250, 500, 1000]
     params:
       n_estimators: 200

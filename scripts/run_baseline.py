@@ -22,13 +22,17 @@ from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from featsel import DataLoader, FeatureSelector  # noqa: E402
+from featsel import DataLoader
+from featsel.selectors import ANOVAFSelector, RandomSelector
 
 CONFIG = "configs/scanb_small.yaml"
-METHODS = ["random", "anova_f"]
 N_FEATURES = 100
 N_SPLITS = 5
 SEED = 42
+SELECTORS = [
+    RandomSelector(n_features=N_FEATURES, random_state=SEED),
+    ANOVAFSelector(n_features=N_FEATURES),
+]
 
 
 def main(config_path: str = CONFIG) -> None:
@@ -44,13 +48,12 @@ def main(config_path: str = CONFIG) -> None:
 
     cv = StratifiedKFold(n_splits=N_SPLITS, shuffle=True, random_state=SEED)
 
-    for method in METHODS:
+    for selector in SELECTORS:
+        method = type(selector).__name__
         pipe = Pipeline([
             ("impute", SimpleImputer(strategy="median")),
             ("scale", StandardScaler()),
-            ("select", FeatureSelector(
-                method=method, n_features=N_FEATURES, random_state=SEED
-            )),
+            ("select", selector),
             ("clf", LogisticRegression(max_iter=1000, random_state=SEED)),
         ])
 

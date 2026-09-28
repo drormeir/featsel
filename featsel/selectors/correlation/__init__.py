@@ -5,10 +5,10 @@ Correlation: rank features by target correlation and drop redundant pairs.
 import numpy as np
 import pandas as pd
 
-from ..base import BaseSelector
+from ..base import FeatureSelector
 
 
-class CorrelationSelector(BaseSelector):
+class CorrelationSelector(FeatureSelector):
     """
     Select features based on correlation with target and remove redundant features.
 
@@ -32,8 +32,6 @@ class CorrelationSelector(BaseSelector):
         Maximum correlation between features (remove one if exceeded).
     method : str, default='pearson'
         Correlation method: 'pearson', 'spearman', or 'kendall'.
-    **kwargs : dict
-        Additional arguments (unused).
 
     Attributes
     ----------
@@ -42,7 +40,7 @@ class CorrelationSelector(BaseSelector):
     feature_importances_ : np.ndarray
         Alias for target_corr_ values.
     selected_features_ : list
-        Names or indices of selected features.
+        Names (DataFrame input) or indices of selected features.
 
     Examples
     --------
@@ -52,16 +50,13 @@ class CorrelationSelector(BaseSelector):
     >>> np.random.seed(42)
     >>> X = pd.DataFrame(np.random.randn(100, 5), columns=[f'f{i}' for i in range(5)])
     >>> y = X['f0'] + X['f1'] + np.random.randn(100) * 0.1
-    >>> selector = CorrelationSelector(n_features=3)
-    >>> selector.fit(X, y)
-    >>> X_selected = selector.transform(X)
-    >>> X_selected.shape
+    >>> CorrelationSelector(n_features=3).fit_transform(X, y).shape
     (100, 3)
     """
 
     def __init__(self, n_features=None, target_threshold=0.1,
-                 inter_feature_threshold=0.95, method='pearson', **kwargs):
-        super().__init__(n_features=n_features, **kwargs)
+                 inter_feature_threshold=0.95, method='pearson'):
+        self.n_features = n_features
         self.target_threshold = target_threshold
         self.inter_feature_threshold = inter_feature_threshold
         self.method = method
@@ -82,23 +77,12 @@ class CorrelationSelector(BaseSelector):
         self : CorrelationSelector
             Fitted selector.
         """
-        if y is None:
-            raise ValueError("CorrelationSelector requires target values (y)")
-
-        self._store_feature_info(X)
-
-        # Convert to DataFrame for correlation computation
-        if not isinstance(X, pd.DataFrame):
-            if self.feature_names_in_:
-                X = pd.DataFrame(X, columns=self.feature_names_in_)
-            else:
-                X = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(X.shape[1])])
-
-        if not isinstance(y, pd.Series):
-            y = pd.Series(y, name='target')
+        X, y = self._validate(X, y)
+        names = list(getattr(self, 'feature_names_in_', range(self.n_features_in_)))
+        X = pd.DataFrame(X, columns=names)
 
         # 1. Compute correlation with target
-        self.target_corr_ = X.corrwith(y, method=self.method).abs()
+        self.target_corr_ = X.corrwith(pd.Series(y), method=self.method).abs()
 
         # 2. Keep features above target threshold
         candidates = self.target_corr_[self.target_corr_ >= self.target_threshold].index.tolist()
@@ -134,35 +118,5 @@ class CorrelationSelector(BaseSelector):
 
         self.selected_features_ = selected
         self.feature_importances_ = self.target_corr_.values
-        self.is_fitted_ = True
+        self.support_ = np.isin(names, selected)
         return self
-
-    def get_support(self, indices=False):
-        """
-        Get boolean mask or indices of selected features.
-
-        Parameters
-        ----------
-        indices : bool, default=False
-            If True, return integer indices.
-            If False, return boolean mask.
-
-        Returns
-        -------
-        support : np.ndarray
-            Boolean mask or integer indices of selected features.
-        """
-        if not self.is_fitted_:
-            raise RuntimeError("Selector must be fitted before get_support")
-
-        if self.feature_names_in_:
-            # Create boolean mask based on feature names
-            support = np.array([name in self.selected_features_ for name in self.feature_names_in_])
-            selected_indices = np.where(support)[0]
-        else:
-            # Selected features are indices
-            support = np.zeros(self.n_features_in_, dtype=bool)
-            support[self.selected_features_] = True
-            selected_indices = self.selected_features_
-
-        return selected_indices if indices else support

@@ -6,10 +6,10 @@ import numpy as np
 from sklearn.linear_model import Lasso, LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
 
-from ..base import BaseSelector
+from ..base import FeatureSelector
 
 
-class LassoSelector(BaseSelector):
+class LassoSelector(FeatureSelector):
     """
     Select features by the magnitude of L1-regularized model coefficients.
 
@@ -38,8 +38,6 @@ class LassoSelector(BaseSelector):
         Maximum solver iterations.
     random_state : int, optional
         Random seed for the solver.
-    **kwargs : dict
-        Additional arguments (unused).
 
     Attributes
     ----------
@@ -53,15 +51,13 @@ class LassoSelector(BaseSelector):
     >>> from featsel.selectors import LassoSelector
     >>> from sklearn.datasets import make_classification
     >>> X, y = make_classification(n_samples=100, n_features=20, n_informative=10)
-    >>> selector = LassoSelector(n_features=10, random_state=42)
-    >>> selector.fit(X, y)
-    >>> selector.transform(X).shape
+    >>> LassoSelector(n_features=10, random_state=42).fit_transform(X, y).shape
     (100, 10)
     """
 
     def __init__(self, n_features=None, C=1.0, alpha=0.01, task='classification',
-                 max_iter=1000, random_state=None, **kwargs):
-        super().__init__(n_features=n_features, **kwargs)
+                 max_iter=1000, random_state=None):
+        self.n_features = n_features
         self.C = C
         self.alpha = alpha
         self.task = task
@@ -84,12 +80,7 @@ class LassoSelector(BaseSelector):
         self : LassoSelector
             Fitted selector.
         """
-        if y is None:
-            raise ValueError("LassoSelector requires target values (y)")
-
-        self._store_feature_info(X)
-        X_array = self._convert_to_array(X)
-        y_array = self._convert_to_series(y)
+        X, y = self._validate(X, y)
 
         if self.task == 'classification':
             model = LogisticRegression(
@@ -98,7 +89,7 @@ class LassoSelector(BaseSelector):
             )
             # liblinear is the fast L1 solver but is binary only, so multiclass
             # goes through an explicit one-vs-rest wrapper.
-            if len(np.unique(y_array)) > 2:
+            if len(np.unique(y)) > 2:
                 model = OneVsRestClassifier(model)
         elif self.task == 'regression':
             model = Lasso(
@@ -108,7 +99,7 @@ class LassoSelector(BaseSelector):
         else:
             raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
 
-        model.fit(X_array, y_array)
+        model.fit(X, y)
         if isinstance(model, OneVsRestClassifier):
             self.coef_ = np.vstack([est.coef_ for est in model.estimators_])
         else:
@@ -116,43 +107,16 @@ class LassoSelector(BaseSelector):
 
         # Multiclass gives one coefficient row per class; a feature matters if
         # it matters for any class, so sum the absolute values.
-        coef = np.atleast_2d(self.coef_)
-        self.feature_importances_ = np.abs(coef).sum(axis=0)
+        self.feature_importances_ = np.abs(np.atleast_2d(self.coef_)).sum(axis=0)
 
-        nonzero = np.flatnonzero(self.feature_importances_)
         if self.n_features is None:
-            self.selected_indices_ = nonzero
+            self.support_ = self.feature_importances_ != 0
         else:
-            ranked = np.argsort(self.feature_importances_)[::-1]
-            self.selected_indices_ = np.sort(ranked[:self.n_features])
+            self.support_ = self._top(self.feature_importances_)
 
-        if len(self.selected_indices_) == 0:
+        if not self.support_.any():
             raise ValueError(
                 "L1 regularization zeroed every coefficient. "
                 "Increase C (classification) or decrease alpha (regression)."
             )
-
-        self.is_fitted_ = True
         return self
-
-    def get_support(self, indices=False):
-        """
-        Get boolean mask or indices of selected features.
-
-        Parameters
-        ----------
-        indices : bool, default=False
-            If True, return integer indices.
-            If False, return boolean mask.
-
-        Returns
-        -------
-        support : np.ndarray
-            Boolean mask or integer indices of selected features.
-        """
-        if not self.is_fitted_:
-            raise RuntimeError("Selector must be fitted before get_support")
-
-        support = np.zeros(self.n_features_in_, dtype=bool)
-        support[self.selected_indices_] = True
-        return self.selected_indices_ if indices else support

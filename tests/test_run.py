@@ -51,7 +51,7 @@ def experiment(tmp_path):
         'train_sizes': [0.5],
         'preprocess': ['standard'],
         'metrics': ['accuracy', 'macro_f1', 'g_mean'],
-        'selectors': [{'name': 'random', 'k': [5]}, {'name': 'anova_f', 'k': [5, 10]}],
+        'selectors': [{'name': 'randomselector', 'k': [5]}, {'name': 'ANOVAFSelector', 'k': [5, 10]}],
         'models': [{'name': 'knn'}, {'name': 'lda', 'label': 'lda_shrinkage',
                                      'params': {'solver': 'lsqr', 'shrinkage': 'auto'}}],
     }))
@@ -170,7 +170,7 @@ def test_metrics_and_axes_recorded(experiment):
                    'selection_time_s', 'fit_time_s']:
         assert column in df.columns
 
-    assert set(df.selector) == {'random', 'anova_f'}
+    assert set(df.selector) == {'RandomSelector', 'ANOVAFSelector'}
     assert set(df.model) == {'knn', 'lda_shrinkage'}
     assert (df.n_selected == df.k).all()
 
@@ -188,7 +188,7 @@ def test_selection_differs_across_splits(experiment):
     """Test that selectors refit per split rather than reusing one selection."""
     df = pd.read_csv(run_config(experiment))
 
-    for selector in ['random', 'anova_f']:
+    for selector in ['RandomSelector', 'ANOVAFSelector']:
         picks = df[(df.selector == selector) & (df.k == 5)].selected_indices.unique()
         assert len(picks) > 1, f"{selector} chose identical features in every split"
 
@@ -266,7 +266,7 @@ def test_truth_records_feature_recovery(experiment):
     assert df.truth_recall.between(0, 1).all()
     assert df.truth_precision.between(0, 1).all()
     by_selector = df.groupby('selector').truth_precision.mean()
-    assert by_selector['anova_f'] > by_selector['random']
+    assert by_selector['ANOVAFSelector'] > by_selector['RandomSelector']
 
 
 def test_config_paths_are_relative_to_the_config_file(tmp_path, monkeypatch):
@@ -300,8 +300,8 @@ def test_kuncheva_separates_random_from_anova(experiment):
 
     assert len(stability) == 3  # sel-k, the model does not change the selection
     assert (stability.n_pairs == 3).all()  # 3 splits give 3 pairs
-    assert stability.loc[('anova_f', 5), 'consistency_index'] > \
-        stability.loc[('random', 5), 'consistency_index'] + 0.3
+    assert stability.loc[('ANOVAFSelector', 5), 'consistency_index'] > \
+        stability.loc[('RandomSelector', 5), 'consistency_index'] + 0.3
 
 
 def test_unknown_model_is_rejected(experiment):

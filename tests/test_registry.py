@@ -1,11 +1,10 @@
 """
-Tests for selector self-registration and the BaseSelector.create factory.
+Tests for selector self-registration and the FeatureSelector.create factory.
 """
 
-import numpy as np
 import pytest
 
-from featsel.selectors import ANOVAFSelector, BaseSelector
+from featsel.selectors import ANOVAFSelector, FeatureSelector
 
 BUILT_IN = ['VarianceThreshold', 'ANOVAFSelector', 'MutualInfoSelector',
             'CorrelationSelector', 'RandomSelector', 'LassoSelector',
@@ -15,43 +14,46 @@ BUILT_IN = ['VarianceThreshold', 'ANOVAFSelector', 'MutualInfoSelector',
 @pytest.fixture(autouse=True)
 def restore_registry():
     """Classes defined inside a test must not leak into the next one."""
-    saved = dict(BaseSelector._registry)
+    saved = dict(FeatureSelector._registry)
     yield
-    BaseSelector._registry.clear()
-    BaseSelector._registry.update(saved)
+    FeatureSelector._registry.clear()
+    FeatureSelector._registry.update(saved)
 
 
-class _Stub(BaseSelector):
+class _Stub(FeatureSelector):
     """Concrete enough to register; the tests only check names."""
 
     def fit(self, X, y=None):
         return self
 
-    def get_support(self, indices=False):
-        return np.array([])
 
-
-del BaseSelector._registry['_stub']  # a test helper, not a selector
+del FeatureSelector._registry['_stub']  # a test helper, not a selector
 
 
 def test_built_in_selectors_register_by_class_name():
     """Test that every built-in selector is reachable by its class name."""
     for name in BUILT_IN:
-        assert BaseSelector._registry[name.lower()].__name__ == name
+        assert FeatureSelector.lookup(name).__name__ == name
 
 
 def test_create_is_case_insensitive_and_passes_params():
     """Test that any casing finds the class and parameters reach its constructor."""
-    selector = BaseSelector.create('anovafselector', n_features=5)
+    selector = FeatureSelector.create('anovafselector', n_features=5)
 
     assert isinstance(selector, ANOVAFSelector)
     assert selector.n_features == 5
 
 
+def test_misspelled_parameter_is_rejected():
+    """Test that a typo in a parameter name fails instead of being ignored."""
+    with pytest.raises(TypeError, match="n_featurs"):
+        FeatureSelector.create('ANOVAFSelector', n_featurs=5)
+
+
 def test_unknown_name_lists_what_is_available():
     """Test that a typo in the name fails with the valid names."""
     with pytest.raises(ValueError, match="Unknown selector 'anova'.*anovafselector"):
-        BaseSelector.create('anova')
+        FeatureSelector.create('anova')
 
 
 def test_aliases_accept_a_string_or_a_list():
@@ -62,10 +64,10 @@ def test_aliases_accept_a_string_or_a_list():
     class TwoAliases(_Stub, aliases=['two', 'Deux']):
         pass
 
-    assert BaseSelector._registry['one'] is OneAlias
-    assert BaseSelector._registry['onealias'] is OneAlias
-    assert BaseSelector._registry['two'] is TwoAliases
-    assert isinstance(BaseSelector.create('DEUX'), TwoAliases)
+    assert FeatureSelector.lookup('one') is OneAlias
+    assert FeatureSelector.lookup('onealias') is OneAlias
+    assert FeatureSelector.lookup('two') is TwoAliases
+    assert isinstance(FeatureSelector.create('DEUX'), TwoAliases)
 
 
 def test_alias_equal_to_the_class_name_is_ignored():
@@ -73,7 +75,7 @@ def test_alias_equal_to_the_class_name_is_ignored():
     class Echo(_Stub, aliases='ECHO'):
         pass
 
-    assert BaseSelector._registry['echo'] is Echo
+    assert FeatureSelector.lookup('echo') is Echo
 
 
 def test_name_collision_is_rejected_at_definition():
@@ -94,14 +96,13 @@ def test_aliases_are_not_inherited():
     class Child(Parent):
         pass
 
-    assert BaseSelector._registry['family'] is Parent
-    assert BaseSelector._registry['child'] is Child
+    assert FeatureSelector.lookup('family') is Parent
+    assert FeatureSelector.lookup('child') is Child
 
 
 def test_abstract_classes_do_not_register():
-    """Test that a class leaving an abstract method open stays out."""
-    class HalfDone(BaseSelector):
-        def fit(self, X, y=None):
-            return self
+    """Test that a class leaving fit() unimplemented stays out."""
+    class HalfDone(FeatureSelector):
+        pass
 
-    assert 'halfdone' not in BaseSelector._registry
+    assert 'halfdone' not in FeatureSelector._registry

@@ -40,8 +40,8 @@ from sklearn.svm import LinearSVC
 from tqdm.auto import tqdm
 
 from .data_loader import DataLoader
-from .feature_selector import FeatureSelector
 from .metrics import KEY_COLUMNS, METRICS
+from .selectors import FeatureSelector
 
 # name -> sklearn estimator class. Parameters come from the config, not here,
 # so adding a classifier is one line plus a config entry.
@@ -128,8 +128,29 @@ def _instantiate(registry, spec, seed):
 
 
 def _label(spec):
-    """Config label for a selector or model: its name, or an explicit label."""
+    """Config label for a model: its name, or an explicit label."""
     return spec.get('label', spec['name'])
+
+
+def _selector_label(spec):
+    """
+    Config label for a selector: an explicit label, or its class name.
+
+    The class name, not the config's spelling or alias, so that results stay
+    comparable whatever name a config used.
+    """
+    return spec.get('label') or FeatureSelector.lookup(spec['name']).__name__
+
+
+def _make_selector(spec, k, seed):
+    """Build a selector from its config entry, seeding it if it takes a seed."""
+    cls = FeatureSelector.lookup(spec['name'])
+    params = dict(spec.get('params') or {})
+    if k is not None:
+        params['n_features'] = k
+    if 'random_state' in cls().get_params():
+        params.setdefault('random_state', seed)
+    return cls(**params)
 
 
 DEFAULTS = {
@@ -194,7 +215,7 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, config,
     split_seed = context['seed']
 
     for sel_spec in config['selectors']:
-        sel_name = _label(sel_spec)
+        sel_name = _selector_label(sel_spec)
 
         for k in sel_spec.get('k', [None]):
             keys = {_label(m): (*context['key'], sel_name, k, _label(m))
@@ -202,9 +223,7 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, config,
             if all(tuple(str(v) for v in key) in skip for key in keys.values()):
                 continue
 
-            params = dict(sel_spec.get('params') or {})
-            params.setdefault('random_state', split_seed)
-            selector = FeatureSelector(method=sel_spec['name'], n_features=k, **params)
+            selector = _make_selector(sel_spec, k, split_seed)
 
             tracemalloc.start()
             start = time.perf_counter()
@@ -373,7 +392,7 @@ def print_plan(config, X, y, tasks, target, total):
         else:
             shown = ', '.join(f"{k} ({100 * k / n_features:.2f}%)" for k in k_values)
         params = spec.get('params') or {}
-        print(f"  {_label(spec):<16} k = {shown}")
+        print(f"  {_selector_label(spec):<16} k = {shown}")
         if params:
             print(f"  {'':<16} params {params}")
 

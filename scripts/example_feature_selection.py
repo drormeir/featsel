@@ -5,14 +5,19 @@ This script demonstrates the featsel package's feature selection capabilities
 for high-dimensional data, particularly useful for transfer learning scenarios.
 """
 
+import numpy as np
+import pandas as pd
 from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
-import pandas as pd
-import numpy as np
 
-from featsel import FeatureSelector
+from featsel.selectors import (
+    ANOVAFSelector,
+    CorrelationSelector,
+    MutualInfoSelector,
+    VarianceThreshold,
+)
 
 # Set random seed for reproducibility
 np.random.seed(42)
@@ -60,19 +65,19 @@ print(f"   Accuracy: {score_baseline:.3f}")
 # Method 1: Variance threshold (fast preprocessing)
 print("\n3. Feature Selection Method 1: Variance Threshold")
 pipe_variance = Pipeline([
-    ('select', FeatureSelector(method='variance_threshold', threshold=0.01)),
+    ('select', VarianceThreshold(threshold=0.01)),
     ('clf', LogisticRegression(max_iter=1000, random_state=42))
 ])
 pipe_variance.fit(X_train, y_train)
 score_variance = pipe_variance.score(X_test, y_test)
-n_features_variance = pipe_variance.named_steps['select'].n_features_out_
+n_features_variance = pipe_variance.named_steps['select'].get_support().sum()
 print(f"   Selected features: {n_features_variance}/{X_train.shape[1]}")
 print(f"   Accuracy: {score_variance:.3f}")
 
 # Method 2: ANOVA F-test (fast univariate)
 print("\n4. Feature Selection Method 2: ANOVA F-test")
 pipe_anova = Pipeline([
-    ('select', FeatureSelector(method='anova_f', n_features=100, task='classification')),
+    ('select', ANOVAFSelector(n_features=100, task='classification')),
     ('clf', LogisticRegression(max_iter=1000, random_state=42))
 ])
 pipe_anova.fit(X_train, y_train)
@@ -83,7 +88,7 @@ print(f"   Accuracy: {score_anova:.3f}")
 # Method 3: Mutual Information (captures non-linearity)
 print("\n5. Feature Selection Method 3: Mutual Information")
 pipe_mi = Pipeline([
-    ('select', FeatureSelector(method='mutual_info', n_features=100, random_state=42)),
+    ('select', MutualInfoSelector(n_features=100, random_state=42)),
     ('clf', LogisticRegression(max_iter=1000, random_state=42))
 ])
 pipe_mi.fit(X_train, y_train)
@@ -94,8 +99,7 @@ print(f"   Accuracy: {score_mi:.3f}")
 # Method 4: Correlation-based (removes redundancy)
 print("\n6. Feature Selection Method 4: Correlation Selector")
 pipe_corr = Pipeline([
-    ('select', FeatureSelector(
-        method='correlation',
+    ('select', CorrelationSelector(
         n_features=100,
         target_threshold=0.05,
         inter_feature_threshold=0.95
@@ -113,11 +117,13 @@ print("   Stage 1: Remove low-variance features")
 print("   Stage 2: ANOVA F-test (500 → 200 features)")
 print("   Stage 3: Mutual Information (200 → 50 features)")
 pipe_multi = Pipeline([
-    ('prefilter', FeatureSelector(method='variance_threshold', threshold=0.01)),
-    ('quick_select', FeatureSelector(method='anova_f', n_features=200)),
-    ('final_select', FeatureSelector(method='mutual_info', n_features=50, random_state=42)),
+    ('prefilter', VarianceThreshold(threshold=0.01)),
+    ('quick_select', ANOVAFSelector(n_features=200)),
+    ('final_select', MutualInfoSelector(n_features=50, random_state=42)),
     ('clf', LogisticRegression(max_iter=1000, random_state=42))
 ])
+# Pandas output carries column names from stage to stage.
+pipe_multi.set_output(transform='pandas')
 pipe_multi.fit(X_train, y_train)
 score_multi = pipe_multi.score(X_test, y_test)
 print(f"   Final features: 50/{X_train.shape[1]}")
@@ -132,11 +138,15 @@ print(f"   Mean CV Score: {cv_scores.mean():.3f} (+/- {cv_scores.std():.3f})")
 # Get feature importance report
 print("\n9. Feature Importance Report (top 10 features)")
 selector = pipe_multi.named_steps['final_select']
-report = selector.get_report()
-print(report.head(10).to_string())
+report = pd.DataFrame({
+    'feature': selector.feature_names_in_,
+    'importance': selector.feature_importances_,
+    'selected': selector.get_support(),
+})
+print(report.nlargest(10, 'importance').to_string(index=False))
 
 # Save selected features
-selected_features = selector.selected_features_
+selected_features = list(selector.get_feature_names_out())
 print(f"\n10. Selected Features ({len(selected_features)} total):")
 print(f"    {selected_features[:10]} ... (showing first 10)")
 
@@ -151,5 +161,3 @@ print(f"Mutual Information:          {score_mi:.3f} (100 features)")
 print(f"Correlation Selector:        {score_corr:.3f} (100 features)")
 print(f"Multi-Stage Pipeline:        {score_multi:.3f} (50 features)")
 print("=" * 70)
-print("\nFeature selection successfully reduced dimensionality while")
-print("maintaining or improving model performance!")

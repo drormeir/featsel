@@ -1,14 +1,16 @@
 """
-Base class for all feature selection methods.
+The base class of every feature selector.
 """
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import ClassVar
 
 import numpy as np
-import pandas as pd
+from sklearn.base import BaseEstimator
+from sklearn.feature_selection import SelectorMixin
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 
 def _has_abstract_methods(cls):
@@ -22,40 +24,32 @@ def _has_abstract_methods(cls):
                for name in dir(cls))
 
 
-class BaseSelector(ABC):
+class FeatureSelector(SelectorMixin, BaseEstimator):
     """
-    Abstract base class for all feature selection methods.
+    Base class of every feature selector: a scikit-learn estimator.
 
-    All selectors must implement fit() and get_support() methods.
-    This ensures a consistent interface across filter, wrapper, and embedded methods.
+    A subclass lists its parameters explicitly in __init__, only stores them,
+    and implements fit(), which sets `support_`: a boolean mask over the input
+    features. scikit-learn's SelectorMixin then provides transform(),
+    fit_transform(), get_support() and get_feature_names_out(), and
+    BaseEstimator provides get_params() and set_params(), so selectors work
+    with Pipeline, clone(), cross_val_score() and GridSearchCV.
+
+    As in scikit-learn, transform() returns a NumPy array. Call
+    set_output(transform='pandas') to keep DataFrame columns.
 
     Every concrete subclass registers itself when it is defined, under its
     class name and any aliases given as a class keyword:
 
-        class ANOVAFSelector(BaseSelector, aliases=['anova', 'anova_f']): ...
+        class ANOVAFSelector(FeatureSelector, aliases=['anova', 'anova_f']): ...
 
-    BaseSelector.create(name, **params) then builds a selector by any of those
-    names, case-insensitively. The base class never imports its subclasses.
-
-    Parameters
-    ----------
-    n_features : int, optional
-        Number of features to select. If None, method-specific default is used.
-    **kwargs : dict
-        Additional method-specific parameters.
-
-    Attributes
-    ----------
-    is_fitted_ : bool
-        Whether the selector has been fitted.
-    n_features_in_ : int
-        Number of features seen during fit.
-    feature_names_in_ : list or None
-        Feature names if input was DataFrame, None otherwise.
+    In Python, import the class. FeatureSelector.create(name, **params) is for
+    names that arrive as text, such as a YAML config; lookup ignores case. The
+    base class never imports its subclasses.
     """
 
     # lowercased name or alias -> concrete selector class
-    _registry: ClassVar[dict[str, type[BaseSelector]]] = {}
+    _registry: ClassVar[dict[str, type[FeatureSelector]]] = {}
 
     def __init_subclass__(cls, aliases: str | list[str] | None = None, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -64,168 +58,57 @@ class BaseSelector(ABC):
 
         names = [cls.__name__, *([aliases] if isinstance(aliases, str) else aliases or [])]
         for name in {n.lower() for n in names}:
-            owner = BaseSelector._registry.setdefault(name, cls)
+            owner = FeatureSelector._registry.setdefault(name, cls)
             if owner is not cls:
                 raise ValueError(f"Selector name '{name}' of {cls.__name__} is already "
                                  f"taken by {owner.__name__}")
 
     @classmethod
-    def create(cls, name: str, **params) -> BaseSelector:
-        """Build the selector registered under name, case-insensitively."""
-        selector_cls = BaseSelector._registry.get(name.lower())
+    def lookup(cls, name: str) -> type[FeatureSelector]:
+        """The selector class registered under name, case-insensitively."""
+        selector_cls = FeatureSelector._registry.get(name.lower())
         if selector_cls is None:
-            available = ', '.join(sorted(BaseSelector._registry))
+            available = ', '.join(sorted(FeatureSelector._registry))
             raise ValueError(f"Unknown selector '{name}'. Available: {available}")
-        return selector_cls(**params)
+        return selector_cls
 
-    def __init__(self, n_features=None, **kwargs):
-        self.n_features = n_features
-        self.kwargs = kwargs
-        self.is_fitted_ = False
-        self.n_features_in_ = None
-        self.feature_names_in_ = None
+    @classmethod
+    def create(cls, name: str, **params) -> FeatureSelector:
+        """Build the selector registered under name. A misspelled parameter raises."""
+        return cls.lookup(name)(**params)
 
     @abstractmethod
     def fit(self, X, y=None):
-        """
-        Fit the selector on training data.
-
-        Parameters
-        ----------
-        X : pd.DataFrame or np.ndarray of shape (n_samples, n_features)
-            Training data.
-        y : pd.Series or np.ndarray of shape (n_samples,), optional
-            Target values. Required for supervised methods.
-
-        Returns
-        -------
-        self : BaseSelector
-            Fitted selector.
-        """
-
-    @abstractmethod
-    def get_support(self, indices=False):
-        """
-        Get boolean mask or integer indices of selected features.
-
-        Parameters
-        ----------
-        indices : bool, default=False
-            If True, return integer indices of selected features.
-            If False, return boolean mask.
-
-        Returns
-        -------
-        support : np.ndarray
-            Boolean mask (if indices=False) or integer indices (if indices=True)
-            of selected features.
-        """
+        """Learn which features to keep; set `support_` and return self."""
 
     def transform(self, X):
-        """
-        Transform X to selected features.
+        # Check fitting first: SelectorMixin would otherwise validate X against
+        # an unfitted selector and warn about feature names before failing.
+        check_is_fitted(self, 'support_')
+        return super().transform(X)
 
-        Parameters
-        ----------
-        X : pd.DataFrame or np.ndarray of shape (n_samples, n_features)
-            Data to transform.
+    def _get_support_mask(self):
+        check_is_fitted(self, 'support_')
+        return self.support_
 
-        Returns
-        -------
-        X_selected : pd.DataFrame or np.ndarray of shape (n_samples, n_features_out)
-            Data with only selected features. Type matches input type.
-        """
-        if not self.is_fitted_:
-            raise RuntimeError("Selector must be fitted before transform. Call fit() first.")
-
-        support = self.get_support(indices=False)
-
-        if isinstance(X, pd.DataFrame):
-            return X.loc[:, support]
-        else:
-            return X[:, support]
-
-    def fit_transform(self, X, y=None):
-        """
-        Fit and transform in one step.
-
-        Parameters
-        ----------
-        X : pd.DataFrame or np.ndarray of shape (n_samples, n_features)
-            Training data.
-        y : pd.Series or np.ndarray of shape (n_samples,), optional
-            Target values.
-
-        Returns
-        -------
-        X_selected : pd.DataFrame or np.ndarray
-            Transformed data with selected features.
-        """
-        return self.fit(X, y).transform(X)
-
-    def get_feature_importances(self):
-        """
-        Return feature importance scores if available.
-
-        Returns
-        -------
-        importances : np.ndarray or None
-            Feature importance scores. None if method doesn't provide importance scores.
-        """
-        return getattr(self, 'feature_importances_', None)
-
-    def _store_feature_info(self, X):
-        """
-        Store feature information from input data.
-
-        Parameters
-        ----------
-        X : pd.DataFrame or np.ndarray
-            Input data.
-        """
-        if isinstance(X, pd.DataFrame):
-            self.feature_names_in_ = X.columns.tolist()
-            self.n_features_in_ = len(self.feature_names_in_)
-        elif isinstance(X, np.ndarray):
-            self.n_features_in_ = X.shape[1]
-            self.feature_names_in_ = None
-        else:
-            raise TypeError(f"X must be pandas DataFrame or numpy array, got {type(X)}")
-
-    def _convert_to_array(self, X):
-        """
-        Convert input to numpy array if needed.
-
-        Parameters
-        ----------
-        X : pd.DataFrame or np.ndarray
-            Input data.
-
-        Returns
-        -------
-        X_array : np.ndarray
-            Data as numpy array.
-        """
-        if isinstance(X, pd.DataFrame):
-            return X.values
-        return X
-
-    def _convert_to_series(self, y):
-        """
-        Convert target to numpy array if needed.
-
-        Parameters
-        ----------
-        y : pd.Series or np.ndarray or None
-            Target values.
-
-        Returns
-        -------
-        y_array : np.ndarray or None
-            Target as numpy array, or None if y is None.
-        """
+    def _validate(self, X, y=None, requires_y=True):
+        """Validate the training data and record the input feature count and names."""
         if y is None:
-            return None
-        if isinstance(y, pd.Series):
-            return y.values
-        return y
+            if requires_y:
+                raise ValueError(f"{type(self).__name__} requires target values (y)")
+            return validate_data(self, X), None
+        return validate_data(self, X, y)
+
+    def _require_n_features(self):
+        if self.n_features is None:
+            raise ValueError(f"{type(self).__name__} requires n_features to be specified")
+
+    def _mask(self, indices):
+        """A boolean mask over the input features with `indices` set."""
+        mask = np.zeros(self.n_features_in_, dtype=bool)
+        mask[indices] = True
+        return mask
+
+    def _top(self, scores):
+        """A mask selecting the n_features highest scores."""
+        return self._mask(np.argsort(scores)[::-1][:self.n_features])
