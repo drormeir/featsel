@@ -123,12 +123,17 @@ featsel/
 ├── __init__.py              # Exports DataLoader, FeatureSelector
 ├── data_loader.py           # Core data loading and cleaning logic
 ├── feature_selector.py      # Main sklearn-compatible API
-├── selectors/               # Feature selection methods
-│   ├── __init__.py          # Exports all selectors
-│   ├── base.py              # BaseSelector abstract class
-│   ├── filter.py            # Filter methods (variance, ANOVA, mutual info, correlation)
-│   ├── embedded.py          # Embedded methods (Lasso, trees) - Phase 2
-│   └── wrapper.py           # Wrapper methods (RFE) - Phase 3
+├── selectors/               # Feature selection methods, one subpackage each:
+│   │                        #   __init__.py (the class), tests/, demos/
+│   ├── __init__.py          # Imports every selector, which registers it
+│   ├── base.py              # BaseSelector: abstract base, registration, create()
+│   ├── anova_f/             # ANOVAFSelector
+│   ├── correlation/         # CorrelationSelector
+│   ├── lasso/               # LassoSelector
+│   ├── mutual_info/         # MutualInfoSelector
+│   ├── random_selection/    # RandomSelector (not `random`: shadows the stdlib)
+│   ├── tree_importance/     # TreeImportanceSelector
+│   └── variance_threshold/  # VarianceThreshold
 └── utils/                   # Utility functions
     ├── __init__.py
     ├── validation.py        # Input validation

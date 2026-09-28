@@ -73,10 +73,14 @@ package-dir = {"" = "."}
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["featsel*"]
-exclude = ["tests*", "docs*", "notebooks*"]
+exclude = ["tests*", "*.tests", "docs*", "notebooks*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.yaml", "*.yml"]
+
+[tool.pytest.ini_options]
+# Selector tests live next to their selector, under featsel/selectors/*/tests.
+testpaths = ["tests", "featsel"]
 
 [tool.mypy]
 # pandas, scikit-learn, yaml, tqdm and xgboost ship no type stubs.

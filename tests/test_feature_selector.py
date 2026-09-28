@@ -1,303 +1,20 @@
 """
-Tests for FeatureSelector and filter methods.
+Tests for the FeatureSelector wrapper.
 """
 
-import pytest
 import numpy as np
 import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression, LinearRegression
+import pytest
+from sklearn.exceptions import NotFittedError
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
 
 from featsel import FeatureSelector
 
 
-class TestVarianceThreshold:
-    """Tests for VarianceThreshold selector."""
-
-    def test_remove_constant_features(self, data_with_constant_features):
-        """Test that constant features are removed."""
-        X, y = data_with_constant_features
-
-        selector = FeatureSelector(method='variance_threshold', threshold=0.0)
-        selector.fit(X)
-
-        X_selected = selector.transform(X)
-
-        # Should remove 3 constant features
-        assert X_selected.shape[1] == 12  # 15 - 3 = 12
-        assert not any('constant' in name for name in X_selected.columns)
-
-    def test_remove_low_variance(self, data_with_constant_features):
-        """Test that low-variance features are removed."""
-        X, y = data_with_constant_features
-
-        selector = FeatureSelector(method='variance_threshold', threshold=0.1)
-        selector.fit(X)
-
-        X_selected = selector.transform(X)
-
-        # Should remove 3 constant + 2 low-variance features
-        assert X_selected.shape[1] == 10
-        assert not any('constant' in name for name in X_selected.columns)
-        assert not any('low_var' in name for name in X_selected.columns)
-
-    def test_dataframe_preservation(self, small_classification_data):
-        """Test that DataFrame input returns DataFrame output."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='variance_threshold')
-        X_selected = selector.fit_transform(X)
-
-        assert isinstance(X_selected, pd.DataFrame)
-        assert X_selected.shape[0] == X.shape[0]
-
-
-class TestRandomSelector:
-    """Tests for RandomSelector, the control baseline."""
-
-    def test_select_exact_count(self, small_classification_data):
-        """Test that exactly n_features are selected."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='random', n_features=5, random_state=42)
-        X_selected = selector.fit_transform(X, y)
-
-        assert X_selected.shape[1] == 5
-        assert X_selected.shape[0] == X.shape[0]
-
-    def test_reproducibility(self, small_classification_data):
-        """Test that the same seed selects the same features."""
-        X, y = small_classification_data
-
-        first = FeatureSelector(method='random', n_features=5, random_state=42)
-        second = FeatureSelector(method='random', n_features=5, random_state=42)
-        first.fit(X, y)
-        second.fit(X, y)
-
-        assert first.selected_features_ == second.selected_features_
-
-    def test_different_seeds_differ(self, small_classification_data):
-        """Test that different seeds select different features."""
-        X, y = small_classification_data
-
-        first = FeatureSelector(method='random', n_features=5, random_state=1)
-        second = FeatureSelector(method='random', n_features=5, random_state=2)
-        first.fit(X, y)
-        second.fit(X, y)
-
-        assert first.selected_features_ != second.selected_features_
-
-    def test_ignores_target(self, small_classification_data):
-        """Test that selection is unchanged when the target is shuffled."""
-        X, y = small_classification_data
-        y_shuffled = pd.Series(np.random.RandomState(0).permutation(y.values), index=y.index)
-
-        with_y = FeatureSelector(method='random', n_features=5, random_state=42)
-        with_shuffled = FeatureSelector(method='random', n_features=5, random_state=42)
-        with_y.fit(X, y)
-        with_shuffled.fit(X, y_shuffled)
-
-        assert with_y.selected_features_ == with_shuffled.selected_features_
-
-    def test_caps_at_available_features(self, small_classification_data):
-        """Test that requesting more features than exist selects all of them."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='random', n_features=X.shape[1] + 10, random_state=42)
-        X_selected = selector.fit_transform(X, y)
-
-        assert X_selected.shape[1] == X.shape[1]
-
-
-class TestANOVAFSelector:
-    """Tests for ANOVAFSelector."""
-
-    def test_select_top_features(self, small_classification_data):
-        """Test selecting top n features by ANOVA F-score."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='anova_f', n_features=10)
-        selector.fit(X, y)
-
-        X_selected = selector.transform(X)
-
-        assert X_selected.shape == (100, 10)
-        assert len(selector.selected_features_) == 10
-
-    def test_requires_target(self, small_classification_data):
-        """Test that ANOVA F requires target variable."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='anova_f', n_features=10)
-
-        with pytest.raises(ValueError, match="requires target"):
-            selector.fit(X)  # Missing y
-
-    def test_classification_vs_regression(self, small_classification_data, small_regression_data):
-        """Test that task parameter correctly selects f_classif vs f_regression."""
-        X_clf, y_clf = small_classification_data
-        X_reg, y_reg = small_regression_data
-
-        # Classification task
-        selector_clf = FeatureSelector(method='anova_f', n_features=10, task='classification')
-        selector_clf.fit(X_clf, y_clf)
-        assert selector_clf.n_features_out_ == 10
-
-        # Regression task
-        selector_reg = FeatureSelector(method='anova_f', n_features=10, task='regression')
-        selector_reg.fit(X_reg, y_reg)
-        assert selector_reg.n_features_out_ == 10
-
-    def test_feature_importances(self, small_classification_data):
-        """Test that feature importances are computed."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='anova_f', n_features=10)
-        selector.fit(X, y)
-
-        assert selector.feature_importances_ is not None
-        assert len(selector.feature_importances_) == X.shape[1]
-
-
-class TestMutualInfoSelector:
-    """Tests for MutualInfoSelector."""
-
-    def test_select_features(self, small_classification_data):
-        """Test mutual information feature selection."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(
-            method='mutual_info',
-            n_features=10,
-            random_state=42
-        )
-        selector.fit(X, y)
-
-        X_selected = selector.transform(X)
-
-        assert X_selected.shape == (100, 10)
-        assert len(selector.selected_features_) == 10
-
-    def test_requires_n_features(self, small_classification_data):
-        """Test that mutual info requires n_features parameter."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='mutual_info')  # Missing n_features
-
-        with pytest.raises(TypeError, match="missing 1 required positional argument"):
-            selector.fit(X, y)
-
-    def test_reproducibility(self, small_classification_data):
-        """Test that random_state ensures reproducibility."""
-        X, y = small_classification_data
-
-        selector1 = FeatureSelector(method='mutual_info', n_features=10, random_state=42)
-        selector1.fit(X, y)
-
-        selector2 = FeatureSelector(method='mutual_info', n_features=10, random_state=42)
-        selector2.fit(X, y)
-
-        assert selector1.selected_features_ == selector2.selected_features_
-
-
-class TestCorrelationSelector:
-    """Tests for CorrelationSelector."""
-
-    def test_select_correlated_features(self, small_regression_data):
-        """Test correlation-based selection."""
-        X, y = small_regression_data
-
-        selector = FeatureSelector(
-            method='correlation',
-            n_features=10,
-            target_threshold=0.0
-        )
-        selector.fit(X, y)
-
-        X_selected = selector.transform(X)
-
-        assert X_selected.shape[1] == 10
-        assert len(selector.selected_features_) == 10
-
-    def test_remove_redundant_features(self):
-        """Test that highly correlated features are removed."""
-        np.random.seed(42)
-        X = np.random.randn(100, 5)
-        # Create redundant feature (copy of feature 0)
-        X_redundant = np.column_stack([X, X[:, 0] + np.random.randn(100) * 0.01])
-
-        X_df = pd.DataFrame(X_redundant, columns=[f'f{i}' for i in range(6)])
-        y = X[:, 0] + X[:, 1]
-
-        selector = FeatureSelector(
-            method='correlation',
-            inter_feature_threshold=0.9
-        )
-        selector.fit(X_df, y)
-
-        # Should remove one of the redundant features
-        assert selector.n_features_out_ < 6
-
-
 class TestEmbeddedSelectors:
-    """Tests for the embedded methods: Lasso and tree importance."""
-
-    def test_lasso_select_top_features(self, small_classification_data):
-        """Test selecting a fixed number of features by L1 coefficient."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='lasso', n_features=10, random_state=42)
-        X_selected = selector.fit_transform(X, y)
-
-        assert X_selected.shape[1] == 10
-
-    def test_lasso_chooses_own_count(self, small_classification_data):
-        """Test that without n_features, Lasso keeps only non-zero coefficients."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(method='lasso', C=0.1, random_state=42)
-        selector.fit(X, y)
-
-        assert 0 < selector.n_features_out_ <= X.shape[1]
-
-    def test_lasso_sparser_with_smaller_C(self, small_classification_data):
-        """Test that stronger regularization keeps fewer features."""
-        X, y = small_classification_data
-
-        weak = FeatureSelector(method='lasso', C=1.0, random_state=42).fit(X, y)
-        strong = FeatureSelector(method='lasso', C=0.05, random_state=42).fit(X, y)
-
-        assert strong.n_features_out_ <= weak.n_features_out_
-
-    def test_lasso_requires_target(self, small_classification_data):
-        """Test that Lasso raises without a target."""
-        X, y = small_classification_data
-
-        with pytest.raises(ValueError):
-            FeatureSelector(method='lasso', n_features=10).fit(X, None)
-
-    def test_tree_importance_select_top_features(self, small_classification_data):
-        """Test selecting a fixed number of features by impurity decrease."""
-        X, y = small_classification_data
-
-        selector = FeatureSelector(
-            method='tree_importance', n_features=10, n_estimators=20, random_state=42
-        )
-        X_selected = selector.fit_transform(X, y)
-
-        assert X_selected.shape[1] == 10
-
-    def test_tree_importance_reproducibility(self, small_classification_data):
-        """Test that the same seed gives the same ranking."""
-        X, y = small_classification_data
-
-        kwargs = dict(method='tree_importance', n_features=10,
-                      n_estimators=20, random_state=42)
-        first = FeatureSelector(**kwargs).fit(X, y)
-        second = FeatureSelector(**kwargs).fit(X, y)
-
-        assert first.selected_features_ == second.selected_features_
+    """Tests comparing the embedded methods with each other."""
 
     def test_embedded_beats_random_on_informative_data(self, small_classification_data):
         """Test that embedded methods find informative features more often than chance."""
@@ -474,11 +191,11 @@ class TestErrorHandling:
 
     def test_transform_before_fit(self, small_classification_data):
         """Test that transform before fit raises error."""
-        X, y = small_classification_data
+        X, _y = small_classification_data
 
         selector = FeatureSelector(method='anova_f', n_features=10)
 
-        with pytest.raises(Exception):  # sklearn raises NotFittedError
+        with pytest.raises(NotFittedError):
             selector.transform(X)
 
     def test_invalid_method(self, small_classification_data):
