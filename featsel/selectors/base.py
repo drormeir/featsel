@@ -2,9 +2,24 @@
 Base class for all feature selection methods.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-import pandas as pd
+from typing import ClassVar
+
 import numpy as np
+import pandas as pd
+
+
+def _has_abstract_methods(cls):
+    """
+    Whether cls still leaves an abstract method unimplemented.
+
+    ABCMeta sets __abstractmethods__ only after __init_subclass__ has run, so
+    registration has to inspect the methods itself.
+    """
+    return any(getattr(getattr(cls, name, None), '__isabstractmethod__', False)
+               for name in dir(cls))
 
 
 class BaseSelector(ABC):
@@ -13,6 +28,14 @@ class BaseSelector(ABC):
 
     All selectors must implement fit() and get_support() methods.
     This ensures a consistent interface across filter, wrapper, and embedded methods.
+
+    Every concrete subclass registers itself when it is defined, under its
+    class name and any aliases given as a class keyword:
+
+        class ANOVAFSelector(BaseSelector, aliases=['anova', 'anova_f']): ...
+
+    BaseSelector.create(name, **params) then builds a selector by any of those
+    names, case-insensitively. The base class never imports its subclasses.
 
     Parameters
     ----------
@@ -30,6 +53,30 @@ class BaseSelector(ABC):
     feature_names_in_ : list or None
         Feature names if input was DataFrame, None otherwise.
     """
+
+    # lowercased name or alias -> concrete selector class
+    _registry: ClassVar[dict[str, type[BaseSelector]]] = {}
+
+    def __init_subclass__(cls, aliases: str | list[str] | None = None, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if _has_abstract_methods(cls):
+            return
+
+        names = [cls.__name__, *([aliases] if isinstance(aliases, str) else aliases or [])]
+        for name in {n.lower() for n in names}:
+            owner = BaseSelector._registry.setdefault(name, cls)
+            if owner is not cls:
+                raise ValueError(f"Selector name '{name}' of {cls.__name__} is already "
+                                 f"taken by {owner.__name__}")
+
+    @classmethod
+    def create(cls, name: str, **params) -> BaseSelector:
+        """Build the selector registered under name, case-insensitively."""
+        selector_cls = BaseSelector._registry.get(name.lower())
+        if selector_cls is None:
+            available = ', '.join(sorted(BaseSelector._registry))
+            raise ValueError(f"Unknown selector '{name}'. Available: {available}")
+        return selector_cls(**params)
 
     def __init__(self, n_features=None, **kwargs):
         self.n_features = n_features
@@ -55,7 +102,6 @@ class BaseSelector(ABC):
         self : BaseSelector
             Fitted selector.
         """
-        pass
 
     @abstractmethod
     def get_support(self, indices=False):
@@ -74,7 +120,6 @@ class BaseSelector(ABC):
             Boolean mask (if indices=False) or integer indices (if indices=True)
             of selected features.
         """
-        pass
 
     def transform(self, X):
         """
