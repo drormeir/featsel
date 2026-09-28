@@ -258,17 +258,13 @@ the first split that uses it.
 
 ## Selector design
 
-Decided 2026-09-26, extended 2026-09-28.
+Decided 2026-09-26, extended 2026-09-28. Built 2026-09-29.
 
-**Status.**
+**Status.** Built as described below. The old wrapper
+(`featsel/feature_selector.py`) is removed. The runner and the configs name
+selectors by class name. Not built: RFE and Higher Criticism.
 
-- Built: self-registration and `create`, on the current base class
-  `BaseSelector`. One subpackage per selector, each with `tests/` and
-  `demos/`.
-- Not built: the base as a scikit-learn estimator, renamed `FeatureSelector`;
-  removal of the old wrapper; the runner naming selectors by class name.
-
-**Problem.** There are two layers. The selector classes in `selectors/`
+**Problem (before this design).** There were two layers. The selector classes in `selectors/`
 do the work but are not scikit-learn estimators, so they cannot go into a
 scikit-learn `Pipeline` directly. The `FeatureSelector` wrapper picks a class
 by name and forwards parameters through a hand-written whitelist. A parameter
@@ -278,9 +274,14 @@ the default and nobody notices. Adding a selector means editing three places.
 **Decision.**
 
 - `FeatureSelector` becomes the base class of every selector. It inherits
-  scikit-learn's `BaseEstimator` and `SelectorMixin`. Each subclass writes
-  `fit` and `_get_support_mask`; `transform`, `get_support` and
-  `get_feature_names_out` come from `SelectorMixin`.
+  scikit-learn's `BaseEstimator` and `SelectorMixin`. Each subclass lists its
+  parameters in `__init__`, only stores them, and writes `fit`, which sets
+  `support_`. `transform`, `get_support` and `get_feature_names_out` come
+  from `SelectorMixin`; `get_params`, `set_params` and `clone` from
+  `BaseEstimator`.
+- As in scikit-learn, `transform` returns a NumPy array. Pandas output is
+  opt-in with `set_output(transform='pandas')`. The old base class returned
+  a DataFrame for DataFrame input.
 - One instance handles one selection method.
 - Every concrete subclass registers itself automatically, through
   `__init_subclass__`, under its class name. It may add aliases as a class
@@ -355,8 +356,12 @@ intersection and voting modes for combining methods.
 - A class registers only when its module is imported. `featsel/__init__.py`
   imports `featsel.selectors`, which imports every selector.
 - Aliases are added only when a rename actually happens.
-- Every selector constructor still accepts `**kwargs`, so a misspelled
-  parameter is silently accepted. This ends with the conversion to
-  scikit-learn estimators, which forbid `**kwargs` in constructors.
+- Results files written before the switch to class names use the old method
+  names (`random`, `anova_f`). They are not comparable by name with new runs,
+  and `--resume` on them recomputes everything. Notebook 02 names its control
+  `random`, matching the current `results/experiment_classifiers.csv`; it
+  needs `RandomSelector` after that file is regenerated.
+- Validation happens in `fit`, as scikit-learn requires, so a missing
+  required `n_features` fails at fit time, not at construction.
 - Selector tests live inside the package. Packaging excludes them, and pytest
   searches both `tests/` and `featsel/`.

@@ -31,19 +31,20 @@ python featsel/data_loader.py configs/scanb_small.yaml
 
 ### Feature Selection
 ```bash
-# Use FeatureSelector in Python scripts or notebooks
+# Use a selector class in Python scripts or notebooks
 python
->>> from featsel import DataLoader, FeatureSelector
+>>> from featsel import DataLoader
+>>> from featsel.selectors import ANOVAFSelector
 >>> loader = DataLoader('configs/scanb_small.yaml')
->>> selector = FeatureSelector(method='anova_f', n_features=100)
+>>> selector = ANOVAFSelector(n_features=100)
 >>> selector.fit(loader.X, loader.y)
 >>> X_selected = selector.transform(loader.X)
 
-# Run tests for feature selection
-python -m pytest tests/test_feature_selector.py -v
+# Run one selector's tests
+python -m pytest featsel/selectors/anova_f -v
 
-# Run all tests
-python -m pytest tests/ -v
+# Run all tests (tests/ and the selector tests under featsel/)
+python -m pytest -v
 ```
 
 ### Package Building and Publishing
@@ -120,13 +121,15 @@ Example: `configs/scanb_small.yaml` configures the SCAN-B breast cancer dataset 
 
 ```
 featsel/
-├── __init__.py              # Exports DataLoader, FeatureSelector
+├── __init__.py              # Exports DataLoader, FeatureSelector, summarize, kuncheva_index
 ├── data_loader.py           # Core data loading and cleaning logic
-├── feature_selector.py      # Main sklearn-compatible API
+├── run.py                   # Config-driven experiment runner: run(X, y, config), CLI
+├── analysis.py              # summarize() and kuncheva_index() over the runner's CSV
+├── metrics.py               # Predictive metrics and the CSV's key columns
 ├── selectors/               # Feature selection methods, one subpackage each:
-│   │                        #   __init__.py (the class), tests/, demos/
+│   │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb
 │   ├── __init__.py          # Imports every selector, which registers it
-│   ├── base.py              # BaseSelector: abstract base, registration, create()
+│   ├── base.py              # FeatureSelector: scikit-learn base, registration, create()
 │   ├── anova_f/             # ANOVAFSelector
 │   ├── correlation/         # CorrelationSelector
 │   ├── lasso/               # LassoSelector
@@ -134,82 +137,74 @@ featsel/
 │   ├── random_selection/    # RandomSelector (not `random`: shadows the stdlib)
 │   ├── tree_importance/     # TreeImportanceSelector
 │   └── variance_threshold/  # VarianceThreshold
-└── utils/                   # Utility functions
+└── utils/
     ├── __init__.py
-    ├── validation.py        # Input validation
-    └── reporting.py         # Feature importance reports - Phase 2
+    └── validation.py        # Input validation helpers (currently unused)
 ```
 
-**Current Status (Phase 1 - COMPLETE):**
-- ✅ BaseSelector abstract class
-- ✅ Filter methods: VarianceThreshold, ANOVAFSelector, MutualInfoSelector, CorrelationSelector
-- ✅ FeatureSelector main API with sklearn TransformerMixin
-- ✅ Full sklearn Pipeline integration
-- ✅ Comprehensive test suite (26 tests, 100% passing)
+Every selector subclasses `FeatureSelector`, which inherits scikit-learn's
+`BaseEstimator` and `SelectorMixin`. A selector lists its parameters in
+`__init__` (no `**kwargs`) and sets `support_` in `fit`. It therefore works
+with `Pipeline`, `clone`, `cross_val_score` and `GridSearchCV`, and a
+misspelled parameter raises. As in scikit-learn, `transform` returns a NumPy
+array unless `set_output(transform='pandas')` is set.
 
-**Future development:**
-- Phase 2: Embedded methods (Lasso, ElasticNet, tree-based importance)
-- Phase 3: Wrapper methods (RFE)
-- Phase 4: PyTorch Dataset integration
-- Model evaluation pipelines
-- Visualization utilities
+Selectors register themselves by class name. In Python, import the class.
+`FeatureSelector.create(name, **params)` is for names read as text, such as the
+runner's YAML configs, which name selectors by class name (case-insensitive).
+See `docs/architecture_options.md`, section "Selector design".
+
+Built: VarianceThreshold, ANOVAFSelector, MutualInfoSelector,
+CorrelationSelector, LassoSelector, TreeImportanceSelector, RandomSelector.
+Planned (see `NEXT.md`): RFESelector, HigherCriticismSelector.
 
 ## Feature Selection Usage
 
 ### Basic sklearn Pipeline Integration
 
 ```python
-from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
-from featsel import DataLoader, FeatureSelector
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
 
-# Load data
+from featsel import DataLoader
+from featsel.selectors import ANOVAFSelector
+
 loader = DataLoader('configs/scanb_small.yaml')
 
-# Create pipeline with feature selection
 pipe = Pipeline([
-    ('select', FeatureSelector(method='anova_f', n_features=100)),
+    ('select', ANOVAFSelector(n_features=100)),
     ('clf', LogisticRegression(max_iter=1000))
 ])
 
-# Train and evaluate
+# Selection is refit inside every fold
+scores = cross_val_score(pipe, loader.X, loader.y, cv=5)
+
+# Selected features and their scores
 pipe.fit(loader.X, loader.y)
-score = pipe.score(X_test, y_test)
-
-# Access selected features
-selected_features = pipe.named_steps['select'].selected_features_
-print(f"Selected {len(selected_features)} features: {selected_features[:10]}")
-
-# Get feature importance report
-report = pipe.named_steps['select'].get_report()
-report.to_csv('feature_selection_report.csv')
+select = pipe.named_steps['select']
+selected = select.get_feature_names_out()
+scores_per_feature = select.feature_importances_
 ```
 
-### Available Filter Methods
+### Available Selectors
 
-1. **VarianceThreshold** - Remove low/zero variance features (fastest)
-```python
-selector = FeatureSelector(method='variance_threshold', threshold=0.01)
-```
+Each has a tutorial in `featsel/selectors/<name>/demos/tutorial.ipynb`.
 
-2. **ANOVAFSelector** - ANOVA F-test for univariate feature selection
 ```python
-selector = FeatureSelector(method='anova_f', n_features=100, task='classification')
-```
-
-3. **MutualInfoSelector** - Mutual information (captures non-linear relationships)
-```python
-selector = FeatureSelector(method='mutual_info', n_features=100, n_neighbors=3, random_state=42)
-```
-
-4. **CorrelationSelector** - Correlation-based selection with redundancy removal
-```python
-selector = FeatureSelector(
-    method='correlation',
-    n_features=100,
-    target_threshold=0.1,
-    inter_feature_threshold=0.95
+from featsel.selectors import (
+    ANOVAFSelector, CorrelationSelector, LassoSelector, MutualInfoSelector,
+    RandomSelector, TreeImportanceSelector, VarianceThreshold,
 )
+
+VarianceThreshold(threshold=0.01)                        # drop near-constant features
+ANOVAFSelector(n_features=100)                           # univariate F-test
+MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slower
+CorrelationSelector(n_features=100, target_threshold=0.1,
+                    inter_feature_threshold=0.95)        # drops redundant pairs
+LassoSelector(n_features=None, C=0.1, random_state=42)   # L1 model, picks its own count
+TreeImportanceSelector(n_features=100, random_state=42)  # random forest importance
+RandomSelector(n_features=100, random_state=42)          # the control
 ```
 
 ### High-Dimensional Use Case (few samples, many features)
@@ -217,20 +212,21 @@ selector = FeatureSelector(
 For transfer learning with ResNet embeddings where embedding dimension >> sample count:
 
 ```python
-from featsel import FeatureSelector
-from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+
+from featsel.selectors import ANOVAFSelector, MutualInfoSelector, VarianceThreshold
 
 # Example: 500 ResNet features, 50 rare disease CT image samples
 
 # Step 1: Quick preprocessing - remove zero-variance features
-prefilter = FeatureSelector(method='variance_threshold', threshold=0.01)
+prefilter = VarianceThreshold(threshold=0.01)
 
 # Step 2: Fast univariate screening to reduce dimensionality
-quick_select = FeatureSelector(method='anova_f', n_features=200)
+quick_select = ANOVAFSelector(n_features=200)
 
-# Step 3: Final selection (can use Lasso in Phase 2 for better results)
-final_select = FeatureSelector(method='mutual_info', n_features=50, random_state=42)
+# Step 3: Final selection
+final_select = MutualInfoSelector(n_features=50, random_state=42)
 
 # Create pipeline
 pipe = Pipeline([
@@ -247,13 +243,14 @@ pipe.fit(X_embeddings, y_disease_labels)
 ### Multi-Target Support with DataLoader
 
 ```python
-from featsel import DataLoader, FeatureSelector
+from featsel import DataLoader
+from featsel.selectors import ANOVAFSelector
 
 loader = DataLoader('configs/scanb_small.yaml')
 
 # Fit feature selection on PAM50 target
 loader.set_target('PAM50')
-selector = FeatureSelector(method='anova_f', n_features=100)
+selector = ANOVAFSelector(n_features=100)
 selector.fit(loader.X, loader.y)
 
 # Transform works with any target

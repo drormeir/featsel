@@ -8,8 +8,8 @@ file, and nothing else claims attention while it is open.
 **The wrapper and Higher Criticism selectors.**
 
 Add `RFESelector` in `selectors/rfe/` and `HigherCriticismSelector` in
-`selectors/higher_criticism/`, both behind the existing `BaseSelector`
-interface and registered in `FeatureSelector._METHOD_MAP`. Higher Criticism
+`selectors/higher_criticism/`, both subclassing `FeatureSelector`, which
+registers them by class name, each with its own `tests/`. Higher Criticism
 follows the published Donoho and Jin thresholding formulation: per-feature
 p-values from a univariate test, sorted, HC statistic, threshold. It selects
 its own feature count, so `n_features` is ignored for it.

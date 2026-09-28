@@ -24,8 +24,9 @@ Gene expression data from the Sweden Cancerome Analysis Network - Breast.
 
 **Config**: `configs/scanb_small.yaml`
 
-Shape: 9,265 genes x 3,069 samples. This is the pre-filtered version handed out
-with the course and the one all reported results use.
+Shape: 9,265 genes x 3,069 samples; 9,259 genes after the loader drops
+constant and empty columns. This is the pre-filtered version handed out with
+the course and the one all reported results use.
 
 ### SCAN-B Breast Cancer, full gene set (`scanb_full/`)
 
@@ -41,5 +42,6 @@ reported method comparison.
 
 1. Create a subfolder: `datasets/<your_dataset>/`
 2. Add `features.csv` and `metadata.csv` following the expected format
-3. Create a config file: `configs/<your_dataset>.yaml`
-4. Run the pipeline with: `python -m src.run --config configs/<your_dataset>.yaml`
+3. Create a dataset config: `configs/<your_dataset>.yaml` (see `configs/README.md`)
+4. Create an experiment config that names it, then run:
+   `python -m featsel.run --config configs/<your_experiment>.yaml`

@@ -43,8 +43,10 @@ The PAM50 molecular subtype classification serves as the primary prediction targ
 
 This report is organized as follows:
 
-- **Chapter 2 - Background**: Theoretical foundations of feature selection methods and their applicability to high-dimensional data
-- **Chapter 3 - Methods**: Detailed description of the implemented feature selection pipeline and evaluation methodology
-- **Chapter 4 - Experiments**: Experimental setup, parameter configurations, and execution details
-- **Chapter 5 - Results**: Comparative analysis of feature selection methods and model performance
-- **Chapter 6 - Conclusion**: Summary of findings, limitations, and future directions
+- **Chapter 2 - Related Work**: The filter, embedded and wrapper families, Higher Criticism, and prior comparative studies on gene expression
+- **Chapter 3 - Data**: SCAN-B and the second dataset, their targets and class imbalance
+- **Chapter 4 - Methodology**: The selection methods, the evaluation protocol and the metrics
+- **Chapter 5 - Software and Implementation**: The `featsel` package and its parallel infrastructure
+- **Chapter 6 - Results**: Comparison of the selection methods across models, targets and datasets
+- **Chapter 7 - Discussion**: What the results mean, threats to validity and limitations
+- **Chapter 8 - Conclusion**: What was built, what was learned, and future work

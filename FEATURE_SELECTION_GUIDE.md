@@ -2,6 +2,10 @@
 
 A comprehensive guide to feature selection approaches with focus on gene expression analysis and high-dimensional biological data.
 
+The code examples use `featsel`'s selector classes, imported from
+`featsel.selectors`. Every built selector has a runnable tutorial at
+`featsel/selectors/<name>/demos/tutorial.ipynb`. RFE is planned, not built.
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
@@ -64,12 +68,12 @@ Gene expression datasets typically contain measurements for 20,000+ genes but on
 
 The SCAN-B dataset (Sweden Cancerome Analysis Network - Breast) exemplifies these challenges:
 - **Goal**: Predict PAM50 molecular subtypes (Basal, LumA, LumB, Her2, Normal)
-- **Data**: ~20,000 gene expression measurements per patient
-- **Sample size**: Hundreds to thousands of patients
+- **Data**: 9,259 genes per patient after cleaning (`configs/scanb_small.yaml`)
+- **Sample size**: 3,069 patients
 - **Clinical importance**: Subtype determines treatment strategy
 - **Need for interpretation**: Oncologists must understand which genes differentiate subtypes
 
-**The question**: From 20,000 genes, which 50-200 are most predictive of cancer subtype?
+**The question**: From 9,259 genes, which 50-200 are most predictive of cancer subtype?
 
 ---
 
@@ -136,14 +140,15 @@ Keep feature i if Var(X_i) > threshold
 #### Example Use Case: Remove Housekeeping Genes
 
 ```python
-from featsel import FeatureSelector
+from featsel.selectors import VarianceThreshold
 
 # Remove genes with very low variance
-selector = FeatureSelector(method='variance_threshold', threshold=0.01)
+selector = VarianceThreshold(threshold=0.01)
 selector.fit(gene_expression_data)  # No target needed - unsupervised
 
-print(f"Removed {n_removed} low-variance genes")
-print(f"Kept {selector.n_features_out_} genes")
+kept = selector.get_support()
+print(f"Removed {(~kept).sum()} low-variance genes")
+print(f"Kept {kept.sum()} genes")
 ```
 
 **Real scenario**: In a dataset with 20,000 genes, 2,000-3,000 may have near-zero variance (constitutive/housekeeping genes expressed at constant levels). Removing these immediately reduces dimensionality without losing information.
@@ -198,19 +203,22 @@ For regression tasks, F-test for linear regression is used instead.
 #### Example Use Case: Identify Subtype-Specific Genes
 
 ```python
-from featsel import FeatureSelector
+import pandas as pd
+from featsel.selectors import ANOVAFSelector
 
 # Find genes that differ between cancer subtypes
-selector = FeatureSelector(
-    method='anova_f',
+selector = ANOVAFSelector(
     n_features=200,
     task='classification'
 )
 
 selector.fit(gene_expression_data, cancer_subtypes)
 
-# Get most significant genes
-report = selector.get_report()
+# Get most significant genes (feature_names_in_ exists for DataFrame input)
+report = pd.DataFrame({'feature_name': selector.feature_names_in_,
+                       'importance_score': selector.feature_importances_})
+report['rank'] = report.importance_score.rank(ascending=False).astype(int)
+report = report.sort_values('rank')
 top_genes = report.head(20)
 print(top_genes[['feature_name', 'importance_score', 'rank']])
 ```
@@ -273,12 +281,12 @@ For continuous features, MI is estimated using k-nearest neighbors.
 #### Example Use Case: Capture Non-Linear Gene-Phenotype Relationships
 
 ```python
-from featsel import FeatureSelector
+from featsel.selectors import MutualInfoSelector
 
 # Find genes with any relationship to target (linear or non-linear)
-selector = FeatureSelector(
-    method='mutual_info',
+selector = MutualInfoSelector(
     n_features=200,
+    task='regression',  # continuous target
     n_neighbors=3,
     random_state=42
 )
@@ -348,11 +356,10 @@ Correlation-based selection combines two objectives:
 #### Example Use Case: Remove Co-Expressed Gene Redundancy
 
 ```python
-from featsel import FeatureSelector
+from featsel.selectors import CorrelationSelector
 
 # Select genes correlated with outcome, remove redundant co-expressed genes
-selector = FeatureSelector(
-    method='correlation',
+selector = CorrelationSelector(
     n_features=100,
     target_threshold=0.1,      # Keep genes with |r| > 0.1 with target
     inter_feature_threshold=0.95  # Remove pairs with r > 0.95
@@ -415,7 +422,8 @@ minimize: (1/2n) Σ(y_i - Σ β_j x_ij)² + α Σ|β_j|
 
 where:
 - β_j = coefficient for feature j
-- α = regularization strength (larger α → more zeros)
+- α = regularization strength (larger α → more zeros). `LassoSelector` takes
+  `alpha` for regression and `C = 1/α` for classification
 - |β_j| = absolute value (creates sparsity)
 ```
 
@@ -424,17 +432,16 @@ where:
 #### Example Use Case: Sparse Gene Signature for Classification
 
 ```python
-from featsel import FeatureSelector
+from featsel.selectors import LassoSelector
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 
-# Select genes via Lasso regularization
-# Phase 2 implementation (not yet available):
-selector = FeatureSelector(
-    method='lasso',
+# Select genes via L1-penalized logistic regression
+selector = LassoSelector(
     n_features=50,
-    alpha=0.01,  # Regularization strength
-    task='classification'
+    C=0.1,  # Inverse regularization strength: smaller is sparser
+    task='classification',
+    random_state=42
 )
 
 pipe = Pipeline([
@@ -445,7 +452,7 @@ pipe = Pipeline([
 pipe.fit(gene_expression_data, cancer_subtypes)
 
 # Selected genes form a sparse signature
-selected_genes = selector.selected_features_
+selected_genes = list(selector.get_feature_names_out())
 print(f"Gene signature: {selected_genes}")
 ```
 
@@ -498,7 +505,7 @@ print(f"Gene signature: {selected_genes}")
 
 #### Theory
 
-Tree-based models (Random Forest, Gradient Boosting) naturally produce feature importance scores based on how much each feature improves predictions across all trees.
+Tree-based models (Random Forest, Gradient Boosting) naturally produce feature importance scores based on how much each feature improves predictions across all trees. `featsel`'s `TreeImportanceSelector` uses a random forest.
 
 **Importance measures**:
 
@@ -509,6 +516,7 @@ Tree-based models (Random Forest, Gradient Boosting) naturally produce feature i
 2. **Permutation importance**:
    - Measure accuracy drop when feature values are randomly shuffled
    - More reliable but computationally expensive
+   - Not used by `TreeImportanceSelector`, which uses impurity importance
 
 **Random Forest algorithm**:
 ```
@@ -523,12 +531,10 @@ Tree-based models (Random Forest, Gradient Boosting) naturally produce feature i
 #### Example Use Case: Non-Linear Gene Interactions
 
 ```python
-from featsel import FeatureSelector
-from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
+from featsel.selectors import TreeImportanceSelector
 
-# Phase 2 implementation (not yet available):
-selector = FeatureSelector(
-    method='random_forest',
+selector = TreeImportanceSelector(
     n_features=100,
     n_estimators=100,
     task='classification',
@@ -539,7 +545,10 @@ selector.fit(gene_expression_data, cancer_subtypes)
 
 # Feature importance from Random Forest
 importances = selector.feature_importances_
-report = selector.get_report()
+report = pd.DataFrame({'feature_name': selector.feature_names_in_,
+                       'importance_score': selector.feature_importances_})
+report['rank'] = report.importance_score.rank(ascending=False).astype(int)
+report = report.sort_values('rank')
 
 # Plot top genes
 import matplotlib.pyplot as plt
@@ -622,13 +631,15 @@ RFE is a backward selection method that recursively removes the least important 
 
 #### Example Use Case: Optimize Feature Set for Specific Model
 
+**Planned, not built.** `RFESelector` is the next selector (see `NEXT.md`).
+Until then, scikit-learn's `RFE` does the same job. The sketch below shows
+the intended use; its parameters are not final.
+
 ```python
-from featsel import FeatureSelector
+from featsel.selectors import RFESelector  # planned
 from sklearn.svm import SVC
 
-# Phase 3 implementation (not yet available):
-selector = FeatureSelector(
-    method='rfe',
+selector = RFESelector(
     n_features=50,
     estimator=SVC(kernel='linear'),  # Model to use for ranking
     step=10  # Remove 10 features at a time
@@ -637,7 +648,7 @@ selector = FeatureSelector(
 selector.fit(gene_expression_data, cancer_subtypes)
 
 # RFE ranking: 1 = selected, >1 = iteration when removed
-ranking = selector.selector_.ranking_
+ranking = selector.ranking_
 ```
 
 **Real scenario**: Developing a minimal gene panel for clinical qPCR testing (which can only measure 50-100 genes due to cost). RFE finds the best 50 genes specifically for the SVM classifier that will be deployed, accounting for how genes work together in that specific model.
@@ -672,12 +683,12 @@ ranking = selector.selector_.ranking_
 - **Overfitting risk**: With p >> n, repeated model training can overfit
 - **Not exploratory**: Only useful when you've committed to a specific model
 
-**Recommended workflow for gene expression**:
+**Recommended workflow for gene expression** (`RFESelector` is planned):
 ```python
 # Multi-stage approach
 pipe = Pipeline([
-    ('prefilter', FeatureSelector(method='anova_f', n_features=500)),  # Fast
-    ('rfe', FeatureSelector(method='rfe', n_features=50, step=10)),     # Slow
+    ('prefilter', ANOVAFSelector(n_features=500)),  # Fast
+    ('rfe', RFESelector(n_features=50, step=10)),     # Slow
     ('clf', SVC())
 ])
 ```
@@ -753,8 +764,8 @@ Goal: Optimal set for specific model (slow)
 ```python
 # Conservative, filter-only approach
 pipe = Pipeline([
-    ('variance', FeatureSelector(method='variance_threshold', threshold=0.01)),
-    ('anova', FeatureSelector(method='anova_f', n_features=50)),
+    ('variance', VarianceThreshold(threshold=0.01)),
+    ('anova', ANOVAFSelector(n_features=50)),
     ('clf', LogisticRegression(penalty='l2', C=1.0))  # L2 for stability
 ])
 ```
@@ -769,9 +780,9 @@ pipe = Pipeline([
 ```python
 # Multi-stage: Filter → Embedded
 pipe = Pipeline([
-    ('variance', FeatureSelector(method='variance_threshold', threshold=0.01)),
-    ('anova', FeatureSelector(method='anova_f', n_features=500)),
-    ('lasso', FeatureSelector(method='lasso', n_features=100, alpha=0.01)),
+    ('variance', VarianceThreshold(threshold=0.01)),
+    ('anova', ANOVAFSelector(n_features=500)),
+    ('lasso', LassoSelector(n_features=100, C=0.1, random_state=42)),
     ('clf', LogisticRegression())
 ])
 ```
@@ -782,13 +793,13 @@ pipe = Pipeline([
 
 **Challenge**: Can afford computationally expensive methods
 
-**Recommended approach**:
+**Recommended approach** (`RFESelector` is planned):
 ```python
 # Full pipeline: Filter → Embedded → Wrapper
 pipe = Pipeline([
-    ('variance', FeatureSelector(method='variance_threshold', threshold=0.01)),
-    ('rf_importance', FeatureSelector(method='random_forest', n_features=500)),
-    ('rfe', FeatureSelector(method='rfe', n_features=100, step=10)),
+    ('variance', VarianceThreshold(threshold=0.01)),
+    ('rf_importance', TreeImportanceSelector(n_features=500)),
+    ('rfe', RFESelector(n_features=100, step=10)),
     ('clf', SVC(kernel='rbf'))
 ])
 ```
@@ -802,13 +813,14 @@ pipe = Pipeline([
 **Recommended approach**:
 ```python
 # Try multiple methods, compare results
-methods = ['anova_f', 'mutual_info', 'lasso', 'random_forest']
-results = {}
+from featsel.selectors import (
+    ANOVAFSelector, LassoSelector, MutualInfoSelector, TreeImportanceSelector,
+)
 
-for method in methods:
-    selector = FeatureSelector(method=method, n_features=200)
-    selector.fit(X, y)
-    results[method] = selector.get_report()
+results = {}
+for cls in (ANOVAFSelector, MutualInfoSelector, LassoSelector, TreeImportanceSelector):
+    selector = cls(n_features=200).fit(X, y)
+    results[cls.__name__] = selector.get_feature_names_out()
 
 # Analyze overlap and differences
 # Genes selected by all methods: robust candidates
@@ -825,12 +837,12 @@ for method in methods:
 ```python
 # Focus on sparsity
 pipe = Pipeline([
-    ('variance', FeatureSelector(method='variance_threshold', threshold=0.05)),
-    ('lasso', FeatureSelector(method='lasso', n_features=20, alpha=0.1)),
+    ('variance', VarianceThreshold(threshold=0.05)),
+    ('lasso', LassoSelector(n_features=20, C=0.05, random_state=42)),
     ('clf', LogisticRegression())
 ])
 
-# Validate with nested cross-validation
+# Validate with cross-validation; selection refits inside every fold
 from sklearn.model_selection import cross_val_score
 scores = cross_val_score(pipe, X, y, cv=10)
 ```
@@ -849,6 +861,8 @@ scores = cross_val_score(pipe, X, y, cv=10)
    X_train_selected = selector.transform(X_train)
    X_test_selected = selector.transform(X_test)
    ```
+   `transform` returns a NumPy array, as in scikit-learn. Call
+   `selector.set_output(transform='pandas')` first to keep gene names.
 
 2. **Not Removing Batch Effects First**
    - Gene expression has technical batch effects

@@ -20,9 +20,9 @@ secondary to the ordering between methods and to the gap over the control.
 
 | Axis | Values | What it answers |
 |---|---|---|
-| Selector | random (control), anova_f, lasso, tree_importance, plus wrapper and Higher Criticism when implemented | The primary question. |
+| Selector | RandomSelector (control), ANOVAFSelector, LassoSelector, TreeImportanceSelector; RFESelector and HigherCriticismSelector when implemented | The primary question. |
 | `k` | A percent of the total sample count, up to 100%, plus `k=50` and all features | How much of the gain survives as the budget grows. `k=50` is an anchor: PAM50 is a 50-gene signature. All features is the no-selection reference. See section 2d. |
-| Classifier | logistic_regression, linear_svm, random_forest, knn, lda_shrinkage, xgboost | How much external selection is worth to a model, given its own regularization. |
+| Classifier | logistic_regression, linear_svm, random_forest, knn, lda_shrinkage; xgboost if installed (it is not in the current environment) | How much external selection is worth to a model, given its own regularization. |
 | Task framing | 5-class PAM50, plus five one-vs-rest binary tasks | Whether the best selector differs per subtype; the 5-class number hides this. |
 | Dataset | SCAN-B, plus one non-gene-expression set (task 4, undecided) | Whether conclusions generalize beyond genomics. |
 | Split | 100 stratified Monte Carlo splits, fixed seed | Error bars. See section 2a. |
@@ -217,13 +217,13 @@ Predictive quality, all reported per cell:
   alone: LumA is 1540 samples and Normal is 202, so accuracy rewards ignoring
   the rare subtypes.
 - **balanced accuracy** and **MCC** - imbalance-robust cross-checks.
-- **G-mean** (geometric mean of per-class recalls, Kubat and Matwin 1997) -
-  planned. Stricter than macro-F1 because it collapses to zero if any subtype
+- **G-mean** (geometric mean of per-class recalls, Kubat and Matwin 1997).
+  Stricter than macro-F1 because it collapses to zero if any subtype
   is never predicted.
 
 Selection quality:
 
-- **Stability** - Kuncheva's (2007) consistency index over folds,
+- **Stability** - Kuncheva's (2007) consistency index over splits,
   chance-corrected so a random selector scores 0 rather than the positive
   overlap it gets by luck. A method that scores well but is unstable produces
   a gene list that is an artefact of the split.
@@ -259,7 +259,8 @@ These come from `SCOPE.md` 3a and are not negotiable.
 
 ## 5. What the current results show
 
-From `configs/experiment_classifiers.yaml` (random and anova_f only, 12
+From `configs/experiment_classifiers.yaml` (RandomSelector and ANOVAFSelector
+only, 12
 Monte Carlo splits at train fraction 0.5, medians over splits):
 
 - ANOVA F beats random at every `k` and every classifier.

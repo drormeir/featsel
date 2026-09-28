@@ -1,46 +1,67 @@
 # Configuration Files
 
-Dataset-specific configuration files for the feature selection pipeline.
+Two kinds of YAML file. A **dataset config** says where a dataset's files are
+and how to read them. An **experiment config** names a dataset config and
+describes one comparison. Every path in either kind is relative to the file
+itself.
 
 ## Files
 
-| File | Description |
-|------|-------------|
-| `template.yaml` | Documented template with all available options |
-| `scanb_small.yaml` | SCAN-B breast cancer, course version (9,265 genes) |
-| `scanb_full.yaml` | SCAN-B breast cancer, full gene set (30,866 genes), timing runs only |
+| File | Kind | Description |
+|------|------|-------------|
+| `template.yaml` | dataset | Documented template for a new dataset config |
+| `scanb_small.yaml` | dataset | SCAN-B breast cancer, course version: 3,069 patients, 9,259 genes after cleaning |
+| `scanb_full.yaml` | dataset | SCAN-B breast cancer, full gene set, for timing runs only |
+| `experiment_classifiers.yaml` | experiment | Random vs ANOVA F across five classifiers, 12 splits |
+| `experiment_baseline.yaml` | experiment | The random-selection control across all task framings |
+| `experiment_scanb.yaml` | experiment | The full SCAN-B design: four selectors, three train fractions |
 
-## Task Types
+## Dataset config
 
-The pipeline supports three task types:
+Keys the loader reads:
 
-| Task | Config Setting | Use Case |
-|------|----------------|----------|
-| Binary classification | `type: classification`, `classification_type: binary` | Two classes (e.g., disease vs healthy) |
-| Multi-class classification | `type: classification`, `classification_type: multiclass` | Three or more classes (e.g., cancer subtypes) |
-| Regression | `type: regression` | Continuous target (e.g., survival time, gene expression level) |
+| Key | Meaning |
+|-----|---------|
+| `name` | Name shown in reports |
+| `paths.features`, `paths.metadata` | CSV files, relative to this config |
+| `sample_id_column` | Metadata column that identifies a sample |
+| `target_column` | Default target |
+| `transpose_features` | `true` if `features.csv` has samples as columns |
+| `separator` | CSV separator, default `,` |
 
-## Creating a New Config
+Other keys, such as `task`, `target_classes` and `alternative_targets`,
+document the dataset for readers. The code does not read them. The runner
+supports classification only.
 
-1. Copy `template.yaml` to `<dataset_name>.yaml`
-2. Fill in required fields (marked `[REQUIRED]` in template)
-3. Adjust optional settings as needed
-4. Run: `python -m src.run --config configs/<dataset_name>.yaml`
+## Experiment config
 
-## Feature Selection Methods by Task Type
+| Key | Default | Meaning |
+|-----|---------|---------|
+| `dataset` | required | Dataset config, relative to this file |
+| `output` | required | Output CSV, relative to this file |
+| `target` | dataset default | Target column to predict |
+| `selectors` | required | List of `{name, k, params, label}`. `name` is a selector class name, case-insensitive, such as `ANOVAFSelector` |
+| `models` | required | List of `{name, params, label}`. `name` is one of `logistic_regression`, `linear_svm`, `random_forest`, `knn`, `lda` (and `xgboost` if installed) |
+| `seed` | `42` | Global seed; each split derives its own |
+| `n_splits` | `100` | Stratified Monte Carlo splits |
+| `train_sizes` | `[0.5]` | Training fractions |
+| `preprocess` | `["standard"]` | `none`, `standard` or `quantile_normal`, fit on the training part |
+| `task_framings` | `["multiclass"]` | `multiclass`, `one_vs_rest`, `one_vs_one` |
+| `metrics` | all | `accuracy`, `macro_f1`, `balanced_accuracy`, `mcc`, `g_mean` |
+| `n_jobs` | `1` | Worker processes; splits run in parallel. `-1` uses every core |
 
-### Classification
-- Variance threshold
-- Chi-squared test
-- ANOVA F-test (`f_classif`)
-- Mutual information (`mutual_info_classif`)
-- L1-regularized logistic regression
-- Tree-based importance (Random Forest, Gradient Boosting)
+## Running
 
-### Regression
-- Variance threshold
-- Pearson/Spearman correlation
-- F-test (`f_regression`)
-- Mutual information (`mutual_info_regression`)
-- Lasso (L1-regularized linear regression)
-- Tree-based importance (Random Forest, Gradient Boosting)
+```bash
+python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs -1
+```
+
+`--out`, `--n-splits` and `--n-jobs` override the config. `--resume` skips
+rows already in the output CSV.
+
+## Creating a new dataset
+
+1. Put `features.csv` and `metadata.csv` in `datasets/<name>/`.
+2. Copy `template.yaml` to `<name>.yaml` and fill in the keys above.
+3. Copy an experiment config, point its `dataset` at `<name>.yaml`, and set
+   its `output`.
