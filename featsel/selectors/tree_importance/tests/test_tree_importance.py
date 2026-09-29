@@ -3,8 +3,20 @@ Tests for the tree_importance selector.
 """
 
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectFromModel
 
 from featsel.selectors import TreeImportanceSelector
+from tests.sklearn_reference import assert_not_slower, assert_same_selection
+
+
+def _with_sklearn():
+    """This selector and its scikit-learn equivalent, both unfitted."""
+    return (
+        TreeImportanceSelector(n_features=20, n_estimators=50, random_state=0),
+        SelectFromModel(RandomForestClassifier(n_estimators=50, random_state=0),
+                        max_features=20, threshold=-np.inf),
+    )
 
 
 class TestTreeImportanceSelector:
@@ -29,3 +41,11 @@ class TestTreeImportanceSelector:
 
         assert np.array_equal(first.get_support(indices=True),
                               second.get_support(indices=True))
+
+    def test_matches_sklearn(self, sklearn_reference_data):
+        """Test that it selects the same features as SelectFromModel with a random forest."""
+        assert_same_selection(*_with_sklearn(), *sklearn_reference_data)
+
+    def test_not_slower_than_sklearn(self, sklearn_reference_data):
+        """Test that fit is at most 5% slower than SelectFromModel with a random forest."""
+        assert_not_slower(*_with_sklearn(), *sklearn_reference_data)

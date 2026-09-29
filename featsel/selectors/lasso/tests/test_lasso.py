@@ -2,9 +2,23 @@
 Tests for the lasso selector.
 """
 
+import numpy as np
 import pytest
+from sklearn.feature_selection import SelectFromModel
+from sklearn.linear_model import LogisticRegression
 
 from featsel.selectors import LassoSelector
+from tests.sklearn_reference import assert_not_slower, assert_same_selection
+
+
+def _with_sklearn():
+    """This selector and its scikit-learn equivalent, both unfitted."""
+    return (
+        LassoSelector(n_features=20, C=0.1, random_state=0),
+        SelectFromModel(LogisticRegression(l1_ratio=1, C=0.1, solver='liblinear',
+                                           max_iter=1000, random_state=0),
+                        max_features=20, threshold=-np.inf),
+    )
 
 
 class TestLassoSelector:
@@ -41,3 +55,11 @@ class TestLassoSelector:
 
         with pytest.raises(ValueError, match="requires target"):
             LassoSelector(n_features=10).fit(X, None)
+
+    def test_matches_sklearn(self, sklearn_reference_data):
+        """Test that it selects the same features as SelectFromModel with L1 logistic regression."""
+        assert_same_selection(*_with_sklearn(), *sklearn_reference_data)
+
+    def test_not_slower_than_sklearn(self, sklearn_reference_data):
+        """Test that fit is at most 5% slower than SelectFromModel with L1 logistic regression."""
+        assert_not_slower(*_with_sklearn(), *sklearn_reference_data)

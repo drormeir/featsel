@@ -3,8 +3,15 @@ Tests for the variance_threshold selector.
 """
 
 import pandas as pd
+from sklearn.feature_selection import VarianceThreshold as SKLearnVarianceThreshold
 
 from featsel.selectors import VarianceThreshold
+from tests.sklearn_reference import assert_not_slower, assert_same_selection
+
+
+def _with_sklearn():
+    """This selector and its scikit-learn equivalent, both unfitted."""
+    return VarianceThreshold(threshold=0.5), SKLearnVarianceThreshold(threshold=0.5)
 
 
 class TestVarianceThreshold:
@@ -39,3 +46,11 @@ class TestVarianceThreshold:
 
         assert isinstance(X_selected, pd.DataFrame)
         assert X_selected.shape[0] == X.shape[0]
+
+    def test_matches_sklearn(self, sklearn_reference_data):
+        """Test that it selects the same features as scikit-learn's VarianceThreshold."""
+        assert_same_selection(*_with_sklearn(), *sklearn_reference_data)
+
+    def test_not_slower_than_sklearn(self, sklearn_reference_data):
+        """Test that fit is at most 5% slower than scikit-learn's VarianceThreshold."""
+        assert_not_slower(*_with_sklearn(), *sklearn_reference_data)

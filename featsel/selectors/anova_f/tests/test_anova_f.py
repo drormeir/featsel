@@ -3,8 +3,15 @@ Tests for the anova_f selector.
 """
 
 import pytest
+from sklearn.feature_selection import SelectKBest, f_classif
 
 from featsel.selectors import ANOVAFSelector
+from tests.sklearn_reference import assert_not_slower, assert_same_selection
+
+
+def _with_sklearn():
+    """This selector and its scikit-learn equivalent, both unfitted."""
+    return ANOVAFSelector(n_features=20), SelectKBest(f_classif, k=20)
 
 
 class TestANOVAFSelector:
@@ -44,3 +51,11 @@ class TestANOVAFSelector:
         selector = ANOVAFSelector(n_features=10).fit(X, y)
 
         assert len(selector.feature_importances_) == X.shape[1]
+
+    def test_matches_sklearn(self, sklearn_reference_data):
+        """Test that it selects the same features as SelectKBest(f_classif)."""
+        assert_same_selection(*_with_sklearn(), *sklearn_reference_data)
+
+    def test_not_slower_than_sklearn(self, sklearn_reference_data):
+        """Test that fit is at most 5% slower than SelectKBest(f_classif)."""
+        assert_not_slower(*_with_sklearn(), *sklearn_reference_data)

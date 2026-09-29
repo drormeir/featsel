@@ -145,6 +145,24 @@ def data_with_constant_features():
     return X_df, y_series
 
 
+@pytest.fixture(scope='session')
+def sklearn_reference_data():
+    """
+    Binary dataset for comparing a selector with its scikit-learn equivalent.
+
+    Returns
+    -------
+    X : np.ndarray of shape (200, 200)
+        Feature matrix, with feature variances spread between 0.01 and 4.
+    y : np.ndarray of shape (200,)
+        Binary target variable.
+    """
+    X, y = make_classification(n_samples=200, n_features=200, n_informative=20,
+                               random_state=0)
+    scale = np.random.default_rng(0).uniform(0.1, 2.0, X.shape[1])
+    return X * scale, y
+
+
 @pytest.fixture
 def scanb_loader():
     """
