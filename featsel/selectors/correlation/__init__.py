@@ -33,6 +33,9 @@ class CorrelationSelector(FeatureSelector):
     method : str, default='pearson'
         Correlation method: 'pearson', 'spearman', or 'kendall'.
 
+    check_input : bool, default=True
+        Validate X and y in fit. See FeatureSelector.
+
     Attributes
     ----------
     target_corr_ : pd.Series
@@ -55,11 +58,12 @@ class CorrelationSelector(FeatureSelector):
     """
 
     def __init__(self, n_features=None, target_threshold=0.1,
-                 inter_feature_threshold=0.95, method='pearson'):
+                 inter_feature_threshold=0.95, method='pearson', check_input=True):
         self.n_features = n_features
         self.target_threshold = target_threshold
         self.inter_feature_threshold = inter_feature_threshold
         self.method = method
+        self.check_input = check_input
 
     def fit(self, X, y):
         """

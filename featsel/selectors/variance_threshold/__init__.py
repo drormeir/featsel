@@ -21,6 +21,9 @@ class VarianceThreshold(FeatureSelector):
         Features with variance below this threshold will be removed.
         Default (0.0) removes features with zero variance.
 
+    check_input : bool, default=True
+        Validate X and y in fit. See FeatureSelector.
+
     Attributes
     ----------
     variances_ : np.ndarray
@@ -37,8 +40,9 @@ class VarianceThreshold(FeatureSelector):
     (4, 2)
     """
 
-    def __init__(self, threshold=0.0):
+    def __init__(self, threshold=0.0, check_input=True):
         self.threshold = threshold
+        self.check_input = check_input
 
     def fit(self, X, y=None):
         """

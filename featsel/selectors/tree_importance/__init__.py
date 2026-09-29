@@ -31,6 +31,9 @@ class TreeImportanceSelector(FeatureSelector):
     n_jobs : int, default=1
         Threads used to fit the forest.
 
+    check_input : bool, default=True
+        Validate X and y in fit. See FeatureSelector.
+
     Attributes
     ----------
     feature_importances_ : np.ndarray
@@ -46,13 +49,14 @@ class TreeImportanceSelector(FeatureSelector):
     """
 
     def __init__(self, n_features=None, n_estimators=200, task='classification',
-                 max_depth=None, random_state=None, n_jobs=1):
+                 max_depth=None, random_state=None, n_jobs=1, check_input=True):
         self.n_features = n_features
         self.n_estimators = n_estimators
         self.task = task
         self.max_depth = max_depth
         self.random_state = random_state
         self.n_jobs = n_jobs
+        self.check_input = check_input
 
     def fit(self, X, y):
         """

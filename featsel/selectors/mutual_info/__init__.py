@@ -27,6 +27,9 @@ class MutualInfoSelector(FeatureSelector):
     random_state : int, optional
         Random seed for reproducibility.
 
+    check_input : bool, default=True
+        Validate X and y in fit. See FeatureSelector.
+
     Attributes
     ----------
     feature_importances_ : np.ndarray
@@ -42,11 +45,12 @@ class MutualInfoSelector(FeatureSelector):
     """
 
     def __init__(self, n_features=None, task='classification', n_neighbors=3,
-                 random_state=None):
+                 random_state=None, check_input=True):
         self.n_features = n_features
         self.task = task
         self.n_neighbors = n_neighbors
         self.random_state = random_state
+        self.check_input = check_input
 
     def fit(self, X, y):
         """

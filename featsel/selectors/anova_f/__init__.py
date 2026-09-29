@@ -27,6 +27,9 @@ class ANOVAFSelector(FeatureSelector):
         Type of task: 'classification' or 'regression'.
         Determines whether to use f_classif or f_regression.
 
+    check_input : bool, default=True
+        Validate X and y in fit. See FeatureSelector.
+
     Attributes
     ----------
     scores_ : np.ndarray
@@ -45,10 +48,11 @@ class ANOVAFSelector(FeatureSelector):
     (100, 10)
     """
 
-    def __init__(self, n_features=None, alpha=0.05, task='classification'):
+    def __init__(self, n_features=None, alpha=0.05, task='classification', check_input=True):
         self.n_features = n_features
         self.alpha = alpha
         self.task = task
+        self.check_input = check_input
 
     def fit(self, X, y):
         """

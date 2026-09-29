@@ -38,6 +38,10 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     As in scikit-learn, transform() returns a NumPy array. Call
     set_output(transform='pandas') to keep DataFrame columns.
 
+    Every subclass takes check_input=True. False skips validating X and y in
+    fit, as scikit-learn's own check_input does. Use it only when X is already
+    a finite 2-D NumPy array and y a 1-D array.
+
     Every concrete subclass registers itself when it is defined, under its
     class name and any aliases given as a class keyword:
 
@@ -92,10 +96,18 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         return self.support_
 
     def _validate(self, X, y=None, requires_y=True):
-        """Validate the training data and record the input feature count and names."""
+        """
+        Validate the training data and record the input feature count and names.
+
+        With check_input=False only the feature count is recorded, and X and y
+        are returned as given.
+        """
+        if y is None and requires_y:
+            raise ValueError(f"{type(self).__name__} requires target values (y)")
+        if not self.check_input:
+            self.n_features_in_ = X.shape[1]
+            return X, y
         if y is None:
-            if requires_y:
-                raise ValueError(f"{type(self).__name__} requires target values (y)")
             return validate_data(self, X), None
         return validate_data(self, X, y)
 

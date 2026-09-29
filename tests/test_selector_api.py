@@ -74,6 +74,16 @@ def test_cross_val_score_in_a_pipeline(selector, small_classification_data):
 
 
 @pytest.mark.parametrize('selector', SELECTORS, ids=IDS)
+def test_skipping_input_check_keeps_the_selection(selector, small_classification_data):
+    """Test that check_input=False selects the same features from clean arrays."""
+    X, y = small_classification_data
+    checked = clone(selector).fit(X.values, y.values)
+    unchecked = clone(selector).set_params(check_input=False).fit(X.values, y.values)
+
+    assert np.array_equal(checked.get_support(), unchecked.get_support())
+
+
+@pytest.mark.parametrize('selector', SELECTORS, ids=IDS)
 def test_transform_before_fit_raises(selector, small_classification_data):
     """Test that an unfitted selector refuses to transform."""
     X, _ = small_classification_data

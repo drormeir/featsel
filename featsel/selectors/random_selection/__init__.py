@@ -27,6 +27,9 @@ class RandomSelector(FeatureSelector):
         Random seed for reproducibility. Selection is redrawn on every fit(),
         so a fixed seed is what makes resampling splits reproducible.
 
+    check_input : bool, default=True
+        Validate X and y in fit. See FeatureSelector.
+
     Attributes
     ----------
     feature_importances_ : np.ndarray
@@ -41,9 +44,10 @@ class RandomSelector(FeatureSelector):
     (100, 5)
     """
 
-    def __init__(self, n_features=None, random_state=None):
+    def __init__(self, n_features=None, random_state=None, check_input=True):
         self.n_features = n_features
         self.random_state = random_state
+        self.check_input = check_input
 
     def fit(self, X, y=None):
         """
