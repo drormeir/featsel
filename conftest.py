@@ -163,6 +163,25 @@ def sklearn_reference_data():
     return X * scale, y
 
 
+@pytest.fixture(scope='session')
+def sklearn_timing_data():
+    """
+    Larger version of sklearn_reference_data, for timing the fast selectors.
+
+    On the small dataset a filter fits in about 1 ms, where timing noise alone
+    exceeds 5%.
+
+    Returns
+    -------
+    X : np.ndarray of shape (1000, 4000)
+    y : np.ndarray of shape (1000,)
+    """
+    X, y = make_classification(n_samples=1000, n_features=4000, n_informative=20,
+                               random_state=0)
+    scale = np.random.default_rng(0).uniform(0.1, 2.0, X.shape[1])
+    return X * scale, y
+
+
 @pytest.fixture
 def scanb_loader():
     """

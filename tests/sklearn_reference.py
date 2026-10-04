@@ -9,7 +9,9 @@ import time
 
 import numpy as np
 
-REPEATS = 10
+# 50 fits per side, then one comparison of the medians. With 10, two equal
+# implementations drifted up to 5% apart from timing noise alone.
+REPEATS = 50
 MAX_SLOWDOWN = 1.05
 
 
