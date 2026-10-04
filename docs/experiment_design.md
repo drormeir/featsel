@@ -20,7 +20,7 @@ secondary to the ordering between methods and to the gap over the control.
 
 | Axis | Values | What it answers |
 |---|---|---|
-| Selector | RandomSelector (control), ANOVAFSelector, LassoSelector, TreeImportanceSelector; RFESelector and HigherCriticismSelector when implemented | The primary question. |
+| Selector | RandomSelector (control), ANOVAFSelector, LassoSelector, TreeImportanceSelector, RFESelector; HigherCriticismSelector when implemented | The primary question. |
 | `k` | A percent of the total sample count, up to 100%, plus `k=50` and all features | How much of the gain survives as the budget grows. `k=50` is an anchor: PAM50 is a 50-gene signature. All features is the no-selection reference. See section 2d. |
 | Classifier | logistic_regression, linear_svm, random_forest, knn, lda_shrinkage; xgboost if installed (it is not in the current environment) | How much external selection is worth to a model, given its own regularization. |
 | Task framing | 5-class PAM50, plus five one-vs-rest binary tasks | Whether the best selector differs per subtype; the 5-class number hides this. |

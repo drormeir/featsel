@@ -16,9 +16,12 @@ Training models on such data leads to overfitting, long computation times, and p
 
 This project implements a feature selection pipeline that:
 
-- Applies multiple feature selection methods: filter (variance, ANOVA F, mutual
-  information, correlation) and embedded (Lasso, random forest importance),
-  plus a random-selection control. Wrapper (RFE) and Higher Criticism are planned.
+- Applies multiple feature selection methods: filter (variance, ANOVA F with a
+  fixed count, a percentile, or a false discovery or family-wise error rate,
+  mutual information, correlation), embedded (Lasso, random forest
+  importance) and wrapper (recursive feature elimination, with or without
+  cross-validation, and sequential selection), plus a random-selection
+  control. Higher Criticism is planned.
 - Compares them under one protocol: stratified Monte Carlo splits, with every
   selector fit on the training part only
 - Runs the splits in parallel

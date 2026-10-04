@@ -50,6 +50,11 @@ supports classification only.
 | `metrics` | all | `accuracy`, `macro_f1`, `balanced_accuracy`, `mcc`, `g_mean` |
 | `n_jobs` | `1` | Worker processes; splits run in parallel. `-1` uses every core |
 
+Each value in a selector's `k` list is passed as its `n_features`. Four
+selectors have no `n_features` and choose their own count: `FDRSelector`,
+`FWESelector`, `PercentileSelector` and `RFECVSelector`. Leave out `k` for
+them. A `k` fails at the first split.
+
 ## Running
 
 ```bash

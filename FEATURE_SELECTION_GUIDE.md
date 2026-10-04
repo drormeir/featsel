@@ -4,7 +4,7 @@ A comprehensive guide to feature selection approaches with focus on gene express
 
 The code examples use `featsel`'s selector classes, imported from
 `featsel.selectors`. Every built selector has a runnable tutorial at
-`featsel/selectors/<name>/demos/tutorial.ipynb`. RFE is planned, not built.
+`featsel/selectors/<name>/demos/tutorial.ipynb`.
 
 ## Table of Contents
 
@@ -405,11 +405,65 @@ selector.fit(gene_expression_data, cancer_subtype_binary)
 
 ---
 
+### 5. Cutoffs on the F-test: FDR, FWE and Percentile
+
+#### Theory
+
+These three rank genes by the same ANOVA F-test as section 2. They differ
+only in where they cut the ranking.
+
+- `FDRSelector` controls the **false discovery rate** (Benjamini and Hochberg,
+  1995). Sort the m p-values, smallest first. Keep the i-th gene if its p-value
+  is at most `alpha * i / m`. On average, at most a fraction `alpha` of the
+  kept genes are false discoveries.
+- `FWESelector` controls the **family-wise error rate** (Bonferroni). Keep a
+  gene if its p-value is below `alpha / m`. The chance of keeping even one
+  uninformative gene is then at most `alpha`.
+- `PercentileSelector` keeps the top `percentile` percent of genes by F.
+
+FDR and FWE choose their own count. Percentile fixes a share instead of a
+number.
+
+#### Example Use Case: Let an Error Rate Set the Count
+
+```python
+from featsel.selectors import FDRSelector, FWESelector
+
+fdr = FDRSelector(alpha=0.05).fit(gene_expression_data, cancer_subtypes)
+fwe = FWESelector(alpha=0.05).fit(gene_expression_data, cancer_subtypes)
+
+print(fdr.get_support().sum(), 'genes at a 5% false discovery rate')
+print(fwe.get_support().sum(), 'genes at a 5% family-wise error rate')
+```
+
+Every gene FWE keeps, FDR keeps too. FDR usually keeps more.
+
+#### When to Choose Them
+
+✅ **Use when:**
+- You want the count justified by a stated error rate, not guessed
+- You compare against Higher Criticism, which also picks its own count
+- You compare datasets of different widths (Percentile)
+
+❌ **Don't use when:**
+- You need a fixed number of genes, such as a panel of 50
+- The signal is not a difference in means (the F-test's blind spot)
+
+#### Gene Expression Relevance
+
+When many genes differ in mean between classes, FDR can keep thousands.
+FWE's cutoff tightens as genes are added, so on wide data it keeps only the
+strongest. Percentile's count grows with the number of genes, even when the
+signal does not. When nothing passes, FDR and FWE raise an error instead of
+returning zero genes.
+
+---
+
 ## Embedded Methods
 
 Embedded methods perform feature selection as part of the model training process. The model itself determines feature importance through its internal mechanisms.
 
-### 5. L1 Regularization (Lasso)
+### 6. L1 Regularization (Lasso)
 
 #### Theory
 
@@ -501,7 +555,7 @@ print(f"Gene signature: {selected_genes}")
 
 ---
 
-### 6. Tree-Based Importance (Random Forest, Gradient Boosting)
+### 7. Tree-Based Importance (Random Forest, Gradient Boosting)
 
 #### Theory
 
@@ -613,7 +667,7 @@ plt.title('Top 20 Genes by Random Forest Importance')
 
 Wrapper methods use the predictive model itself to evaluate feature subsets. They iteratively select features based on model performance.
 
-### 7. Recursive Feature Elimination (RFE)
+### 8. Recursive Feature Elimination (RFE)
 
 #### Theory
 
@@ -631,25 +685,31 @@ RFE is a backward selection method that recursively removes the least important 
 
 #### Example Use Case: Optimize Feature Set for Specific Model
 
-**Planned, not built.** `RFESelector` is the next selector (see `NEXT.md`).
-Until then, scikit-learn's `RFE` does the same job. The sketch below shows
-the intended use; its parameters are not final.
+`RFESelector` is SVM-RFE (Guyon et al., 2002): the model is a linear SVM,
+and a feature's importance is the size of its weight. It wraps
+scikit-learn's `RFE`. Classification only.
 
 ```python
-from featsel.selectors import RFESelector  # planned
-from sklearn.svm import SVC
+from featsel.selectors import RFESelector
 
 selector = RFESelector(
     n_features=50,
-    estimator=SVC(kernel='linear'),  # Model to use for ranking
-    step=10  # Remove 10 features at a time
+    step=0.1,   # remove 10% of the starting genes per round
+    C=0.01,     # strong regularization; see below
+    random_state=42,
 )
 
 selector.fit(gene_expression_data, cancer_subtypes)
 
-# RFE ranking: 1 = selected, >1 = iteration when removed
+# RFE ranking: 1 = selected, >1 = removed in an earlier round
 ranking = selector.ranking_
 ```
+
+**Set `C` small when genes outnumber samples.** Then the classes can be
+separated perfectly, and a weakly regularized SVM spreads its weights over
+noise. In the tutorial (300 samples, 500 features, 10 informative), the
+default `C=1.0` kept 1 informative feature and `C=0.001` kept 5. ANOVA F
+also kept 5 on that data.
 
 **Real scenario**: Developing a minimal gene panel for clinical qPCR testing (which can only measure 50-100 genes due to cost). RFE finds the best 50 genes specifically for the SVM classifier that will be deployed, accounting for how genes work together in that specific model.
 
@@ -683,12 +743,12 @@ ranking = selector.ranking_
 - **Overfitting risk**: With p >> n, repeated model training can overfit
 - **Not exploratory**: Only useful when you've committed to a specific model
 
-**Recommended workflow for gene expression** (`RFESelector` is planned):
+**Recommended workflow for gene expression**:
 ```python
 # Multi-stage approach
 pipe = Pipeline([
-    ('prefilter', ANOVAFSelector(n_features=500)),  # Fast
-    ('rfe', RFESelector(n_features=50, step=10)),     # Slow
+    ('prefilter', ANOVAFSelector(n_features=500)),         # Fast
+    ('rfe', RFESelector(n_features=50, step=10, C=0.01)),  # Slow
     ('clf', SVC())
 ])
 ```
@@ -700,6 +760,78 @@ pipe = Pipeline([
 - Clinical deployment (need absolute best 50-gene panel)
 - Have sufficient samples (n > 200 recommended)
 - Computational time acceptable (hours to days)
+
+### 9. RFE with Cross-Validation (RFECV)
+
+#### Theory
+
+`RFECVSelector` runs the same SVM-RFE inside an inner stratified
+cross-validation. It scores every feature count it passes and keeps the count
+with the best mean score. Then it runs one final elimination on all the data,
+down to that count. It wraps scikit-learn's `RFECV`.
+
+**Computational cost**: `cv` times RFE, plus one more RFE.
+
+#### Example Use Case: When the Right Count Is Unknown
+
+```python
+from featsel.selectors import RFECVSelector
+
+selector = RFECVSelector(step=0.1, cv=5, scoring='f1_macro', C=0.01,
+                         random_state=42)
+selector.fit(gene_expression_data, cancer_subtypes)
+
+print(selector.n_features_, 'genes chosen')
+print(selector.cv_results_['mean_test_score'])  # one score per count tried
+```
+
+#### When to Choose RFECV
+
+✅ **Use when:**
+- You would use RFE but cannot justify a value of k
+
+❌ **Don't use when:**
+- The sample is small: neighbouring counts score within noise of each other,
+  so the chosen count jumps between subsamples of the same data
+- Time is tight: inside the runner's own splits this is a second, nested
+  cross-validation
+
+### 10. Sequential Feature Selection
+
+#### Theory
+
+`SequentialSelector` is greedy. Forward: start with no features. At each
+step, add the one feature whose addition gives the best cross-validated score
+of a logistic regression. Backward: start with all features and remove one at
+a time. It stops at `n_features`. It wraps scikit-learn's
+`SequentialFeatureSelector` (Whitney, 1971, for forward selection).
+
+**Computational cost**: forward selection of k features from p costs about
+k × p × cv model fits. Doubling p doubles the time.
+
+#### Example Use Case: Refine a Short List
+
+```python
+from sklearn.pipeline import Pipeline
+from featsel.selectors import ANOVAFSelector, SequentialSelector
+
+pipe = Pipeline([
+    ('prefilter', ANOVAFSelector(n_features=50)),         # fast
+    ('sfs', SequentialSelector(n_features=10, cv=5)),     # slow
+])
+pipe.fit(gene_expression_data, cancer_subtypes)
+```
+
+#### When to Choose Sequential Selection
+
+✅ **Use when:**
+- A fast filter has already cut the genes to a few dozen
+- The final classifier is logistic regression
+
+❌ **Don't use when:**
+- Thousands of genes remain: on 9,000 genes with `cv=5`, choosing 50 needs
+  about 2 million model fits
+- A feature chosen early should be reconsidered: greedy steps are never undone
 
 ---
 
@@ -720,6 +852,10 @@ Goal: Fast exploratory analysis, interpretability
 ├─ ANOVA F-test (n_features=200-500)
 └─ Result: Top differentially expressed genes
 
+Goal: Let a stated error rate set the count
+├─ FDR (alpha=0.05), or FWE for a stricter list
+└─ Result: Differentially expressed genes, count chosen by the data
+
 Goal: Capture non-linearity, more comprehensive
 ├─ Mutual Information (n_features=200-500)
 └─ Result: Genes with any relationship to target
@@ -738,8 +874,13 @@ Goal: Capture interactions, max accuracy
 
 Goal: Optimal set for specific model (slow)
 ├─ Pre-filter to 500 genes (ANOVA or Lasso)
-├─ Then RFE (n_features=50-100)
+├─ Then RFE (n_features=50-100, small C), or RFECV if k is unknown
 └─ Result: Best genes for chosen classifier
+
+Goal: Refine a short list by held-out score (slowest)
+├─ Pre-filter to a few dozen genes (ANOVA)
+├─ Then Sequential selection (n_features=5-20)
+└─ Result: Genes chosen one by one for logistic regression
 ```
 
 ### Method Comparison Table
@@ -748,11 +889,14 @@ Goal: Optimal set for specific model (slow)
 |--------|-------|------------------------|----------------------|------------------|------------------|
 | **Variance Threshold** | ★★★★★ | N/A | N/A | ★★★★★ | Any |
 | **ANOVA F-test** | ★★★★★ | ☆☆☆☆☆ | ☆☆☆☆☆ | ★★★★★ | n > 30 |
+| **FDR / FWE / Percentile** | ★★★★★ | ☆☆☆☆☆ | ☆☆☆☆☆ | ★★★★★ | n > 30 |
 | **Mutual Information** | ★★★☆☆ | ★★★★★ | ☆☆☆☆☆ | ★★★★☆ | n > 50 |
 | **Correlation** | ★★★★☆ | ☆☆☆☆☆ | ☆☆☆☆☆ | ★★★★★ | n > 30 |
 | **Lasso** | ★★★★☆ | ☆☆☆☆☆ | ★★☆☆☆ | ★★★★☆ | n > 50 |
 | **Random Forest** | ★★☆☆☆ | ★★★★★ | ★★★★★ | ★★★☆☆ | n > 100 |
-| **RFE** | ★☆☆☆☆ | Depends on estimator | ★★★★★ | ★★☆☆☆ | n > 200 |
+| **RFE** | ★☆☆☆☆ | ☆☆☆☆☆ (linear SVM) | ★★★★★ | ★★☆☆☆ | n > 200 |
+| **RFECV** | ☆☆☆☆☆ | ☆☆☆☆☆ (linear SVM) | ★★★★★ | ★★☆☆☆ | n > 200 |
+| **Sequential** | ☆☆☆☆☆ | ☆☆☆☆☆ (logistic regression) | ★★★☆☆ | ★★★☆☆ | n > 200 |
 
 ### Recommended Pipelines for Different Scenarios
 
@@ -793,7 +937,7 @@ pipe = Pipeline([
 
 **Challenge**: Can afford computationally expensive methods
 
-**Recommended approach** (`RFESelector` is planned):
+**Recommended approach**:
 ```python
 # Full pipeline: Filter → Embedded → Wrapper
 pipe = Pipeline([
@@ -902,31 +1046,37 @@ scores = cross_val_score(pipe, X, y, cv=10)
 5. **Mutual Information**
    - Peng, H., Long, F., & Ding, C. (2005). "Feature selection based on mutual information: Criteria of max-dependency, max-relevance, and min-redundancy." *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 27(8), 1226-1238.
 
+6. **False Discovery Rate**
+   - Benjamini, Y., & Hochberg, Y. (1995). "Controlling the false discovery rate: A practical and powerful approach to multiple testing." *Journal of the Royal Statistical Society: Series B*, 57(1), 289-300.
+
+7. **Sequential Forward Selection**
+   - Whitney, A. W. (1971). "A direct method of nonparametric measurement selection." *IEEE Transactions on Computers*, C-20(9), 1100-1103.
+
 ### Gene Expression Specific
 
-6. **Differential Expression Analysis**
+8. **Differential Expression Analysis**
    - Love, M. I., Huber, W., & Anders, S. (2014). "Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2." *Genome Biology*, 15(12), 550.
 
-7. **PAM50 Breast Cancer Signature**
+9. **PAM50 Breast Cancer Signature**
    - Parker, J. S., et al. (2009). "Supervised risk predictor of breast cancer based on intrinsic subtypes." *Journal of Clinical Oncology*, 27(8), 1160-1167.
 
-8. **MammaPrint Signature**
-   - Van't Veer, L. J., et al. (2002). "Gene expression profiling predicts clinical outcome of breast cancer." *Nature*, 415(6871), 530-536.
+10. **MammaPrint Signature**
+    - Van't Veer, L. J., et al. (2002). "Gene expression profiling predicts clinical outcome of breast cancer." *Nature*, 415(6871), 530-536.
 
 ### Textbooks
 
-9. **Machine Learning**
-   - Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning: Data Mining, Inference, and Prediction* (2nd ed.). Springer.
+11. **Machine Learning**
+    - Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning: Data Mining, Inference, and Prediction* (2nd ed.). Springer.
 
-10. **Curse of Dimensionality**
+12. **Curse of Dimensionality**
     - Bellman, R. (1961). *Adaptive Control Processes*. Princeton University Press.
 
 ### Software Documentation
 
-11. **scikit-learn Feature Selection**
+13. **scikit-learn Feature Selection**
     - https://scikit-learn.org/stable/modules/feature_selection.html
 
-12. **DESeq2 (Bioconductor)**
+14. **DESeq2 (Bioconductor)**
     - https://bioconductor.org/packages/release/bioc/html/DESeq2.html
 
 ---

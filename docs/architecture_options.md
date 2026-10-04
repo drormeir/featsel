@@ -258,11 +258,12 @@ the first split that uses it.
 
 ## Selector design
 
-Decided 2026-09-26, extended 2026-09-28. Built 2026-09-29.
+Decided 2026-09-26, extended 2026-09-28. Built 2026-09-29. RFE changed
+2026-09-30.
 
 **Status.** Built as described below. The old wrapper
 (`featsel/feature_selector.py`) is removed. The runner and the configs name
-selectors by class name. Not built: RFE and Higher Criticism.
+selectors by class name. Not built: Higher Criticism.
 
 **Problem (before this design).** There were two layers. The selector classes in `selectors/`
 do the work but are not scikit-learn estimators, so they cannot go into a
@@ -304,11 +305,19 @@ the default and nobody notices. Adding a selector means editing three places.
   scikit-learn, or be its own CPU or GPU implementation. Replacing one with
   another keeps the class name and parameters, so configs and results do not
   change.
-- Wrappers by default: ANOVA F, mutual information, variance, correlation,
-  Lasso, tree importance. Own implementations: RFE, which scikit-learn runs
-  sequentially and which dominates cost, and Higher Criticism, which
-  scikit-learn lacks. Any other selector gets its own implementation only if a
-  timing run shows a real gain, checked against scikit-learn's selection.
+- Wrappers by default: ANOVA F, FDR, FWE, percentile, mutual information,
+  variance, correlation, Lasso, tree importance, RFE, RFECV, sequential
+  selection. Own implementation: Higher Criticism, which scikit-learn lacks.
+  Any other selector gets its own implementation only if a timing run shows a
+  real gain, checked against scikit-learn's selection.
+- Each wrapper is tested against the scikit-learn method it wraps: the same
+  selected features, and `fit` plus `get_support` at most 5% slower.
+- RFE, changed 2026-09-30. It was planned as an own implementation, because
+  it dominates cost. It wraps scikit-learn's `RFE` for now, to get the full
+  pipeline running end to end. On its own, a hand-written loop does the same
+  work as scikit-learn's. The saving comes from ranking features once per
+  split and reading every `k` from that one ranking, which is a change to the
+  runner. An own implementation comes after that.
 
 **Layout.** One subpackage per selector, not per family:
 
@@ -340,8 +349,9 @@ intersection and voting modes for combining methods.
 - Reimplementing every scikit-learn algorithm: most selectors cost seconds
   per split while model fitting costs minutes, so rewriting them gains
   nothing measurable.
-- Wrapping everything, RFE included: RFE is the one selector whose cost
-  makes the full design impractical.
+- Wrapping RFE for good: RFE is the one selector whose cost makes the full
+  design impractical. Wrapping it is accepted only until the runner ranks
+  once per split (see RFE above).
 - Family files or family folders: a file per family grows unmanageable once
   a selector has CPU and GPU versions, and a family folder adds nesting
   without shared code.

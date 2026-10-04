@@ -132,9 +132,15 @@ featsel/
 │   ├── base.py              # FeatureSelector: scikit-learn base, registration, create()
 │   ├── anova_f/             # ANOVAFSelector
 │   ├── correlation/         # CorrelationSelector
+│   ├── fdr/                 # FDRSelector
+│   ├── fwe/                 # FWESelector
 │   ├── lasso/               # LassoSelector
 │   ├── mutual_info/         # MutualInfoSelector
+│   ├── percentile/          # PercentileSelector
 │   ├── random_selection/    # RandomSelector (not `random`: shadows the stdlib)
+│   ├── rfe/                 # RFESelector
+│   ├── rfecv/               # RFECVSelector
+│   ├── sequential/          # SequentialSelector
 │   ├── tree_importance/     # TreeImportanceSelector
 │   └── variance_threshold/  # VarianceThreshold
 └── utils/
@@ -155,8 +161,14 @@ runner's YAML configs, which name selectors by class name (case-insensitive).
 See `docs/architecture_options.md`, section "Selector design".
 
 Built: VarianceThreshold, ANOVAFSelector, MutualInfoSelector,
-CorrelationSelector, LassoSelector, TreeImportanceSelector, RandomSelector.
-Planned (see `NEXT.md`): RFESelector, HigherCriticismSelector.
+CorrelationSelector, FDRSelector, FWESelector, PercentileSelector,
+LassoSelector, TreeImportanceSelector, RFESelector, RFECVSelector,
+SequentialSelector, RandomSelector.
+Planned (see `NEXT.md`): HigherCriticismSelector.
+
+Every selector that wraps a scikit-learn method has two tests next to it:
+it selects the same features as that method, and `fit` plus `get_support` is
+at most 5% slower. The shared checks are in `tests/sklearn_reference.py`.
 
 ## Feature Selection Usage
 
@@ -193,19 +205,34 @@ Each has a tutorial in `featsel/selectors/<name>/demos/tutorial.ipynb`.
 
 ```python
 from featsel.selectors import (
-    ANOVAFSelector, CorrelationSelector, LassoSelector, MutualInfoSelector,
-    RandomSelector, TreeImportanceSelector, VarianceThreshold,
+    ANOVAFSelector, CorrelationSelector, FDRSelector, FWESelector,
+    LassoSelector, MutualInfoSelector, PercentileSelector, RandomSelector,
+    RFECVSelector, RFESelector, SequentialSelector, TreeImportanceSelector,
+    VarianceThreshold,
 )
 
+# Filters
 VarianceThreshold(threshold=0.01)                        # drop near-constant features
 ANOVAFSelector(n_features=100)                           # univariate F-test
+FDRSelector(alpha=0.05)                                  # F-test, Benjamini-Hochberg; own count
+FWESelector(alpha=0.05)                                  # F-test, Bonferroni; own count
+PercentileSelector(percentile=1)                         # F-test, top 1%
 MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slower
 CorrelationSelector(n_features=100, target_threshold=0.1,
                     inter_feature_threshold=0.95)        # drops redundant pairs
+# Embedded
 LassoSelector(n_features=None, C=0.1, random_state=42)   # L1 model, picks its own count
 TreeImportanceSelector(n_features=100, random_state=42)  # random forest importance
+# Wrappers
+RFESelector(n_features=100, C=0.01, random_state=42)     # SVM-RFE; small C when p >> n
+RFECVSelector(cv=5, C=0.01, random_state=42)             # SVM-RFE, count chosen by inner CV
+SequentialSelector(n_features=10, cv=5)                  # greedy forward; slow, prefilter first
+# Control
 RandomSelector(n_features=100, random_state=42)          # the control
 ```
+
+Every selector takes `check_input=True`. `False` skips input validation in
+`fit`; use it only for a clean NumPy array.
 
 ### High-Dimensional Use Case (few samples, many features)
 

@@ -14,6 +14,9 @@ follows the published Donoho and Jin thresholding formulation: per-feature
 p-values from a univariate test, sorted, HC statistic, threshold. It selects
 its own feature count, so `n_features` is ignored for it.
 
+Status 2026-09-30: `RFESelector` is built. It wraps scikit-learn's `RFE` for
+now. Still open: `HigherCriticismSelector`, the config entries and the run.
+
 Done means: both are listed in `configs/experiment_scanb.yaml`, the grid
 runs end to end with all six selectors through `python -m featsel.run`, and `results/` plus the figures in
 `notebooks/02_classifier_behaviour.ipynb` are regenerated and committed. A bad
