@@ -8,7 +8,9 @@ from featsel.selectors import ANOVAFSelector, FeatureSelector
 
 BUILT_IN = ['VarianceThreshold', 'ANOVAFSelector', 'MutualInfoSelector',
             'CorrelationSelector', 'RandomSelector', 'LassoSelector',
-            'TreeImportanceSelector']
+            'TreeImportanceSelector', 'FDRSelector', 'FWESelector',
+            'PercentileSelector', 'RFESelector', 'RFECVSelector',
+            'SequentialSelector']
 
 
 @pytest.fixture(autouse=True)

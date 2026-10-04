@@ -17,20 +17,32 @@ from sklearn.pipeline import Pipeline
 from featsel.selectors import (
     ANOVAFSelector,
     CorrelationSelector,
+    FDRSelector,
+    FWESelector,
     LassoSelector,
     MutualInfoSelector,
+    PercentileSelector,
     RandomSelector,
+    RFECVSelector,
+    RFESelector,
+    SequentialSelector,
     TreeImportanceSelector,
     VarianceThreshold,
 )
 
-# One configured instance of every selector, each keeping 10 features or fewer.
+# One configured instance of every selector.
 SELECTORS = [
     ANOVAFSelector(n_features=10),
     CorrelationSelector(n_features=10, target_threshold=0.0),
+    FDRSelector(alpha=0.05),
+    FWESelector(alpha=0.05),
     LassoSelector(n_features=10, random_state=0),
     MutualInfoSelector(n_features=10, random_state=0),
+    PercentileSelector(percentile=50),
     RandomSelector(n_features=10, random_state=0),
+    RFECVSelector(cv=3, random_state=0),
+    RFESelector(n_features=10, random_state=0),
+    SequentialSelector(n_features=3, cv=3),
     TreeImportanceSelector(n_features=10, n_estimators=20, random_state=0),
     VarianceThreshold(threshold=0.0),
 ]
