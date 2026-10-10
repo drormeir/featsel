@@ -214,7 +214,6 @@ results/
 # Claude Code local files (private working notes)
 .claude/
 
-# Papers kept locally: the repo is public, and their licenses do not allow
-# redistribution. references/README.md lists where to get them.
-references/*.pdf
-!references/MLDS_Feature_Selection.pdf
+# Papers and documents kept locally: the repo is public, and they may not be
+# redistributed.
+references/local/
