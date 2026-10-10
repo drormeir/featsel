@@ -15,3 +15,10 @@ Format: one line, dated, plus one line on why it was parked.
   project requirement.
 - 2026-07-30 - Blog posts on the GPU Monte-Carlo / Beta-CDF infrastructure.
   Parked: job-search work, after the deadline.
+- 2026-10-05 - Higher Criticism with exact null moments: center the i-th
+  p-value at i/(N+1) and scale by sqrt(N+2), from Beta(i, N-i+1). Plus an
+  appendix proving it. Parked: no publication found, and SCOPE.md allows
+  published HC only. Add as a mode once published HC runs on SCAN-B.
+- 2026-10-05 - Berk-Jones (Donoho and Jin 2004, eq. 1.9) as a threshold rule,
+  as another Higher Criticism mode. Parked: published only as a detection
+  test, not for feature selection. Same condition as above.
