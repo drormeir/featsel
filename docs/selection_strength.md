@@ -1,7 +1,8 @@
 # Measuring a selection method's strength against random selection
 
-Discussion of 2026-10-12. Nothing here is built yet. The open decisions are
-listed at the end.
+Discussion of 2026-10-12. The simple score of 2026-10-13 is built in
+`featsel/strength.py`; see "The simple score". The open decisions are listed
+at the end.
 
 ## The problem
 
@@ -85,6 +86,34 @@ Leave-one-out trains on n − 1 patients, so its estimate is closest to the
 full-data procedure. Monte Carlo trains on fewer patients and scores somewhat
 pessimistically. Raising its training share, for example to 90%, narrows that
 gap. Leave-one-out also costs n fits per setting: 3,069 for SCAN-B.
+
+## The simple score
+
+Built 2026-10-13 as `loo_confusion(X, y, alpha, Cs)` in `featsel/strength.py`.
+It takes the leave-one-out branch above. No AUC is computed.
+
+- **Input.** X holds the chosen genes only, and y is binary. The genes are
+  chosen outside the function. The function does not know how.
+- **Outer loop.** It holds out one patient at a time. It visits
+  max(⌊α·n⌋, 1) patients, drawn at random without replacement.
+- **Inner loop.** The same, on the outer round's n − 1 training patients:
+  max(⌊α·(n − 1)⌋, 1) patients.
+- **λ.** Picked from a fixed grid of C = 1/λ by the lowest inner log-loss.
+- **Balanced log-loss.** The classes are imbalanced. Each patient's loss is
+  weighted by N / (2·N_c), where N_c counts its label. The counts come from
+  the outer round's training patients.
+- **Classifier.** Logistic regression with `class_weight='balanced'`, so the
+  0.5 cutoff is not pulled toward the majority class.
+- **Output.** The 2×2 confusion table of the outer decisions.
+- **α.** Defaults to 0.01, so the whole project runs end to end fast. On
+  SCAN-B that is 30 outer and 30 inner patients: 30 × 30 × 9 fits.
+
+Rejected: accuracy as the inner score. It needs a cutoff and is misleading
+on imbalanced classes.
+
+Limit: the outer patient is out of sample only if the genes were chosen
+without it. Genes chosen on all patients bring back the selection bias shown
+above. Avoiding it means refitting the selector inside each outer round.
 
 ## A curve over the feature budget, and its area
 

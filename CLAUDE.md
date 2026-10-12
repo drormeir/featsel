@@ -126,6 +126,7 @@ featsel/
 ├── run.py                   # Config-driven experiment runner: run(X, y, config), CLI
 ├── analysis.py              # summarize() and kuncheva_index() over the runner's CSV
 ├── metrics.py               # Predictive metrics and the CSV's key columns
+├── strength.py              # loo_confusion(): nested leave-one-out score of chosen genes
 ├── selectors/               # Feature selection methods, one subpackage each:
 │   │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb
 │   ├── __init__.py          # Imports every selector, which registers it
