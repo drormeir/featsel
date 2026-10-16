@@ -38,7 +38,7 @@ The primary use case is predicting breast cancer molecular subtypes from gene ex
 ├── featsel/            # The Python package
 │   └── selectors/      # One subpackage per selector, with its tests and a tutorial notebook
 ├── configs/            # Dataset and experiment configuration files (YAML)
-├── datasets/           # Input data (one subfolder per dataset, not in git)
+├── featsel_datasets/           # Input data (one subfolder per dataset, not in git)
 ├── results/            # Experiment output CSVs (not in git)
 ├── figures/            # Generated plots
 ├── notebooks/          # Analysis and usage notebooks
@@ -103,7 +103,7 @@ X_selected = ANOVAFSelector(n_features=50).fit_transform(X, y)
 
 See `notebooks/03_usage_demo.ipynb` for an end-to-end example.
 
-To use your own dataset, add a data folder in `datasets/`, a dataset config
+To use your own dataset, add a data folder in `featsel_datasets/`, a dataset config
 (see `configs/template.yaml`) and an experiment config that names it (see
 `configs/experiment_classifiers.yaml`). Paths in a config are relative to the
 config file.
@@ -111,7 +111,7 @@ config file.
 ## Datasets
 
 The pipeline is dataset-agnostic. Each dataset needs:
-- A subfolder in `datasets/` with `features.csv` and `metadata.csv`
+- A subfolder in `featsel_datasets/` with `features.csv` and `metadata.csv`
 - A dataset config file in `configs/`
 
 ### SCAN-B Breast Cancer (included config)
@@ -120,7 +120,7 @@ The pipeline is dataset-agnostic. Each dataset needs:
 - PAM50 molecular subtype labels (Basal, LumA, LumB, HER2, Normal)
 - Clinical metadata (ER status, survival data)
 
-**Note**: Data files are not included due to size. Download from [TBD] and place in `datasets/scanb_small/`.
+**Note**: Data files are not included due to size. Download from [TBD] and place in `featsel_datasets/scanb_small/`.
 
 ## Status
 

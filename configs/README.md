@@ -66,7 +66,7 @@ rows already in the output CSV.
 
 ## Creating a new dataset
 
-1. Put `features.csv` and `metadata.csv` in `datasets/<name>/`.
+1. Put `features.csv` and `metadata.csv` in `featsel_datasets/<name>/`.
 2. Copy `template.yaml` to `<name>.yaml` and fill in the keys above.
 3. Copy an experiment config, point its `dataset` at `<name>.yaml`, and set
    its `output`.

@@ -11,6 +11,14 @@ not be redistributed. Download missing papers from the link.
 | Reichman University, MLDS program. Feature selection final project: specification. | `MLDS_Feature_Selection.pdf` (in git) |
 | An earlier feature selection report on SCAN-B. Unpublished, about 3,900 words. | `local/Final Project Report with analysis.docx` |
 
+## Dataset
+
+| Work | Local copy |
+|------|------------|
+| Brueffer, C., Vallon-Christersson, J., Grabau, D., et al. (2018). Clinical value of RNA sequencing-based classifiers for prediction of the five conventional breast cancer biomarkers: a report from the population-based multicenter Sweden Cancerome Analysis Network-Breast Initiative. *JCO Precision Oncology* 2, 1-18. https://doi.org/10.1200/PO.17.00135. Data: GEO GSE96058. | `local/Brueffer_2018_SCANB_Biomarker_Classifiers.pdf` |
+| Data Supplement to the above: methods PDF and Supplementary Tables 1-9. Table 3 holds the multigene classifiers' shrunken centroids per gene; Table 6 the single-gene cutoffs. https://ascopubs.org/doi/suppl/10.1200/PO.17.00135 | `local/Brueffer_2018_supplement/` |
+| Parker, J. S., Mullins, M., Cheang, M. C. U., et al. (2009). Supervised risk predictor of breast cancer based on intrinsic subtypes. *Journal of Clinical Oncology* 27(8), 1160-1167. https://doi.org/10.1200/JCO.2008.18.1370. Defines PAM50. Supplemental Table 2 lists the 50 genes plus 5 control genes (ACTB, MRPL19, PSMC4, RPLP0, SF3A1); `pam50_genes.csv` maps the 50 to current gene symbols. | `local/Parker_2009_PAM50/` |
+
 ## Higher Criticism
 
 | Work | Local copy |
@@ -25,6 +33,7 @@ Cited in `docs/selection_strength.md`.
 
 | Work | Local copy |
 |------|------------|
+| Neekhra, B., Gupta, D. and Chakrabarti, P. P. (2025). On the (In)Significance of Feature Selection in High-Dimensional Datasets. https://arxiv.org/abs/2508.03593. Small random feature subsets matched or beat feature selection on 28 of 30 high-dimensional datasets, many from genomics. Bears directly on the random control. | none |
 | Ambroise, C. and McLachlan, G. J. (2002). Selection bias in gene extraction on the basis of microarray gene-expression data. *PNAS* 99(10), 6562-6566. | none |
 | Rajabinasab, M., Lautrup, A. D., Hyrup, T. and Zimek, A. (2024). FSDEM: Feature Selection Dynamic Evaluation Metric. SISAP 2024. https://arxiv.org/abs/2408.14234 | `local/Rajabinasab_2024_FSDEM.pdf` |
 | Overschie, J. G. S. (2021). A novel evaluation methodology for supervised Feature Ranking algorithms. Technical report, University of Groningen. https://arxiv.org/abs/2207.04258 | `local/Overschie_2021_Feature_Ranking_Evaluation.pdf` |

@@ -17,8 +17,8 @@ description: "Brief description"        # Optional description
 # File Paths (relative to this config file)
 # -----------------------------------------------------------------------------
 paths:
-  features: "../datasets/<name>/features.csv"   # [REQUIRED] Feature matrix
-  metadata: "../datasets/<name>/metadata.csv"   # [REQUIRED] Sample metadata
+  features: "../featsel_datasets/<name>/features.csv"   # [REQUIRED] Feature matrix
+  metadata: "../featsel_datasets/<name>/metadata.csv"   # [REQUIRED] Sample metadata
 
 # -----------------------------------------------------------------------------
 # Column Mappings

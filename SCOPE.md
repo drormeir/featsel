@@ -48,7 +48,8 @@ Non-negotiable, they decide whether the numbers mean anything.
   dataset before splitting is leakage and inflates every reported score.
 - **Stratified cross-validation**, not a single 80/20 split. One split is too
   noisy to rank methods against each other.
-- **Keep PAM50 as five classes.** The proposal names subtype prediction.
+- **Keep PAM50 as five classes.** The proposal asks for "the clinical class"
+  and does not name PAM50; choosing PAM50 subtype is this project's decision.
   Binarizing it discards the actual problem. Report macro-F1 alongside
   accuracy because the classes are imbalanced.
 - **Random-selection baseline.** A selector that picks k features at random is
@@ -66,9 +67,11 @@ early, they shape the code and the report.
 expression, publicly available, small enough to iterate on. Candidates worth
 checking: text classification with a bag-of-words or TF-IDF vocabulary, a
 tabular UCI high-dimensional set, or ResNet embeddings extracted offline from
-a small image set. Whatever is chosen goes in `datasets/<name>/` with a config
-in `configs/`, extracted by a script outside the package, and gets a section
-in the Data chapter.
+a small image set, or the NIPS 2003 challenge sets on Hugging Face (Arcene,
+Gisette, Madelon; uploaded by one user, `mstz`). Whatever is chosen goes in
+`featsel_datasets/<name>/`, outside the `featsel` package, with a loader that
+downloads and caches it (see `docs/architecture_options.md`, "Dataset
+loaders"), and gets a section in the Data chapter.
 
 **Higher Criticism as a selector.** This is the one method that sets the
 project apart from a standard method comparison, and it currently has no

@@ -207,8 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 # Data
-datasets/*/
-!datasets/README.md
+featsel_datasets/**/*.csv
+*.gz
+featsel_datasets/**/*.part
 results/
 
 # Claude Code local files (private working notes)

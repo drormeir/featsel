@@ -108,11 +108,11 @@ Example: `configs/scanb_small.yaml` configures the SCAN-B breast cancer dataset 
 
 ### Dataset Structure
 
-**Expected format in `datasets/<dataset_name>/`:**
+**Expected format in `featsel_datasets/<dataset_name>/`:**
 - `features.csv`: Feature matrix with samples as rows and features (genes) as columns, OR transposed (set `transpose_features: true` in config)
 - `metadata.csv`: Sample metadata with target labels and additional clinical variables
 
-**Current dataset: `datasets/scanb_small/`**
+**Current dataset: `featsel_datasets/scanb_small/`**
 - 518MB gene expression matrix with thousands of genes per sample
 - PAM50 molecular subtypes (Basal, LumA, LumB, Her2, Normal) as primary classification target
 - Alternative targets: ER status (binary), survival event (binary), survival time (regression)
@@ -292,14 +292,14 @@ loader.set_target('ER')
 ## Important Notes
 
 ### Data Files
-- Data files in `datasets/scanb_small/` are not tracked in git (large files, potentially sensitive)
+- Data files in `featsel_datasets/scanb_small/` are not tracked in git (large files, potentially sensitive)
 - The `features.csv` file is ~519MB, containing full gene expression matrix
 - When working with data loading, test on a subset first to avoid long load times
 
 ### Configuration Files
 - YAML configs in `configs/` drive all pipeline behavior
 - `template.yaml` contains full documentation of all available options
-- Every path in a config is relative to that config file: dataset configs use `../datasets/...`, experiment configs name their dataset config and `../results/...` output the same way
+- Every path in a config is relative to that config file: dataset configs use `../featsel_datasets/...`, experiment configs name their dataset config and `../results/...` output the same way
 
 ### Package Installation
 - The package uses modern Python packaging with `pyproject.toml`

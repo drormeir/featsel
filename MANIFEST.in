@@ -4,7 +4,7 @@ include requirements.txt
 recursive-include configs *.yaml *.yml
 recursive-include featsel *.py
 exclude notebooks/*
-exclude datasets/*
+exclude featsel_datasets/*
 exclude figures/*
 exclude docs/*
 exclude references/*

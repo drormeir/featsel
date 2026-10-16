@@ -375,3 +375,49 @@ intersection and voting modes for combining methods.
   required `n_features` fails at fit time, not at construction.
 - Selector tests live inside the package. Packaging excludes them, and pytest
   searches both `tests/` and `featsel/`.
+
+## Dataset loaders
+
+Decided 2026-10-16. Built for SCAN-B as `featsel_datasets/scanb_gse96058/`.
+
+**Problem.** The SCAN-B files came from the course with no recorded source or
+filters. Their origin, which patients they hold and how genes were chosen
+could not be checked. Other researchers on the same data could not reuse our
+preparation.
+
+**Decision.** Each dataset gets a folder in `featsel_datasets/<name>/` with
+two layers.
+
+- A generic class (`gse96058.py`). It downloads the published files once,
+  keeps them in the folder as a cache, and exposes them unchanged: every
+  sample, every gene, every patient field under its published name. It makes
+  no choice for the caller. Other researchers can use it alone.
+- A function holding this project's choices (`featsel_view.py`, `load_xy`).
+  For SCAN-B: HiSeq samples only, one sample per patient, the chosen label,
+  and no single-value genes. It returns `X, y` for `run`. It is a function,
+  not a class, because it holds no state.
+- `X` is a DataFrame and `y` a Series. Gene names reach the selectors, and
+  patients cannot be misaligned with their labels. `X.to_numpy()` gives an
+  array when needed.
+- A notebook in `demos/` shows the dataset's content and traps.
+- Git ignores the downloaded files (`*.gz`, and `*.csv` under
+  `featsel_datasets/`), not the folder, so the code is tracked.
+
+**Rejected.**
+
+- A loader class per dataset inside the `featsel` package: the package stays
+  generic; dataset code lives beside the data.
+- Returning NumPy arrays and a name list: alignment by position is what the
+  index protects against. GSE96058's gene file and patient file list samples
+  in different orders.
+- A second class for the project's choices: it would hold no state.
+- Naming the folder `datasets/`: the Hugging Face `datasets` library would
+  shadow it on import.
+
+**Limits.**
+
+- The runner's YAML path still reads CSVs through `DataLoader`. `load_xy` is
+  used from Python with `run(X, y, config)`.
+- `featsel_datasets` is not an installed package. Code outside the repo root
+  must put the root on `sys.path`.
+- The first load downloads 592 MB and takes about 85 s.

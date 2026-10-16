@@ -231,6 +231,11 @@ Selection quality:
   own count (Lasso without `n_features`, Higher Criticism).
 - **Overlap with the published PAM50 gene list** - planned. A partial ground
   truth for "did it find the right genes", not just "did it predict well".
+  PAM50 labels are computed from these 50 genes, so for the PAM50 target the
+  answer is known. It needs a gene set that holds all 50: `scanb_full` or
+  GSE96058 does; `scanb_small` lacks 11 of them. `run(..., truth=...)`
+  already records recall and precision against given feature indices. See
+  `docs/report/03_data.md`.
 
 Cost:
 
