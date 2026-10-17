@@ -70,49 +70,24 @@ PREPROCESSORS = {
 }
 
 
-def build_tasks(y, framings):
+def build_tasks(y):
     """
-    Expand the target into the classification tasks to run.
+    Expand the target into the binary classification tasks to run.
 
-    'multiclass'  : the target as it stands, all classes at once.
-    'one_vs_rest' : one binary task per class, that class against everything
-                    else. Uses every sample.
-    'one_vs_one'  : one binary task per pair of classes, using only the samples
-                    belonging to those two. Isolates which subtypes are
-                    genuinely hard to tell apart, which one-vs-rest hides
-                    behind the majority class.
+    Every task is binary (SCOPE.md 3a). A binary target is one task, 'binary'.
+    A target with more classes gives one task per class, that class against
+    everything else, named 'ovr_<class>'. Every task uses every sample.
 
-    All framings are decompositions of the same target, not independent
+    The tasks are decompositions of the same target, not independent
     datasets, and the report must say so.
 
-    Returns a list of (task_name, y_task, mask) triples, where mask selects the
-    samples the task uses and y_task is already restricted to them.
+    Returns a list of (task_name, y_task) pairs.
     """
     y = np.asarray(y)
     labels = sorted(pd.Series(y).unique())
-    everything = np.ones(len(y), dtype=bool)
-    tasks = []
-
-    for framing in framings:
-        if framing == 'multiclass':
-            tasks.append(('multiclass', y, everything))
-
-        elif framing == 'one_vs_rest':
-            for label in labels:
-                binary = np.where(y == label, str(label), 'rest')
-                tasks.append((f'ovr_{label}', binary, everything))
-
-        elif framing == 'one_vs_one':
-            for i, first in enumerate(labels):
-                for second in labels[i + 1:]:
-                    mask = np.isin(y, [first, second])
-                    tasks.append((f'ovo_{first}_vs_{second}', y[mask].astype(str), mask))
-
-        else:
-            raise ValueError(f"Unknown task framing '{framing}'. Available: "
-                             "'multiclass', 'one_vs_rest', 'one_vs_one'")
-
-    return tasks
+    if len(labels) == 2:
+        return [('binary', y)]
+    return [(f'ovr_{label}', np.where(y == label, str(label), 'rest')) for label in labels]
 
 
 # Selectors whose fit does not depend on n_features and that keep the top
@@ -166,7 +141,6 @@ DEFAULTS = {
     'n_splits': 100,
     'train_sizes': [0.5],
     'preprocess': ['standard'],
-    'task_framings': ['multiclass'],
     'metrics': list(METRICS),
     'n_jobs': 1,
 }
@@ -370,21 +344,18 @@ def iter_rows(X, y, config, skip=frozenset(), truth=None):
     y_array = y.values if isinstance(y, pd.Series) else np.asarray(y)
 
     def jobs():
-        for task_name, y_task, mask in build_tasks(y_array, config['task_framings']):
-            # One-vs-one tasks use only the samples of the two classes involved.
-            X_task = X_array[mask]
-
+        for task_name, y_task in build_tasks(y_array):
             for train_size in config['train_sizes']:
                 splitter = StratifiedShuffleSplit(
                     n_splits=config['n_splits'], train_size=train_size, random_state=seed
                 )
 
-                for split, (train_idx, test_idx) in enumerate(splitter.split(X_task, y_task)):
+                for split, (train_idx, test_idx) in enumerate(splitter.split(X_array, y_task)):
                     # Every stochastic step in this split derives from one seed,
                     # so the split is reproducible and selectors redraw per split.
                     context = {'task': task_name, 'split': split,
                                'train_size': train_size, 'seed': seed + split}
-                    yield delayed(_split_rows)(X_task, y_task, train_idx, test_idx,
+                    yield delayed(_split_rows)(X_array, y_task, train_idx, test_idx,
                                                context, config, skip, truth)
 
     for rows in Parallel(n_jobs=config['n_jobs'], return_as='generator')(jobs()):
@@ -403,23 +374,16 @@ def print_plan(config, X, y, tasks, target, name, total):
     print(f"Seed         : {config['seed']}")
 
     print(f"Tasks        : {len(tasks)}")
-    for task_name, y_task, mask in tasks:
+    for task_name, y_task in tasks:
         counts = pd.Series(y_task).value_counts()
         shown = ', '.join(f"{label} {count}" for label, count in counts.items())
-        used = '' if mask.all() else f", {mask.sum()} of {n_samples} samples"
-        print(f"  {task_name:<22} {len(counts)} classes ({shown}{used})")
+        print(f"  {task_name:<22} {shown}")
 
     print(f"Splits       : {config['n_splits']} stratified Monte Carlo draws")
     for train_size in config['train_sizes']:
-        # One-vs-one tasks use fewer samples, so report the range across tasks.
-        totals = sorted({int(m.sum()) for _, _, m in tasks})
-        splits = [f"{round(train_size * n)} train / "
-                  f"{n - round(train_size * n)} validation" for n in totals]
-        if len(splits) == 1:
-            print(f"  train_size {train_size}: {splits[0]}")
-        else:
-            print(f"  train_size {train_size}: {splits[0]} .. {splits[-1]} "
-                  f"depending on the task")
+        n_train = round(train_size * n_samples)
+        print(f"  train_size {train_size}: {n_train} train / "
+              f"{n_samples - n_train} validation")
 
     print(f"Preprocess   : {', '.join(config['preprocess'])}")
     print(f"Metrics      : {', '.join(config['metrics'])}")
@@ -475,7 +439,7 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
         out_path.unlink()
 
     n_k = sum(len(s.get('k', [None])) for s in config['selectors'])
-    tasks = build_tasks(np.asarray(y), config['task_framings'])
+    tasks = build_tasks(y)
     total = (len(tasks) * config['n_splits'] * len(config['train_sizes'])
              * len(config['preprocess']) * n_k * len(config['models']))
     print_plan(config, X, y, tasks, target, name, total)

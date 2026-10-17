@@ -48,10 +48,13 @@ Non-negotiable, they decide whether the numbers mean anything.
   dataset before splitting is leakage and inflates every reported score.
 - **Stratified cross-validation**, not a single 80/20 split. One split is too
   noisy to rank methods against each other.
-- **Keep PAM50 as five classes.** The proposal asks for "the clinical class"
-  and does not name PAM50; choosing PAM50 subtype is this project's decision.
-  Binarizing it discards the actual problem. Report macro-F1 alongside
-  accuracy because the classes are imbalanced.
+- **Binary targets only. Decided 2026-10-18.** Features are selected for
+  binary classifiers. A target with more than two classes becomes one dataset
+  per class, that class vs the rest; the datasets differ only in the target.
+  PAM50 gives five such datasets. No five-class results: the five classes are
+  too imbalanced. The proposal asks for "the clinical class" and does not name
+  PAM50; choosing PAM50 subtype is this project's decision. Report macro-F1
+  alongside accuracy because each class-vs-rest task is imbalanced.
 - **Random-selection baseline.** A selector that picks k features at random is
   the control every other method must beat. Report it in the same table.
 - **Runtime and selected-feature count are first-class metrics**, reported

@@ -22,8 +22,11 @@ runs end to end with all six selectors through `python -m featsel.run`, and `res
 `notebooks/02_classifier_behaviour.ipynb` are regenerated and committed. A bad
 score still counts.
 
-Not part of this step: the second dataset, parallelization, per-class task
-framing, G-mean, report chapters. Park anything else in `docs/ideas.md`.
+The run uses binary tasks only, each PAM50 subtype vs the rest (`SCOPE.md`
+3a, decided 2026-10-18).
+
+Not part of this step: the second dataset, parallelization, G-mean, report
+chapters. Park anything else in `docs/ideas.md`.
 
 First move: read the Donoho and Jin formulation in `references/` before
 writing any code.

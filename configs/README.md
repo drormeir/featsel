@@ -11,7 +11,7 @@ to the file itself.
 |------|------|-------------|
 | `template.yaml` | dataset | Documented template for a new CSV dataset config |
 | `experiment_classifiers.yaml` | experiment | Random vs ANOVA F across five classifiers, 12 splits |
-| `experiment_baseline.yaml` | experiment | The random-selection control across all task framings |
+| `experiment_baseline.yaml` | experiment | The random-selection control on every PAM50 subtype-vs-rest task |
 | `experiment_breastmnist.yaml` | experiment | The same design on BreastMNIST ResNet-50 embeddings (task 4), k scaled to 2,048 features |
 | `experiment_scanb.yaml` | experiment | The full SCAN-B design: four selectors, three train fractions |
 
@@ -56,9 +56,12 @@ supports classification only.
 | `n_splits` | `100` | Stratified Monte Carlo splits |
 | `train_sizes` | `[0.5]` | Training fractions |
 | `preprocess` | `["standard"]` | `none`, `standard` or `quantile_normal`, fit on the training part |
-| `task_framings` | `["multiclass"]` | `multiclass`, `one_vs_rest`, `one_vs_one` |
 | `metrics` | all | `accuracy`, `macro_f1`, `balanced_accuracy`, `mcc`, `g_mean` |
 | `n_jobs` | `1` | Worker processes; splits run in parallel. `-1` uses every core |
+
+Every task is binary (`SCOPE.md` 3a). A two-class target runs as one task,
+`binary`. A target with more classes runs as one task per class, that class
+vs the rest, named `ovr_<class>`.
 
 Each value in a selector's `k` list is passed as its `n_features`. Four
 selectors have no `n_features` and choose their own count: `FDRSelector`,

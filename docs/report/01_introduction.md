@@ -37,7 +37,7 @@ The primary dataset used in this project is the SCAN-B breast cancer gene expres
 - Estrogen receptor (ER) status
 - Survival outcomes
 
-The PAM50 molecular subtype classification serves as the primary prediction target, representing a clinically relevant multi-class classification problem.
+The PAM50 molecular subtype is the primary prediction target. Features are selected for binary classifiers only. Each of the five subtypes becomes its own task: that subtype vs the other four. The five classes are too imbalanced to report as one task.
 
 ## Report Structure
 

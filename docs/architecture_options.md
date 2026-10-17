@@ -56,8 +56,10 @@ method works best, and by how much over picking features at random?
 - **Selection inside the split.** The selector is fitted on the training part
   only. Fitting it on all the data first leaks test information and inflates
   scores.
-- **Macro-F1.** The F1 score averaged over classes with equal weight. The main
-  metric, because the classes are imbalanced.
+- **Task.** Every task is binary. A target with more than two classes, such
+  as PAM50, becomes one task per class: that class vs the rest.
+- **Macro-F1.** The F1 score averaged over the two classes with equal weight.
+  The main metric, because each class-vs-rest task is imbalanced.
 - **Stability.** How similar the chosen features are across splits. Measured
   with Kuncheva's index, where random selection scores 0.
 - **Grid.** Every combination of selector, `k`, model and split,

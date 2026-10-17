@@ -143,6 +143,7 @@ config. A CSV dataset config specifies:
 **Current dataset: SCAN-B, GSE96058 (`featsel_datasets/scanb_gse96058/`)**
 - 3,273 patients, 3,409 samples, 30,865 genes; `load_xy()` gives 2,976 patients
 - Default target `pam50 subtype` (Basal, LumA, LumB, Her2, Normal)
+- Every task is binary (`SCOPE.md` 3a): PAM50 becomes five tasks, each subtype vs the rest. No five-class results
 - Other targets are GSE96058's own field names, e.g. `er status` (pathologist), `er prediction mgc` (computed from genes), `overall survival event`
 - PAM50 and the `prediction` fields are computed from gene expression, not measured. See `docs/report/03_data.md`.
 

@@ -23,7 +23,7 @@ secondary to the ordering between methods and to the gap over the control.
 | Selector | RandomSelector (control), ANOVAFSelector, LassoSelector, TreeImportanceSelector, RFESelector; HigherCriticismSelector when implemented | The primary question. |
 | `k` | A percent of the total sample count, up to 100%, plus `k=50` and all features | How much of the gain survives as the budget grows. `k=50` is an anchor: PAM50 is a 50-gene signature. All features is the no-selection reference. See section 2d. |
 | Classifier | logistic_regression, linear_svm, random_forest, knn, lda_shrinkage; xgboost if installed (it is not in the current environment) | How much external selection is worth to a model, given its own regularization. |
-| Task framing | 5-class PAM50, plus five one-vs-rest binary tasks | Whether the best selector differs per subtype; the 5-class number hides this. |
+| Task framing | One binary task per class, that class vs the rest: five for PAM50. No five-class task (decided 2026-10-18, `SCOPE.md` 3a). | Whether the best selector differs per subtype. |
 | Dataset | SCAN-B, plus one non-gene-expression set (task 4, undecided) | Whether conclusions generalize beyond genomics. |
 | Split | 100 stratified Monte Carlo splits, fixed seed | Error bars. See section 2a. |
 | Train fraction | 0.5, 0.7, 0.9 | Learning curve: does the winning method change when the training set shrinks? |
@@ -62,11 +62,16 @@ If preprocessing is ever crossed with the other axes, it must be crossed for
 preprocessing confounds the method with its transform, and the comparison stops
 being controlled.
 
-### Open decisions
+### Binary tasks only
 
-- **Per-class selection.** Selecting genes one-vs-rest and taking the union is
-  a method variant worth testing, since a 5-class F statistic is dominated by
-  the large LumA class. Not yet implemented.
+Decided 2026-10-18. Features are selected for binary classifiers only. A
+target with more than two classes becomes one dataset per class, that class
+vs the rest. The datasets differ only in the target. The five PAM50 classes
+are too imbalanced to report as one task.
+
+Rejected: the five-class task, and the union of the per-class gene sets.
+Recombining the binary classifiers into a subtype decision tree is parked in
+`docs/ideas.md`.
 
 ## 2a. Monte Carlo splits instead of k-fold
 
@@ -149,8 +154,8 @@ metric means a new run.
 
 **Decision.** Store, for every test patient in every cell, the true label, the
 final model's score, and the threshold that turns the score into a prediction.
-For a binary task that is one score per patient; for the five-class task, one
-per class. Every metric is derived afterwards from these.
+Every task is binary, so that is one score per patient. Every metric is
+derived afterwards from these.
 
 - Threshold metrics (accuracy, F1, balanced accuracy, MCC, G-mean) come from
   the confusion matrix, which the scores and threshold reproduce.
@@ -214,12 +219,12 @@ hundreds of hours; `dual=False` may fix that and is not yet verified.
 Predictive quality, all reported per cell:
 
 - **macro-F1** - the headline. Accuracy is reported too but is misleading
-  alone: LumA is 1540 samples and Normal is 202, so accuracy rewards ignoring
-  the rare subtypes.
+  alone: Normal vs the rest is 202 against 2774 patients, so predicting "rest"
+  for everyone scores 0.93 accuracy.
 - **balanced accuracy** and **MCC** - imbalance-robust cross-checks.
-- **G-mean** (geometric mean of per-class recalls, Kubat and Matwin 1997).
-  Stricter than macro-F1 because it collapses to zero if any subtype
-  is never predicted.
+- **G-mean** (geometric mean of the two class recalls, Kubat and Matwin 1997).
+  Stricter than macro-F1 because it collapses to zero if either class is
+  never predicted.
 
 Selection quality:
 
@@ -256,7 +261,8 @@ These come from `SCOPE.md` 3a and are not negotiable.
   entirely spurious error rates on microarray data in Ambroise and McLachlan
   (PNAS 2002).
 - Imputation and scaling are also fit inside the split.
-- PAM50 stays five classes in the multiclass framing.
+- Every task is binary. A multiclass target becomes one task per class, that
+  class vs the rest.
 - The random control is reported in the same table as every other method.
 - Fixed seeds. Stochastic selectors take a **per-split** seed derived from the
   global one: a fixed seed across splits would make their measured stability a
@@ -266,7 +272,9 @@ These come from `SCOPE.md` 3a and are not negotiable.
 
 From `configs/experiment_classifiers.yaml` (RandomSelector and ANOVAFSelector
 only, 12
-Monte Carlo splits at train fraction 0.5, medians over splits):
+Monte Carlo splits at train fraction 0.5, medians over splits). These are
+five-class results, from before the 2026-10-18 switch to binary tasks. They
+are not yet rerun per class.
 
 - ANOVA F beats random at every `k` and every classifier.
 - The gap shrinks from 0.21-0.27 macro-F1 at `k=10` to 0.01-0.14 at `k=1000`,

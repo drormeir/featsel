@@ -22,3 +22,6 @@ Format: one line, dated, plus one line on why it was parked.
 - 2026-10-05 - Berk-Jones (Donoho and Jin 2004, eq. 1.9) as a threshold rule,
   as another Higher Criticism mode. Parked: published only as a detection
   test, not for feature selection. Same condition as above.
+- 2026-10-18 - Recombine the five PAM50 class-vs-rest classifiers into a
+  decision tree that predicts the subtype. Parked: not needed now; the
+  project selects features for binary targets only.

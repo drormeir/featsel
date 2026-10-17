@@ -65,100 +65,41 @@ def test_one_row_per_execution(experiment):
     out = run_config(experiment)
     df = pd.read_csv(out)
 
-    expected = 1 * 3 * 1 * 1 * 3 * 2  # tasks x splits x train_sizes x preprocess x sel-k x models
+    expected = 3 * 3 * 1 * 1 * 3 * 2  # tasks x splits x train_sizes x preprocess x sel-k x models
     assert len(df) == expected
     assert not df.duplicated(KEY_COLUMNS).any()
 
 
-class TestTaskFraming:
-    """Tests for expanding one target into several classification tasks."""
+class TestTasks:
+    """Tests for expanding one target into binary classification tasks."""
 
-    def test_multiclass_is_the_target_unchanged(self):
-        """Test that the multiclass framing passes the target through."""
-        y = np.array(['a', 'b', 'c', 'a'])
-        tasks = build_tasks(y, ['multiclass'])
+    def test_binary_target_is_one_task_unchanged(self):
+        """Test that a two-class target passes through as a single task."""
+        y = np.array(['a', 'b', 'b', 'a'])
+        tasks = build_tasks(y)
 
         assert len(tasks) == 1
-        name, y_task, mask = tasks[0]
-        assert name == 'multiclass'
+        name, y_task = tasks[0]
+        assert name == 'binary'
         np.testing.assert_array_equal(y_task, y)
-        assert mask.all()
 
-    def test_one_vs_rest_gives_one_binary_task_per_class(self):
-        """Test that one-vs-rest yields a binary task per class, using all samples."""
+    def test_multiclass_target_gives_one_task_per_class(self):
+        """Test that each class becomes a task against the rest."""
         y = np.array(['Basal', 'LumA', 'LumA', 'Normal'])
-        tasks = build_tasks(y, ['one_vs_rest'])
+        tasks = build_tasks(y)
 
-        assert [name for name, _, _ in tasks] == ['ovr_Basal', 'ovr_LumA', 'ovr_Normal']
-        for name, y_task, mask in tasks:
+        assert [name for name, _ in tasks] == ['ovr_Basal', 'ovr_LumA', 'ovr_Normal']
+        for name, y_task in tasks:
             assert set(np.unique(y_task)) == {name.removeprefix('ovr_'), 'rest'}
-            assert mask.all()
 
-        basal = next(y_task for name, y_task, _ in tasks if name == 'ovr_Basal')
+        basal = next(y_task for name, y_task in tasks if name == 'ovr_Basal')
         np.testing.assert_array_equal(basal, ['Basal', 'rest', 'rest', 'rest'])
-
-    def test_one_vs_one_gives_a_task_per_pair_on_a_subset(self):
-        """Test that one-vs-one yields every pair, restricted to those samples."""
-        y = np.array(['Basal', 'LumA', 'LumA', 'Normal'])
-        tasks = build_tasks(y, ['one_vs_one'])
-
-        assert [name for name, _, _ in tasks] == [
-            'ovo_Basal_vs_LumA', 'ovo_Basal_vs_Normal', 'ovo_LumA_vs_Normal'
-        ]
-        for name, y_task, mask in tasks:
-            expected = set(name.removeprefix('ovo_').split('_vs_'))
-            assert set(np.unique(y_task)) == expected
-            assert mask.sum() == len(y_task)
-            assert not mask.all()  # every pair excludes at least one sample here
-
-        pair = next(t for t in tasks if t[0] == 'ovo_Basal_vs_Normal')
-        np.testing.assert_array_equal(pair[1], ['Basal', 'Normal'])
-
-    def test_one_vs_one_count_is_the_number_of_pairs(self):
-        """Test that five classes give ten pairwise tasks."""
-        y = np.array(['a', 'b', 'c', 'd', 'e'])
-        assert len(build_tasks(y, ['one_vs_one'])) == 10
-
-    def test_framings_combine(self):
-        """Test that all three framings together give 1 + n + n(n-1)/2 tasks."""
-        y = np.array(['a', 'b', 'c'])
-        tasks = build_tasks(y, ['multiclass', 'one_vs_rest', 'one_vs_one'])
-
-        assert len(tasks) == 1 + 3 + 3
-
-    def test_unknown_framing_is_rejected(self):
-        """Test that a typo in the framing list fails loudly."""
-        with pytest.raises(ValueError, match='Unknown task framing'):
-            build_tasks(np.array(['a', 'b']), ['leave_one_out'])
 
     def test_runner_records_each_task(self, experiment):
         """Test that every task appears in the CSV and rows do not collide."""
-        experiment['task_framings'] = ['multiclass', 'one_vs_rest']
         df = pd.read_csv(run_config(experiment))
 
-        assert set(df.task) == {'multiclass', 'ovr_class0', 'ovr_class1', 'ovr_class2'}
-        assert not df.duplicated(KEY_COLUMNS).any()
-        assert len(df) == 4 * 3 * 1 * 1 * 3 * 2
-
-    def test_binary_tasks_score_differently_from_multiclass(self, experiment):
-        """Test that the binary framings are genuinely different problems."""
-        experiment['task_framings'] = ['multiclass', 'one_vs_rest']
-        df = pd.read_csv(run_config(experiment))
-
-        by_task = df.groupby('task').accuracy.mean()
-        assert by_task['multiclass'] < by_task.drop('multiclass').max()
-
-    def test_one_vs_one_uses_only_the_two_classes(self, experiment):
-        """Test that pairwise tasks train and validate on a subset of samples."""
-        experiment['task_framings'] = ['multiclass', 'one_vs_one']
-        df = pd.read_csv(run_config(experiment))
-
-        pairwise = df[df.task.str.startswith('ovo_')]
-        multiclass = df[df.task == 'multiclass']
-
-        assert set(pairwise.task) == {'ovo_class0_vs_class1', 'ovo_class0_vs_class2',
-                                      'ovo_class1_vs_class2'}
-        assert pairwise.n_train.max() < multiclass.n_train.iloc[0]
+        assert set(df.task) == {'ovr_class0', 'ovr_class1', 'ovr_class2'}
         assert not df.duplicated(KEY_COLUMNS).any()
 
 
@@ -238,7 +179,7 @@ def test_run_takes_arrays_in_memory(experiment):
 
     df = pd.read_csv(run(X, y, config))
 
-    assert len(df) == 1 * 2 * 1 * 1 * 3 * 2  # default train size, preprocess, framing
+    assert len(df) == 1 * 2 * 1 * 1 * 3 * 2  # one binary task, default train size, preprocess
     assert set(df.train_size) == {0.5}
 
 
@@ -326,7 +267,7 @@ def test_summarize_gives_one_row_per_cell(experiment):
     df = pd.read_csv(run_config(experiment))
     summary = summarize(df)
 
-    assert len(summary) == 3 * 2  # sel-k x models
+    assert len(summary) == 3 * 3 * 2  # tasks x sel-k x models
     for column in ['macro_f1_median', 'macro_f1_q1', 'macro_f1_q3', 'selection_time_s_median']:
         assert column in summary.columns
     assert (summary.macro_f1_q1 <= summary.macro_f1_q3).all()
@@ -335,12 +276,14 @@ def test_summarize_gives_one_row_per_cell(experiment):
 def test_kuncheva_separates_random_from_anova(experiment):
     """Test that random selection scores near zero and ANOVA F well above it."""
     df = pd.read_csv(run_config(experiment))
-    stability = kuncheva_index(df, n_total_features=200).set_index(['selector', 'k'])
+    stability = (kuncheva_index(df, n_total_features=200)
+                 .set_index(['selector', 'k', 'task']).sort_index())
 
-    assert len(stability) == 3  # sel-k, the model does not change the selection
+    assert len(stability) == 3 * 3  # sel-k x tasks, the model does not change the selection
     assert (stability.n_pairs == 3).all()  # 3 splits give 3 pairs
-    assert stability.loc[('ANOVAFSelector', 5), 'consistency_index'] > \
-        stability.loc[('RandomSelector', 5), 'consistency_index'] + 0.3
+    anova = stability.loc[('ANOVAFSelector', 5), 'consistency_index']
+    random = stability.loc[('RandomSelector', 5), 'consistency_index']
+    assert (anova > random + 0.2).all()
 
 
 def test_unknown_model_is_rejected(experiment):
