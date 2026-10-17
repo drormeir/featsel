@@ -89,9 +89,10 @@ A folder per dataset with code that downloads the published files once and
 caches them beside it. For SCAN-B (`featsel_datasets/scanb_gse96058/`):
 - `gse96058.py`: class `GSE96058`, exposes every sample, gene and field of
   GEO accession GSE96058 unchanged.
-- `featsel_view.py`: `load_xy()`, this project's choices (HiSeq 2000 only,
-  one sample per patient, chosen target, no single-value genes). Returns a
-  DataFrame and a Series.
+- `featsel_view.py`: `NAME`, `TARGET` and `load_xy()`, this project's
+  choices (HiSeq 2000 only, one sample per patient, chosen target, no
+  single-value genes). `load_xy` returns a DataFrame and a Series. An
+  experiment config names this module as its `dataset`.
 - `demos/tutorial.ipynb`: what the dataset contains.
 
 `featsel_datasets` is not an installed package: run from the repo root.
@@ -111,9 +112,9 @@ The `DataLoader` class:
 
 **Configuration System: `configs/`**
 
-A dataset config either names a loader (`loader: module:function`, plus
-`params` and `target_column`; see `configs/scanb_gse96058.yaml`) or, for a
-CSV dataset, specifies:
+An experiment config's `dataset` is either a dataset module (e.g.
+`featsel_datasets.scanb_gse96058.featsel_view`, no YAML) or a CSV dataset
+config. A CSV dataset config specifies:
 - Paths to `features.csv` and `metadata.csv` (relative to the config file)
 - `sample_id_column`: Column name to use as sample identifier
 - `target_column`: Default target variable for prediction
@@ -312,7 +313,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 ### Configuration Files
 - YAML configs in `configs/` drive all pipeline behavior
 - `template.yaml` documents the CSV dataset form; `configs/README.md` documents both forms
-- Every path in a config is relative to that config file: dataset configs use `../featsel_datasets/...`, experiment configs name their dataset config and `../results/...` output the same way
+- Every path in a config is relative to that config file: CSV dataset configs use `../featsel_datasets/...`, experiment configs name their output `../results/...` and a CSV dataset config the same way. A dataset module is named by its import path, not a file path.
 
 ### Package Installation
 - The package uses modern Python packaging with `pyproject.toml`

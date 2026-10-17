@@ -399,6 +399,11 @@ two layers.
 - `X` is a DataFrame and `y` a Series. Gene names reach the selectors, and
   patients cannot be misaligned with their labels. `X.to_numpy()` gives an
   array when needed.
+- `featsel_view.py` also defines `NAME` and `TARGET`. An experiment config
+  names the module as its `dataset`; the runner imports it and calls
+  `load_xy(target=...)`. There is no dataset YAML (decided 2026-10-17). The
+  module owns the data choices; the experiment config owns the protocol and
+  the `k` values, which are feature counts for that dataset.
 - A notebook in `demos/` shows the dataset's content and traps.
 - Git ignores the downloaded files (`*.gz`, and `*.csv` under
   `featsel_datasets/`), not the folder, so the code is tracked.
@@ -413,13 +418,18 @@ two layers.
 - A second class for the project's choices: it would hold no state.
 - Naming the folder `datasets/`: the Hugging Face `datasets` library would
   shadow it on import.
+- A dataset YAML naming the loader (`loader: module:function` plus
+  `params`), used briefly on 2026-10-17: it repeated the choices `load_xy`
+  already makes, so the two could drift apart.
+- Moving `k` and the output name into `featsel_view.py` too: the experiment
+  config would no longer show the full experiment.
 
 **Limits.**
 
-- The runner reaches a loader through a dataset config with a `loader` key
-  (`module:function`) and `params` (added 2026-10-17). This names code from
-  a config, which is close to the extension points `SCOPE.md` section 4
-  rules out. It is one key, with no registry.
+- The runner imports a module named in a config. This names code from a
+  config, which is close to the extension points `SCOPE.md` section 4 rules
+  out. It is one convention (`NAME`, `TARGET`, `load_xy`), with no registry.
+- The runner tells a module from a CSV config by the `.yaml`/`.yml` ending.
 - `featsel_datasets` is not an installed package. Code outside the repo root
   must put the root on `sys.path`.
 - The first load downloads 592 MB and takes about 85 s.

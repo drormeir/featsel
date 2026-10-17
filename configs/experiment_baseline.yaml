@@ -7,7 +7,7 @@
 #
 # Run with: python -m featsel.run --config configs/experiment_baseline.yaml
 
-dataset: "scanb_gse96058.yaml"
+dataset: "featsel_datasets.scanb_gse96058.featsel_view"
 target: "pam50 subtype"
 
 output: "../results/baseline_random.csv"

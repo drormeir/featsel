@@ -70,7 +70,7 @@ pip install featsel
 
 ## Usage
 
-Run a comparison from an experiment config. It names a dataset config, the
+Run a comparison from an experiment config. It names a dataset, the
 selectors, the models and the splits, and writes one CSV row per execution:
 
 ```bash
@@ -103,16 +103,16 @@ X_selected = ANOVAFSelector(n_features=50).fit_transform(X, y)
 
 See `notebooks/03_usage_demo.ipynb` for an end-to-end example.
 
-To use your own dataset, add a data folder in `featsel_datasets/`, a dataset config
-(see `configs/template.yaml`) and an experiment config that names it (see
+To use your own dataset, add a folder in `featsel_datasets/` with either a
+`featsel_view.py` module or CSV files plus a dataset config (see
+`configs/template.yaml`). Then write an experiment config that names it (see
 `configs/experiment_classifiers.yaml`). Paths in a config are relative to the
 config file.
 
 ## Datasets
 
 The pipeline is dataset-agnostic. Each dataset needs a folder in
-`featsel_datasets/` and a dataset config in `configs/`. See
-`featsel_datasets/README.md`.
+`featsel_datasets/`. See `featsel_datasets/README.md`.
 
 ### SCAN-B Breast Cancer (GSE96058)
 
@@ -121,7 +121,7 @@ The pipeline is dataset-agnostic. Each dataset needs a folder in
 - PAM50 molecular subtype labels (Basal, LumA, LumB, Her2, Normal)
 - Clinical and pathology fields: ER, PgR, HER2, Ki67, grade, survival
 
-Config: `configs/scanb_gse96058.yaml`. Notes on the labels and on retired
+Experiment configs name it as `dataset: "featsel_datasets.scanb_gse96058.featsel_view"`. Notes on the labels and on retired
 course copies are in `docs/report/03_data.md`.
 
 ## Status

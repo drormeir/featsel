@@ -176,36 +176,40 @@ def load_config(path):
     """
     Read the experiment YAML. Defaults are filled in by run().
 
-    The 'dataset' and 'output' paths are relative to the config file, so a
-    config works from any working directory.
+    The 'output' path, and a 'dataset' given as a YAML file, are relative to
+    the config file, so a config works from any working directory.
     """
     with open(path) as f:
         config = yaml.safe_load(f)
 
     base = Path(path).parent
-    for key in ('dataset', 'output'):
-        if key in config:
-            config[key] = str(base / config[key])
+    if 'output' in config:
+        config['output'] = str(base / config['output'])
+    if _is_dataset_file(config.get('dataset', '')):
+        config['dataset'] = str(base / config['dataset'])
     return config
+
+
+def _is_dataset_file(dataset):
+    """A YAML dataset config, as opposed to a dataset module name."""
+    return dataset.endswith(('.yaml', '.yml'))
 
 
 def load_dataset(config):
     """
-    Load X and y for the dataset config named in the experiment config.
+    Load X, y, the target name and the dataset name.
 
-    A dataset config with a 'loader' key names a function as
-    'module:function'. It is called with the target and the config's
-    'params', and returns X and y. Otherwise the DataLoader reads the
-    config's CSV files, and unlabelled samples are dropped.
+    'dataset' is either a module, such as
+    'featsel_datasets.scanb_gse96058.featsel_view', or a CSV dataset config.
+    A module defines NAME, TARGET and load_xy(target=...); its choices about
+    samples and genes live in load_xy. A CSV config is read by the DataLoader,
+    and unlabelled samples are dropped.
     """
-    with open(config['dataset']) as f:
-        dataset = yaml.safe_load(f)
-    if 'loader' in dataset:
-        target = config.get('target') or dataset['target_column']
-        module, function = dataset['loader'].split(':')
-        load = getattr(importlib.import_module(module), function)
-        X, y = load(target=target, **dataset.get('params', {}))
-        return X, y, target
+    if not _is_dataset_file(config['dataset']):
+        view = importlib.import_module(config['dataset'])
+        target = config.get('target') or view.TARGET
+        X, y = view.load_xy(target=target)
+        return X, y, target, view.NAME
 
     loader = DataLoader(config['dataset'])
     if config.get('target'):
@@ -217,7 +221,7 @@ def load_dataset(config):
         print(f"Dropping {(~labelled).sum()} samples with no {loader.target_column} label")
         X, y = X.loc[labelled], y.loc[labelled]
 
-    return X, y, loader.target_column
+    return X, y, loader.target_column, loader.config['name']
 
 
 def _done_keys(path):
@@ -387,22 +391,23 @@ def iter_rows(X, y, config, skip=frozenset(), truth=None):
         yield from rows
 
 
-def print_plan(config, X, y, tasks, target, total):
+def print_plan(config, X, y, tasks, target, name, total):
     """Print every axis of the experiment before it starts."""
     n_features = X.shape[1]
     n_samples = X.shape[0]
 
     print(f"\n=== {config.get('output')} ===")
-    print(f"Dataset      : {n_samples} samples x {n_features} features"
+    print("Dataset      : " + (f"{name}, " if name else '')
+          + f"{n_samples} samples x {n_features} features"
           + (f", target '{target}'" if target else ''))
     print(f"Seed         : {config['seed']}")
 
     print(f"Tasks        : {len(tasks)}")
-    for name, y_task, mask in tasks:
+    for task_name, y_task, mask in tasks:
         counts = pd.Series(y_task).value_counts()
         shown = ', '.join(f"{label} {count}" for label, count in counts.items())
         used = '' if mask.all() else f", {mask.sum()} of {n_samples} samples"
-        print(f"  {name:<22} {len(counts)} classes ({shown}{used})")
+        print(f"  {task_name:<22} {len(counts)} classes ({shown}{used})")
 
     print(f"Splits       : {config['n_splits']} stratified Monte Carlo draws")
     for train_size in config['train_sizes']:
@@ -444,14 +449,15 @@ def print_plan(config, X, y, tasks, target, total):
           f"{len(config['models'])} models)\n")
 
 
-def run(X, y, config, resume=False, target=None, truth=None):
+def run(X, y, config, resume=False, target=None, truth=None, name=None):
     """
     Run the experiment on data in memory, appending each finished execution to
     the output CSV.
 
     X is a samples-by-features array or DataFrame and y the labels. config is
     the experiment description and must name an 'output' CSV; its 'dataset'
-    entry, if any, is ignored here. target only labels the printed plan.
+    entry, if any, is ignored here. target and name only label the printed
+    plan.
 
     truth, when given, holds the column indices of the truly informative
     features, as a simulation knows them. Each row then also records
@@ -472,7 +478,7 @@ def run(X, y, config, resume=False, target=None, truth=None):
     tasks = build_tasks(np.asarray(y), config['task_framings'])
     total = (len(tasks) * config['n_splits'] * len(config['train_sizes'])
              * len(config['preprocess']) * n_k * len(config['models']))
-    print_plan(config, X, y, tasks, target, total)
+    print_plan(config, X, y, tasks, target, name, total)
 
     written, start = 0, time.perf_counter()
     writer = None
@@ -504,8 +510,8 @@ def run(X, y, config, resume=False, target=None, truth=None):
 
 def run_config(config, resume=False):
     """Load the dataset named in the config, then run the experiment on it."""
-    X, y, target = load_dataset(config)
-    return run(X, y, config, resume=resume, target=target)
+    X, y, target, name = load_dataset(config)
+    return run(X, y, config, resume=resume, target=target, name=name)
 
 
 def main(argv=None):

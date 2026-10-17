@@ -297,25 +297,28 @@ def test_ranking_once_selects_the_same_genes_as_one_fit_per_k(experiment, monkey
     assert (once['n_selected'] == once['k']).all()
 
 
-def test_dataset_config_can_name_a_loader(tmp_path, monkeypatch):
-    """Test that a 'loader' dataset config is called with the target and params."""
-    (tmp_path / 'toy_loader.py').write_text(
+def test_dataset_can_be_a_module(tmp_path, monkeypatch):
+    """Test that a dataset module supplies X, y, its default target and its name."""
+    (tmp_path / 'toy_view.py').write_text(
         "import pandas as pd\n"
-        "def load(target, scale):\n"
-        "    X = pd.DataFrame({'g0': [scale, 2 * scale], 'g1': [0.0, 1.0]})\n"
+        "NAME = 'toy'\n"
+        "TARGET = 'label'\n"
+        "def load_xy(target=TARGET):\n"
+        "    X = pd.DataFrame({'g0': [1.0, 2.0], 'g1': [0.0, 1.0]})\n"
         "    return X, pd.Series(['a', 'b'], name=target)\n"
     )
     monkeypatch.syspath_prepend(str(tmp_path))
-    dataset = tmp_path / 'data.yaml'
-    dataset.write_text(yaml.safe_dump({
-        'loader': 'toy_loader:load', 'target_column': 'label', 'params': {'scale': 3.0}}))
+    path = tmp_path / 'exp.yaml'
+    path.write_text(yaml.safe_dump({'dataset': 'toy_view', 'output': 'out.csv'}))
 
-    X, y, target = load_dataset({'dataset': str(dataset), 'target': 'other'})
+    config = load_config(str(path))
+    assert config['dataset'] == 'toy_view'  # a module name is not a path
 
+    X, y, target, name = load_dataset(config)
+    assert (target, name) == ('label', 'toy')
+    assert X['g0'].tolist() == [1.0, 2.0]
+    _, y, target, _ = load_dataset({**config, 'target': 'other'})
     assert target == 'other' and y.name == 'other'
-    assert X['g0'].tolist() == [3.0, 6.0]
-    X, y, target = load_dataset({'dataset': str(dataset)})
-    assert target == 'label'
 
 
 def test_summarize_gives_one_row_per_cell(experiment):

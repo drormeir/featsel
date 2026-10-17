@@ -1,4 +1,9 @@
-"""This project's choices on GSE96058: which samples, which label, which genes."""
+"""
+This project's choices on GSE96058: which samples, which label, which genes.
+
+An experiment config names this module as its `dataset`. The runner reads
+NAME and TARGET and calls `load_xy(target=...)`.
+"""
 
 from __future__ import annotations
 
@@ -6,10 +11,13 @@ import pandas as pd
 
 from .gse96058 import GSE96058
 
+NAME = 'SCAN-B GSE96058'
+TARGET = 'pam50 subtype'
+
 
 def load_xy(
     data: GSE96058 | None = None,
-    target: str = 'pam50 subtype',
+    target: str = TARGET,
     instrument: str = 'HiSeq 2000',
     one_per_specimen: bool = True,
 ) -> tuple[pd.DataFrame, pd.Series]:

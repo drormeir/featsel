@@ -2,7 +2,7 @@
 # Feeds notebooks/02_classifier_behaviour.ipynb.
 # Run with: python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs -1
 
-dataset: "scanb_gse96058.yaml"
+dataset: "featsel_datasets.scanb_gse96058.featsel_view"
 target: "pam50 subtype"
 
 output: "../results/experiment_classifiers.csv"

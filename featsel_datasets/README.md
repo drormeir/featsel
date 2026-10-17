@@ -1,7 +1,7 @@
 # Datasets
 
-Each dataset has its own folder here and a dataset config in `configs/`.
-Git tracks the code and docs; it ignores the data files (`*.csv`, `*.gz`).
+Each dataset has its own folder here. Git tracks the code and docs; it
+ignores the data files (`*.csv`, `*.gz`).
 
 ## Current datasets
 
@@ -12,12 +12,14 @@ GSE96058 (Brueffer et al., 2018).
 
 - `gse96058.py` downloads and caches the published files on first use, and
   exposes them unchanged.
-- `featsel_view.py` returns `X, y` with this project's choices: HiSeq 2000
+- `featsel_view.py` defines `NAME`, `TARGET` (`pam50 subtype`) and
+  `load_xy`, which returns `X, y` with this project's choices: HiSeq 2000
   samples only, one sample per patient.
 - `demos/tutorial.ipynb` shows the content.
 
-**Config**: `configs/scanb_gse96058.yaml`. Findings and decisions are in
-`docs/report/03_data.md`.
+Experiment configs name it as
+`dataset: "featsel_datasets.scanb_gse96058.featsel_view"`. Findings and
+decisions are in `docs/report/03_data.md`.
 
 ## Retired datasets
 
@@ -34,12 +36,12 @@ The data and their configs are archived, outside git, in
 
 Either:
 
-- **A loader**, like `scanb_gse96058/`: a folder with code that downloads and
-  caches the data, and a function that returns `X, y`. Its dataset config
-  names the function under `loader`.
+- **A module**, like `scanb_gse96058/`: a folder with code that downloads and
+  caches the data, and a `featsel_view.py` defining `NAME`, `TARGET` and
+  `load_xy(target=...)`. No dataset YAML.
 - **CSV files**: `features.csv` and `metadata.csv` in the folder, read by
   `DataLoader`. Copy `configs/template.yaml` for the dataset config.
 
-See `configs/README.md` for both config forms. Then create an experiment
-config that names the dataset config, and run:
+See `configs/README.md` for both forms. Then create an experiment config
+whose `dataset` names the module or the dataset config, and run:
 `python -m featsel.run --config configs/<your_experiment>.yaml`

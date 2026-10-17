@@ -1,8 +1,8 @@
 # Experiment definition for SCAN-B. Every axis of the study lives here.
 # Run with: python -m featsel.run --config configs/experiment_scanb.yaml
 
-dataset: "scanb_gse96058.yaml"
-target: "pam50 subtype"          # omit to use the dataset config's default target
+dataset: "featsel_datasets.scanb_gse96058.featsel_view"
+target: "pam50 subtype"          # omit to use the dataset's default target
 
 output: "../results/experiment_scanb.csv"
 

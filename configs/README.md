@@ -1,36 +1,33 @@
 # Configuration Files
 
-Two kinds of YAML file. A **dataset config** says where a dataset's files are
-and how to read them. An **experiment config** names a dataset config and
-describes one comparison. Every path in either kind is relative to the file
-itself.
+An **experiment config** describes one comparison and names its dataset. The
+dataset is either a Python module in `featsel_datasets/` (SCAN-B) or a
+**dataset config** describing CSV files. Every path in a config is relative
+to the file itself.
 
 ## Files
 
 | File | Kind | Description |
 |------|------|-------------|
 | `template.yaml` | dataset | Documented template for a new CSV dataset config |
-| `scanb_gse96058.yaml` | dataset | SCAN-B breast cancer from GSE96058: 2,976 patients (HiSeq 2000, one sample each), downloaded on first use |
 | `experiment_classifiers.yaml` | experiment | Random vs ANOVA F across five classifiers, 12 splits |
 | `experiment_baseline.yaml` | experiment | The random-selection control across all task framings |
 | `experiment_scanb.yaml` | experiment | The full SCAN-B design: four selectors, three train fractions |
 
-## Dataset config
+## Dataset
 
-A dataset config either names a loader function or describes CSV files.
+**A dataset module**, such as
+`featsel_datasets.scanb_gse96058.featsel_view`. It defines:
 
-**Loader.** The function returns `X, y`. The runner calls it with the
-target and with `params`. Its module must be importable, so run from the
-repo root.
+| Name | Meaning |
+|------|---------|
+| `NAME` | Name shown in the printed plan |
+| `TARGET` | Default target |
+| `load_xy(target=...)` | Returns `X, y`, with the module's choices of samples and genes |
 
-| Key | Meaning |
-|-----|---------|
-| `name` | Name shown in reports |
-| `loader` | Function as `module:function`, e.g. `featsel_datasets.scanb_gse96058.featsel_view:load_xy` |
-| `target_column` | Default target |
-| `params` | Keyword arguments passed to the function |
+The module must be importable, so run from the repo root.
 
-**CSV files.** Read by `DataLoader`. Keys it reads:
+**A CSV dataset config**, read by `DataLoader`. Keys it reads:
 
 | Key | Meaning |
 |-----|---------|
@@ -49,7 +46,7 @@ supports classification only.
 
 | Key | Default | Meaning |
 |-----|---------|---------|
-| `dataset` | required | Dataset config, relative to this file |
+| `dataset` | required | A dataset module name, or a CSV dataset config (`.yaml`) relative to this file |
 | `output` | required | Output CSV, relative to this file |
 | `target` | dataset default | Target column to predict |
 | `selectors` | required | List of `{name, k, params, label}`. `name` is a selector class name, case-insensitive, such as `ANOVAFSelector` |
@@ -65,7 +62,8 @@ supports classification only.
 Each value in a selector's `k` list is passed as its `n_features`. Four
 selectors have no `n_features` and choose their own count: `FDRSelector`,
 `FWESelector`, `PercentileSelector` and `RFECVSelector`. Leave out `k` for
-them. A `k` fails at the first split.
+them. A `k` fails at the first split. A `k` is a feature count for one
+dataset, so it lives in the experiment config, not in the dataset module.
 
 ## Running
 
@@ -77,6 +75,15 @@ python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs -1
 rows already in the output CSV.
 
 ## Creating a new dataset
+
+As a module (preferred when the data is downloaded or needs choices):
+
+1. Create `featsel_datasets/<name>/` with the code that fetches the data and
+   a `featsel_view.py` defining `NAME`, `TARGET` and `load_xy`.
+2. Copy an experiment config, set its `dataset` to
+   `featsel_datasets.<name>.featsel_view`, and set its `output`.
+
+As CSV files:
 
 1. Put `features.csv` and `metadata.csv` in `featsel_datasets/<name>/`.
 2. Copy `template.yaml` to `<name>.yaml` and fill in the keys above.
