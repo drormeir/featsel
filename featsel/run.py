@@ -115,6 +115,13 @@ def build_tasks(y, framings):
     return tasks
 
 
+# Selectors whose fit does not depend on n_features and that keep the top
+# n_features of feature_importances_. The runner fits them once per split and
+# cuts the ranking at each k: the same genes, one fit instead of one per k.
+# Their selection_time_s and selection_peak_mb are that one fit's, on every k.
+RANK_ONCE = {'LassoSelector', 'TreeImportanceSelector'}
+
+
 def _instantiate(registry, spec, seed):
     """Build an estimator from a {name, params} config entry, seeding if it takes one."""
     name = spec['name']
@@ -233,23 +240,35 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, config,
 
     for sel_spec in config['selectors']:
         sel_name = _selector_label(sel_spec)
+        k_values = sel_spec.get('k', [None])
+        rank_once = (FeatureSelector.lookup(sel_spec['name']).__name__ in RANK_ONCE
+                     and None not in k_values)
+        ranking = None
 
-        for k in sel_spec.get('k', [None]):
+        for k in k_values:
             keys = {_label(m): (*context['key'], sel_name, k, _label(m))
                     for m in config['models']}
             if all(tuple(str(v) for v in key) in skip for key in keys.values()):
                 continue
 
-            selector = _make_selector(sel_spec, k, split_seed)
+            if ranking is None:
+                selector = _make_selector(sel_spec, max(k_values) if rank_once else k,
+                                          split_seed)
+                tracemalloc.start()
+                start = time.perf_counter()
+                selector.fit(X_train, y_train)
+                selection_time = time.perf_counter() - start
+                _, peak_bytes = tracemalloc.get_traced_memory()
+                tracemalloc.stop()
+                if rank_once:
+                    # The same argsort as FeatureSelector._top, so each cut
+                    # equals a fit with n_features=k.
+                    ranking = np.argsort(selector.feature_importances_)[::-1]
 
-            tracemalloc.start()
-            start = time.perf_counter()
-            selector.fit(X_train, y_train)
-            selection_time = time.perf_counter() - start
-            _, peak_bytes = tracemalloc.get_traced_memory()
-            tracemalloc.stop()
-
-            support = selector.get_support(indices=True)
+            if rank_once:
+                support = np.sort(ranking[:k])
+            else:
+                support = selector.get_support(indices=True)
             X_train_sel, X_test_sel = X_train[:, support], X_test[:, support]
 
             recovery = {}

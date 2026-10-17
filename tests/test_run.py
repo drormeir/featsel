@@ -15,6 +15,7 @@ import pytest
 import yaml
 from sklearn.datasets import make_classification
 
+import featsel.run as run_module
 from featsel.analysis import kuncheva_index, summarize
 from featsel.metrics import KEY_COLUMNS, g_mean
 from featsel.run import build_tasks, load_config, load_dataset, run, run_config
@@ -280,6 +281,20 @@ def test_config_paths_are_relative_to_the_config_file(tmp_path, monkeypatch):
 
     assert Path(config['dataset']).resolve() == tmp_path / 'configs' / 'data.yaml'
     assert Path(config['output']).resolve() == tmp_path / 'results' / 'out.csv'
+
+
+def test_ranking_once_selects_the_same_genes_as_one_fit_per_k(experiment, monkeypatch):
+    """Test that cutting one ranking at each k equals fitting once per k."""
+    experiment['selectors'] = [
+        {'name': 'LassoSelector', 'k': [5, 10, 20], 'params': {'C': 1.0}},
+        {'name': 'TreeImportanceSelector', 'k': [5, 10, 20], 'params': {'n_estimators': 20}},
+    ]
+    once = pd.read_csv(run_config(experiment))
+    monkeypatch.setattr(run_module, 'RANK_ONCE', set())
+    per_k = pd.read_csv(run_config(experiment))
+
+    pd.testing.assert_series_equal(once['selected_indices'], per_k['selected_indices'])
+    assert (once['n_selected'] == once['k']).all()
 
 
 def test_dataset_config_can_name_a_loader(tmp_path, monkeypatch):
