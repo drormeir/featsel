@@ -142,8 +142,8 @@ Plan:
      not a curve.
    - Correlated substitutes. A method that picks a gene highly correlated
      with a PAM50 gene finds the same signal but scores no recall.
-3. Run it on a gene set that holds all 50 genes: GSE96058 or `scanb_full`,
-   not `scanb_small`.
+3. Run it on GSE96058, which holds all 50 genes; the retired `scanb_small`
+   did not.
 
 ## Gene sets
 

@@ -7,7 +7,9 @@ five-class target. Prints accuracy and macro-F1 per method.
 Feature selection sits inside the pipeline, so it is fit on the training
 split of each fold only (SCOPE.md 3a: selection inside the fold).
 
-Usage: python scripts/run_baseline.py [config_path]
+Data: GSE96058 through `load_xy`, one HiSeq 2000 sample per patient.
+
+Usage: python scripts/run_baseline.py
 """
 
 import sys
@@ -22,10 +24,9 @@ from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from featsel import DataLoader
 from featsel.selectors import ANOVAFSelector, RandomSelector
+from featsel_datasets.scanb_gse96058.featsel_view import load_xy
 
-CONFIG = "configs/scanb_small.yaml"
 N_FEATURES = 100
 N_SPLITS = 5
 SEED = 42
@@ -35,14 +36,8 @@ SELECTORS = [
 ]
 
 
-def main(config_path: str = CONFIG) -> None:
-    loader = DataLoader(config_path)
-    X, y = loader.X, loader.y
-
-    labelled = y.notna()
-    if not labelled.all():
-        print(f"Dropping {(~labelled).sum()} samples with no PAM50 label")
-        X, y = X.loc[labelled], y.loc[labelled]
+def main() -> None:
+    X, y = load_xy(target="pam50 subtype")
 
     print(f"\nClass distribution:\n{y.value_counts().to_string()}")
 
@@ -70,4 +65,4 @@ def main(config_path: str = CONFIG) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else CONFIG)
+    main()

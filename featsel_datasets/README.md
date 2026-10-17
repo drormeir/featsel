@@ -1,56 +1,45 @@
 # Datasets
 
-Each dataset should have its own subfolder with a corresponding config file in `configs/`.
+Each dataset has its own folder here and a dataset config in `configs/`.
+Git tracks the code and docs; it ignores the data files (`*.csv`, `*.gz`).
 
-## Expected Structure
-
-```
-featsel_datasets/
-├── <dataset_name>/
-│   ├── features.csv    # Feature matrix (genes/features x samples or samples x features)
-│   └── metadata.csv    # Sample metadata with target labels
-```
-
-## Current Datasets
+## Current datasets
 
 ### SCAN-B Breast Cancer, GSE96058 (`scanb_gse96058/`)
 
-The published source of both course versions below: 3,273 patients, 3,409
-samples, 30,865 genes, from NCBI GEO accession GSE96058 (Brueffer et al.,
-2018). `gse96058.py` downloads and caches the files on first use.
-`featsel_view.py` returns `X, y` with this project's choices.
-`demos/tutorial.ipynb` shows the content. Findings and decisions are in
+3,273 patients, 3,409 samples, 30,865 genes, from NCBI GEO accession
+GSE96058 (Brueffer et al., 2018).
+
+- `gse96058.py` downloads and caches the published files on first use, and
+  exposes them unchanged.
+- `featsel_view.py` returns `X, y` with this project's choices: HiSeq 2000
+  samples only, one sample per patient.
+- `demos/tutorial.ipynb` shows the content.
+
+**Config**: `configs/scanb_gse96058.yaml`. Findings and decisions are in
 `docs/report/03_data.md`.
 
-### SCAN-B Breast Cancer, course version (`scanb_small/`)
+## Retired datasets
 
-Gene expression data from the Sweden Cancerome Analysis Network - Breast.
+`scanb_small` and `scanb_full`, the course's copies of SCAN-B, were retired
+on 2026-10-17. Both hold the 3,069 HiSeq 2000 samples of GSE96058, which come
+from 2,976 patients: 93 patients have two samples each. `scanb_small` keeps
+9,264 genes chosen by an unrecorded rule, and lacks 11 of the 50 PAM50 genes.
+Results computed before 2026-10-17 used `scanb_small`.
 
-| File | Description |
-|------|-------------|
-| `features.csv` | Gene expression matrix (genes x samples) |
-| `metadata.csv` | Sample metadata with PAM50 subtypes, ER status, survival data |
+The data and their configs are archived, outside git, in
+`references/local/scanb_course/`.
 
-**Config**: `configs/scanb_small.yaml`
+## Adding a new dataset
 
-Shape: 9,264 genes x 3,069 samples. This is the pre-filtered version handed
-out with the course and the one all reported results use. The gene filter is
-not recorded, and it removed 11 of the 50 PAM50 genes. The 3,069 samples come
-from 2,976 patients: 93 patients have two samples each.
+Either:
 
-### SCAN-B Breast Cancer, full gene set (`scanb_full/`)
+- **A loader**, like `scanb_gse96058/`: a folder with code that downloads and
+  caches the data, and a function that returns `X, y`. Its dataset config
+  names the function under `loader`.
+- **CSV files**: `features.csv` and `metadata.csv` in the folder, read by
+  `DataLoader`. Copy `configs/template.yaml` for the dataset config.
 
-Same samples, 30,865 genes x 3,069 samples (1.6 GB). Present as symlinks to a
-copy outside the repo. Used only for scaling and timing experiments, not for
-the reported method comparison. Its samples are the HiSeq 2000 samples of
-`scanb_gse96058/`; values match on the 7 genes checked.
-
-**Config**: `configs/scanb_full.yaml`
-
-## Adding a New Dataset
-
-1. Create a subfolder: `featsel_datasets/<your_dataset>/`
-2. Add `features.csv` and `metadata.csv` following the expected format
-3. Create a dataset config: `configs/<your_dataset>.yaml` (see `configs/README.md`)
-4. Create an experiment config that names it, then run:
-   `python -m featsel.run --config configs/<your_experiment>.yaml`
+See `configs/README.md` for both config forms. Then create an experiment
+config that names the dataset config, and run:
+`python -m featsel.run --config configs/<your_experiment>.yaml`

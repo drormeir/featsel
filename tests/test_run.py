@@ -17,7 +17,7 @@ from sklearn.datasets import make_classification
 
 from featsel.analysis import kuncheva_index, summarize
 from featsel.metrics import KEY_COLUMNS, g_mean
-from featsel.run import build_tasks, load_config, run, run_config
+from featsel.run import build_tasks, load_config, load_dataset, run, run_config
 
 
 @pytest.fixture
@@ -280,6 +280,27 @@ def test_config_paths_are_relative_to_the_config_file(tmp_path, monkeypatch):
 
     assert Path(config['dataset']).resolve() == tmp_path / 'configs' / 'data.yaml'
     assert Path(config['output']).resolve() == tmp_path / 'results' / 'out.csv'
+
+
+def test_dataset_config_can_name_a_loader(tmp_path, monkeypatch):
+    """Test that a 'loader' dataset config is called with the target and params."""
+    (tmp_path / 'toy_loader.py').write_text(
+        "import pandas as pd\n"
+        "def load(target, scale):\n"
+        "    X = pd.DataFrame({'g0': [scale, 2 * scale], 'g1': [0.0, 1.0]})\n"
+        "    return X, pd.Series(['a', 'b'], name=target)\n"
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    dataset = tmp_path / 'data.yaml'
+    dataset.write_text(yaml.safe_dump({
+        'loader': 'toy_loader:load', 'target_column': 'label', 'params': {'scale': 3.0}}))
+
+    X, y, target = load_dataset({'dataset': str(dataset), 'target': 'other'})
+
+    assert target == 'other' and y.name == 'other'
+    assert X['g0'].tolist() == [3.0, 6.0]
+    X, y, target = load_dataset({'dataset': str(dataset)})
+    assert target == 'label'
 
 
 def test_summarize_gives_one_row_per_cell(experiment):

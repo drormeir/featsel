@@ -20,6 +20,7 @@ Usage:
 
 import argparse
 import csv
+import importlib
 import json
 import time
 import tracemalloc
@@ -182,7 +183,23 @@ def load_config(path):
 
 
 def load_dataset(config):
-    """Load X and y through the DataLoader, dropping unlabelled samples."""
+    """
+    Load X and y for the dataset config named in the experiment config.
+
+    A dataset config with a 'loader' key names a function as
+    'module:function'. It is called with the target and the config's
+    'params', and returns X and y. Otherwise the DataLoader reads the
+    config's CSV files, and unlabelled samples are dropped.
+    """
+    with open(config['dataset']) as f:
+        dataset = yaml.safe_load(f)
+    if 'loader' in dataset:
+        target = config.get('target') or dataset['target_column']
+        module, function = dataset['loader'].split(':')
+        load = getattr(importlib.import_module(module), function)
+        X, y = load(target=target, **dataset.get('params', {}))
+        return X, y, target
+
     loader = DataLoader(config['dataset'])
     if config.get('target'):
         loader.set_target(config['target'])

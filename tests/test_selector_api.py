@@ -196,16 +196,3 @@ def test_embedded_methods_agree_on_informative_data(small_classification_data):
 
     overlap = set(lasso.get_support(indices=True)) & set(trees.get_support(indices=True))
     assert len(overlap) >= 2
-
-
-def test_selection_is_independent_of_the_target_switch(scanb_loader):
-    """Test that a fitted unsupervised selector transforms data under any target."""
-    loader = scanb_loader
-    selector = VarianceThreshold(threshold=0.1).fit(loader.X)
-
-    loader.set_target('PAM50')
-    first = selector.transform(loader.X)
-    loader.set_target('ER')
-    second = selector.transform(loader.X)
-
-    assert first.shape == second.shape

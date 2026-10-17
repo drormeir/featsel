@@ -22,23 +22,23 @@ pip install -r requirements.txt
 
 ### Running the Pipeline
 ```bash
-# Run with a configuration file
-python -m featsel.data_loader configs/scanb_small.yaml
+# Run an experiment (from the repo root, so featsel_datasets imports)
+python -m featsel.run --config configs/experiment_scanb.yaml
 
-# Test the DataLoader directly
-python featsel/data_loader.py configs/scanb_small.yaml
+# Load SCAN-B; the first call downloads GSE96058 (592 MB) into the cache
+python -c "from featsel_datasets.scanb_gse96058.featsel_view import load_xy; X, y = load_xy(); print(X.shape)"
 ```
 
 ### Feature Selection
 ```bash
 # Use a selector class in Python scripts or notebooks
 python
->>> from featsel import DataLoader
 >>> from featsel.selectors import ANOVAFSelector
->>> loader = DataLoader('configs/scanb_small.yaml')
+>>> from featsel_datasets.scanb_gse96058.featsel_view import load_xy
+>>> X, y = load_xy()
 >>> selector = ANOVAFSelector(n_features=100)
->>> selector.fit(loader.X, loader.y)
->>> X_selected = selector.transform(loader.X)
+>>> selector.fit(X, y)
+>>> X_selected = selector.transform(X)
 
 # Run one selector's tests
 python -m pytest featsel/selectors/anova_f -v
@@ -81,9 +81,24 @@ mypy featsel/
 
 ### Data Loading System
 
-The core architecture revolves around a PyTorch-style DataLoader that provides a consistent interface for loading high-dimensional datasets.
+A dataset is loaded one of two ways. Both give `X, y` to the runner.
 
-**Key Component: `featsel/data_loader.py`**
+**Dataset loaders: `featsel_datasets/<name>/`** (used for SCAN-B)
+
+A folder per dataset with code that downloads the published files once and
+caches them beside it. For SCAN-B (`featsel_datasets/scanb_gse96058/`):
+- `gse96058.py`: class `GSE96058`, exposes every sample, gene and field of
+  GEO accession GSE96058 unchanged.
+- `featsel_view.py`: `load_xy()`, this project's choices (HiSeq 2000 only,
+  one sample per patient, chosen target, no single-value genes). Returns a
+  DataFrame and a Series.
+- `demos/tutorial.ipynb`: what the dataset contains.
+
+`featsel_datasets` is not an installed package: run from the repo root.
+Design: `docs/architecture_options.md`, "Dataset loaders". Data findings:
+`docs/report/03_data.md`.
+
+**CSV datasets: `featsel/data_loader.py`**
 
 The `DataLoader` class:
 - Loads datasets from YAML configuration files in `configs/`
@@ -96,7 +111,9 @@ The `DataLoader` class:
 
 **Configuration System: `configs/`**
 
-Each dataset requires a YAML config file specifying:
+A dataset config either names a loader (`loader: module:function`, plus
+`params` and `target_column`; see `configs/scanb_gse96058.yaml`) or, for a
+CSV dataset, specifies:
 - Paths to `features.csv` and `metadata.csv` (relative to the config file)
 - `sample_id_column`: Column name to use as sample identifier
 - `target_column`: Default target variable for prediction
@@ -104,18 +121,22 @@ Each dataset requires a YAML config file specifying:
 - Task type: classification (binary/multiclass) or regression
 - Optional alternative targets available in the metadata
 
-Example: `configs/scanb_small.yaml` configures the SCAN-B breast cancer dataset with PAM50 subtypes as the primary target, and ER status and survival data as alternative targets.
+`configs/template.yaml` documents the CSV form.
 
 ### Dataset Structure
 
-**Expected format in `featsel_datasets/<dataset_name>/`:**
+**CSV format in `featsel_datasets/<dataset_name>/`:**
 - `features.csv`: Feature matrix with samples as rows and features (genes) as columns, OR transposed (set `transpose_features: true` in config)
 - `metadata.csv`: Sample metadata with target labels and additional clinical variables
 
-**Current dataset: `featsel_datasets/scanb_small/`**
-- 518MB gene expression matrix with thousands of genes per sample
-- PAM50 molecular subtypes (Basal, LumA, LumB, Her2, Normal) as primary classification target
-- Alternative targets: ER status (binary), survival event (binary), survival time (regression)
+**Current dataset: SCAN-B, GSE96058 (`featsel_datasets/scanb_gse96058/`)**
+- 3,273 patients, 3,409 samples, 30,865 genes; `load_xy()` gives 2,976 patients
+- Default target `pam50 subtype` (Basal, LumA, LumB, Her2, Normal)
+- Other targets are GSE96058's own field names, e.g. `er status` (pathologist), `er prediction mgc` (computed from genes), `overall survival event`
+- PAM50 and the `prediction` fields are computed from gene expression, not measured. See `docs/report/03_data.md`.
+
+The course copies `scanb_small` and `scanb_full` are retired; they are
+archived outside git in `references/local/scanb_course/`.
 
 ### Package Structure
 
@@ -180,10 +201,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
 
-from featsel import DataLoader
 from featsel.selectors import ANOVAFSelector
+from featsel_datasets.scanb_gse96058.featsel_view import load_xy
 
-loader = DataLoader('configs/scanb_small.yaml')
+X, y = load_xy()
 
 pipe = Pipeline([
     ('select', ANOVAFSelector(n_features=100)),
@@ -191,10 +212,10 @@ pipe = Pipeline([
 ])
 
 # Selection is refit inside every fold
-scores = cross_val_score(pipe, loader.X, loader.y, cv=5)
+scores = cross_val_score(pipe, X, y, cv=5)
 
 # Selected features and their scores
-pipe.fit(loader.X, loader.y)
+pipe.fit(X, y)
 select = pipe.named_steps['select']
 selected = select.get_feature_names_out()
 scores_per_feature = select.feature_importances_
@@ -268,37 +289,29 @@ pipe = Pipeline([
 pipe.fit(X_embeddings, y_disease_labels)
 ```
 
-### Multi-Target Support with DataLoader
+### Multiple Targets
 
 ```python
-from featsel import DataLoader
-from featsel.selectors import ANOVAFSelector
+from featsel_datasets.scanb_gse96058.featsel_view import load_xy
+from featsel_datasets.scanb_gse96058.gse96058 import GSE96058
 
-loader = DataLoader('configs/scanb_small.yaml')
-
-# Fit feature selection on PAM50 target
-loader.set_target('PAM50')
-selector = ANOVAFSelector(n_features=100)
-selector.fit(loader.X, loader.y)
-
-# Transform works with any target
-X_selected = selector.transform(loader.X)
-
-# Switch to different target (ER status)
-loader.set_target('ER')
-# Same selected features, different target for modeling
+data = GSE96058()                                   # load once, reuse
+X, y_pam50 = load_xy(data, target='pam50 subtype')
+X_er, y_er = load_xy(data, target='er status')      # pathologist ER; drops patients without it
 ```
+
+A CSV dataset switches targets with `DataLoader.set_target()`.
 
 ## Important Notes
 
 ### Data Files
-- Data files in `featsel_datasets/scanb_small/` are not tracked in git (large files, potentially sensitive)
-- The `features.csv` file is ~519MB, containing full gene expression matrix
+- Data files under `featsel_datasets/` are not tracked in git (`*.csv` there, `*.gz` anywhere); the loader code is
+- GSE96058's gene expression file is 592 MB; loading it takes about a minute
 - When working with data loading, test on a subset first to avoid long load times
 
 ### Configuration Files
 - YAML configs in `configs/` drive all pipeline behavior
-- `template.yaml` contains full documentation of all available options
+- `template.yaml` documents the CSV dataset form; `configs/README.md` documents both forms
 - Every path in a config is relative to that config file: dataset configs use `../featsel_datasets/...`, experiment configs name their dataset config and `../results/...` output the same way
 
 ### Package Installation

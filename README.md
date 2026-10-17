@@ -38,7 +38,7 @@ The primary use case is predicting breast cancer molecular subtypes from gene ex
 ├── featsel/            # The Python package
 │   └── selectors/      # One subpackage per selector, with its tests and a tutorial notebook
 ├── configs/            # Dataset and experiment configuration files (YAML)
-├── featsel_datasets/           # Input data (one subfolder per dataset, not in git)
+├── featsel_datasets/   # One folder per dataset: loader code in git, data files not
 ├── results/            # Experiment output CSVs (not in git)
 ├── figures/            # Generated plots
 ├── notebooks/          # Analysis and usage notebooks
@@ -110,17 +110,19 @@ config file.
 
 ## Datasets
 
-The pipeline is dataset-agnostic. Each dataset needs:
-- A subfolder in `featsel_datasets/` with `features.csv` and `metadata.csv`
-- A dataset config file in `configs/`
+The pipeline is dataset-agnostic. Each dataset needs a folder in
+`featsel_datasets/` and a dataset config in `configs/`. See
+`featsel_datasets/README.md`.
 
-### SCAN-B Breast Cancer (included config)
+### SCAN-B Breast Cancer (GSE96058)
 
-- 3,069 patients, 9,259 gene expression features after cleaning
-- PAM50 molecular subtype labels (Basal, LumA, LumB, HER2, Normal)
-- Clinical metadata (ER status, survival data)
+- Downloaded from NCBI GEO on first use (592 MB) and cached locally
+- 2,976 patients (HiSeq 2000, one sample each), 28,552 genes for PAM50
+- PAM50 molecular subtype labels (Basal, LumA, LumB, Her2, Normal)
+- Clinical and pathology fields: ER, PgR, HER2, Ki67, grade, survival
 
-**Note**: Data files are not included due to size. Download from [TBD] and place in `featsel_datasets/scanb_small/`.
+Config: `configs/scanb_gse96058.yaml`. Notes on the labels and on retired
+course copies are in `docs/report/03_data.md`.
 
 ## Status
 

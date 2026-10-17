@@ -180,24 +180,3 @@ def sklearn_timing_data():
                                random_state=0)
     scale = np.random.default_rng(0).uniform(0.1, 2.0, X.shape[1])
     return X * scale, y
-
-
-@pytest.fixture
-def scanb_loader():
-    """
-    Real SCAN-B dataset loader (if data available).
-
-    Returns
-    -------
-    loader : DataLoader
-        Loaded SCAN-B dataset.
-
-    Notes
-    -----
-    Skips test if SCAN-B data is not available.
-    """
-    from featsel import DataLoader
-    try:
-        return DataLoader('configs/scanb_small.yaml')
-    except FileNotFoundError:
-        pytest.skip("SCAN-B dataset not available")

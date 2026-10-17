@@ -416,8 +416,10 @@ two layers.
 
 **Limits.**
 
-- The runner's YAML path still reads CSVs through `DataLoader`. `load_xy` is
-  used from Python with `run(X, y, config)`.
+- The runner reaches a loader through a dataset config with a `loader` key
+  (`module:function`) and `params` (added 2026-10-17). This names code from
+  a config, which is close to the extension points `SCOPE.md` section 4
+  rules out. It is one key, with no registry.
 - `featsel_datasets` is not an installed package. Code outside the repo root
   must put the root on `sys.path`.
 - The first load downloads 592 MB and takes about 85 s.

@@ -7,8 +7,8 @@
 #
 # Run with: python -m featsel.run --config configs/experiment_baseline.yaml
 
-dataset: "scanb_small.yaml"
-target: "PAM50"
+dataset: "scanb_gse96058.yaml"
+target: "pam50 subtype"
 
 output: "../results/baseline_random.csv"
 

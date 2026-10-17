@@ -83,7 +83,7 @@ no unbiased estimator of the variance of k-fold cross-validation. Five or ten
 numbers are in any case too few to characterise a distribution.
 
 Monte Carlo splits do not escape dependence entirely - every split is drawn
-from the same 3069 patients, so training sets still overlap - but the
+from the same 2976 patients, so training sets still overlap - but the
 dependence is no longer forced by a disjointness constraint, and 100 draws
 give a distribution rather than a handful of points.
 
@@ -92,7 +92,7 @@ degenerate split, and its interquartile range describes the bulk of the
 distribution without assuming symmetry.
 
 **What the interval does and does not mean.** The interval measures *split*
-variance: how much the number moves if the same 3069 patients are re-split. It
+variance: how much the number moves if the same 2976 patients are re-split. It
 is not a confidence interval over the population of breast cancer patients,
 because every split reuses the same cohort. The report must say this
 explicitly.
@@ -133,7 +133,7 @@ outer training part with that C, and scored once on the outer test part.
 - Leave-one-out: a one-patient test set gives no per-split macro-F1, only a
   pooled number with no spread. Training sets differ by one patient, so
   stability reads near 1.0 for every method. Its estimate has high variance
-  (Kohavi 1995). It costs 3069 refits per cell.
+  (Kohavi 1995). It costs 2976 refits per cell.
 - Fixed C with no tuning: valid for ranking selectors, since every selector
   gets the same model, but C=1 may be poor at large `k`.
 
@@ -170,7 +170,7 @@ Decided 2026-09-26.
 **Decision.** `k` is given as a percent of the total sample count, so the
 budget scales with the data and is comparable across datasets. It uses the
 total count, not the training count, so `k` stays fixed across train
-fractions. `k=50` is added explicitly, since it is not a round percent of 3069.
+fractions. `k=50` is added explicitly, since it is not a round percent of 2976.
 
 **Above the sample count.** Selecting more features than training samples is
 not a useful target: the point of selection here is to get below it. One run
@@ -232,8 +232,8 @@ Selection quality:
 - **Overlap with the published PAM50 gene list** - planned. A partial ground
   truth for "did it find the right genes", not just "did it predict well".
   PAM50 labels are computed from these 50 genes, so for the PAM50 target the
-  answer is known. It needs a gene set that holds all 50: `scanb_full` or
-  GSE96058 does; `scanb_small` lacks 11 of them. `run(..., truth=...)`
+  answer is known. It needs a gene set that holds all 50: GSE96058 does;
+  the retired `scanb_small` lacked 11 of them. `run(..., truth=...)`
   already records recall and precision against given feature indices. See
   `docs/report/03_data.md`.
 

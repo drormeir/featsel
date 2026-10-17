@@ -9,16 +9,28 @@ itself.
 
 | File | Kind | Description |
 |------|------|-------------|
-| `template.yaml` | dataset | Documented template for a new dataset config |
-| `scanb_small.yaml` | dataset | SCAN-B breast cancer, course version: 3,069 patients, 9,259 genes after cleaning |
-| `scanb_full.yaml` | dataset | SCAN-B breast cancer, full gene set, for timing runs only |
+| `template.yaml` | dataset | Documented template for a new CSV dataset config |
+| `scanb_gse96058.yaml` | dataset | SCAN-B breast cancer from GSE96058: 2,976 patients (HiSeq 2000, one sample each), downloaded on first use |
 | `experiment_classifiers.yaml` | experiment | Random vs ANOVA F across five classifiers, 12 splits |
 | `experiment_baseline.yaml` | experiment | The random-selection control across all task framings |
 | `experiment_scanb.yaml` | experiment | The full SCAN-B design: four selectors, three train fractions |
 
 ## Dataset config
 
-Keys the loader reads:
+A dataset config either names a loader function or describes CSV files.
+
+**Loader.** The function returns `X, y`. The runner calls it with the
+target and with `params`. Its module must be importable, so run from the
+repo root.
+
+| Key | Meaning |
+|-----|---------|
+| `name` | Name shown in reports |
+| `loader` | Function as `module:function`, e.g. `featsel_datasets.scanb_gse96058.featsel_view:load_xy` |
+| `target_column` | Default target |
+| `params` | Keyword arguments passed to the function |
+
+**CSV files.** Read by `DataLoader`. Keys it reads:
 
 | Key | Meaning |
 |-----|---------|
