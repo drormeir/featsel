@@ -18,6 +18,9 @@ not be redistributed. Download missing papers from the link.
 | Brueffer, C., Vallon-Christersson, J., Grabau, D., et al. (2018). Clinical value of RNA sequencing-based classifiers for prediction of the five conventional breast cancer biomarkers: a report from the population-based multicenter Sweden Cancerome Analysis Network-Breast Initiative. *JCO Precision Oncology* 2, 1-18. https://doi.org/10.1200/PO.17.00135. Data: GEO GSE96058. | `local/Brueffer_2018_SCANB_Biomarker_Classifiers.pdf` |
 | Data Supplement to the above: methods PDF and Supplementary Tables 1-9. Table 3 holds the multigene classifiers' shrunken centroids per gene; Table 6 the single-gene cutoffs. https://ascopubs.org/doi/suppl/10.1200/PO.17.00135 | `local/Brueffer_2018_supplement/` |
 | Parker, J. S., Mullins, M., Cheang, M. C. U., et al. (2009). Supervised risk predictor of breast cancer based on intrinsic subtypes. *Journal of Clinical Oncology* 27(8), 1160-1167. https://doi.org/10.1200/JCO.2008.18.1370. Defines PAM50. Supplemental Table 2 lists the 50 genes plus 5 control genes (ACTB, MRPL19, PSMC4, RPLP0, SF3A1); `pam50_genes.csv` maps the 50 to current gene symbols. | `local/Parker_2009_PAM50/` |
+| Yang, J., Shi, R., Wei, D., Liu, Z., Zhao, L., Ke, B., Pfister, H. and Ni, B. (2023). MedMNIST v2 - A large-scale lightweight benchmark for 2D and 3D biomedical image classification. *Scientific Data*. https://arxiv.org/abs/2110.14795. BreastMNIST, the second dataset; 224 x 224 files on Zenodo, record 10519652. | `local/Yang_2023_MedMNIST_v2.pdf` (arXiv v2) |
+| Al-Dhabyani, W., Gomaa, M., Khaled, H. and Fahmy, A. (2020). Dataset of breast ultrasound images. *Data in Brief* 28, 104863. https://doi.org/10.1016/j.dib.2019.104863. The source images of BreastMNIST. | none |
+| He, K., Zhang, X., Ren, S. and Sun, J. (2016). Deep residual learning for image recognition. *CVPR 2016*. The ResNet-50 that embeds the BreastMNIST images. | none |
 
 ## Higher Criticism
 

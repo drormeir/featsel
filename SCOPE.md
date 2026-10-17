@@ -58,12 +58,19 @@ Non-negotiable, they decide whether the numbers mean anything.
   next to accuracy for every method. They are what makes task 3 measurable.
 - **Fixed seeds everywhere**, so results are reproducible.
 
-## 3b. Two open decisions
+## 3b. Two decisions
 
-Both are required by the four tasks and neither is settled yet. Decide them
-early, they shape the code and the report.
+Both are required by the four tasks. The second dataset is decided; Higher
+Criticism is still open.
 
-**The second dataset (task 4).** Requirements: high-dimensional, not gene
+**The second dataset (task 4). Decided 2026-10-17: BreastMNIST.** 780 breast
+ultrasound images from MedMNIST v2, each turned into 2,048 ResNet-50
+embedding dimensions, malignant vs benign or normal. Not gene expression,
+more features than images, public (CC BY 4.0), a published benchmark. Code in
+`featsel_datasets/medmnist_breastmnist/`, config `configs/experiment_breastmnist.yaml`.
+The original requirements and candidates follow.
+
+Requirements: high-dimensional, not gene
 expression, publicly available, small enough to iterate on. Candidates worth
 checking: text classification with a bag-of-words or TF-IDF vocabulary, a
 tabular UCI high-dimensional set, or ResNet embeddings extracted offline from
@@ -88,9 +95,9 @@ worth calling out in the report. Standard published HC only.
 - PyPI publishing, `twine`, release engineering, version strategy.
 - A plugin architecture, registries, or generalized extension points.
 - Optuna or any hyperparameter search beyond a fixed small grid.
-- PyTorch integration, deep models, embeddings inside the package. If image
-  embeddings are used as the second dataset, extract them offline and feed
-  plain CSV files to the pipeline.
+- PyTorch integration, deep models, embeddings inside the package. Image
+  embeddings for the second dataset are extracted once, outside the package
+  (`featsel_datasets/medmnist_breastmnist/`), cached, and fed to the pipeline as `X, y`.
 - Novel research contributions. This is a comparative study, not a paper.
 - Use standard, published Higher Criticism only. No unpublished variants.
 

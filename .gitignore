@@ -33,8 +33,8 @@ MANIFEST
 *.spec
 
 # Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+*.txt
+!requirements.txt
 
 # Unit test / coverage reports
 htmlcov/
@@ -207,9 +207,10 @@ marimo/_lsp/
 __marimo__/
 
 # Data
-featsel_datasets/**/*.csv
+*.csv
 *.gz
-featsel_datasets/**/*.part
+*.part
+*.npz
 results/
 
 # Claude Code local files (private working notes)

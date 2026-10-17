@@ -1,7 +1,7 @@
 # Datasets
 
 Each dataset has its own folder here. Git tracks the code and docs; it
-ignores the data files (`*.csv`, `*.gz`).
+ignores data files (`*.csv`, `*.gz`, `*.npz`, `*.txt`) anywhere in the repo.
 
 ## Current datasets
 
@@ -20,6 +20,26 @@ GSE96058 (Brueffer et al., 2018).
 Experiment configs name it as
 `dataset: "featsel_datasets.scanb_gse96058.featsel_view"`. Findings and
 decisions are in `docs/report/03_data.md`.
+
+### BreastMNIST, ResNet-50 embeddings (`medmnist_breastmnist/`)
+
+The second dataset (task 4): not gene expression. 780 breast ultrasound
+images, malignant (210) vs benign or normal (570), from MedMNIST v2 (Yang et
+al., 2023), 224 x 224 version. Each image becomes 2,048 ResNet-50 embedding
+dimensions, so there are more features than images, as in SCAN-B.
+
+- `breastmnist.py` downloads the images from Zenodo, checks the published
+  MD5, and exposes them unchanged. It computes the embeddings once (ImageNet
+  ResNet-50 without its last layer, on the GPU if there is one) and caches
+  them. Computing needs the `embeddings` extra (`torch`, `torchvision`);
+  reading cached embeddings does not.
+- `featsel_view.py` defines `NAME`, `TARGET` (`label`) and `load_xy`: all 780
+  images, MedMNIST's own split ignored.
+- `demos/tutorial.ipynb` shows the images, labels and embeddings;
+  `demos/selection.ipynb` compares selectors, simulates leakage and
+  summarizes the full run.
+
+Experiment config: `configs/experiment_breastmnist.yaml`.
 
 ## Retired datasets
 

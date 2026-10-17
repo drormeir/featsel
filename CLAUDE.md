@@ -27,6 +27,10 @@ python -m featsel.run --config configs/experiment_scanb.yaml
 
 # Load SCAN-B; the first call downloads GSE96058 (592 MB) into the cache
 python -c "from featsel_datasets.scanb_gse96058.featsel_view import load_xy; X, y = load_xy(); print(X.shape)"
+
+# The second dataset, BreastMNIST embeddings; the first call needs the
+# 'embeddings' extra (pip install -e ".[embeddings]") to compute them
+python -m featsel.run --config configs/experiment_breastmnist.yaml --n-jobs -1
 ```
 
 ### Feature Selection
@@ -83,7 +87,7 @@ mypy featsel/
 
 A dataset is loaded one of two ways. Both give `X, y` to the runner.
 
-**Dataset loaders: `featsel_datasets/<name>/`** (used for SCAN-B)
+**Dataset loaders: `featsel_datasets/<name>/`** (used for SCAN-B and BreastMNIST)
 
 A folder per dataset with code that downloads the published files once and
 caches them beside it. For SCAN-B (`featsel_datasets/scanb_gse96058/`):
@@ -95,7 +99,13 @@ caches them beside it. For SCAN-B (`featsel_datasets/scanb_gse96058/`):
   experiment config names this module as its `dataset`.
 - `demos/tutorial.ipynb`: what the dataset contains.
 
-`featsel_datasets` is not an installed package: run from the repo root.
+BreastMNIST (`featsel_datasets/medmnist_breastmnist/`) has the same shape:
+`breastmnist.py` (class `BreastMNIST`: images, labels, and ResNet-50
+embeddings computed once with PyTorch and cached) and `featsel_view.py`.
+
+`featsel_datasets` is a regular package (with `__init__.py` files) but is not
+installed: `pyproject.toml` excludes it from the `featsel` package. Run from
+the repo root.
 Design: `docs/architecture_options.md`, "Dataset loaders". Data findings:
 `docs/report/03_data.md`.
 
@@ -135,6 +145,12 @@ config. A CSV dataset config specifies:
 - Default target `pam50 subtype` (Basal, LumA, LumB, Her2, Normal)
 - Other targets are GSE96058's own field names, e.g. `er status` (pathologist), `er prediction mgc` (computed from genes), `overall survival event`
 - PAM50 and the `prediction` fields are computed from gene expression, not measured. See `docs/report/03_data.md`.
+
+**Second dataset (task 4): BreastMNIST (`featsel_datasets/medmnist_breastmnist/`)**
+- 780 breast ultrasound images (MedMNIST v2, 224 x 224), malignant 210 vs benign or normal 570
+- Features: 2,048 ResNet-50 embedding dimensions per image (ImageNet weights, last layer removed)
+- Target `label`; all 780 images are used, MedMNIST's own split is ignored
+- Computing embeddings needs `torch`/`torchvision` (the `embeddings` extra); they are cached as `embeddings_resnet50.npz`
 
 The course copies `scanb_small` and `scanb_full` are retired; they are
 archived outside git in `references/local/scanb_course/`.
@@ -306,8 +322,9 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 ## Important Notes
 
 ### Data Files
-- Data files under `featsel_datasets/` are not tracked in git (`*.csv` there, `*.gz` anywhere); the loader code is
+- Data files are not tracked in git: `.gitignore` ignores `*.csv`, `*.gz`, `*.npz`, `*.part` and `*.txt` anywhere, and a file that must be tracked is named as an exception (e.g. `!requirements.txt`); the loader code is tracked
 - GSE96058's gene expression file is 592 MB; loading it takes about a minute
+- BreastMNIST's images are 31 MB; its cached embeddings 4 MB
 - When working with data loading, test on a subset first to avoid long load times
 
 ### Configuration Files
@@ -320,7 +337,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 - Designed for PyPI distribution but currently in development (version 0.1.0)
 - Support for Python 3.9-3.13
 - Core dependencies: numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, pyyaml, tqdm
-- Optional dependencies: jupyter (dev), optuna (hyperparameter optimization)
+- Optional dependencies: jupyter (dev), optuna (hyperparameter optimization), torch and torchvision (embeddings: only to compute the BreastMNIST embeddings)
 
 ### Index Alignment
 - The DataLoader automatically handles mismatches between feature and metadata sample indices

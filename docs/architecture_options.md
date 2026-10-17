@@ -378,7 +378,11 @@ intersection and voting modes for combining methods.
 
 ## Dataset loaders
 
-Decided 2026-10-16. Built for SCAN-B as `featsel_datasets/scanb_gse96058/`.
+Decided 2026-10-16. Built for SCAN-B as `featsel_datasets/scanb_gse96058/`,
+and on 2026-10-17 for BreastMNIST as `featsel_datasets/medmnist_breastmnist/`. There,
+the generic class also computes ResNet-50 embeddings once and caches them;
+it imports PyTorch only inside that step, so the `featsel` package and
+cached runs never need it.
 
 **Problem.** The SCAN-B files came from the course with no recorded source or
 filters. Their origin, which patients they hold and how genes were chosen
@@ -405,8 +409,9 @@ two layers.
   module owns the data choices; the experiment config owns the protocol and
   the `k` values, which are feature counts for that dataset.
 - A notebook in `demos/` shows the dataset's content and traps.
-- Git ignores the downloaded files (`*.gz`, and `*.csv` under
-  `featsel_datasets/`), not the folder, so the code is tracked.
+- Git ignores data files by type (`*.csv`, `*.gz`, `*.npz`, `*.txt`
+  anywhere), not the folder, so the code is tracked. A file that must be
+  tracked is named as an exception.
 
 **Rejected.**
 
@@ -430,6 +435,11 @@ two layers.
   config, which is close to the extension points `SCOPE.md` section 4 rules
   out. It is one convention (`NAME`, `TARGET`, `load_xy`), with no registry.
 - The runner tells a module from a CSV config by the `.yaml`/`.yml` ending.
-- `featsel_datasets` is not an installed package. Code outside the repo root
-  must put the root on `sys.path`.
+- `featsel_datasets` is a regular package, with an `__init__.py` per folder,
+  so each dataset's `featsel_view` has one module name. It is excluded from
+  the installed `featsel` package; code outside the repo root must put the
+  root on `sys.path`.
+- Dataset folders are named after source and dataset (`scanb_gse96058`,
+  `medmnist_breastmnist`); the generic module is named after the dataset
+  (`gse96058.py`, `breastmnist.py`).
 - The first load downloads 592 MB and takes about 85 s.

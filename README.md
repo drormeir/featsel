@@ -124,6 +124,16 @@ The pipeline is dataset-agnostic. Each dataset needs a folder in
 Experiment configs name it as `dataset: "featsel_datasets.scanb_gse96058.featsel_view"`. Notes on the labels and on retired
 course copies are in `docs/report/03_data.md`.
 
+### BreastMNIST, ResNet-50 embeddings (second dataset)
+
+- 780 breast ultrasound images (MedMNIST v2, 224 x 224), malignant vs benign or normal
+- Each image is 2,048 ResNet-50 embedding dimensions: more features than images
+- Images downloaded from Zenodo on first use (31 MB); embeddings computed once
+  with PyTorch (`pip install -e ".[embeddings]"`) and cached
+
+Config: `configs/experiment_breastmnist.yaml`. Notebooks in
+`featsel_datasets/medmnist_breastmnist/demos/`.
+
 ## Status
 
 This project is an M.Sc. final project at Reichman University, supervised by Dr. Ben Galili.

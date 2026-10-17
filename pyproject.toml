@@ -60,6 +60,11 @@ dev = [
 optuna = [
     "optuna>=3.0.0",
 ]
+# Only to compute the BreastMNIST ResNet-50 embeddings; cached ones need neither.
+embeddings = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+]
 
 [project.urls]
 Homepage = "https://github.com/drormeir/featsel"
@@ -73,7 +78,8 @@ package-dir = {"" = "."}
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["featsel*"]
-exclude = ["tests*", "*.tests", "docs*", "notebooks*"]
+# featsel_datasets matches "featsel*" but is repo code, not part of the package.
+exclude = ["tests*", "*.tests", "docs*", "notebooks*", "featsel_datasets*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.yaml", "*.yml"]

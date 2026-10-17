@@ -154,6 +154,48 @@ Plan:
   recorded. It lacks 11 of the 50 PAM50 genes: ANLN, BAG1, CDC6, CXXC5,
   FOXA1, GPR160, KRT14, MIA, NUF2, TMEM45B and UBE2T.
 
+## BreastMNIST (second dataset, task 4)
+
+Terms here: a *sample* is one ultrasound image; a *feature* is one embedding
+dimension.
+
+**Source.** BreastMNIST is part of MedMNIST v2 (Yang et al., 2023), a
+published benchmark collection. Its 780 breast ultrasound images come from
+Al-Dhabyani et al. (2020). This project uses the 224 x 224 version
+(MedMNIST+, Zenodo record 10519652, CC BY 4.0). The loader checks the file
+against the published MD5.
+
+- MedMNIST merged the source's *normal* (133) and *benign* (437) into one
+  class against *malignant* (210): 570 vs 210.
+- MedMNIST fixes a split of 546 / 78 / 156 images.
+
+**Features.** Each image goes through an ImageNet ResNet-50 (torchvision,
+`IMAGENET1K_V2` weights) with its last layer removed, giving 2,048 numbers.
+The grayscale image is repeated over three channels and normalized as
+ImageNet images are. The embeddings are computed once and cached; on this
+machine, two runs on the GPU gave identical values.
+
+- 2,048 features for 780 images: more features than samples, as in SCAN-B.
+- Values are never negative; 42.8% are exactly zero (ReLU then average pool).
+- Pairs of dimensions are weakly correlated: median |r| 0.056, and 0.17% of
+  pairs above 0.5. Yet 12 principal components hold 50% of the variance, 150
+  hold 90% and 462 hold 99%. The dependence is spread across many dimensions,
+  not concentrated in strongly correlated pairs.
+- 223 of 2,048 dimensions pass a univariate F test at p < 0.05 / 2048.
+
+**Decision: all 780 images, MedMNIST's split ignored.** The runner draws its
+own 100 stratified splits, as for SCAN-B. Results are therefore not directly
+comparable with MedMNIST's published test-set scores (ResNet-18 trained end
+to end: AUC 0.891 to 0.901).
+
+**Trap.** Some images carry measurement marks ("+" calipers) drawn during the
+scan. A model can learn such marks instead of the tissue, and the embeddings
+include them. Not measured.
+
+Code: `featsel_datasets/medmnist_breastmnist/`. Notebooks: `demos/tutorial.ipynb`
+(the facts above) and `demos/selection.ipynb` (selector comparison, leakage
+simulation, full run).
+
 ## Open
 
 - How the course chose the 9,264 genes of `scanb_small`.

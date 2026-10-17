@@ -1,0 +1,62 @@
+# Experiment definition for BreastMNIST: the second dataset (task 4).
+# 780 breast ultrasound images as 2,048 ResNet-50 embedding dimensions,
+# malignant vs benign or normal. Same protocol as experiment_scanb.yaml;
+# k is scaled to 2,048 features and 780 images.
+# Run with: python -m featsel.run --config configs/experiment_breastmnist.yaml
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"          # omit to use the dataset's default target
+
+output: "../results/experiment_breastmnist.csv"
+
+# Resampling: independent Monte Carlo splits, not k-fold. See
+# docs/experiment_design.md section 2a for why.
+seed: 42
+n_splits: 100
+train_sizes: [0.5, 0.7, 0.9]
+
+preprocess: ["standard"]   # also available: "none", "quantile_normal"
+
+metrics:
+  - accuracy
+  - macro_f1
+  - balanced_accuracy
+  - mcc
+  - g_mean
+
+# Feature selectors. 'name' is a selector class name (case-insensitive); 'k' is the sweep.
+selectors:
+  - name: RandomSelector           # the control every other method must beat
+    k: [5, 10, 25, 50, 100, 250, 500]
+  - name: ANOVAFSelector
+    k: [5, 10, 25, 50, 100, 250, 500]
+  - name: LassoSelector
+    k: [5, 10, 25, 50, 100, 250, 500]
+    params:
+      C: 1.0
+  - name: TreeImportanceSelector
+    k: [5, 10, 25, 50, 100, 250, 500]
+    params:
+      n_estimators: 200
+
+# Classifiers. 'params' is passed straight to the sklearn estimator, so the
+# protocol is visible in the config rather than buried in code.
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
+  - name: linear_svm
+    params:
+      max_iter: 20000
+  - name: random_forest
+    params:
+      n_estimators: 200
+      n_jobs: 1
+  - name: knn
+    params:
+      n_neighbors: 5
+  - name: lda
+    label: lda_shrinkage
+    params:
+      solver: "lsqr"
+      shrinkage: "auto"
