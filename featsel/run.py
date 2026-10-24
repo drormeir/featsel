@@ -22,6 +22,8 @@ import argparse
 import csv
 import importlib
 import json
+import resource
+import sys
 import time
 import tracemalloc
 from pathlib import Path
@@ -30,6 +32,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from joblib import Parallel, delayed
+from joblib.externals.loky.process_executor import TerminatedWorkerError
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -97,6 +100,10 @@ def build_tasks(y):
 RANK_ONCE = {'LassoSelector', 'TreeImportanceSelector'}
 
 
+class WorkerDiedError(RuntimeError):
+    """A worker process died mid-split, most likely out of memory."""
+
+
 def _instantiate(registry, spec, seed):
     """Build an estimator from a {name, params} config entry, seeding if it takes one."""
     name = spec['name']
@@ -143,6 +150,7 @@ DEFAULTS = {
     'preprocess': ['standard'],
     'metrics': list(METRICS),
     'n_jobs': 1,
+    'max_worker_memory_gb': None,
 }
 
 
@@ -207,12 +215,15 @@ def _done_keys(path):
 
 
 def _selection_rows(X_train, X_test, y_train, y_test, context, config,
-                    metrics, skip, truth):
+                    metrics, skip, truth, failures):
     """
     Yield one row per (selector, k, model) for a single prepared split.
 
     X_train and X_test are already imputed and scaled on the training half, so
     nothing about the validation half has touched them.
+
+    A selector or model that runs out of memory skips its cells and appends a
+    description to failures; the rest of the split goes on.
     """
     split_seed = context['seed']
 
@@ -234,10 +245,16 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, config,
                                           split_seed)
                 tracemalloc.start()
                 start = time.perf_counter()
-                selector.fit(X_train, y_train)
+                try:
+                    selector.fit(X_train, y_train)
+                except MemoryError:
+                    failures.append(f"{context['task']} split {context['split']} "
+                                    f"train_size {context['train_size']}: {sel_name} k={k}")
+                    continue
+                finally:
+                    _, peak_bytes = tracemalloc.get_traced_memory()
+                    tracemalloc.stop()
                 selection_time = time.perf_counter() - start
-                _, peak_bytes = tracemalloc.get_traced_memory()
-                tracemalloc.stop()
                 if rank_once:
                     # The same argsort as FeatureSelector._top, so each cut
                     # equals a fit with n_features=k.
@@ -263,13 +280,19 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, config,
                     continue
 
                 model = _instantiate(MODELS, model_spec, split_seed)
-                start = time.perf_counter()
-                model.fit(X_train_sel, y_train)
-                fit_time = time.perf_counter() - start
+                try:
+                    start = time.perf_counter()
+                    model.fit(X_train_sel, y_train)
+                    fit_time = time.perf_counter() - start
 
-                start = time.perf_counter()
-                y_pred = model.predict(X_test_sel)
-                predict_time = time.perf_counter() - start
+                    start = time.perf_counter()
+                    y_pred = model.predict(X_test_sel)
+                    predict_time = time.perf_counter() - start
+                except MemoryError:
+                    failures.append(f"{context['task']} split {context['split']} "
+                                    f"train_size {context['train_size']}: "
+                                    f"{sel_name} k={k} {model_name}")
+                    continue
 
                 row = {
                     'task': context['task'],
@@ -298,38 +321,59 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, config,
 
 def _split_rows(X_task, y_task, train_idx, test_idx, context, config, skip, truth):
     """
-    Every row of one split. The unit of parallel work.
+    Every row of one split, and the cells that ran out of memory. The unit of
+    parallel work.
 
     A split is independent of every other split and carries its own seed, so
     the rows are identical whether splits run in sequence or in parallel.
+
+    With config['max_worker_memory_gb'] set, the process's address space is
+    capped at that size while the split runs. An allocation past the cap
+    raises MemoryError, which skips the cell instead of letting the kernel
+    kill a process. The cap counts reserved memory, including the shared data
+    and math-library thread buffers, so it needs headroom above real use.
     """
-    metrics = {name: METRICS[name] for name in config['metrics']}
-    y_train, y_test = y_task[train_idx], y_task[test_idx]
+    limit_gb = config['max_worker_memory_gb']
+    previous = resource.getrlimit(resource.RLIMIT_AS)
+    if limit_gb is not None:
+        resource.setrlimit(resource.RLIMIT_AS, (int(limit_gb * 1024 ** 3), previous[1]))
 
-    imputer = SimpleImputer(strategy='median').fit(X_task[train_idx])
-    X_train_imp = imputer.transform(X_task[train_idx])
-    X_test_imp = imputer.transform(X_task[test_idx])
+    rows, failures = [], []
+    try:
+        metrics = {name: METRICS[name] for name in config['metrics']}
+        y_train, y_test = y_task[train_idx], y_task[test_idx]
 
-    rows = []
-    for preprocess in config['preprocess']:
-        scaler = PREPROCESSORS[preprocess](context['seed'])
-        if scaler is None:
-            X_train, X_test = X_train_imp, X_test_imp
-        else:
-            scaler.fit(X_train_imp)
-            X_train = scaler.transform(X_train_imp)
-            X_test = scaler.transform(X_test_imp)
+        imputer = SimpleImputer(strategy='median').fit(X_task[train_idx])
+        X_train_imp = imputer.transform(X_task[train_idx])
+        X_test_imp = imputer.transform(X_task[test_idx])
 
-        prepared = {**context, 'preprocess': preprocess,
-                    'key': (context['task'], context['split'], context['train_size'], preprocess)}
-        rows.extend(_selection_rows(X_train, X_test, y_train, y_test,
-                                    prepared, config, metrics, skip, truth))
-    return rows
+        for preprocess in config['preprocess']:
+            scaler = PREPROCESSORS[preprocess](context['seed'])
+            if scaler is None:
+                X_train, X_test = X_train_imp, X_test_imp
+            else:
+                scaler.fit(X_train_imp)
+                X_train = scaler.transform(X_train_imp)
+                X_test = scaler.transform(X_test_imp)
+
+            prepared = {**context, 'preprocess': preprocess,
+                        'key': (context['task'], context['split'], context['train_size'],
+                                preprocess)}
+            rows.extend(_selection_rows(X_train, X_test, y_train, y_test,
+                                        prepared, config, metrics, skip, truth, failures))
+    except MemoryError:
+        failures.append(f"{context['task']} split {context['split']} "
+                        f"train_size {context['train_size']}: preprocessing, whole split")
+    finally:
+        # Workers are reused for later splits and later runs, so lift the cap.
+        resource.setrlimit(resource.RLIMIT_AS, previous)
+    return rows, failures
 
 
-def iter_rows(X, y, config, skip=frozenset(), truth=None):
+def iter_rows(X, y, config, failures, skip=frozenset(), truth=None):
     """
-    Yield one result row per execution.
+    Yield one result row per execution, and append each cell skipped for lack
+    of memory to failures.
 
     An execution is one (task, split, train size, preprocessing, selector, k,
     classifier) cell. Selection and preprocessing are fit on the training half
@@ -358,7 +402,9 @@ def iter_rows(X, y, config, skip=frozenset(), truth=None):
                     yield delayed(_split_rows)(X_array, y_task, train_idx, test_idx,
                                                context, config, skip, truth)
 
-    for rows in Parallel(n_jobs=config['n_jobs'], return_as='generator')(jobs()):
+    for rows, split_failures in Parallel(n_jobs=config['n_jobs'],
+                                         return_as='generator')(jobs()):
+        failures.extend(split_failures)
         yield from rows
 
 
@@ -388,6 +434,8 @@ def print_plan(config, X, y, tasks, target, name, total):
     print(f"Preprocess   : {', '.join(config['preprocess'])}")
     print(f"Metrics      : {', '.join(config['metrics'])}")
     print(f"Workers      : {config['n_jobs']} (parallel over splits)")
+    if config['max_worker_memory_gb'] is not None:
+        print(f"Memory cap   : {config['max_worker_memory_gb']} GB per worker")
 
     print("Selectors    :")
     for spec in config['selectors']:
@@ -446,29 +494,46 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
 
     written, start = 0, time.perf_counter()
     writer = None
+    failures = []
     has_header = out_path.exists() and out_path.stat().st_size > 0
     # The bar counts every execution in the grid, including any skipped by
     # --resume, so its total matches the number printed above.
     progress = tqdm(total=total, initial=len(skip), unit='exec',
                     smoothing=0.05, dynamic_ncols=True)
-    with progress, open(out_path, 'a', newline='') as handle:
-        for row in iter_rows(X, y, config, skip=skip, truth=truth):
-            if writer is None:
-                writer = csv.DictWriter(handle, fieldnames=list(row))
-                if not has_header:
-                    writer.writeheader()
+    try:
+        with progress, open(out_path, 'a', newline='') as handle:
+            for row in iter_rows(X, y, config, failures, skip=skip, truth=truth):
+                if writer is None:
+                    writer = csv.DictWriter(handle, fieldnames=list(row))
+                    if not has_header:
+                        writer.writeheader()
 
-            writer.writerow(row)
-            handle.flush()  # a killed run keeps everything already finished
-            written += 1
-            progress.update(1)
-            progress.set_postfix_str(
-                f"{row['task']} {row['selector']} k={row['k']} {row['model']}",
-                refresh=False,
-            )
+                writer.writerow(row)
+                handle.flush()  # a killed run keeps everything already finished
+                written += 1
+                progress.update(1)
+                progress.set_postfix_str(
+                    f"{row['task']} {row['selector']} k={row['k']} {row['model']}",
+                    refresh=False,
+                )
+    except TerminatedWorkerError:
+        raise WorkerDiedError(
+            "Stopped: a worker process died, most likely out of memory. Compiled "
+            "code such as liblinear aborts when memory is refused, instead of "
+            "raising MemoryError, so the cell could not be skipped.\n"
+            f"{written} executions are saved in {out_path}.\n"
+            "Rerun with --resume and fewer workers (--n-jobs) or a higher "
+            "--max-worker-memory-gb."
+        ) from None
 
     print(f"Wrote {written} executions to {out_path} "
           f"in {time.perf_counter() - start:.0f}s")
+    if failures:
+        print(f"\nOut of memory, skipped ({len(failures)}):")
+        for failure in failures:
+            print(f"  {failure}")
+        print("Rerun with --resume and fewer workers or a higher memory cap "
+              "to fill them in.")
     return out_path
 
 
@@ -487,6 +552,9 @@ def main(argv=None):
     parser.add_argument('--n-splits', type=int, help='Override the number of splits')
     parser.add_argument('--n-jobs', type=int,
                         help='Worker processes; splits run in parallel. -1 uses every core')
+    parser.add_argument('--max-worker-memory-gb', type=float,
+                        help='Cap each worker at this many GB; a cell past it is skipped, '
+                             'not killed')
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
@@ -496,8 +564,13 @@ def main(argv=None):
         config['n_splits'] = args.n_splits
     if args.n_jobs:
         config['n_jobs'] = args.n_jobs
+    if args.max_worker_memory_gb:
+        config['max_worker_memory_gb'] = args.max_worker_memory_gb
 
-    run_config(config, resume=args.resume)
+    try:
+        run_config(config, resume=args.resume)
+    except WorkerDiedError as error:
+        sys.exit(f"\n{error}")
 
 
 if __name__ == '__main__':

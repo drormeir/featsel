@@ -35,6 +35,18 @@ selectors:
     k: [10, 25, 50, 100, 250, 500, 1000]
     params:
       n_estimators: 200
+  - name: RFESelector
+    k: [10, 25, 50, 100, 250, 500, 1000]
+    params:
+      C: 0.01                      # small C when genes far outnumber patients
+  - name: HigherCriticismSelector  # picks its own count, so no k
+    label: HC2004
+    params:
+      variant: "2004"
+  - name: HigherCriticismSelector
+    label: HC2008
+    params:
+      variant: "2008"
 
 # Classifiers. 'params' is passed straight to the sklearn estimator, so the
 # protocol is visible in the config rather than buried in code.

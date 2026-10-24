@@ -7,18 +7,21 @@ validation half into selection, and a resume that neither duplicates nor drops
 work.
 """
 
+import resource
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 import yaml
+from joblib.externals.loky.process_executor import TerminatedWorkerError
 from sklearn.datasets import make_classification
 
 import featsel.run as run_module
 from featsel.analysis import kuncheva_index, summarize
 from featsel.metrics import KEY_COLUMNS, g_mean
 from featsel.run import build_tasks, load_config, load_dataset, run, run_config
+from featsel.selectors import FeatureSelector
 
 
 @pytest.fixture
@@ -292,3 +295,69 @@ def test_unknown_model_is_rejected(experiment):
 
     with pytest.raises(ValueError, match='Unknown entry'):
         run_config(experiment)
+
+
+class GreedySelector(FeatureSelector):
+    """A selector that asks for 2 GB, to hit the memory cap for real."""
+
+    def __init__(self, check_input=True):
+        self.check_input = check_input
+
+    def fit(self, X, y):
+        X, y = self._validate(X, y)
+        np.ones(2 ** 28)  # 2 GB of float64
+        self.support_ = self._mask([0])
+        return self
+
+
+def _address_space_gb():
+    """This process's current virtual memory, from /proc."""
+    for line in Path('/proc/self/status').read_text().splitlines():
+        if line.startswith('VmSize:'):
+            return int(line.split()[1]) / 1024 ** 2
+    raise RuntimeError('No VmSize in /proc/self/status')
+
+
+class TestMemoryCap:
+    """Tests for max_worker_memory_gb: a cell past the cap is skipped, not killed."""
+
+    def test_cell_past_the_cap_is_skipped_and_reported(self, experiment, capsys):
+        """Test that the greedy selector's cells are skipped and the rest written."""
+        experiment['selectors'] = [{'name': 'GreedySelector'}, {'name': 'ANOVAFSelector', 'k': [5]}]
+        experiment['max_worker_memory_gb'] = _address_space_gb() + 0.5
+
+        df = pd.read_csv(run_config(experiment))
+
+        assert set(df.selector) == {'ANOVAFSelector'}
+        assert len(df) == 3 * 3 * 1 * 2  # tasks x splits x sel-k x models
+        out = capsys.readouterr().out
+        assert 'Out of memory, skipped (9)' in out
+        assert 'GreedySelector k=None' in out
+
+    def test_cap_is_lifted_after_the_split(self, experiment):
+        """Test that the process gets its old limit back, so later work is not capped."""
+        before = resource.getrlimit(resource.RLIMIT_AS)
+        experiment['max_worker_memory_gb'] = _address_space_gb() + 2
+
+        run_config(experiment)
+
+        assert resource.getrlimit(resource.RLIMIT_AS) == before
+
+
+def test_dead_worker_stops_with_a_message(experiment, monkeypatch):
+    """Test that a worker killed mid-run ends the CLI with a short message, rows kept."""
+    real_iter_rows = run_module.iter_rows
+
+    def dies_after_one_row(*args, **kwargs):
+        yield next(real_iter_rows(*args, **kwargs))
+        raise TerminatedWorkerError('worker aborted')
+
+    monkeypatch.setattr(run_module, 'iter_rows', dies_after_one_row)
+    monkeypatch.setattr(run_module, 'load_config', lambda path: experiment)
+
+    with pytest.raises(SystemExit) as stopped:
+        run_module.main(['--config', 'unused.yaml'])
+
+    assert 'most likely out of memory' in str(stopped.value.code)
+    assert '1 executions are saved' in str(stopped.value.code)
+    assert len(pd.read_csv(experiment['output'])) == 1
