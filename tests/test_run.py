@@ -361,3 +361,56 @@ def test_dead_worker_stops_with_a_message(experiment, monkeypatch):
     assert 'most likely out of memory' in str(stopped.value.code)
     assert '1 executions are saved' in str(stopped.value.code)
     assert len(pd.read_csv(experiment['output'])) == 1
+
+
+class TestSharedSplits:
+    """Tests for preparing each split once and sharing it across tasks and workers."""
+
+    def test_every_task_uses_the_same_split(self, experiment, monkeypatch):
+        """Test that all tasks of a split read one prepared copy of the same patients."""
+        real_job_rows = run_module._job_rows
+        seen = {}
+
+        def recording_job_rows(folder, y_train, y_test, context, *args):
+            seen.setdefault((context['split'], context['task']), set()).add(folder)
+            return real_job_rows(folder, y_train, y_test, context, *args)
+
+        monkeypatch.setattr(run_module, '_job_rows', recording_job_rows)
+        run_config(experiment)
+
+        for split in range(3):
+            folders = {folder for (s, _), group in seen.items() if s == split
+                       for folder in group}
+            assert len(folders) == 1
+        assert {task for _, task in seen} == {'ovr_class0', 'ovr_class1', 'ovr_class2'}
+
+    def test_shared_files_are_removed(self, experiment):
+        """Test that no prepared split is left in shared memory after a run."""
+        shm = Path('/dev/shm')
+        before = set(shm.glob('featsel_*'))
+
+        run_config(experiment)
+
+        assert set(shm.glob('featsel_*')) == before
+
+    def test_rank_once_selectors_keep_their_k_values_together(self):
+        """Test that Lasso fits once for all k, while ANOVA gets one job per k."""
+        lasso = run_module._k_groups({'name': 'LassoSelector', 'k': [5, 10]})
+        anova = run_module._k_groups({'name': 'ANOVAFSelector', 'k': [5, 10]})
+        hc = run_module._k_groups({'name': 'HigherCriticismSelector'})
+
+        assert lasso == [[5, 10]]
+        assert anova == [[5], [10]]
+        assert hc == [[None]]
+
+
+def test_resume_with_a_selector_without_k_does_not_duplicate(experiment):
+    """Test that an empty k in the CSV, and the float column it causes, still match on resume."""
+    experiment['selectors'] = [{'name': 'HigherCriticismSelector'},
+                               {'name': 'ANOVAFSelector', 'k': [5, 10]}]
+    first = pd.read_csv(run_config(experiment))
+
+    again = pd.read_csv(run_config(experiment, resume=True))
+
+    assert len(again) == len(first)
+    assert not again.duplicated(KEY_COLUMNS).any()

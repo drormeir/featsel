@@ -23,9 +23,12 @@ import csv
 import importlib
 import json
 import resource
+import shutil
 import sys
+import tempfile
 import time
 import tracemalloc
+from collections import deque
 from pathlib import Path
 
 import numpy as np
@@ -206,131 +209,140 @@ def load_dataset(config):
     return X, y, loader.target_column, loader.config['name']
 
 
+def _key(values):
+    """
+    An execution's key as text, as the CSV writer writes it: None is ''.
+
+    Read back as text too, a key matches whatever else is in its column; read
+    as numbers, an empty k turns the column to floats and 10 into 10.0.
+    """
+    return tuple('' if v is None else str(v) for v in values)
+
+
 def _done_keys(path):
     """Read the keys of executions already present in an output CSV."""
     if not Path(path).exists():
         return set()
-    done = pd.read_csv(path, usecols=KEY_COLUMNS)
-    return {tuple(str(v) for v in row) for row in done.itertuples(index=False)}
+    done = pd.read_csv(path, usecols=KEY_COLUMNS, dtype=str, keep_default_na=False)
+    return set(done.itertuples(index=False, name=None))
 
 
-def _selection_rows(X_train, X_test, y_train, y_test, context, config,
-                    metrics, skip, truth, failures):
+def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_values,
+                    config, skip, truth, failures):
     """
-    Yield one row per (selector, k, model) for a single prepared split.
+    Yield one row per (k, model) for one selector on one prepared task.
 
     X_train and X_test are already imputed and scaled on the training half, so
     nothing about the validation half has touched them.
 
     A selector or model that runs out of memory skips its cells and appends a
-    description to failures; the rest of the split goes on.
+    description to failures; the rest of the job goes on.
     """
     split_seed = context['seed']
+    metrics = {name: METRICS[name] for name in config['metrics']}
+    sel_name = _selector_label(sel_spec)
+    rank_once = (FeatureSelector.lookup(sel_spec['name']).__name__ in RANK_ONCE
+                 and None not in k_values)
+    ranking = None
 
-    for sel_spec in config['selectors']:
-        sel_name = _selector_label(sel_spec)
-        k_values = sel_spec.get('k', [None])
-        rank_once = (FeatureSelector.lookup(sel_spec['name']).__name__ in RANK_ONCE
-                     and None not in k_values)
-        ranking = None
+    for k in k_values:
+        keys = {_label(m): (*context['key'], sel_name, k, _label(m))
+                for m in config['models']}
+        if all(_key(key) in skip for key in keys.values()):
+            continue
 
-        for k in k_values:
-            keys = {_label(m): (*context['key'], sel_name, k, _label(m))
-                    for m in config['models']}
-            if all(tuple(str(v) for v in key) in skip for key in keys.values()):
+        if ranking is None:
+            selector = _make_selector(sel_spec, max(k_values) if rank_once else k,
+                                      split_seed)
+            tracemalloc.start()
+            start = time.perf_counter()
+            try:
+                selector.fit(X_train, y_train)
+            except MemoryError:
+                failures.append(f"{context['task']} split {context['split']} "
+                                f"train_size {context['train_size']}: {sel_name} k={k}")
+                continue
+            finally:
+                _, peak_bytes = tracemalloc.get_traced_memory()
+                tracemalloc.stop()
+            selection_time = time.perf_counter() - start
+            if rank_once:
+                # The same argsort as FeatureSelector._top, so each cut
+                # equals a fit with n_features=k.
+                ranking = np.argsort(selector.feature_importances_)[::-1]
+
+        if rank_once:
+            support = np.sort(ranking[:k])
+        else:
+            support = selector.get_support(indices=True)
+        X_train_sel, X_test_sel = X_train[:, support], X_test[:, support]
+
+        recovery = {}
+        if truth is not None:
+            hits = len(np.intersect1d(support, truth))
+            recovery = {
+                'truth_recall': hits / len(truth),
+                'truth_precision': hits / len(support) if len(support) else 0.0,
+            }
+
+        for model_spec in config['models']:
+            model_name = _label(model_spec)
+            if _key(keys[model_name]) in skip:
                 continue
 
-            if ranking is None:
-                selector = _make_selector(sel_spec, max(k_values) if rank_once else k,
-                                          split_seed)
-                tracemalloc.start()
+            model = _instantiate(MODELS, model_spec, split_seed)
+            try:
                 start = time.perf_counter()
-                try:
-                    selector.fit(X_train, y_train)
-                except MemoryError:
-                    failures.append(f"{context['task']} split {context['split']} "
-                                    f"train_size {context['train_size']}: {sel_name} k={k}")
-                    continue
-                finally:
-                    _, peak_bytes = tracemalloc.get_traced_memory()
-                    tracemalloc.stop()
-                selection_time = time.perf_counter() - start
-                if rank_once:
-                    # The same argsort as FeatureSelector._top, so each cut
-                    # equals a fit with n_features=k.
-                    ranking = np.argsort(selector.feature_importances_)[::-1]
+                model.fit(X_train_sel, y_train)
+                fit_time = time.perf_counter() - start
 
-            if rank_once:
-                support = np.sort(ranking[:k])
-            else:
-                support = selector.get_support(indices=True)
-            X_train_sel, X_test_sel = X_train[:, support], X_test[:, support]
+                start = time.perf_counter()
+                y_pred = model.predict(X_test_sel)
+                predict_time = time.perf_counter() - start
+            except MemoryError:
+                failures.append(f"{context['task']} split {context['split']} "
+                                f"train_size {context['train_size']}: "
+                                f"{sel_name} k={k} {model_name}")
+                continue
 
-            recovery = {}
-            if truth is not None:
-                hits = len(np.intersect1d(support, truth))
-                recovery = {
-                    'truth_recall': hits / len(truth),
-                    'truth_precision': hits / len(support) if len(support) else 0.0,
-                }
-
-            for model_spec in config['models']:
-                model_name = _label(model_spec)
-                if tuple(str(v) for v in keys[model_name]) in skip:
-                    continue
-
-                model = _instantiate(MODELS, model_spec, split_seed)
-                try:
-                    start = time.perf_counter()
-                    model.fit(X_train_sel, y_train)
-                    fit_time = time.perf_counter() - start
-
-                    start = time.perf_counter()
-                    y_pred = model.predict(X_test_sel)
-                    predict_time = time.perf_counter() - start
-                except MemoryError:
-                    failures.append(f"{context['task']} split {context['split']} "
-                                    f"train_size {context['train_size']}: "
-                                    f"{sel_name} k={k} {model_name}")
-                    continue
-
-                row = {
-                    'task': context['task'],
-                    'split': context['split'],
-                    'train_size': context['train_size'],
-                    'preprocess': context['preprocess'],
-                    'selector': sel_name,
-                    'k': k,
-                    'model': model_name,
-                    'seed': split_seed,
-                    'n_train': len(y_train),
-                    'n_test': len(y_test),
-                    'n_selected': len(support),
-                    'selection_time_s': selection_time,
-                    'selection_peak_mb': peak_bytes / 1024 ** 2,
-                    'fit_time_s': fit_time,
-                    'predict_time_s': predict_time,
-                    'selector_params': json.dumps(sel_spec.get('params') or {}),
-                    'model_params': json.dumps(model_spec.get('params') or {}),
-                    'selected_indices': ' '.join(str(i) for i in support),
-                    **recovery,
-                }
-                row.update({name: fn(y_test, y_pred) for name, fn in metrics.items()})
-                yield row
+            row = {
+                'task': context['task'],
+                'split': context['split'],
+                'train_size': context['train_size'],
+                'preprocess': context['preprocess'],
+                'selector': sel_name,
+                'k': k,
+                'model': model_name,
+                'seed': split_seed,
+                'n_train': len(y_train),
+                'n_test': len(y_test),
+                'n_selected': len(support),
+                'selection_time_s': selection_time,
+                'selection_peak_mb': peak_bytes / 1024 ** 2,
+                'fit_time_s': fit_time,
+                'predict_time_s': predict_time,
+                'selector_params': json.dumps(sel_spec.get('params') or {}),
+                'model_params': json.dumps(model_spec.get('params') or {}),
+                'selected_indices': ' '.join(str(i) for i in support),
+                **recovery,
+            }
+            row.update({name: fn(y_test, y_pred) for name, fn in metrics.items()})
+            yield row
 
 
-def _split_rows(X_task, y_task, train_idx, test_idx, context, config, skip, truth):
+def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip, truth):
     """
-    Every row of one split, and the cells that ran out of memory. The unit of
-    parallel work.
+    Every row of one job, and the cells that ran out of memory. The unit of
+    parallel work: one selector, at the given k values, on one task of one
+    prepared split.
 
-    A split is independent of every other split and carries its own seed, so
-    the rows are identical whether splits run in sequence or in parallel.
+    folder holds the split's prepared X_train.npy and X_test.npy. They are
+    opened read-only and memory-mapped, so all workers share one copy.
 
     With config['max_worker_memory_gb'] set, the process's address space is
-    capped at that size while the split runs. An allocation past the cap
+    capped at that size while the job runs. An allocation past the cap
     raises MemoryError, which skips the cell instead of letting the kernel
-    kill a process. The cap counts reserved memory, including the shared data
+    kill a process. The cap counts reserved memory, including the mapped data
     and math-library thread buffers, so it needs headroom above real use.
     """
     limit_gb = config['max_worker_memory_gb']
@@ -340,34 +352,39 @@ def _split_rows(X_task, y_task, train_idx, test_idx, context, config, skip, trut
 
     rows, failures = [], []
     try:
-        metrics = {name: METRICS[name] for name in config['metrics']}
-        y_train, y_test = y_task[train_idx], y_task[test_idx]
-
-        imputer = SimpleImputer(strategy='median').fit(X_task[train_idx])
-        X_train_imp = imputer.transform(X_task[train_idx])
-        X_test_imp = imputer.transform(X_task[test_idx])
-
-        for preprocess in config['preprocess']:
-            scaler = PREPROCESSORS[preprocess](context['seed'])
-            if scaler is None:
-                X_train, X_test = X_train_imp, X_test_imp
-            else:
-                scaler.fit(X_train_imp)
-                X_train = scaler.transform(X_train_imp)
-                X_test = scaler.transform(X_test_imp)
-
-            prepared = {**context, 'preprocess': preprocess,
-                        'key': (context['task'], context['split'], context['train_size'],
-                                preprocess)}
-            rows.extend(_selection_rows(X_train, X_test, y_train, y_test,
-                                        prepared, config, metrics, skip, truth, failures))
-    except MemoryError:
-        failures.append(f"{context['task']} split {context['split']} "
-                        f"train_size {context['train_size']}: preprocessing, whole split")
+        X_train = np.load(folder / 'X_train.npy', mmap_mode='r')
+        X_test = np.load(folder / 'X_test.npy', mmap_mode='r')
+        rows.extend(_selection_rows(X_train, X_test, y_train, y_test, context, sel_spec,
+                                    k_values, config, skip, truth, failures))
     finally:
-        # Workers are reused for later splits and later runs, so lift the cap.
+        # Workers are reused for later jobs and later runs, so lift the cap.
         resource.setrlimit(resource.RLIMIT_AS, previous)
     return rows, failures
+
+
+def _k_groups(sel_spec):
+    """
+    The k values of a selector, grouped into jobs.
+
+    A selector that ranks once per split keeps all its k values in one job,
+    so it fits once. Any other selector fits once per k, so each k is its own
+    job and a slow selector spreads over the workers.
+    """
+    k_values = sel_spec.get('k', [None])
+    if FeatureSelector.lookup(sel_spec['name']).__name__ in RANK_ONCE:
+        return [k_values]
+    return [[k] for k in k_values]
+
+
+def _prepare(X_train, X_test, preprocess, seed, folder):
+    """Scale an imputed split, fit on the training half, and save it to folder."""
+    scaler = PREPROCESSORS[preprocess](seed)
+    if scaler is not None:
+        X_train = scaler.fit(X_train).transform(X_train)
+        X_test = scaler.transform(X_test)
+    folder.mkdir()
+    np.save(folder / 'X_train.npy', X_train)
+    np.save(folder / 'X_test.npy', X_test)
 
 
 def iter_rows(X, y, config, failures, skip=frozenset(), truth=None):
@@ -380,32 +397,82 @@ def iter_rows(X, y, config, failures, skip=frozenset(), truth=None):
     only, inside the split, so nothing about the validation half leaks into the
     choice of features (Ambroise and McLachlan, PNAS 2002).
 
-    Splits run on config['n_jobs'] worker processes. Rows come back in split
-    order, so the output does not depend on the number of workers.
+    Each split is stratified on the full target and shared by every task, so
+    all tasks are scored on the same patients. Imputation and scaling do not
+    see the labels, so they are fit once per split, in this process, and the
+    result is saved to shared memory (/dev/shm where it exists). Jobs of one
+    selector on one task then run on config['n_jobs'] workers, which map the
+    saved split instead of copying it. A split's files are deleted once its
+    last job returns; joblib prepares only a few jobs ahead, so only a couple
+    of splits are on disk at once.
+
+    Rows come back in job order, so the output does not depend on the number
+    of workers.
     """
     seed = config['seed']
     X_array = X.values if isinstance(X, pd.DataFrame) else np.asarray(X)
     y_array = y.values if isinstance(y, pd.Series) else np.asarray(y)
+    tasks = build_tasks(y_array)
+    shm = Path('/dev/shm')
+    shared = Path(tempfile.mkdtemp(prefix='featsel_', dir=shm if shm.is_dir() else None))
+    # The folder of each dispatched job, in dispatch order, and how many of
+    # each folder's jobs have not returned yet.
+    job_folders = deque()
+    pending = {}
 
     def jobs():
-        for task_name, y_task in build_tasks(y_array):
-            for train_size in config['train_sizes']:
-                splitter = StratifiedShuffleSplit(
-                    n_splits=config['n_splits'], train_size=train_size, random_state=seed
-                )
-
-                for split, (train_idx, test_idx) in enumerate(splitter.split(X_array, y_task)):
+        for train_size in config['train_sizes']:
+            splitter = StratifiedShuffleSplit(
+                n_splits=config['n_splits'], train_size=train_size, random_state=seed
+            )
+            for split, (train_idx, test_idx) in enumerate(splitter.split(X_array, y_array)):
+                imputed = None
+                for preprocess in config['preprocess']:
                     # Every stochastic step in this split derives from one seed,
                     # so the split is reproducible and selectors redraw per split.
-                    context = {'task': task_name, 'split': split,
-                               'train_size': train_size, 'seed': seed + split}
-                    yield delayed(_split_rows)(X_array, y_task, train_idx, test_idx,
-                                               context, config, skip, truth)
+                    context = {'split': split, 'train_size': train_size,
+                               'seed': seed + split, 'preprocess': preprocess}
+                    cells = []
+                    for task_name, y_task in tasks:
+                        key = (task_name, split, train_size, preprocess)
+                        for sel_spec in config['selectors']:
+                            sel_name = _selector_label(sel_spec)
+                            for k_values in _k_groups(sel_spec):
+                                done = all(
+                                    _key((*key, sel_name, k, _label(m))) in skip
+                                    for k in k_values for m in config['models'])
+                                if not done:
+                                    cells.append((task_name, y_task, key, sel_spec, k_values))
+                    if not cells:
+                        continue
 
-    for rows, split_failures in Parallel(n_jobs=config['n_jobs'],
-                                         return_as='generator')(jobs()):
-        failures.extend(split_failures)
-        yield from rows
+                    if imputed is None:
+                        imputer = SimpleImputer(strategy='median').fit(X_array[train_idx])
+                        imputed = (imputer.transform(X_array[train_idx]),
+                                   imputer.transform(X_array[test_idx]))
+                    folder = shared / f'{train_size}_{split}_{preprocess}'
+                    _prepare(*imputed, preprocess, context['seed'], folder)
+                    pending[folder] = len(cells)
+
+                    for task_name, y_task, key, sel_spec, k_values in cells:
+                        job_folders.append(folder)
+                        yield delayed(_job_rows)(
+                            folder, y_task[train_idx], y_task[test_idx],
+                            {**context, 'task': task_name, 'key': key},
+                            sel_spec, k_values, config, skip, truth,
+                        )
+
+    try:
+        for rows, job_failures in Parallel(n_jobs=config['n_jobs'],
+                                           return_as='generator')(jobs()):
+            folder = job_folders.popleft()
+            pending[folder] -= 1
+            if not pending[folder]:
+                shutil.rmtree(folder)
+            failures.extend(job_failures)
+            yield from rows
+    finally:
+        shutil.rmtree(shared, ignore_errors=True)
 
 
 def print_plan(config, X, y, tasks, target, name, total):
@@ -433,7 +500,8 @@ def print_plan(config, X, y, tasks, target, name, total):
 
     print(f"Preprocess   : {', '.join(config['preprocess'])}")
     print(f"Metrics      : {', '.join(config['metrics'])}")
-    print(f"Workers      : {config['n_jobs']} (parallel over splits)")
+    print(f"Workers      : {config['n_jobs']} (parallel over task x selector jobs, "
+          f"one shared copy of each split)")
     if config['max_worker_memory_gb'] is not None:
         print(f"Memory cap   : {config['max_worker_memory_gb']} GB per worker")
 

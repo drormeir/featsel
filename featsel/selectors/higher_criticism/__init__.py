@@ -119,9 +119,9 @@ class HigherCriticismSelector(FeatureSelector):
         # when no rank scores above 0.
         above = center > p_sorted
         if above.any():
-            with np.errstate(divide='ignore'):
-                log_hc = np.log(center - p_sorted) - log_var / 2
-            best = np.argmax(np.where(above, log_hc, -np.inf))
+            log_hc = np.full(len(i), -np.inf)
+            log_hc[above] = np.log(center[above] - p_sorted[above]) - log_var[above] / 2
+            best = np.argmax(log_hc)
         else:
             best = np.argmax((center - p_sorted) / np.exp(log_var / 2))
 
