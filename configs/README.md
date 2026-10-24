@@ -11,6 +11,7 @@ to the file itself.
 |------|------|-------------|
 | `template.yaml` | dataset | Documented template for a new CSV dataset config |
 | `experiment_classifiers.yaml` | experiment | Random vs ANOVA F across five classifiers, 12 splits |
+| `smoke_scanb.yaml` | experiment | Smoke test: every selector and classifier once on one SCAN-B split, about 3 minutes on 6 workers. A check, not a result |
 | `experiment_baseline.yaml` | experiment | The random-selection control on every PAM50 subtype-vs-rest task |
 | `experiment_breastmnist.yaml` | experiment | The same design on BreastMNIST ResNet-50 embeddings (task 4), k scaled to 2,048 features |
 | `experiment_scanb.yaml` | experiment | The full SCAN-B design: four selectors, three train fractions |

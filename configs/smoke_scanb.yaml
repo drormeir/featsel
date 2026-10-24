@@ -1,0 +1,66 @@
+# Smoke test on SCAN-B: every selector and every classifier once, on one
+# split, to check that the pipeline completes end to end. Not a result.
+# Run with: python -m featsel.run --config configs/smoke_scanb.yaml --n-jobs 6 --max-worker-memory-gb 3.5
+
+dataset: "featsel_datasets.scanb_gse96058.featsel_view"
+target: "pam50 subtype"
+
+output: "../results/smoke_scanb.csv"
+
+seed: 42
+n_splits: 1
+train_sizes: [0.5]
+preprocess: ["standard"]
+
+metrics:
+  - accuracy
+  - macro_f1
+  - balanced_accuracy
+  - mcc
+  - g_mean
+
+selectors:
+  - name: RandomSelector
+    k: [50]
+  - name: ANOVAFSelector
+    k: [50]
+  - name: LassoSelector
+    k: [50]
+    params:
+      C: 1.0
+  - name: TreeImportanceSelector
+    k: [50]
+    params:
+      n_estimators: 200
+  - name: RFESelector
+    k: [50]
+    params:
+      C: 0.01
+  - name: HigherCriticismSelector
+    label: HC2004
+    params:
+      variant: "2004"
+  - name: HigherCriticismSelector
+    label: HC2008
+    params:
+      variant: "2008"
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
+  - name: linear_svm
+    params:
+      max_iter: 20000
+  - name: random_forest
+    params:
+      n_estimators: 200
+      n_jobs: 1
+  - name: knn
+    params:
+      n_neighbors: 5
+  - name: lda
+    label: lda_shrinkage
+    params:
+      solver: "lsqr"
+      shrinkage: "auto"
