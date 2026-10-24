@@ -10,6 +10,7 @@ from .base import FeatureSelector
 from .correlation import CorrelationSelector
 from .fdr import FDRSelector
 from .fwe import FWESelector
+from .higher_criticism import HigherCriticismSelector
 from .lasso import LassoSelector
 from .mutual_info import MutualInfoSelector
 from .percentile import PercentileSelector
@@ -26,6 +27,7 @@ __all__ = [
     'FDRSelector',
     'FWESelector',
     'FeatureSelector',
+    'HigherCriticismSelector',
     'LassoSelector',
     'MutualInfoSelector',
     'PercentileSelector',

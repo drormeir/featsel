@@ -174,6 +174,7 @@ featsel/
 │   ├── correlation/         # CorrelationSelector
 │   ├── fdr/                 # FDRSelector
 │   ├── fwe/                 # FWESelector
+│   ├── higher_criticism/    # HigherCriticismSelector; log_pvalue.py: F-test log p below 1e-308
 │   ├── lasso/               # LassoSelector
 │   ├── mutual_info/         # MutualInfoSelector
 │   ├── percentile/          # PercentileSelector
@@ -203,8 +204,7 @@ See `docs/architecture_options.md`, section "Selector design".
 Built: VarianceThreshold, ANOVAFSelector, MutualInfoSelector,
 CorrelationSelector, FDRSelector, FWESelector, PercentileSelector,
 LassoSelector, TreeImportanceSelector, RFESelector, RFECVSelector,
-SequentialSelector, RandomSelector.
-Planned (see `NEXT.md`): HigherCriticismSelector.
+SequentialSelector, RandomSelector, HigherCriticismSelector.
 
 Every selector that wraps a scikit-learn method has two tests next to it:
 it selects the same features as that method, and `fit` plus `get_support` is
@@ -246,7 +246,7 @@ Each has a tutorial in `featsel/selectors/<name>/demos/tutorial.ipynb`.
 ```python
 from featsel.selectors import (
     ANOVAFSelector, CorrelationSelector, FDRSelector, FWESelector,
-    LassoSelector, MutualInfoSelector, PercentileSelector, RandomSelector,
+    HigherCriticismSelector, LassoSelector, MutualInfoSelector, PercentileSelector, RandomSelector,
     RFECVSelector, RFESelector, SequentialSelector, TreeImportanceSelector,
     VarianceThreshold,
 )
@@ -257,6 +257,7 @@ ANOVAFSelector(n_features=100)                           # univariate F-test
 FDRSelector(alpha=0.05)                                  # F-test, Benjamini-Hochberg; own count
 FWESelector(alpha=0.05)                                  # F-test, Bonferroni; own count
 PercentileSelector(percentile=1)                         # F-test, top 1%
+HigherCriticismSelector(variant='2008')                  # F-test, HC threshold; own count; or '2004'
 MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slower
 CorrelationSelector(n_features=100, target_threshold=0.1,
                     inter_feature_threshold=0.95)        # drops redundant pairs
