@@ -4,8 +4,7 @@ Tests for the higher_criticism selector.
 
 import numpy as np
 import pytest
-from scipy.stats import f as f_dist
-from sklearn.feature_selection import f_classif
+from scipy.stats import mannwhitneyu
 
 from featsel.selectors import FeatureSelector, HigherCriticismSelector
 
@@ -16,8 +15,7 @@ def _direct(X, y, variant, alpha0=0.1):
 
     Valid only while every p-value is above 1e-308.
     """
-    F, _ = f_classif(X, y)
-    p = f_dist.sf(F, 1, len(y) - 2)
+    p = mannwhitneyu(X[y == 1], X[y == 0], method='asymptotic', axis=0).pvalue
     n = len(p)
     order = np.argsort(p, kind='stable')
     i = np.arange(1, int(alpha0 * n) + 1)
@@ -70,8 +68,7 @@ class TestHigherCriticismSelector:
     def test_p_values_below_float64(self, variant):
         """Test that p-values float64 stores as 0 still give a finite, valid choice."""
         X, y = _rare_weak(n_samples=3000, n_signal=50, shift=2.0)
-        F, _ = f_classif(X, y)
-        assert (f_dist.sf(F, 1, len(y) - 2) == 0).sum() > 10
+        assert (mannwhitneyu(X[y == 1], X[y == 0], axis=0).pvalue == 0).sum() > 10
 
         selector = HigherCriticismSelector(variant=variant).fit(X, y)
 
@@ -92,8 +89,7 @@ class TestHigherCriticismSelector:
         X, y = _rare_weak()
         X[:, 0] = 1.0
 
-        with pytest.warns(UserWarning, match='constant'), np.errstate(invalid='ignore'):
-            selector = HigherCriticismSelector().fit(X, y)
+        selector = HigherCriticismSelector().fit(X, y)
 
         assert selector.log_pvalues_[0] == 0.0
         assert not selector.get_support()[0]
@@ -117,3 +113,20 @@ class TestHigherCriticismSelector:
         selector = FeatureSelector.create('higherCriticismSelector', variant='2004')
 
         assert isinstance(selector, HigherCriticismSelector)
+
+    def test_monotone_transform_keeps_the_selection(self):
+        """Test that only the order of each feature matters, as for an AUC."""
+        X, y = _rare_weak()
+
+        raw = HigherCriticismSelector().fit(X, y).get_support()
+        transformed = HigherCriticismSelector().fit(np.exp(X) ** 3, y).get_support()
+
+        np.testing.assert_array_equal(raw, transformed)
+
+    def test_more_than_two_classes_is_rejected(self):
+        """Test that the U test refuses a multiclass target."""
+        X, _ = _rare_weak()
+        y = np.arange(len(X)) % 3
+
+        with pytest.raises(ValueError, match='two classes'):
+            HigherCriticismSelector().fit(X, y)

@@ -1,20 +1,20 @@
 """
-Higher Criticism thresholding: keep the features whose F-test p-values fall
-below the threshold that Higher Criticism chooses.
+Higher Criticism thresholding: keep the features whose Mann-Whitney U
+p-values fall below the threshold that Higher Criticism chooses.
 """
 
 import numpy as np
-from sklearn.feature_selection import f_classif
 
 from ..base import FeatureSelector
-from .log_pvalue import log_f_sf
+from .log_pvalue import log_mannwhitneyu
 
 
 class HigherCriticismSelector(FeatureSelector):
     """
     Select features by Higher Criticism thresholding (Donoho and Jin).
 
-    Computes one p-value per feature with the ANOVA F-test, sorts them,
+    Computes one p-value per feature with the two-sided Mann-Whitney U test,
+    sorts them,
     p(1) <= ... <= p(N), and scores each rank i by how far p(i) falls below
     its expected value under the null:
 
@@ -31,14 +31,22 @@ class HigherCriticismSelector(FeatureSelector):
     at or below p(i) at the maximum is kept, so the selector picks its own
     count.
 
+    The U test uses only the order of each feature's values: its U is the
+    feature's AUC times n1 n2. Any monotone transform of a feature, such as
+    the log2(FPKM + 0.1) of gene expression, leaves the selection unchanged.
+    It needs two classes. Its p-value is the tie-corrected normal
+    approximation, which is approximate in the extreme tail; with many tied
+    values an exact p-value would depend on each feature's tie pattern.
+
     p-values are handled as logs (see log_pvalue.py): on strong data many are
     below 1e-308, where a float64 p-value is 0 and the 2004 form would divide
     by zero.
 
     Best for: many weak signals among many null features (rare/weak setting)
     Pros: fast, no count to choose, adapts the count to the data
-    Cons: same blind spots as the F-test; the 2004 form can stop at a few
-    features when the strongest p-values are extremely small
+    Cons: one feature at a time, so correlated features all pass together;
+    the 2004 form can stop at a few features when the strongest p-values are
+    extremely small; ranking costs about 10 s on 1,500 x 28,500
 
     Parameters
     ----------
@@ -52,12 +60,12 @@ class HigherCriticismSelector(FeatureSelector):
 
     Attributes
     ----------
-    scores_ : np.ndarray
-        F statistic for each feature.
+    auc_ : np.ndarray
+        AUC of each feature for the second class in sorted order.
     log_pvalues_ : np.ndarray
         Natural log of each feature's p-value. A constant feature gets 0.
     feature_importances_ : np.ndarray
-        Alias for scores_.
+        -log_pvalues_: larger is stronger, in the order the selection uses.
 
     Examples
     --------
@@ -84,7 +92,7 @@ class HigherCriticismSelector(FeatureSelector):
         X : pd.DataFrame or np.ndarray of shape (n_samples, n_features)
             Training data.
         y : pd.Series or np.ndarray of shape (n_samples,)
-            Class labels.
+            Class labels, exactly two classes.
 
         Returns
         -------
@@ -95,11 +103,8 @@ class HigherCriticismSelector(FeatureSelector):
             raise ValueError(f"variant must be '2004' or '2008', got '{self.variant}'")
         X, y = self._validate(X, y)
 
-        n_classes = len(np.unique(y))
-        self.scores_, _ = f_classif(X, y)
-        self.feature_importances_ = self.scores_
-        log_p = log_f_sf(self.scores_, n_classes - 1, len(y) - n_classes)
-        self.log_pvalues_ = np.where(np.isnan(log_p), 0.0, log_p)
+        self.log_pvalues_, self.auc_ = log_mannwhitneyu(X, y)
+        self.feature_importances_ = -self.log_pvalues_
 
         n = self.n_features_in_
         order = np.argsort(self.log_pvalues_, kind='stable')

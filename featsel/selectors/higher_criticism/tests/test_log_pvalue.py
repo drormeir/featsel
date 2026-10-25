@@ -6,9 +6,10 @@ import mpmath
 import numpy as np
 import pytest
 from scipy.stats import f as f_dist
+from scipy.stats import mannwhitneyu
 from scipy.stats import t as t_dist
 
-from featsel.selectors.higher_criticism.log_pvalue import log_f_sf
+from featsel.selectors.higher_criticism.log_pvalue import log_f_sf, log_mannwhitneyu
 
 # Two classes and 3,000 patients, as in a SCAN-B subtype-vs-rest task.
 DFN, DFD = 1, 2998
@@ -76,3 +77,43 @@ class TestLogFSf:
         assert result[0] == 0.0
         assert result[1] == -np.inf
         assert np.isnan(result[2])
+
+
+class TestLogMannWhitneyU:
+    """Tests for log_mannwhitneyu."""
+
+    def test_matches_scipy_with_ties(self):
+        """Test p-values and AUC against scipy, on features with many tied values."""
+        rng = np.random.default_rng(0)
+        y = rng.integers(0, 2, 400)
+        X = np.round(rng.normal(size=(400, 60)), 1)
+        X[:, :20] = np.maximum(X[:, :20], 0)  # half the values tied at 0
+        X[y == 1, 20:30] += 0.6
+
+        log_p, auc = log_mannwhitneyu(X, y)
+        expected = mannwhitneyu(X[y == 1], X[y == 0], method='asymptotic', axis=0)
+
+        np.testing.assert_allclose(log_p, np.log(expected.pvalue), rtol=1e-12)
+        np.testing.assert_allclose(auc, expected.statistic / ((y == 1).sum() * (y == 0).sum()))
+
+    def test_finite_where_scipy_gives_zero(self):
+        """Test that a p-value below 1e-308 keeps its log."""
+        rng = np.random.default_rng(0)
+        y = np.repeat([0, 1], 1500)
+        X = rng.normal(size=(3000, 3))
+        X[y == 1] += 3
+        assert (mannwhitneyu(X[y == 1], X[y == 0], axis=0).pvalue == 0).all()
+
+        log_p, _ = log_mannwhitneyu(X, y)
+
+        assert np.isfinite(log_p).all()
+        assert (log_p < np.log(1e-308)).all()
+
+    def test_constant_feature_has_p_one(self):
+        """Test that a feature with one value gets p = 1, log p = 0."""
+        y = np.repeat([0, 1], 10)
+        X = np.ones((20, 1))
+
+        log_p, _ = log_mannwhitneyu(X, y)
+
+        assert (log_p == 0.0).all()

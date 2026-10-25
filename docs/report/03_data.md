@@ -145,6 +145,101 @@ Plan:
 3. Run it on GSE96058, which holds all 50 genes; the retired `scanb_small`
    did not.
 
+### Found: signal is widespread, and genes are correlated
+
+Found 2026-10-24, in the smoke test (`configs/smoke_scanb.yaml`, one split).
+
+**The facts.**
+
+- The PAM50 label is computed from 50 genes. But each of them moves together
+  with hundreds of other genes across patients. ESR1 moves with the
+  estrogen-response genes; the proliferation genes move with the cell-cycle
+  genes.
+- The F-test scores each gene alone. A gene that moves with ESR1 differs
+  between Basal and the rest as strongly as ESR1 does.
+- So in every subtype-vs-rest task, thousands of genes carry signal: more
+  than 10% of the 28,552.
+
+**Consequences for Higher Criticism.** HC assumes two things that SCAN-B
+does not meet.
+
+- Rare signal: only a small fraction of genes carry signal. HC searches the
+  smallest 10% of p-values (alpha0 = 0.1, as in both papers). On SCAN-B the
+  HC score is still rising at that edge. HC2008 kept exactly 2,855 genes on
+  every task, the edge itself. It therefore acted as ANOVA at k = 2,855, not
+  as a method that picks its own count. These runs used the F-test; HC has
+  used the U test since 2026-10-25 (below), and is not yet rerun.
+- Independent genes: both papers derive the null behaviour of the sorted
+  p-values, including the mean i/(N+1), from independent p-values.
+  Correlated genes give correlated p-values.
+- HC2004 kept one gene on every task. Its 1/sqrt(p) term lets the smallest
+  p-value win alone.
+
+The report states both unmet assumptions as the reason HC behaves this way
+on SCAN-B. BreastMNIST is where to check whether HC behaves differently: what
+fraction of its 2,048 embedding features carry signal is not yet checked.
+
+Open: keep alpha0 = 0.1 and report the edge, or raise it so HC finds its
+own peak. Raising it departs from both papers and must be stated.
+
+**Consequence for recovering the PAM50 genes.** A selector can predict well
+from genes that move with the 50, and still find few of the 50 themselves.
+Low recovery does not mean poor selection. This is the "correlated
+substitutes" point above, now explained.
+
+### Decided: HC scores genes by the Mann-Whitney U test
+
+Decided 2026-10-25.
+
+**Why the U test fits the data.** The stored values are not measurements
+in their own right. The GEO processing notes say the authors summed FPKM per
+gene symbol, added 0.1 and took log2. FPKM is already a normalized number,
+and the pseudocount and the log are a convenience; any other monotone
+transform would have been equally valid. The PAM50 labels come without the
+classifier's own scores. So what each task gives us, per gene, is a set of
+values with a binary label, in which only the order of the values is
+meaningful. The question we ask of a gene is how well that order separates
+the two classes, which is its AUC, and how likely a separation this good is
+by chance, with the class sizes n1 and n2 fixed by the dataset. That is
+exactly the Mann-Whitney U test: U is the AUC times n1 n2, and its p-value
+is the share of random label assignments that rank the classes at least
+this well.
+
+**Why the F-test does not.** The F-test compares class means, so its result
+depends on the size of the values, and would change under another,
+equally valid transform. Its p-values also assume that within each class a
+gene's values follow a normal curve with the same spread in both classes.
+The data is far from that: 52% of the values in the genes checked sit at
+the floor, log2(0.1), meaning the gene was not detected, and 96.7% of genes
+reject normality (`docs/experiment_design.md`). Within a class, a gene is
+a heap of identical floor values plus a spread of detected ones, not a
+normal curve. The F statistic still ranks genes sensibly, but its tiny
+p-values, the ones HC reads, rest on that unmet assumption. The U test
+needs neither the size of the values nor normality, and treats the floor
+as what it is: one large group of tied values. It also needs exactly two
+classes, which matches the project's binary-only tasks. HigherCriticismSelector
+therefore takes its p-values from the two-sided U test. Ties get average
+ranks; the p-value is the tie-corrected normal approximation, as in scipy,
+with its log taken from the normal tail so nothing underflows.
+
+**Limit.** The approximation is not exact in the extreme tail, where HC2004
+reads its p-values. With ties, the exact permutation p-value depends on
+each gene's own tie pattern, so it cannot be computed once for all genes.
+
+**A better model, beyond this project's scope.** The data is better
+described per gene by four numbers: n1 and n2, the class sizes given by the
+dataset, and p1 and p2, the share of each class whose value sits at the
+floor. This matches what we observe. In the first 200 genes, checked on
+all 3,069 HiSeq samples, 52% of the values are at the floor, so the floor
+is not an occasional tie but the main feature of the data. The model also separates the two ways a gene can differ between
+classes: how often it is detected at all (p1 against p2), and how high it
+is when detected (the order of the values above the floor). The U test
+merges both into one AUC. Under the null, given the four numbers, the
+labels split the floor values by a hypergeometric draw and the detected
+values by a random order. That gives an exact null for each gene, and so
+exact tail p-values, where the normal approximation is weakest. It needs a
+separate computation per floor count, and is not built.
+
 ## Gene sets
 
 - `scanb_full`: all 30,865 genes, including all 50 PAM50 genes. Across all

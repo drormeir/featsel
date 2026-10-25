@@ -174,7 +174,7 @@ featsel/
 │   ├── correlation/         # CorrelationSelector
 │   ├── fdr/                 # FDRSelector
 │   ├── fwe/                 # FWESelector
-│   ├── higher_criticism/    # HigherCriticismSelector; log_pvalue.py: F-test log p below 1e-308
+│   ├── higher_criticism/    # HigherCriticismSelector; log_pvalue.py: U-test and F-test log p below 1e-308
 │   ├── lasso/               # LassoSelector
 │   ├── mutual_info/         # MutualInfoSelector
 │   ├── percentile/          # PercentileSelector
@@ -257,7 +257,7 @@ ANOVAFSelector(n_features=100)                           # univariate F-test
 FDRSelector(alpha=0.05)                                  # F-test, Benjamini-Hochberg; own count
 FWESelector(alpha=0.05)                                  # F-test, Bonferroni; own count
 PercentileSelector(percentile=1)                         # F-test, top 1%
-HigherCriticismSelector(variant='2008')                  # F-test, HC threshold; own count; or '2004'
+HigherCriticismSelector(variant='2008')                  # U test, HC threshold; own count; or '2004'; binary only
 MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slower
 CorrelationSelector(n_features=100, target_threshold=0.1,
                     inter_feature_threshold=0.95)        # drops redundant pairs
