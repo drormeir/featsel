@@ -47,7 +47,12 @@ Mann-Whitney U test, C is tuned inside each split.
 7. [ ] The report chapters not yet written (`docs/report/00_report_outline.md`):
    02 Related Work, 07 Discussion, 08 Conclusion, 09 References. Numbers
    only through generated blocks and fact markers
-   (`scripts/report_tables.py`).
+   (`scripts/report_tables.py`). Decided 2026-10-31: step 7 before step 6.
+   - [x] 7a. `02_related_work.md`. References checked on Crossref and
+     jmlr.org.
+   - [ ] 7b. `09_references.md`: every work cited in chapters 1-8.
+   - [ ] 7c. `07_discussion.md`.
+   - [ ] 7d. `08_conclusion.md`.
    - [x] PAM50 gene recovery, 2 splits: `docs/pam50_recovery.md`.
    - [x] HC behaviour: HC2008 stops at its search edge on both datasets,
      because neither has rare signal (`docs/report/03_data.md`).
