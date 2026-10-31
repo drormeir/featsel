@@ -21,7 +21,7 @@ secondary to the ordering between methods and to the gap over the control.
 
 | Axis | Values | What it answers |
 |---|---|---|
-| Selector | RandomSelector (control), ANOVAFSelector, LassoSelector, TreeImportanceSelector, RFESelector, HigherCriticismSelector in its 2004 and 2008 variants. Filters score genes by the Mann-Whitney U test (section 2f). | The primary question. |
+| Selector | RandomSelector (control), MannWhitneySelector, LassoSelector, TreeImportanceSelector, RFESelector, HigherCriticismSelector in its 2004 and 2008 variants. Filters score genes by the Mann-Whitney U test (section 2f). | The primary question. |
 | `k` | Selector comparison: 10, 50 and 250. Classifier study: 10 to 1000. Selectors that choose their own count (Higher Criticism) take no `k`. `k=50` is an anchor: PAM50 is a 50-gene signature. See section 2d. | How much of the gain survives as the budget grows. |
 | Classifier | Selector comparison: logistic_regression. Classifier study (`notebooks/02_classifier_behaviour.ipynb`): logistic_regression, linear_svm, random_forest, knn, lda_shrinkage. | How much external selection is worth to a model, given its own regularization. |
 | Task framing | One binary task per class, that class vs the rest: five for PAM50. No five-class task (decided 2026-10-18, `SCOPE.md` 3a). | Whether the best selector differs per subtype. |
@@ -230,9 +230,13 @@ hundreds of hours; `dual=False` may fix that and is not yet verified.
 
 ## 2f. The univariate test: Mann-Whitney U for every filter
 
-Decided 2026-10-31. Every filter selector scores genes by the two-sided
-Mann-Whitney U test: ANOVAFSelector, FDRSelector, FWESelector,
-PercentileSelector and HigherCriticismSelector.
+Decided 2026-10-31. Every filter selector in the experiments scores genes
+by the two-sided Mann-Whitney U test: MannWhitneySelector, which keeps the
+top `k` and takes ANOVA's place in every experiment config, and
+HigherCriticismSelector. With two classes the U test is the same test as
+Kruskal-Wallis, "ANOVA on ranks". ANOVAFSelector, FDRSelector, FWESelector
+and PercentileSelector keep the F-test: they are drop-in replacements for
+scikit-learn's selectors, and are not used in the experiments.
 
 **Why.** The gene values are log2(FPKM + 0.1), an arbitrary monotone
 transform, so only the order of each gene's values is meaningful. The U test
@@ -243,9 +247,9 @@ about half the values sit tied at the floor. The full reasoning is in
 test". Using one test for every filter keeps the comparison between them a
 comparison of selection rules, not of tests.
 
-**Consequence.** These selectors no longer select what scikit-learn's
-F-test selectors do, so their tests compare against scipy's U test instead.
-A fit costs about 10 s on SCAN-B, against about 1 s for the F-test.
+**Consequence.** A U-test fit costs about 10 s on SCAN-B, against about
+1 s for the F-test. MannWhitneySelector ranks once per split and cuts that
+ranking at every `k`, so the cost is paid once per split, not once per `k`.
 
 ## 3. Dependent variables
 

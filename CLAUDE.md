@@ -170,12 +170,14 @@ featsel/
 │   │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb
 │   ├── __init__.py          # Imports every selector, which registers it
 │   ├── base.py              # FeatureSelector: scikit-learn base, registration, create()
+│   ├── log_pvalue.py        # U-test and F-test log p-values that stay finite below 1e-308
 │   ├── anova_f/             # ANOVAFSelector
 │   ├── correlation/         # CorrelationSelector
 │   ├── fdr/                 # FDRSelector
 │   ├── fwe/                 # FWESelector
-│   ├── higher_criticism/    # HigherCriticismSelector; log_pvalue.py: U-test and F-test log p below 1e-308
+│   ├── higher_criticism/    # HigherCriticismSelector
 │   ├── lasso/               # LassoSelector
+│   ├── mann_whitney/        # MannWhitneySelector
 │   ├── mutual_info/         # MutualInfoSelector
 │   ├── percentile/          # PercentileSelector
 │   ├── random_selection/    # RandomSelector (not `random`: shadows the stdlib)
@@ -204,7 +206,9 @@ See `docs/architecture_options.md`, section "Selector design".
 Built: VarianceThreshold, ANOVAFSelector, MutualInfoSelector,
 CorrelationSelector, FDRSelector, FWESelector, PercentileSelector,
 LassoSelector, TreeImportanceSelector, RFESelector, RFECVSelector,
-SequentialSelector, RandomSelector, HigherCriticismSelector.
+SequentialSelector, RandomSelector, HigherCriticismSelector,
+MannWhitneySelector. The experiment configs use MannWhitneySelector, not
+ANOVAFSelector (`docs/experiment_design.md`, 2f).
 
 Every selector that wraps a scikit-learn method has two tests next to it:
 it selects the same features as that method, and `fit` plus `get_support` is
@@ -246,7 +250,7 @@ Each has a tutorial in `featsel/selectors/<name>/demos/tutorial.ipynb`.
 ```python
 from featsel.selectors import (
     ANOVAFSelector, CorrelationSelector, FDRSelector, FWESelector,
-    HigherCriticismSelector, LassoSelector, MutualInfoSelector, PercentileSelector, RandomSelector,
+    HigherCriticismSelector, LassoSelector, MannWhitneySelector, MutualInfoSelector, PercentileSelector, RandomSelector,
     RFECVSelector, RFESelector, SequentialSelector, TreeImportanceSelector,
     VarianceThreshold,
 )
@@ -254,6 +258,7 @@ from featsel.selectors import (
 # Filters
 VarianceThreshold(threshold=0.01)                        # drop near-constant features
 ANOVAFSelector(n_features=100)                           # univariate F-test
+MannWhitneySelector(n_features=100)                      # univariate U test (AUC); binary only
 FDRSelector(alpha=0.05)                                  # F-test, Benjamini-Hochberg; own count
 FWESelector(alpha=0.05)                                  # F-test, Bonferroni; own count
 PercentileSelector(percentile=1)                         # F-test, top 1%

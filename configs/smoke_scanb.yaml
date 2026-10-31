@@ -22,7 +22,7 @@ metrics:
 selectors:
   - name: RandomSelector
     k: [50]
-  - name: ANOVAFSelector
+  - name: MannWhitneySelector      # U test; ANOVA's rank-based counterpart
     k: [50]
   - name: LassoSelector
     k: [50]

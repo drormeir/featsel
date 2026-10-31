@@ -6,7 +6,7 @@ p-values fall below the threshold that Higher Criticism chooses.
 import numpy as np
 
 from ..base import FeatureSelector
-from .log_pvalue import log_mannwhitneyu
+from ..log_pvalue import log_mannwhitneyu
 
 
 class HigherCriticismSelector(FeatureSelector):
@@ -38,7 +38,7 @@ class HigherCriticismSelector(FeatureSelector):
     approximation, which is approximate in the extreme tail; with many tied
     values an exact p-value would depend on each feature's tie pattern.
 
-    p-values are handled as logs (see log_pvalue.py): on strong data many are
+    p-values are handled as logs (see selectors/log_pvalue.py): on strong data many are
     below 1e-308, where a float64 p-value is 0 and the 2004 form would divide
     by zero.
 

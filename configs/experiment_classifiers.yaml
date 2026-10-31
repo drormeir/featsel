@@ -15,7 +15,7 @@ preprocess: ["standard"]
 selectors:
   - name: RandomSelector           # the control every other method must beat
     k: [10, 25, 50, 100, 250, 500, 1000]
-  - name: ANOVAFSelector
+  - name: MannWhitneySelector      # U test; ANOVA's rank-based counterpart
     k: [10, 25, 50, 100, 250, 500, 1000]
 
 models:

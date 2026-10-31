@@ -1,5 +1,5 @@
 """
-Tests for the F-test log p-values.
+Tests for the U-test and F-test log p-values.
 """
 
 import mpmath
@@ -9,7 +9,7 @@ from scipy.stats import f as f_dist
 from scipy.stats import mannwhitneyu
 from scipy.stats import t as t_dist
 
-from featsel.selectors.higher_criticism.log_pvalue import log_f_sf, log_mannwhitneyu
+from featsel.selectors.log_pvalue import log_f_sf, log_mannwhitneyu
 
 # Two classes and 3,000 patients, as in a SCAN-B subtype-vs-rest task.
 DFN, DFD = 1, 2998

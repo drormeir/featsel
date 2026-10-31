@@ -100,7 +100,7 @@ def build_tasks(y):
 # n_features of feature_importances_. The runner fits them once per split and
 # cuts the ranking at each k: the same genes, one fit instead of one per k.
 # Their selection_time_s and selection_peak_mb are that one fit's, on every k.
-RANK_ONCE = {'LassoSelector', 'TreeImportanceSelector'}
+RANK_ONCE = {'LassoSelector', 'MannWhitneySelector', 'TreeImportanceSelector'}
 
 
 class WorkerDiedError(RuntimeError):

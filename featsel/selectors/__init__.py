@@ -12,6 +12,7 @@ from .fdr import FDRSelector
 from .fwe import FWESelector
 from .higher_criticism import HigherCriticismSelector
 from .lasso import LassoSelector
+from .mann_whitney import MannWhitneySelector
 from .mutual_info import MutualInfoSelector
 from .percentile import PercentileSelector
 from .random_selection import RandomSelector
@@ -29,6 +30,7 @@ __all__ = [
     'FeatureSelector',
     'HigherCriticismSelector',
     'LassoSelector',
+    'MannWhitneySelector',
     'MutualInfoSelector',
     'PercentileSelector',
     'RFECVSelector',
