@@ -177,9 +177,10 @@ class TestHighDimensionalData:
         """Test Lasso selection when features far outnumber samples."""
         X, y = high_dim_data
 
-        X_selected = LassoSelector(n_features=50, random_state=42).fit_transform(X, y)
+        selector = LassoSelector(n_features=50, random_state=42).fit(X, y)
+        n_nonzero = np.count_nonzero(selector.feature_importances_)
 
-        assert X_selected.shape == (X.shape[0], 50)
+        assert selector.transform(X).shape == (X.shape[0], min(50, n_nonzero))
 
     def test_lasso_multiclass_on_high_dim(self, high_dim_data):
         """Test that multiclass targets work despite liblinear being binary-only."""

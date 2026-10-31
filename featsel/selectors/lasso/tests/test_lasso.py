@@ -11,13 +11,18 @@ from featsel.selectors import LassoSelector
 from tests.sklearn_reference import assert_not_slower, assert_same_selection
 
 
-def _with_sklearn():
-    """This selector and its scikit-learn equivalent, both unfitted."""
+def _with_sklearn(n_features=20, C=0.1):
+    """
+    This selector and its scikit-learn equivalent, both unfitted.
+
+    The threshold, the smallest positive float, keeps only non-zero
+    coefficients, as LassoSelector does.
+    """
     return (
-        LassoSelector(n_features=20, C=0.1, random_state=0),
-        SelectFromModel(LogisticRegression(l1_ratio=1, C=0.1, solver='liblinear',
+        LassoSelector(n_features=n_features, C=C, random_state=0),
+        SelectFromModel(LogisticRegression(l1_ratio=1, C=C, solver='liblinear',
                                            max_iter=1000, random_state=0),
-                        max_features=20, threshold=-np.inf),
+                        max_features=n_features, threshold=np.finfo(float).tiny),
     )
 
 
@@ -59,6 +64,16 @@ class TestLassoSelector:
     def test_matches_sklearn(self, sklearn_reference_data):
         """Test that it selects the same features as SelectFromModel with L1 logistic regression."""
         assert_same_selection(*_with_sklearn(), *sklearn_reference_data)
+
+    def test_never_selects_a_zero_coefficient(self, sklearn_reference_data):
+        """Test that with fewer non-zero coefficients than n_features, only those are kept."""
+        X, y = sklearn_reference_data
+        selector = LassoSelector(n_features=150, C=0.01, random_state=0).fit(X, y)
+        nonzero = selector.feature_importances_ != 0
+
+        assert 0 < nonzero.sum() < 150
+        np.testing.assert_array_equal(selector.get_support(), nonzero)
+        assert_same_selection(*_with_sklearn(n_features=150, C=0.01), X, y)
 
     def test_not_slower_than_sklearn(self, sklearn_reference_data):
         """Test that fit is at most 5% slower than SelectFromModel with L1 logistic regression."""

@@ -283,13 +283,17 @@ def test_ranking_once_selects_the_same_genes_as_one_fit_per_k(experiment, monkey
         {'name': 'LassoSelector', 'k': [5, 10, 20], 'params': {'C': 1.0}},
         {'name': 'TreeImportanceSelector', 'k': [5, 10, 20], 'params': {'n_estimators': 20}},
         {'name': 'RFESelector', 'k': [5, 10, 20, 100], 'params': {'step': 0.3}},
+        # Fewer non-zero coefficients than the largest k, so a cut is short.
+        {'name': 'LassoSelector', 'label': 'sparse_lasso', 'k': [5, 100], 'params': {'C': 0.3}},
     ]
     once = pd.read_csv(run_config(experiment))
     monkeypatch.setattr(run_module, 'RANK_ONCE', set())
     per_k = pd.read_csv(run_config(experiment))
 
     pd.testing.assert_series_equal(once['selected_indices'], per_k['selected_indices'])
-    assert (once['n_selected'] == once['k']).all()
+    sparse = once.selector == 'sparse_lasso'
+    assert (once.loc[~sparse, 'n_selected'] == once.loc[~sparse, 'k']).all()
+    assert (once.loc[sparse & (once.k == 100), 'n_selected'] < 100).all()
 
 
 def test_dataset_can_be_a_module(tmp_path, monkeypatch):

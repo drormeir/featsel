@@ -25,9 +25,11 @@ class LassoSelector(FeatureSelector):
     Parameters
     ----------
     n_features : int, optional
-        Number of top features to select by absolute coefficient. If None, all
-        features with a non-zero coefficient are selected, which lets the
-        method choose its own feature count.
+        At most this many features, the largest absolute coefficients. Only
+        features with a non-zero coefficient are selected, so fewer are
+        selected when fewer are non-zero. If None, all features with a
+        non-zero coefficient are selected, which lets the method choose its
+        own feature count.
     C : float, default=1.0
         Inverse regularization strength for classification. Smaller is sparser.
     alpha : float, default=0.01
@@ -113,10 +115,11 @@ class LassoSelector(FeatureSelector):
         # it matters for any class, so sum the absolute values.
         self.feature_importances_ = np.abs(np.atleast_2d(self.coef_)).sum(axis=0)
 
-        if self.n_features is None:
-            self.support_ = self.feature_importances_ != 0
-        else:
-            self.support_ = self._top(self.feature_importances_)
+        # A zero coefficient means the model dropped the feature, so it is never
+        # selected, even when fewer than n_features are nonzero.
+        self.support_ = self.feature_importances_ != 0
+        if self.n_features is not None:
+            self.support_ &= self._top(self.feature_importances_)
 
         if not self.support_.any():
             raise ValueError(

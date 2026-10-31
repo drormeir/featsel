@@ -105,6 +105,10 @@ def build_tasks(y):
 RANK_ONCE = {'LassoSelector', 'MannWhitneySelector', 'RFESelector',
              'TreeImportanceSelector'}
 
+# Rank-once selectors that never select a feature of zero importance, so a
+# cut at k can hold fewer than k features.
+NONZERO_ONLY = {'LassoSelector'}
+
 
 class WorkerDiedError(RuntimeError):
     """A worker process died mid-split, most likely out of memory."""
@@ -274,6 +278,8 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 # The same argsort as FeatureSelector._top, so each cut
                 # equals a fit with n_features=k.
                 ranking = np.argsort(selector.feature_importances_)[::-1]
+                if type(selector).__name__ in NONZERO_ONLY:
+                    ranking = ranking[selector.feature_importances_[ranking] != 0]
 
         if rank_once:
             support = np.sort(ranking[:k])
