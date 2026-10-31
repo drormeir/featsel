@@ -10,13 +10,13 @@ The breast cancer data comes from the Sweden Cancerome Analysis Network -
 Breast (SCAN-B). It was published with Brueffer et al. (2018) and deposited
 in NCBI GEO as accession GSE96058.
 
-- 3,273 patients, 3,409 samples, 30,865 genes.
+- <!-- fact: scanb_patients -->3,273<!-- /fact --> patients, <!-- fact: scanb_samples -->3,409<!-- /fact --> samples, <!-- fact: scanb_genes -->30,865<!-- /fact --> genes.
 - The smallest gene value equals log2(0.1). This fits a log2(FPKM + 0.1)
   transform, but the transform is not confirmed from the source.
-- Samples were sequenced on two machines: 3,069 on a HiSeq 2000 and 340 on a
-  NextSeq 500.
-- The course's copies, `scanb_small` and `scanb_full`, hold exactly the 3,069
-  HiSeq 2000 samples. Their gene values and labels match GSE96058.
+- Samples were sequenced on two machines: <!-- fact: scanb_hiseq_samples -->3,069<!-- /fact --> on a HiSeq 2000 and
+  <!-- fact: scanb_nextseq_samples -->340<!-- /fact --> on a NextSeq 500.
+- The course's copies, `scanb_small` and `scanb_full`, hold exactly the
+  <!-- fact: course_samples -->3,069<!-- /fact --> HiSeq 2000 samples. Their gene values and labels match GSE96058.
 
 The loader is `featsel_datasets/scanb_gse96058/`. It downloads the published
 files and keeps them as a local cache.
@@ -24,23 +24,24 @@ files and keeps them as a local cache.
 **Decision: HiSeq 2000 samples only.** Two machines can give different gene
 values for technical reasons alone. Mixing them would add a difference that
 has nothing to do with the tumour. Using HiSeq only also keeps the same
-patients as the course's copies. The NextSeq samples add 297 patients not in
-the HiSeq set; they are left out.
+patients as the course's copies. The NextSeq samples add <!-- fact: scanb_nextseq_only_patients -->297<!-- /fact --> patients not
+in the HiSeq set; they are left out.
 
 ## Repeat samples of one patient
 
-**Finding.** The 3,069 HiSeq samples come from only 2,976 patients. 93
-patients have two samples each.
+**Finding.** The <!-- fact: scanb_hiseq_samples -->3,069<!-- /fact --> HiSeq samples come from only
+<!-- fact: scanb_hiseq_patients -->2,976<!-- /fact --> patients. <!-- fact: scanb_repeat_patients -->93<!-- /fact --> patients have two samples each.
 
 **Source.** Brueffer et al. sequenced 136 tumours a second time to test the
 reproducibility of their classifiers. GSE96058 publishes each repeat as its
-own sample, with the suffix `repl` (for example `F2621` and `F2621repl`). 93
+own sample, with the suffix `repl` (for example `F2621` and `F2621repl`). <!-- fact: scanb_repeat_patients -->93<!-- /fact -->
 of the repeats are HiSeq samples. The course's copies kept them.
 
 **They are not exact copies.** A patient's two samples have slightly different
-gene values. Their correlation has a median of 0.970 and a minimum of 0.901.
-Samples of two different patients correlate at a median of 0.925 and at most
-0.951. In 87 of the 93 patients both samples carry the same PAM50 subtype.
+gene values. Their correlation (Pearson r over all genes) has a median of
+<!-- fact: scanb_repeat_r_median -->0.970<!-- /fact --> and a minimum of <!-- fact: scanb_repeat_r_min -->0.901<!-- /fact -->. The first samples of two different patients
+correlate at a median of <!-- fact: scanb_between_r_median -->0.927<!-- /fact --> and at most <!-- fact: scanb_between_r_max -->0.968<!-- /fact -->. In <!-- fact: scanb_repeat_same_pam50 -->87<!-- /fact --> of the
+<!-- fact: scanb_repeat_patients -->93<!-- /fact --> patients both samples carry the same PAM50 subtype.
 
 **Impact.** When a patient's two samples fall on opposite sides of a
 train/test split, the model is partly tested on a patient it has seen. Every
@@ -63,10 +64,10 @@ PAM50 subtype is also computed from gene expression. The PAM50 algorithm
 assigns it from 50 fixed genes.
 
 **ER in the course's copies is a prediction.** It equals GSE96058's
-`er prediction mgc` for all 3,069 samples, coded 1 = negative and
-2 = positive. It disagrees with the pathologist on 235 of the 2,870 samples
-that have a pathologist value. The pathologist value is missing for 199
-samples.
+`er prediction mgc` for <!-- fact: course_er_equals_mgc -->3,069<!-- /fact --> of its <!-- fact: course_samples -->3,069<!-- /fact --> samples, coded 1 = negative and
+2 = positive. It disagrees with the pathologist on <!-- fact: scanb_er_disagree -->235<!-- /fact --> of the <!-- fact: scanb_er_known -->2,870<!-- /fact -->
+HiSeq samples that have a pathologist value. The pathologist value is missing
+for <!-- fact: scanb_er_missing -->199<!-- /fact --> samples.
 
 **Consequence.** Predicting ER or PAM50 from gene expression partly re-learns
 another classifier. A selector is expected to find the genes that classifier
@@ -158,37 +159,36 @@ Found 2026-10-24, in the smoke test (`configs/smoke_scanb.yaml`, one split).
 - The F-test scores each gene alone. A gene that moves with ESR1 differs
   between Basal and the rest as strongly as ESR1 does.
 - So in every subtype-vs-rest task, thousands of genes carry signal: more
-  than 10% of the 28,552.
+  than 10% of the <!-- fact: scanb_loaded_genes -->28,552<!-- /fact -->.
 
 **Consequences for Higher Criticism.** HC assumes two things that SCAN-B
 does not meet.
 
 - Rare signal: only a small fraction of genes carry signal. HC searches the
   smallest 10% of p-values (alpha0 = 0.1, as in both papers). On SCAN-B the
-  HC score is still rising at that edge. HC2008 kept exactly 2,855 genes on
-  every task, the edge itself. It therefore acted as ANOVA at k = 2,855, not
-  as a method that picks its own count. These runs used the F-test; HC has
-  used the U test since 2026-10-25 (below), and is not yet rerun.
+  HC score is still rising at that edge. In the selector comparison HC2008
+  kept <!-- fact: scanb_hc2008_min -->2,855<!-- /fact --> to <!-- fact: scanb_hc2008_max -->2,856<!-- /fact --> genes on every task and split, the edge itself. It
+  therefore acted as a top-k filter at the edge, not as a method that picks
+  its own count. The first runs used the F-test and behaved the same.
 - Independent genes: both papers derive the null behaviour of the sorted
   p-values, including the mean i/(N+1), from independent p-values.
   Correlated genes give correlated p-values.
-- HC2004 kept one gene on every task. Its 1/sqrt(p) term lets the smallest
-  p-value win alone.
+- HC2004 kept <!-- fact: scanb_hc2004_min -->1<!-- /fact --> to <!-- fact: scanb_hc2004_max -->4<!-- /fact --> genes. Its 1/sqrt(p) term lets the smallest
+  p-values win alone.
 
 The report states both unmet assumptions as the reason HC behaves this way
 on SCAN-B. BreastMNIST is where to check whether HC behaves differently: what
 fraction of its 2,048 embedding features carry signal is not yet checked.
 
 **Rerun with the U test, 2026-10-31.** The selector comparison
-(`docs/comparison_scanb.md`, 5 splits) used the U test. Nothing changed:
-HC2008 kept 2,855 or 2,856 genes on every task and split, and HC2004 kept
-one gene, at most four.
+(`docs/comparison_scanb.md`, 5 splits) used the U test, and gave the counts
+above: the change of test changed nothing.
 
 **BreastMNIST, checked 2026-10-31: its signal is not rare either.** On each
-of the 5 training halves, 24% to 28% of the 2,048 embedding features pass
-the U test at a 5% false discovery rate (Benjamini-Hochberg), and 36% to 39%
-have p < 0.05. HC searches only the smallest 10%. HC2008 again kept exactly
-the edge, 204 features, on every split (`docs/comparison_breastmnist.md`).
+of the 5 training halves, <!-- fact: bm_bh_share_min -->24%<!-- /fact --> to <!-- fact: bm_bh_share_max -->28%<!-- /fact --> of the <!-- fact: bm_features -->2,048<!-- /fact --> embedding features pass
+the U test at a 5% false discovery rate (Benjamini-Hochberg), and
+<!-- fact: bm_p05_share_min -->36%<!-- /fact --> to <!-- fact: bm_p05_share_max -->39%<!-- /fact --> have p < 0.05. HC searches only the smallest 10%. HC2008
+again kept the edge, <!-- fact: breastmnist_hc2008_min -->204<!-- /fact --> to <!-- fact: breastmnist_hc2008_max -->204<!-- /fact --> features, on every split (`docs/comparison_breastmnist.md`).
 So on both datasets the search limit, not the data, sets HC2008's count.
 
 Decided 2026-10-31: alpha0 stays 0.1, as in both papers. A selector must
@@ -224,9 +224,10 @@ this well.
 depends on the size of the values, and would change under another,
 equally valid transform. Its p-values also assume that within each class a
 gene's values follow a normal curve with the same spread in both classes.
-The data is far from that: 52% of the values in the genes checked sit at
-the floor, log2(0.1), meaning the gene was not detected, and 96.7% of genes
-reject normality (`docs/experiment_design.md`). Within a class, a gene is
+The data is far from that: <!-- fact: scanb_floor_share_200 -->51%<!-- /fact --> of the values in the first 200 genes
+sit at the floor, log2(0.1), meaning the gene was not detected, and
+<!-- fact: scanb_non_normal_share -->98.1%<!-- /fact --> of genes reject normality (D'Agostino-Pearson test at p < 0.05,
+median excess kurtosis <!-- fact: scanb_median_excess_kurtosis -->1.44<!-- /fact -->). Within a class, a gene is
 a heap of identical floor values plus a spread of detected ones, not a
 normal curve. The F statistic still ranks genes sensibly, but its tiny
 p-values, the ones HC reads, rest on that unmet assumption. The U test
@@ -245,7 +246,7 @@ each gene's own tie pattern, so it cannot be computed once for all genes.
 described per gene by four numbers: n1 and n2, the class sizes given by the
 dataset, and p1 and p2, the share of each class whose value sits at the
 floor. This matches what we observe. In the first 200 genes, checked on
-all 3,069 HiSeq samples, 52% of the values are at the floor, so the floor
+all <!-- fact: scanb_hiseq_samples -->3,069<!-- /fact --> HiSeq samples, <!-- fact: scanb_floor_share_200 -->51%<!-- /fact --> of the values are at the floor, so the floor
 is not an occasional tie but the main feature of the data. The model also separates the two ways a gene can differ between
 classes: how often it is detected at all (p1 against p2), and how high it
 is when detected (the order of the values above the floor). The U test
@@ -257,12 +258,11 @@ separate computation per floor count, and is not built.
 
 ## Gene sets
 
-- `scanb_full`: all 30,865 genes, including all 50 PAM50 genes. Across all
-  3,409 GSE96058 samples, 2,236 genes have a single value and carry no
+- `scanb_full`: all <!-- fact: scanb_genes -->30,865<!-- /fact --> genes, including <!-- fact: scanb_pam50_present -->50<!-- /fact --> of the 50 PAM50 genes. Across
+  all <!-- fact: scanb_samples -->3,409<!-- /fact --> GSE96058 samples, <!-- fact: scanb_single_value_genes -->2,236<!-- /fact --> genes have a single value and carry no
   information.
-- `scanb_small`: 9,264 genes, chosen by the course. The selection rule is not
-  recorded. It lacks 11 of the 50 PAM50 genes: ANLN, BAG1, CDC6, CXXC5,
-  FOXA1, GPR160, KRT14, MIA, NUF2, TMEM45B and UBE2T.
+- `scanb_small`: <!-- fact: small_genes -->9,264<!-- /fact --> genes, chosen by the course. The selection rule is not
+  recorded. It lacks <!-- fact: small_pam50_missing -->11<!-- /fact --> of the 50 PAM50 genes: <!-- fact: small_pam50_missing_list -->ANLN, BAG1, CDC6, CXXC5, FOXA1, GPR160, KRT14, MIA, NUF2, TMEM45B, UBE2T<!-- /fact -->.
 
 ## BreastMNIST (second dataset, task 4)
 
@@ -270,14 +270,15 @@ Terms here: a *sample* is one ultrasound image; a *feature* is one embedding
 dimension.
 
 **Source.** BreastMNIST is part of MedMNIST v2 (Yang et al., 2023), a
-published benchmark collection. Its 780 breast ultrasound images come from
+published benchmark collection. Its <!-- fact: bm_images -->780<!-- /fact --> breast ultrasound images come from
 Al-Dhabyani et al. (2020). This project uses the 224 x 224 version
 (MedMNIST+, Zenodo record 10519652, CC BY 4.0). The loader checks the file
 against the published MD5.
 
-- MedMNIST merged the source's *normal* (133) and *benign* (437) into one
-  class against *malignant* (210): 570 vs 210.
-- MedMNIST fixes a split of 546 / 78 / 156 images.
+- MedMNIST merged the source's *normal* (133) and *benign* (437) images,
+  counts from Al-Dhabyani et al., into one class against *malignant*:
+  <!-- fact: bm_benign_or_normal -->570<!-- /fact --> vs <!-- fact: bm_malignant -->210<!-- /fact -->.
+- MedMNIST fixes a split of <!-- fact: bm_split_train -->546<!-- /fact --> / <!-- fact: bm_split_val -->78<!-- /fact --> / <!-- fact: bm_split_test -->156<!-- /fact --> images.
 
 **Features.** Each image goes through an ImageNet ResNet-50 (torchvision,
 `IMAGENET1K_V2` weights) with its last layer removed, giving 2,048 numbers.
@@ -285,16 +286,16 @@ The grayscale image is repeated over three channels and normalized as
 ImageNet images are. The embeddings are computed once and cached; on this
 machine, two runs on the GPU gave identical values.
 
-- 2,048 features for 780 images: more features than samples, as in SCAN-B.
-- Values are never negative; 42.8% are exactly zero (ReLU then average pool).
-- Pairs of dimensions are weakly correlated: median |r| 0.056, and 0.17% of
-  pairs above 0.5. Yet 12 principal components hold 50% of the variance, 150
-  hold 90% and 462 hold 99%. The dependence is spread across many dimensions,
+- <!-- fact: bm_features -->2,048<!-- /fact --> features for <!-- fact: bm_images -->780<!-- /fact --> images: more features than samples, as in SCAN-B.
+- Values are never negative; <!-- fact: bm_zero_share -->42.8%<!-- /fact --> are exactly zero (ReLU then average pool).
+- Pairs of dimensions are weakly correlated: median |r| <!-- fact: bm_median_abs_r -->0.056<!-- /fact -->, and
+  <!-- fact: bm_pairs_above_half -->0.17%<!-- /fact --> of pairs above 0.5. Yet <!-- fact: bm_pc_50 -->12<!-- /fact --> principal components hold 50% of the
+  variance, <!-- fact: bm_pc_90 -->150<!-- /fact --> hold 90% and <!-- fact: bm_pc_99 -->462<!-- /fact --> hold 99%. The dependence is spread across many dimensions,
   not concentrated in strongly correlated pairs.
-- 223 of 2,048 dimensions pass a univariate F test at p < 0.05 / 2048.
+- <!-- fact: bm_f_bonferroni -->223<!-- /fact --> of <!-- fact: bm_features -->2,048<!-- /fact --> dimensions pass a univariate F test at p < 0.05 / 2048.
 
 **Decision: all 780 images, MedMNIST's split ignored.** The runner draws its
-own 100 stratified splits, as for SCAN-B. Results are therefore not directly
+own stratified splits, as for SCAN-B. Results are therefore not directly
 comparable with MedMNIST's published test-set scores (ResNet-18 trained end
 to end: AUC 0.891 to 0.901).
 
