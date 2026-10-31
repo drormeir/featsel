@@ -44,6 +44,10 @@ Mann-Whitney U test, C is tuned inside each split.
 6. [ ] Only then, depth.
    - [ ] More splits in the selector comparisons (now 5).
    - [ ] More k in the selector comparisons (now 10, 50, 250).
+7. [ ] The report chapters not yet written (`docs/report/00_report_outline.md`):
+   02 Related Work, 07 Discussion, 08 Conclusion, 09 References. Numbers
+   only through generated blocks and fact markers
+   (`scripts/report_tables.py`).
    - [x] PAM50 gene recovery, 2 splits: `docs/pam50_recovery.md`.
    - [x] HC behaviour: HC2008 stops at its search edge on both datasets,
      because neither has rare signal (`docs/report/03_data.md`).
