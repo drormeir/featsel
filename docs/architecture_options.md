@@ -304,6 +304,15 @@ the default and nobody notices. Adding a selector means editing three places.
   passes the parameters through untouched.
 - Results always record the class name, whatever alias a config used, so runs
   stay comparable.
+- A selector whose ranking, cut at any `k`, equals a fit at that `k` sets the
+  class flag `rank_once` and gives the order through `ranking()`. The runner
+  then fits once per split. Added 2026-10-31. Before, the runner kept these
+  facts as lists of class names.
+- A selector that uses randomness takes `random_state`, default 42, so a fit
+  repeats without a seed. It draws from a generator built afresh on each fit.
+  A generator kept in the instance was rejected: scikit-learn's `clone` does
+  not copy it, and its draws would depend on the order of fits. Added
+  2026-11-01.
 - How a selector computes its result is its own business. It may wrap
   scikit-learn, or be its own CPU or GPU implementation. Replacing one with
   another keeps the class name and parameters, so configs and results do not

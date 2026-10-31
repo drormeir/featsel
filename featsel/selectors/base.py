@@ -31,6 +31,10 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     fit, as scikit-learn's own check_input does. Use it only when X is already
     a finite 2-D NumPy array and y a 1-D array.
 
+    A subclass that uses randomness takes random_state, default 42, so a fit
+    repeats without a seed being passed. It passes the seed to scikit-learn,
+    or draws from _rng(), a generator built afresh on every fit.
+
     Every subclass registers itself when it is defined, under its class name
     and any aliases given as a class keyword:
 
@@ -114,6 +118,15 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         if self.task == 'regression':
             return regression
         raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
+
+    def _rng(self):
+        """
+        A fresh generator seeded by self.random_state.
+
+        Built anew on every fit, so refitting repeats the same draws whatever
+        else ran before.
+        """
+        return np.random.default_rng(self.random_state)
 
     def _require_n_features(self):
         if self.n_features is None:

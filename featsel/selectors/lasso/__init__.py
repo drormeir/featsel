@@ -38,7 +38,7 @@ class LassoSelector(FeatureSelector):
         Type of task: 'classification' or 'regression'.
     max_iter : int, default=1000
         Maximum solver iterations.
-    random_state : int, optional
+    random_state : int, default=42
         Random seed for the solver.
 
     check_input : bool, default=True
@@ -63,7 +63,7 @@ class LassoSelector(FeatureSelector):
     rank_once = True
 
     def __init__(self, n_features=None, C=1.0, alpha=0.01, task='classification',
-                 max_iter=1000, random_state=None, check_input=True):
+                 max_iter=1000, random_state=42, check_input=True):
         self.n_features = n_features
         self.C = C
         self.alpha = alpha

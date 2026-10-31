@@ -26,7 +26,7 @@ class TreeImportanceSelector(FeatureSelector):
         Type of task: 'classification' or 'regression'.
     max_depth : int, optional
         Maximum tree depth. None grows trees fully.
-    random_state : int, optional
+    random_state : int, default=42
         Random seed for the forest.
     n_jobs : int, default=1
         Threads used to fit the forest.
@@ -51,7 +51,7 @@ class TreeImportanceSelector(FeatureSelector):
     rank_once = True
 
     def __init__(self, n_features=None, n_estimators=200, task='classification',
-                 max_depth=None, random_state=None, n_jobs=1, check_input=True):
+                 max_depth=None, random_state=42, n_jobs=1, check_input=True):
         self.n_features = n_features
         self.n_estimators = n_estimators
         self.task = task

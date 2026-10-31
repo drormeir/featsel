@@ -39,7 +39,7 @@ class RFECVSelector(FeatureSelector):
         Inverse regularization strength of the SVM.
     max_iter : int, default=1000
         Maximum solver iterations per SVM fit.
-    random_state : int, optional
+    random_state : int, default=42
         Random seed for the SVM solver.
     n_jobs : int, default=1
         Folds evaluated in parallel.
@@ -66,7 +66,7 @@ class RFECVSelector(FeatureSelector):
     """
 
     def __init__(self, step=0.1, cv=5, scoring=None, min_features_to_select=1,
-                 C=1.0, max_iter=1000, random_state=None, n_jobs=1, check_input=True):
+                 C=1.0, max_iter=1000, random_state=42, n_jobs=1, check_input=True):
         self.step = step
         self.cv = cv
         self.scoring = scoring

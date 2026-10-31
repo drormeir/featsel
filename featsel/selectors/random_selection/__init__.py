@@ -23,7 +23,7 @@ class RandomSelector(FeatureSelector):
     n_features : int
         Number of features to select. Required at fit time. If larger than the
         number of available features, all features are selected.
-    random_state : int, optional
+    random_state : int, default=42
         Random seed for reproducibility. Selection is redrawn on every fit(),
         so a fixed seed is what makes resampling splits reproducible.
 
@@ -44,7 +44,7 @@ class RandomSelector(FeatureSelector):
     (100, 5)
     """
 
-    def __init__(self, n_features=None, random_state=None, check_input=True):
+    def __init__(self, n_features=None, random_state=42, check_input=True):
         self.n_features = n_features
         self.random_state = random_state
         self.check_input = check_input
@@ -70,7 +70,7 @@ class RandomSelector(FeatureSelector):
             raise ValueError(f"n_features must be >= 1, got {self.n_features}")
         self._validate(X, requires_y=False)
 
-        rng = np.random.default_rng(self.random_state)
+        rng = self._rng()
         n_select = min(self.n_features, self.n_features_in_)
         self.support_ = self._mask(rng.choice(self.n_features_in_, size=n_select, replace=False))
 

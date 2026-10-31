@@ -24,7 +24,7 @@ class MutualInfoSelector(FeatureSelector):
     n_neighbors : int, default=3
         Number of neighbors for MI estimation.
         Lower values = more sensitive to local structure.
-    random_state : int, optional
+    random_state : int, default=42
         Random seed for reproducibility.
 
     check_input : bool, default=True
@@ -45,7 +45,7 @@ class MutualInfoSelector(FeatureSelector):
     """
 
     def __init__(self, n_features=None, task='classification', n_neighbors=3,
-                 random_state=None, check_input=True):
+                 random_state=42, check_input=True):
         self.n_features = n_features
         self.task = task
         self.n_neighbors = n_neighbors
