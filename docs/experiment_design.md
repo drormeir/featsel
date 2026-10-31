@@ -319,8 +319,7 @@ These come from `SCOPE.md` 3a and are not negotiable.
 
 From `configs/experiment_classifiers.yaml`, run 2026-10-31: RandomSelector
 and ANOVAFSelector (F-test, before section 2f), five classifiers, the five
-subtype-vs-rest tasks, 12 splits at train fraction 0.5, fixed C. Figures in
-`notebooks/02_classifier_behaviour.ipynb`.
+subtype-vs-rest tasks, 12 splits at train fraction 0.5, fixed C.
 
 - ANOVA beats random by 0.20-0.24 macro-F1 at `k=10`, for every classifier.
 - The gap closes as `k` grows, and for LDA reverses at `k=1000`: a large
@@ -328,7 +327,15 @@ subtype-vs-rest tasks, 12 splits at train fraction 0.5, fixed C. Figures in
 - The gain differs by subtype: at `k=10` from 0.15 (LumA) to 0.33 (Her2).
 - Best: logistic regression, 0.869 at `k=1000`.
 
-The selector comparison has only a one-split smoke test so far.
+Rerun 2026-10-31 with MannWhitneySelector in place of ANOVA, 3 splits
+(`--n-splits 3`), 9 minutes on 2 workers. The figures in
+`notebooks/02_classifier_behaviour.ipynb` now show this run. The same
+pattern: Mann-Whitney beats random by 0.21-0.23 at `k=10`; LDA falls below
+random at `k=1000`; the gain at `k=10` runs from 0.14 (LumA) to 0.31
+(Her2); best is logistic regression, 0.877 at `k=1000`.
+
+The selector comparison is in `docs/comparison_scanb.md` and
+`docs/comparison_breastmnist.md`.
 
 ## 6. References
 
