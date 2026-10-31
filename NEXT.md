@@ -5,23 +5,33 @@ file, and nothing else claims attention while it is open.
 
 ## Open
 
-**Regenerate the classifier-behaviour figures on binary tasks.**
+**Write the Methodology chapter, `docs/report/04_methodology.md`.**
 
-The figures in `notebooks/02_classifier_behaviour.ipynb` show five-class
-PAM50 results. Since 2026-10-18 every task is binary, each subtype vs the
-rest (`SCOPE.md` 3a), so the figures are out of date.
+The methods are now settled and running: binary subtype-vs-rest tasks,
+stratified Monte Carlo splits shared by all tasks, selection inside the
+split, the random control, the selectors including both Higher Criticism
+variants and the U test, and the metrics. The chapter is missing; the
+outline (`docs/report/00_report_outline.md`) lists it.
 
-Done means: the notebook reads a results CSV from the current runner, its
-figures show the five subtype-vs-rest tasks, and the notebook is committed
-with its outputs. A small run is enough; the full grid is not part of this
-step.
+Done means: the chapter describes the selection methods, the evaluation
+protocol and the metrics as the code runs them today, cites the sources in
+`references/bibliography.md`, and is committed. Decisions already recorded
+in `docs/experiment_design.md` and `docs/report/03_data.md` are referenced,
+not repeated.
 
-Not part of this step: the full SCAN-B grid, the second dataset, report
-chapters. Park anything else in `docs/ideas.md`.
+Not part of this step: new runs, the full SCAN-B grid, other chapters. Park
+anything else in `docs/ideas.md`.
 
-First move: read the notebook and list which CSV and which columns it uses.
+First move: list what `docs/experiment_design.md` says that no longer
+matches the code, such as nested tuning, before writing.
 
 ## Done
+
+- 2026-10-31 - The classifier-behaviour figures on binary tasks.
+  `configs/experiment_classifiers.yaml` ran on the current runner: Random and
+  ANOVA, k = 10 to 1000, five classifiers, five subtype tasks, 12 splits,
+  4,200 executions in 26.5 minutes. The notebook shows the mean over tasks
+  and a new per-subtype gain figure. Committed in `3d73968`.
 
 - 2026-10-31 - The wrapper and Higher Criticism selectors. `RFESelector`
   wraps scikit-learn's `RFE`. `HigherCriticismSelector` has a 2004 variant
