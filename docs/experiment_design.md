@@ -210,8 +210,9 @@ value over plain scikit-learn has to be shown in numbers, not claimed.
 
 **Decision.** Run the same small grid two ways, on the same
 `StratifiedShuffleSplit` splits: plain scikit-learn (`GridSearchCV` or
-`cross_validate`), and the runner on 1 core and on 12. Check that the scores
-are identical. Report wall-clock time, with the speedup split by source:
+`cross_validate`), and the runner, each on one core and on every core the
+machine has. Check that the scores are identical. Report wall-clock time,
+with the speedup split by source:
 
 - parallelism over splits;
 - ranking features once per split and taking every `k` from that ranking,
@@ -221,9 +222,14 @@ are identical. Report wall-clock time, with the speedup split by source:
 A subset is enough, for example 5 splits, 2 selectors and 3 values of `k`,
 extrapolated to the full design.
 
+Built 2026-10-31: `scripts/benchmark_speed.py`, result in
+`docs/speed_benchmark.md`. On a 3000-gene subset of SCAN-B the runner is
+3.4 times faster on one core and 5.3 times faster on every core.
+
 **Why it matters.** Extrapolated from the 12-split run, the full design (300
 splits, 6 selectors, nested tuning) needs about 30-35 CPU-hours without linear
-SVM: a day and a half on one core, 3-4 hours on 12. RFE removing one feature
+SVM: a day and a half on one core, less in proportion to the cores
+available. RFE removing one feature
 per round would take about 2300 hours; removing 10% per round and ranking once
 takes about 3. That is the proposal's point that some techniques are
 impractical in this setting.

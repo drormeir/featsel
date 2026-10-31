@@ -34,8 +34,9 @@ Mann-Whitney U test, C is tuned inside each split.
    run), Lasso never selects a zero weight.
 3. [x] The same on BreastMNIST (task 4). `configs/comparison_breastmnist.yaml`,
    summary in `docs/comparison_breastmnist.md`.
-4. [ ] Measure the speedup (task 3), as in `docs/experiment_design.md` 2e:
+4. [x] Measure the speedup (task 3), as in `docs/experiment_design.md` 2e:
    the runner against plain scikit-learn on a small grid.
+   `scripts/benchmark_speed.py`, result in `docs/speed_benchmark.md`.
 5. [ ] Write each report chapter right after its step: Methodology after
    1, Results after 2-3, Implementation after 4. Methodology drafted in
    `docs/report/04_methodology.md`.
