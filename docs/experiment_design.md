@@ -5,8 +5,8 @@ defensible. `SCOPE.md` decides what may be built; this file decides how the
 experiment is run. Anything here that fails the four-task test in `SCOPE.md`
 belongs in `docs/ideas.md` instead.
 
-Written 2026-08-02. Revised 2026-10-31 to the protocol the runs use: five
-splits at one train fraction, the U test for every filter, tuned C.
+Written 2026-08-02. Revised 2026-10-31 to the protocol the runs use: 16 to
+20 splits at one train fraction, the U test for every filter, tuned C.
 
 ## 1. The claim the experiment supports
 
@@ -22,7 +22,7 @@ secondary to the ordering between methods and to the gap over the control.
 | Axis | Values | What it answers |
 |---|---|---|
 | Selector | RandomSelector (control), MannWhitneySelector, LassoSelector, TreeImportanceSelector, RFESelector, HigherCriticismSelector in its 2004 and 2008 variants. Filters score genes by the Mann-Whitney U test (section 2f). | The primary question. |
-| `k` | Selector comparison: 10, 50 and 250. Classifier study: 10 to 1000. Selectors that choose their own count (Higher Criticism) take no `k`. `k=50` is an anchor: PAM50 is a 50-gene signature. See section 2d. | How much of the gain survives as the budget grows. |
+| `k` | Selector comparison: 5 to 1000 on SCAN-B, 5 to 250 on BreastMNIST. Classifier study: 10 to 1000. Selectors that choose their own count (Higher Criticism) take no `k`. `k=50` is an anchor: PAM50 is a 50-gene signature. See section 2d. | How much of the gain survives as the budget grows. |
 | Classifier | Selector comparison: logistic_regression. Classifier study (`notebooks/02_classifier_behaviour.ipynb`): logistic_regression, linear_svm, random_forest, knn, lda_shrinkage. | How much external selection is worth to a model, given its own regularization. |
 | Task framing | One binary task per class, that class vs the rest: five for PAM50. No five-class task (decided 2026-10-18, `SCOPE.md` 3a). | Whether the best selector differs per subtype. |
 | Dataset | SCAN-B, and BreastMNIST ResNet-50 embeddings (task 4, decided 2026-10-17) | Whether conclusions generalize beyond genomics. |
@@ -85,7 +85,14 @@ with a standard deviation.
 100 splits at 0.5, 0.7 and 0.9, needs about four days for the full SCAN-B
 grid. The selector comparison uses 5 splits; the classifier study has 12.
 Consequence: a median and quartiles over 5 values are rough, so the report
-also gives the range, and Kuncheva's index rests on 10 pairs of splits. The
+also gives the range, and Kuncheva's index rests on 10 pairs of splits.
+
+**Revised again 2026-10-31: 16 splits on SCAN-B, 20 on BreastMNIST**
+(NEXT.md step 6). The first 5 are the same splits as before. 16 or more
+values support quartiles, so the tables give the median and quartiles
+again, not the range. A range over more splits only widens. Kuncheva's
+index rests on 120 or 190 pairs. For speed the data are float32 and the
+forest has 50 trees. The
 reasoning below, written for 100 splits, still explains why splits are drawn
 at random rather than as folds.
 

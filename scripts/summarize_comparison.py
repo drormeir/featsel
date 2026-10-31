@@ -50,8 +50,9 @@ def _own_count_gains(df):
 
     For every task and split, a method without k (Higher Criticism) is
     compared with each fixed-k method run at the k nearest its feature
-    count, if that k is within 1% of it. Returns rows of (selector,
-    against, split, gain), the gain averaged over tasks.
+    count, if that k is within 1% of it. A comparison is kept only if it
+    holds on every split, so no cell rests on a few lucky matches. Returns
+    rows of (selector, against, split, gain), the gain averaged over tasks.
     """
     fixed = df[df.k.notna()]
     ks = np.sort(fixed.k.unique())
@@ -65,7 +66,9 @@ def _own_count_gains(df):
                   'task': own.task, 'split': own.split,
                   'gain': own.macro_f1 - other.macro_f1} for _, other in same.iterrows()]
     gains = pd.DataFrame(rows, columns=['selector', 'against', 'task', 'split', 'gain'])
-    return gains.groupby(['selector', 'against', 'split'], as_index=False).gain.mean()
+    gains = gains.groupby(['selector', 'against', 'split'], as_index=False).gain.mean()
+    n_splits = gains.groupby(['selector', 'against']).split.transform('size')
+    return gains[n_splits == df.split.nunique()]
 
 
 def _ordered(df):

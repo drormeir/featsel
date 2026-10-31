@@ -31,7 +31,7 @@ malignant against benign or normal.
 | Random | control | Draws `k` features at random, a new draw per split | |
 | Mann-Whitney | filter | Smallest two-sided U-test p-value, one feature at a time | |
 | Lasso | embedded | Largest absolute coefficient of L1-penalized logistic regression | C = 1 |
-| Tree importance | embedded | Largest mean impurity decrease in a random forest | 200 trees |
+| Tree importance | embedded | Largest mean impurity decrease in a random forest | 50 trees |
 | RFE | wrapper | Recursive elimination with a linear SVM, squared hinge loss (Guyon et al. 2002). Each round removes 50% of the starting features, so two rounds reach `k` | C = 0.01, step 0.5 |
 | HC 2004 | filter, own count | Higher Criticism threshold on U-test p-values (Donoho and Jin 2004) | alpha0 = 0.1 |
 | HC 2008 | filter, own count | Higher Criticism thresholding with the exact null mean i/(N+1) (Donoho and Jin 2008, 2009) | alpha0 = 0.1 |
@@ -45,13 +45,15 @@ The first five methods take `k`. Both Higher Criticism variants choose their
 own count, so their results stand beside the fixed-`k` curves rather than
 in them.
 
-`k` is 10, 50 and 250. 50 matches the size of the PAM50 signature. 250 is
-below the training size on both datasets: selection here aims at fewer
+On SCAN-B `k` is 5, 10, 20, 50, 100, 250, 500 and 1000. On BreastMNIST it
+stops at 250. 50 matches the size of the PAM50 signature. The largest `k`
+is below the training size on each dataset: selection here aims at fewer
 features than samples.
 
 ## Evaluation protocol
 
-**Outer splits.** Five stratified Monte Carlo splits, each with half the
+**Outer splits.** Stratified Monte Carlo splits, 16 on SCAN-B and 20 on
+BreastMNIST, each with half the
 samples for training and half for testing. On SCAN-B a split is stratified
 on the five-class PAM50 label and shared by all five tasks, so every task is
 scored on the same patients. Random splits are used instead of k-fold
@@ -109,11 +111,11 @@ Each execution, one (task, split, method, `k`) cell, records:
 - **The number of features chosen**, which varies only for Higher Criticism.
 - **The chosen C.**
 
-Over the five splits each cell reports the median and the range. Five
-values are too few for quartiles.
+Over the splits each cell reports the median and the first and third
+quartiles.
 
 **Stability** is Kuncheva's (2007) consistency index between the feature sets
-of two splits, averaged over the ten pairs. It is 1 for identical sets and
+of two splits, averaged over all pairs: 120 on SCAN-B, 190 on BreastMNIST. It is 1 for identical sets and
 0 for the overlap expected by chance, so the random control scores near 0.
 
 ## Baseline
@@ -129,11 +131,15 @@ it: the random selector, the forest, the solvers and the inner splits.
 Re-running a config gives the same features and the same scores. Only the
 timings change.
 
+The data are held as 32-bit floats. That halves the memory, so more workers
+fit on one machine. SCAN-B's values are not measured to more than 7 digits.
+Sums of ranks in the U test are taken in 64 bits.
+
 ## Limits
 
-- Five splits give a rough spread. The range is reported, not a confidence
-  interval. It measures how much a number moves when the same patients are
-  re-split, not how it would move on new patients.
+- The quartiles over splits are not a confidence interval. They measure how
+  much a number moves when the same patients are re-split, not how it would
+  move on new patients.
 - The five SCAN-B tasks share patients, so they are not independent
   replicates.
 - The decision threshold is not tuned: 0.5 on the predicted probability.
@@ -142,3 +148,6 @@ timings change.
 - RFE's step of 0.5 is chosen for speed, to check the whole flow first. It
   is coarse: half the genes go after a single SVM fit. Step 0.1 took about
   35 s per fit on SCAN-B.
+- The forest has 50 trees, chosen for speed. On BreastMNIST, 200 trees gave
+  scores within 0.013 at every `k`, but more stable gene choices.
+- SCAN-B has 16 splits, not 20, to keep its run under half an hour.

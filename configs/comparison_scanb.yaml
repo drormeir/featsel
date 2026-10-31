@@ -1,10 +1,10 @@
-# The smallest complete selector comparison on SCAN-B (tasks 1-2, NEXT.md
-# step 2): every selector of smoke_scanb.yaml, k = 10, 50 and 250, logistic
-# regression with C tuned inside each split, the five PAM50 subtype-vs-rest
-# tasks, 5 splits. Protocol: docs/experiment_design.md.
-# Run with: python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 2 --max-worker-memory-gb 4.5
-# On 16 GB of RAM: 6 workers ran out of memory, and the U-test selectors need
-# more than 3 GB per worker.
+# The selector comparison on SCAN-B (tasks 1-2, NEXT.md steps 2 and 6):
+# every selector of smoke_scanb.yaml, k = 5 to 1000, logistic regression with
+# C tuned inside each split, the five PAM50 subtype-vs-rest tasks, 16 splits.
+# Protocol: docs/experiment_design.md.
+# Run with: python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 4 --max-worker-memory-gb 3
+# On 16 GB of RAM, with the data in float32: 4 workers fit under a 3 GB cap.
+# 16 splits and 50 trees, to keep the run under half an hour.
 
 dataset: "featsel_datasets.scanb_gse96058.featsel_view"
 target: "pam50 subtype"
@@ -12,7 +12,7 @@ target: "pam50 subtype"
 output: "../results/comparison_scanb.csv"
 
 seed: 42
-n_splits: 5
+n_splits: 16
 train_sizes: [0.5]
 preprocess: ["standard"]
 
@@ -30,19 +30,19 @@ tuning:
 
 selectors:
   - name: RandomSelector
-    k: [10, 50, 250, 2855]   # 2855: HC2008's count, to compare it at equal size
+    k: [5, 10, 20, 50, 100, 250, 500, 1000, 2855]   # 2855: HC2008's count, to compare it at equal size
   - name: MannWhitneySelector
-    k: [10, 50, 250, 2855]   # 2855: HC2008's count, to compare it at equal size
+    k: [5, 10, 20, 50, 100, 250, 500, 1000, 2855]   # 2855: HC2008's count, to compare it at equal size
   - name: LassoSelector
-    k: [10, 50, 250]
+    k: [5, 10, 20, 50, 100, 250, 500, 1000]
     params:
       C: 1.0
   - name: TreeImportanceSelector
-    k: [10, 50, 250]
+    k: [5, 10, 20, 50, 100, 250, 500, 1000]
     params:
-      n_estimators: 200
+      n_estimators: 50
   - name: RFESelector
-    k: [10, 50, 250]
+    k: [5, 10, 20, 50, 100, 250, 500, 1000]
     params:
       C: 0.01
       step: 0.5            # fraction of the genes removed per round; 0.5 is two rounds
