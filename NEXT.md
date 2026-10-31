@@ -45,6 +45,9 @@ Mann-Whitney U test, C is tuned inside each split.
    behaviour, rerun `notebooks/02_classifier_behaviour.ipynb` with
    MannWhitneySelector (its config now names it; the committed figures
    still show the F-test ANOVA run).
+   - [x] PAM50 gene recovery, 2 splits: `docs/pam50_recovery.md`.
+   - [x] HC behaviour: HC2008 stops at its search edge on both datasets,
+     because neither has rare signal (`docs/report/03_data.md`).
 
 Done 2026-10-31: MannWhitneySelector has its `demos/tutorial.ipynb`, like
 every other selector.
