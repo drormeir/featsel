@@ -18,9 +18,10 @@ import pandas as pd
 from featsel.analysis import kuncheva_index
 
 
-def _cell(values):
+def _cell(values, digits=3):
     """Median with the range over splits, as text."""
-    return f'{values.median():.3f} [{values.min():.3f}, {values.max():.3f}]'
+    return (f'{values.median():.{digits}f} '
+            f'[{values.min():.{digits}f}, {values.max():.{digits}f}]')
 
 
 def _k_label(k):
@@ -36,9 +37,9 @@ def _markdown(table):
     return '\n'.join(lines)
 
 
-def _table(frame, index, columns, values):
+def _table(frame, index, columns, values, digits=3):
     """A Markdown table of median [min, max] text cells."""
-    table = frame.groupby([index, columns], observed=True)[values].apply(_cell)
+    table = frame.groupby([index, columns], observed=True)[values].apply(_cell, digits=digits)
     return _markdown(table.unstack(columns).fillna(''))
 
 
@@ -68,12 +69,17 @@ def summarize(df, n_features):
                         + _table(df[df.k == k], 'selector', 'task', 'macro_f1'))
     sections.append('## Macro-F1 per task, own count (Higher Criticism)\n\n'
                     + _table(df[df.k == 'own'], 'selector', 'task', 'macro_f1'))
-    sections.append('## Genes chosen by Higher Criticism, per task\n\n'
-                    + _table(df[df.k == 'own'], 'selector', 'task', 'n_selected'))
-
     selection = df.drop_duplicates(['task', 'selector', 'k', 'split'])
+    sections.append('## Features selected, over tasks and splits\n\n'
+                    'Below `k` when a method keeps fewer: Lasso keeps only non-zero '
+                    'weights.\n\n'
+                    + _table(selection, 'selector', 'k', 'n_selected', digits=0))
+    sections.append('## Features chosen by Higher Criticism, per task\n\n'
+                    + _table(df[df.k == 'own'], 'selector', 'task', 'n_selected', digits=0))
     sections.append('## Selection time in seconds, per fit\n\n'
-                    + _table(selection, 'selector', 'k', 'selection_time_s'))
+                    'Rank-once methods (Mann-Whitney, Lasso, tree importance, RFE) fit '
+                    'once per task and split; that time is shown under every `k`.\n\n'
+                    + _table(selection, 'selector', 'k', 'selection_time_s', digits=1))
 
     stability = stability.assign(k=stability.k.map(_k_label))
     stability = stability.groupby(['selector', 'k']).consistency_index.mean().unstack('k')
