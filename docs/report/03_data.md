@@ -179,6 +179,18 @@ The report states both unmet assumptions as the reason HC behaves this way
 on SCAN-B. BreastMNIST is where to check whether HC behaves differently: what
 fraction of its 2,048 embedding features carry signal is not yet checked.
 
+**Rerun with the U test, 2026-10-31.** The selector comparison
+(`docs/comparison_scanb.md`, 5 splits) used the U test. Nothing changed:
+HC2008 kept 2,855 or 2,856 genes on every task and split, and HC2004 kept
+one gene, at most four.
+
+**BreastMNIST, checked 2026-10-31: its signal is not rare either.** On each
+of the 5 training halves, 24% to 28% of the 2,048 embedding features pass
+the U test at a 5% false discovery rate (Benjamini-Hochberg), and 36% to 39%
+have p < 0.05. HC searches only the smallest 10%. HC2008 again kept exactly
+the edge, 204 features, on every split (`docs/comparison_breastmnist.md`).
+So on both datasets the search limit, not the data, sets HC2008's count.
+
 Decided 2026-10-31: alpha0 stays 0.1, as in both papers. A selector must
 not assume what it is meant to find, and we treat the genes that define the
 label as unknown. Raising alpha0 because we know SCAN-B's signal is
