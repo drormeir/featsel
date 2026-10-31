@@ -16,8 +16,9 @@ Each cell is the median over the 5 splits, with the range in brackets.
 
 ## What it shows
 
-- Every selector beats the random control at every k. At k = 10 the gain is
-  0.16 (RFE) to 0.28 (Lasso) macro-F1; at k = 250 it is 0.06 to 0.07.
+- In the median, every selector beats the random control at every k. At
+  k = 10 the gain is 0.16 (RFE) to 0.28 (Lasso) macro-F1; at k = 250 it is
+  0.06 to 0.07.
 - Lasso and tree importance lead at k = 10 (0.71 and 0.72). Lasso leads at
   k = 250 (0.82), with only 162 to 182 non-zero weights.
 - RFE is weakest at k = 10 (0.63) but catches up by k = 250 (0.80). Unlike
