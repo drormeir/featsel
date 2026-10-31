@@ -68,32 +68,52 @@ def _own_count_gains(df):
     return gains.groupby(['selector', 'against', 'split'], as_index=False).gain.mean()
 
 
-def summarize(df, n_features):
-    stability = kuncheva_index(df, n_features)
-    own_gains = _own_count_gains(df)
+def _ordered(df):
+    """k as text labels ('own' last) and selectors in config order, both ordered."""
     selectors = list(dict.fromkeys(df.selector))
     labels = [*sorted({_k_label(k) for k in df.k} - {'own'}, key=int), 'own']
-    df = df.assign(k=pd.Categorical(df.k.map(_k_label), labels, ordered=True),
-                   selector=pd.Categorical(df.selector, selectors, ordered=True))
-    sections = []
+    return df.assign(k=pd.Categorical(df.k.map(_k_label), labels, ordered=True),
+                     selector=pd.Categorical(df.selector, selectors, ordered=True)), labels
 
-    over_tasks = df.groupby(['selector', 'k', 'split'], observed=True).macro_f1.mean()
-    over_tasks = over_tasks.reset_index()
-    sections.append(f'## Macro-F1, mean over the {df.task.nunique()} tasks\n\n'
-                    + _table(over_tasks, 'selector', 'k', 'macro_f1'))
 
-    random = over_tasks[over_tasks.selector == 'RandomSelector'].set_index(['k', 'split'])
-    gain = over_tasks[over_tasks.k != 'own'].join(random.macro_f1.rename('random'),
-                                                  on=['k', 'split'])
+def _over_tasks(df):
+    """Macro-F1 per (selector, k, split), the mean over tasks."""
+    over = _ordered(df)[0].groupby(['selector', 'k', 'split'], observed=True).macro_f1.mean()
+    return over.reset_index()
+
+
+def macro_f1_table(df):
+    """Macro-F1 by selector and k, mean over tasks, median [range] over splits."""
+    return _table(_over_tasks(df), 'selector', 'k', 'macro_f1')
+
+
+def gain_table(df):
+    """Macro-F1 above RandomSelector at the same k and split."""
+    over = _over_tasks(df)
+    random = over[over.selector == 'RandomSelector'].set_index(['k', 'split'])
+    gain = over[over.k != 'own'].join(random.macro_f1.rename('random'), on=['k', 'split'])
     gain['gain'] = gain.macro_f1 - gain.random
-    sections.append('## Gain in macro-F1 over RandomSelector, same k and split\n\n'
-                    + _table(gain[gain.selector != 'RandomSelector'],
-                             'selector', 'k', 'gain'))
-    if len(own_gains):
+    return _table(gain[gain.selector != 'RandomSelector'], 'selector', 'k', 'gain')
+
+
+def own_count_table(df):
+    """Own-count methods against fixed-k methods at their size; '' if none match."""
+    gains = _own_count_gains(df)
+    return _table(gains, 'selector', 'against', 'gain') if len(gains) else ''
+
+
+def summarize(df, n_features):
+    stability = kuncheva_index(df, n_features)
+    own_count = own_count_table(df)
+    sections = [f'## Macro-F1, mean over the {df.task.nunique()} tasks\n\n' + macro_f1_table(df),
+                '## Gain in macro-F1 over RandomSelector, same k and split\n\n' + gain_table(df)]
+    if own_count:
         sections.append('## Own-count methods against fixed-k methods at the same size\n\n'
                         'Macro-F1 of the own-count method minus that of the fixed-k method '
                         'at the k nearest its feature count, same task and split.\n\n'
-                        + _table(own_gains, 'selector', 'against', 'gain'))
+                        + own_count)
+    df, labels = _ordered(df)
+    selectors = list(df.selector.cat.categories)
 
     for k in labels[:-1]:
         sections.append(f'## Macro-F1 per task, k = {k}\n\n'
