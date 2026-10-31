@@ -96,11 +96,14 @@ def build_tasks(y):
     return [(f'ovr_{label}', np.where(y == label, str(label), 'rest')) for label in labels]
 
 
-# Selectors whose fit does not depend on n_features and that keep the top
-# n_features of feature_importances_. The runner fits them once per split and
-# cuts the ranking at each k: the same genes, one fit instead of one per k.
-# Their selection_time_s and selection_peak_mb are that one fit's, on every k.
-RANK_ONCE = {'LassoSelector', 'MannWhitneySelector', 'TreeImportanceSelector'}
+# Selectors whose top k of feature_importances_, fit at the smallest k, is
+# their selection at every larger k. Most do not use n_features in fit at
+# all; RFESelector eliminates down to it, and its ranking covers every larger
+# k. The runner fits them once per split and cuts the ranking at each k: the
+# same genes, one fit instead of one per k. Their selection_time_s and
+# selection_peak_mb are that one fit's, on every k.
+RANK_ONCE = {'LassoSelector', 'MannWhitneySelector', 'RFESelector',
+             'TreeImportanceSelector'}
 
 
 class WorkerDiedError(RuntimeError):
@@ -253,7 +256,7 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
             continue
 
         if ranking is None:
-            selector = _make_selector(sel_spec, max(k_values) if rank_once else k,
+            selector = _make_selector(sel_spec, min(k_values) if rank_once else k,
                                       split_seed)
             tracemalloc.start()
             start = time.perf_counter()

@@ -32,7 +32,7 @@ malignant against benign or normal.
 | Mann-Whitney | filter | Smallest two-sided U-test p-value, one feature at a time | |
 | Lasso | embedded | Largest absolute coefficient of L1-penalized logistic regression | C = 1 |
 | Tree importance | embedded | Largest mean impurity decrease in a random forest | 200 trees |
-| RFE | wrapper | Recursive elimination with a linear SVM (Guyon et al. 2002). Each round removes 50% of the starting features, so two rounds reach `k` | C = 0.01, step 0.5 |
+| RFE | wrapper | Recursive elimination with a linear hinge-loss SVM, trained on the samples' Gram matrix (Guyon et al. 2002). Each round removes 50% of the starting features, so two rounds reach `k` | C = 0.01, step 0.5 |
 | HC 2004 | filter, own count | Higher Criticism threshold on U-test p-values (Donoho and Jin 2004) | alpha0 = 0.1 |
 | HC 2008 | filter, own count | Higher Criticism thresholding with the exact null mean i/(N+1) (Donoho and Jin 2008) | alpha0 = 0.1 |
 
@@ -73,7 +73,10 @@ rates on microarray data look near perfect (Ambroise and McLachlan 2002).
 **Ranking once per split.** Mann-Whitney, Lasso and tree importance rank all
 features in one fit, and that fit does not depend on `k`. Their top-10,
 top-50 and top-250 are cut from one ranking per split. The cut equals a
-separate fit at each `k`. RFE stops at `k`, so it is fit once per `k`.
+separate fit at each `k`. RFE is fit once, down to the smallest `k`. With a
+fixed step, the rounds for a larger `k` are the same up to its last round.
+So ranking the features by when they were removed, and within a round by
+their weight, gives RFE's selection at every larger `k`.
 
 ## The classifier and nested tuning
 

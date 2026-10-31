@@ -46,7 +46,7 @@ SELECTORS = [
     PercentileSelector(percentile=50),
     RandomSelector(n_features=10, random_state=0),
     RFECVSelector(cv=3, random_state=0),
-    RFESelector(n_features=10, random_state=0),
+    RFESelector(n_features=10),
     SequentialSelector(n_features=3, cv=3),
     TreeImportanceSelector(n_features=10, n_estimators=20, random_state=0),
     VarianceThreshold(threshold=0.0),
