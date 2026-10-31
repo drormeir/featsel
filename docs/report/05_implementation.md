@@ -49,10 +49,10 @@ SCAN-B, Basal vs rest, 3000 random genes of 28552, 2976 patients. 5 splits at tr
 
 | run | seconds | speed-up over scikit-learn on 1 core |
 |---|---|---|
-| scikit-learn, 1 core | 32.5 | 1.0 |
-| runner, 1 core | 9.3 | 3.5 |
-| scikit-learn, 12 cores | 23.1 | 1.4 |
-| runner, 12 cores | 6.2 | 5.2 |
+| scikit-learn, 1 core | 33.6 | 1.0 |
+| runner, 1 core | 10.4 | 3.2 |
+| scikit-learn, 12 cores | 22.3 | 1.5 |
+| runner, 12 cores | 6.3 | 5.3 |
 <!-- end generated -->
 
 On one core the runner saves the repeated preparation and fits. On every
@@ -75,6 +75,11 @@ operating system stopped the run; it resumed with fewer workers. With a cap
 of 3 GB the U-test selectors were skipped, and a second resume at a higher
 cap filled them in.
 
+- **32-bit data.** The runner holds the data as 32-bit floats. That cut the
+  U-test selectors' peak memory enough for 4 workers to fit under a 3 GB
+  cap, where 2 fit before. The U test sums its ranks in 64 bits: in 32 bits
+  the tie correction of near-constant genes went wrong.
+
 ## Nested tuning
 
 A model entry with a `grid` is tuned inside each split
@@ -93,7 +98,7 @@ row.
   `pip install -r requirements.txt`.
 - **Re-running.** From the repository root:
 
-      python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 2 --max-worker-memory-gb 4.5
+      python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 4 --max-worker-memory-gb 3
       python -m featsel.run --config configs/comparison_breastmnist.yaml --n-jobs -1
       python scripts/summarize_comparison.py results/comparison_scanb.csv --n-features 28552 --out <file>
       python scripts/benchmark_speed.py --n-genes 3000 --out <file>

@@ -5,8 +5,10 @@ that chapter's generated tables. This chapter does not repeat them.
 
 ## Selection matters most when the budget is small
 
-On both datasets the gain over random selection is largest at k = 10. It
-shrinks as `k` grows. By k = 250 it is a few hundredths of macro-F1.
+On both datasets the gain over random selection is largest at the smallest
+budgets, k = 5 to 20. It shrinks as `k` grows. By k = 250 it is a few
+hundredths of macro-F1, and by k = 1000 on SCAN-B only the best methods
+keep any gain.
 
 The reason is that the signal is spread over many features. On SCAN-B the
 subtype labels are computed from 50 genes. But each of those genes moves
@@ -23,9 +25,11 @@ the methods differ mainly at small `k`.
 ## Which methods win where
 
 **Mann-Whitney, Lasso and tree importance form the top group** on both
-datasets. Their ranges overlap at most `k`. Five splits cannot rank them.
-Tree importance is the only one of the three with a range wholly above
-another's: above Lasso at k = 250 on SCAN-B.
+datasets. With 16 splits on SCAN-B the group can be ranked at most `k`:
+tree importance leads up to k = 250, and its quartiles clear the other two
+at most of those `k`. On BreastMNIST, with one task, the quartiles of
+Lasso and tree importance overlap at every `k`, so the order there is not
+settled.
 
 **The simplest method holds its own.** Mann-Whitney scores each feature
 alone and ignores redundancy. It still sits in the top group. It is also
@@ -37,19 +41,23 @@ classifiers did as well as complex ones on tumour gene expression.
 choose quite different features on each split, yet score close to
 Mann-Whitney. Many features are interchangeable. So a selected list should
 not be read as *the* genes of a subtype. Stability has to be reported next
-to accuracy, as Kuncheva's index is here.
+to accuracy, as Kuncheva's index is here. Tree importance is the clearest
+case: on SCAN-B it scores best and is the least stable. With only 50 trees
+its importances are noisy, so its top genes change from split to split.
 
-**RFE is the weakest on SCAN-B.** At small `k` it fails on LumA and Normal
-and is no better than random at k = 250. On BreastMNIST it is weakest at
-k = 10 but catches up. One likely cause is the step of 0.5: a single SVM fit
+**RFE is the weakest on SCAN-B.** At small `k` it fails on LumA, LumB and
+Normal. From k = 500 it does worse than random. On BreastMNIST it is
+weakest at small `k` but catches up. One likely cause is the step of 0.5: a single SVM fit
 on all <!-- fact: scanb_loaded_genes -->28,552<!-- /fact --> genes removes half of them at once. That fit uses C = 0.01,
 fixed. On BreastMNIST there are far fewer features, so each removal matters
 less. But an earlier run with step 0.1 gave about the same scores
 (chapter 6), so the step is not the whole cause.
 
-**Lasso keeps fewer than `k` features at k = 250** on some tasks. Its
-penalty sets most weights to zero. Its score at that `k` is therefore the
-score of a smaller set.
+**Lasso stops improving at k = 20 on SCAN-B.** At C = 1 its penalty leaves
+only a few hundred genes with a non-zero weight. Larger `k` therefore adds
+nothing, and at k = 1000 random selection of all 1000 genes beats it. A
+weaker penalty would rank more genes. The penalty is fixed here, so Lasso's
+curve shows that setting's limit, not the method's.
 
 ## Higher Criticism
 
@@ -85,11 +93,12 @@ above: a selected list is one of many that predict equally well.
 ## The second dataset
 
 The pattern on BreastMNIST is the same as on SCAN-B. Every selector beats
-random at every `k` in the median, the gain is largest at k = 10, and HC2008
-again stops at its edge. The ranking within the top group differs: Lasso
-leads at k = 250 on BreastMNIST. With one task and five splits, the ranges
-there are wide. The main conclusions carry over from gene expression to
-image embeddings. The fine ranking does not.
+random at every `k` in the median, the gain is largest at small `k`, and
+HC2008 again stops at its edge. The ranking within the top group differs.
+On SCAN-B tree importance leads; on BreastMNIST Lasso and tree importance
+share the lead, and Lasso does not stall, because a few hundred non-zero
+weights are most of what `k` asks for there. The main conclusions carry
+over from gene expression to image embeddings. The fine ranking does not.
 
 ## Speed
 
@@ -106,9 +115,9 @@ measured.
 
 ## Threats to validity
 
-- **Few splits.** Five splits give a rough spread. The range is not a
-  confidence interval. It measures re-splitting the same patients, not new
-  patients.
+- **Re-splits, not new patients.** The quartiles over 16 or 20 splits are
+  not a confidence interval. They measure re-splitting the same patients,
+  not new patients.
 - **Shared patients.** The five SCAN-B tasks use the same patients and the
   same splits. They are not independent replicates.
 - **Computed labels.** PAM50 subtypes are computed from gene expression, not
@@ -117,18 +126,21 @@ measured.
 - **One classifier.** All scores use L2-penalized logistic regression. A
   method's rank may change with another classifier.
 - **Fixed selector settings.** Lasso, RFE and the forest use fixed settings.
-  Only the classifier's C is tuned. RFE's coarse step is chosen for speed.
+  Only the classifier's C is tuned. RFE's coarse step and the forest's 50
+  trees are chosen for speed. Lasso's fixed penalty caps how many genes it
+  ranks.
 - **Mild tuning bias.** The selector is fit on the whole training half, so
   the inner validation parts that choose C helped choose the features. The
   outer test half is untouched.
-- **Timings.** On SCAN-B the rows were computed in several passes with
-  different numbers of workers. Selection times there are not comparable
-  across methods. The speed benchmark used a subset of the genes.
+- **Timings.** Selection times are per fit on one of 4 workers sharing the
+  machine. The speed benchmark used a subset of the genes.
+- **32-bit data.** The data are held as 32-bit floats. In a one-split check
+  against 64 bits, this moved single scores slightly for Lasso, RFE and the
+  forest, whose solvers are sensitive to rounding.
 
 ## Limitations
 
-The study compares methods at three values of `k` and five splits. More
-splits would narrow the ranges. More values of `k` would show where each
-method's gain over random selection ends. Both are planned as the next step
-of depth. The full grid on SCAN-B, with every selector and classifier, was
-not run: it takes about four days.
+The study uses one classifier, one train fraction and fixed selector
+settings. Its splits re-use one cohort per dataset. The full grid on
+SCAN-B, with every selector and classifier, was not run: it takes about
+four days.

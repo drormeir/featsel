@@ -173,7 +173,7 @@ does not meet.
 - Independent genes: both papers derive the null behaviour of the sorted
   p-values, including the mean i/(N+1), from independent p-values.
   Correlated genes give correlated p-values.
-- HC2004 kept <!-- fact: scanb_hc2004_min -->1<!-- /fact --> to <!-- fact: scanb_hc2004_max -->4<!-- /fact --> genes. Its 1/sqrt(p) term lets the smallest
+- HC2004 kept <!-- fact: scanb_hc2004_min -->1<!-- /fact --> to <!-- fact: scanb_hc2004_max -->6<!-- /fact --> genes. Its 1/sqrt(p) term lets the smallest
   p-values win alone.
 
 The report states both unmet assumptions as the reason HC behaves this way
@@ -181,7 +181,7 @@ on SCAN-B. BreastMNIST is where to check whether HC behaves differently: what
 fraction of its 2,048 embedding features carry signal is not yet checked.
 
 **Rerun with the U test, 2026-10-31.** The selector comparison
-(`docs/comparison_scanb.md`, 5 splits) used the U test, and gave the counts
+(`docs/comparison_scanb.md`, 16 splits) used the U test, and gave the counts
 above: the change of test changed nothing.
 
 **BreastMNIST, checked 2026-10-31: its signal is not rare either.** On each

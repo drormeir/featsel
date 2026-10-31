@@ -24,9 +24,13 @@ image embeddings.
 - Feature selection pays most when few features are allowed. As the budget
   grows, random features catch up, because the signal is spread over many
   correlated features.
-- Mann-Whitney, Lasso and tree importance form a top group. Five splits
-  cannot rank them. The simple U-test filter is the most stable of them.
-- RFE with a coarse step is the weakest selector on SCAN-B.
+- Mann-Whitney, Lasso and tree importance form a top group. On SCAN-B tree
+  importance leads up to k = 250 but is the least stable. The simple U-test
+  filter is the most stable and catches up at large `k`.
+- Lasso at a fixed penalty ranks only a few hundred genes, so its curve
+  stops rising early.
+- RFE with a coarse step is the weakest selector on SCAN-B, and worse than
+  random at large `k`.
 - Higher Criticism thresholding reduced to a top-k filter on both datasets.
   Its assumptions, rare signal and independent features, do not hold there.
 - Good prediction does not need the genes that define the label. Many
@@ -36,10 +40,8 @@ image embeddings.
 
 ## Future work
 
-- More splits, to narrow the ranges enough to rank the top group.
-- More values of `k`, to find where each method's gain over random
-  selection ends.
-- A finer RFE step, and tuned selector settings.
+- A finer RFE step, more trees, and tuned selector settings, including
+  Lasso's penalty.
 - Other classifiers, to check that the ranking does not depend on logistic
   regression.
 - A dataset with rare, weak signal, where Higher Criticism is expected to

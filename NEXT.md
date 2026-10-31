@@ -41,9 +41,13 @@ Mann-Whitney U test, C is tuned inside each split.
    1, Results after 2-3, Implementation after 4. Drafted in
    `docs/report/04_methodology.md`, `05_implementation.md` and
    `06_results.md`.
-6. [ ] Only then, depth.
-   - [ ] More splits in the selector comparisons (now 5).
-   - [ ] More k in the selector comparisons (now 10, 50, 250).
+6. [x] Only then, depth.
+   - [x] More splits in the selector comparisons: 16 on SCAN-B, 20 on
+     BreastMNIST. Tables now give quartiles, not the range.
+   - [x] More k in the selector comparisons: 5 to 1000 on SCAN-B, 5 to 250
+     on BreastMNIST.
+   - For speed: data in float32 (the U test now sums ranks in float64), 50
+     trees, 4 workers. SCAN-B ran in 29 minutes.
 7. [x] The report chapters not yet written (`docs/report/00_report_outline.md`):
    02 Related Work, 07 Discussion, 08 Conclusion, 09 References. Numbers
    only through generated blocks and fact markers
@@ -52,7 +56,7 @@ Mann-Whitney U test, C is tuned inside each split.
      jmlr.org.
    - [x] 7b. `09_references.md`: every work cited in chapters 1-8. The
      phase-diagram paper is Donoho and Jin (2009), not 2008. Kuncheva
-     (2007) not yet checked against an index.
+     (2007) checked against citing papers and ResearchGate.
    - [x] 7c. `07_discussion.md`. In words, no result numbers: facts cover
      only the data.
    - [x] 7d. `08_conclusion.md`.

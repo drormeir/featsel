@@ -108,7 +108,7 @@ def main():
     X, y = load_xy(target='pam50 subtype')
     n_total = X.shape[1]
     genes = np.sort(np.random.default_rng(SEED).choice(n_total, args.n_genes, replace=False))
-    X = X.values[:, genes]
+    X = X.values[:, genes].astype(np.float32)  # the runner's dtype, on both sides
     y = np.where(y.values == TASK, TASK, 'rest')
     cores = os.cpu_count()
 

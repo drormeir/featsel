@@ -49,10 +49,10 @@ bm_bh_share_max,28%
 bm_p05_share_min,36%
 bm_p05_share_max,39%
 scanb_hc2004_min,1
-scanb_hc2004_max,4
+scanb_hc2004_max,6
 scanb_hc2008_min,"2,855"
 scanb_hc2008_max,"2,856"
 breastmnist_hc2004_min,1
-breastmnist_hc2004_max,2
+breastmnist_hc2004_max,6
 breastmnist_hc2008_min,204
 breastmnist_hc2008_max,204

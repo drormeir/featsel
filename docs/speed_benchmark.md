@@ -18,20 +18,23 @@ SCAN-B, Basal vs rest, 3000 random genes of 28552, 2976 patients. 5 splits at tr
 
 | run | seconds | speed-up over scikit-learn on 1 core |
 |---|---|---|
-| scikit-learn, 1 core | 32.5 | 1.0 |
-| runner, 1 core | 9.3 | 3.5 |
-| scikit-learn, 12 cores | 23.1 | 1.4 |
-| runner, 12 cores | 6.2 | 5.2 |
+| scikit-learn, 1 core | 33.6 | 1.0 |
+| runner, 1 core | 10.4 | 3.2 |
+| scikit-learn, 12 cores | 22.3 | 1.5 |
+| runner, 12 cores | 6.3 | 5.3 |
+
+Rerun 2026-10-31 with the data in float32 on both sides, as the runner now
+holds it.
 
 ## What it shows
 
-- **On one core the runner is 3.5 times faster.** scikit-learn refits
+- **On one core the runner is 3.2 times faster.** scikit-learn refits
   imputation, scaling and the selector for every `k`. The runner prepares
   each split once and fits each selector once per split for all three `k`.
 - **Parallel work adds little at this size.** scikit-learn spreads only the
-  5 splits of one `cross_validate` call, 1.4 times faster. The runner has
+  5 splits of one `cross_validate` call, 1.5 times faster. The runner has
   10 jobs (2 selectors times 5 splits), and starting the worker processes
-  takes about 4.5 of its 6.2 seconds. 1.5 times faster than itself on one
+  takes about 4.5 of its 6.3 seconds. 1.7 times faster than itself on one
   core.
 - The scores are identical, so the speed comes from doing less work, not
   different work.
