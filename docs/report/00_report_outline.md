@@ -21,5 +21,9 @@ Rules:
 - Write the chapter as soon as the matching code produces output. A chapter
   written from memory weeks later is slower and worse.
 - Every number in the report comes from a committed results file, never
-  retyped by hand.
+  retyped by hand. A table is a block marked `<!-- generated: <name> -->`;
+  a single number is a marker `<!-- fact: <name> -->...<!-- /fact -->`.
+  `python scripts/report_tables.py docs/report/*.md` refills both, from
+  `results/` (facts: `scripts/data_facts.py`). Citations and design
+  settings, such as `k`, are typed.
 - Reproducibility statement in chapter 5: seeds, environment, how to re-run.

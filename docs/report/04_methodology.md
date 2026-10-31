@@ -99,8 +99,8 @@ so the reported scores stay honest.
 Each execution, one (task, split, method, `k`) cell, records:
 
 - **macro-F1**, the headline. Each one-vs-rest task is imbalanced: Normal
-  against the rest is 200 against 2,776 patients, so always predicting
-  "rest" scores 0.93 accuracy.
+  against the rest is <!-- fact: scanb_normal_patients -->200<!-- /fact --> against <!-- fact: scanb_rest_of_normal -->2,776<!-- /fact --> patients, so always
+  predicting "rest" scores <!-- fact: scanb_all_rest_accuracy -->0.93<!-- /fact --> accuracy.
 - **Balanced accuracy, MCC and G-mean** as imbalance-robust checks. G-mean is
   zero if either class is never predicted.
 - **Accuracy**, for comparison with other work.
