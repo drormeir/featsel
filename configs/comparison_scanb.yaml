@@ -43,6 +43,7 @@ selectors:
     k: [10, 50, 250]
     params:
       C: 0.01
+      step: 0.5            # fraction of the genes removed per round; 0.5 is two rounds
   - name: HigherCriticismSelector
     label: HC2004
     params:

@@ -32,7 +32,7 @@ malignant against benign or normal.
 | Mann-Whitney | filter | Smallest two-sided U-test p-value, one feature at a time | |
 | Lasso | embedded | Largest absolute coefficient of L1-penalized logistic regression | C = 1 |
 | Tree importance | embedded | Largest mean impurity decrease in a random forest | 200 trees |
-| RFE | wrapper | Recursive elimination with a linear SVM, 10% of the features per round (Guyon et al. 2002) | C = 0.01 |
+| RFE | wrapper | Recursive elimination with a linear SVM (Guyon et al. 2002). Each round removes 50% of the starting features, so two rounds reach `k` | C = 0.01, step 0.5 |
 | HC 2004 | filter, own count | Higher Criticism threshold on U-test p-values (Donoho and Jin 2004) | alpha0 = 0.1 |
 | HC 2008 | filter, own count | Higher Criticism thresholding with the exact null mean i/(N+1) (Donoho and Jin 2008) | alpha0 = 0.1 |
 
@@ -136,3 +136,6 @@ timings change.
 - The decision threshold is not tuned: 0.5 on the predicted probability.
 - Lasso and RFE use a fixed C inside the selector. Only the classifier's C is
   tuned.
+- RFE's step of 0.5 is chosen for speed, to check the whole flow first. It
+  is coarse: half the genes go after a single SVM fit. Step 0.1 took about
+  35 s per fit on SCAN-B.
