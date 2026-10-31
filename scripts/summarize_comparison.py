@@ -1,9 +1,9 @@
 """
 Summarize a selector-comparison CSV from the runner as Markdown tables.
 
-Each table cell is the median over splits, with the range over splits in
-brackets: 5 splits are too few for quartiles (docs/experiment_design.md 2a).
-Scores over tasks are the mean of the tasks within each split.
+Each table cell is the median over splits, with the first and third
+quartiles in brackets (docs/experiment_design.md 2a). Scores over tasks are
+the mean of the tasks within each split.
 
 Usage:
     python scripts/summarize_comparison.py results/comparison_scanb.csv \
@@ -20,9 +20,9 @@ from featsel.analysis import kuncheva_index
 
 
 def _cell(values, digits=3):
-    """Median with the range over splits, as text."""
-    return (f'{values.median():.{digits}f} '
-            f'[{values.min():.{digits}f}, {values.max():.{digits}f}]')
+    """Median with the first and third quartiles over splits, as text."""
+    q1, median, q3 = values.quantile([0.25, 0.5, 0.75])
+    return f'{median:.{digits}f} [{q1:.{digits}f}, {q3:.{digits}f}]'
 
 
 def _k_label(k):

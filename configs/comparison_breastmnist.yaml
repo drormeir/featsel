@@ -10,7 +10,7 @@ target: "label"
 output: "../results/comparison_breastmnist.csv"
 
 seed: 42
-n_splits: 5
+n_splits: 20
 train_sizes: [0.5]
 preprocess: ["standard"]
 
@@ -28,19 +28,19 @@ tuning:
 
 selectors:
   - name: RandomSelector
-    k: [10, 50, 204, 250]   # 204: HC2008's count, to compare it at equal size
+    k: [5, 10, 20, 50, 100, 204, 250]   # 204: HC2008's count, to compare it at equal size
   - name: MannWhitneySelector
-    k: [10, 50, 204, 250]   # 204: HC2008's count, to compare it at equal size
+    k: [5, 10, 20, 50, 100, 204, 250]   # 204: HC2008's count, to compare it at equal size
   - name: LassoSelector
-    k: [10, 50, 250]
+    k: [5, 10, 20, 50, 100, 250]
     params:
       C: 1.0
   - name: TreeImportanceSelector
-    k: [10, 50, 250]
+    k: [5, 10, 20, 50, 100, 250]
     params:
       n_estimators: 200
   - name: RFESelector
-    k: [10, 50, 250]
+    k: [5, 10, 20, 50, 100, 250]
     params:
       C: 0.01
       step: 0.5            # fraction of the features removed per round; 0.5 is two rounds
