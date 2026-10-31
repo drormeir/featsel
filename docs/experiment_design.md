@@ -126,8 +126,12 @@ count becomes the bottleneck; if so, the subsample size is reported.
 
 ## 2b. Tuning inside the split: nested Monte Carlo
 
-Decided 2026-09-26. Confirmed 2026-10-31; being built. Until it is, the
-runner uses the fixed C given in the config.
+Decided 2026-09-26. Built 2026-10-31: a model entry with a `grid` is tuned
+this way (`configs/README.md`). The selector comparison tunes C for logistic
+regression and linear SVM over 0.01, 0.1, 1, 10 and 100, on 3 inner splits
+at train fraction 0.5, by ROC-AUC. AUC does not depend on the decision
+threshold, so it scores C more smoothly than macro-F1 on small validation
+parts. It does not tune the threshold, which macro-F1 depends on.
 
 **Problem.** Regularized models have a strength parameter, such as C. Choosing
 it by test scores makes the test scores optimistic.

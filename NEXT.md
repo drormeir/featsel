@@ -20,10 +20,11 @@ Mann-Whitney U test, C is tuned inside each split.
      Committed in `511f5aa`.
    - [x] 1b. Add `MannWhitneySelector` (top-k by U test) and use it in place
      of ANOVA in every experiment config. Committed in `8a6abfc`.
-   - [ ] 1c. Build nested tuning of C (`docs/experiment_design.md` 2b):
+   - [x] 1c. Build nested tuning of C (`docs/experiment_design.md` 2b):
      inside each outer training half, inner stratified splits choose C for
      logistic regression and linear SVM from a small fixed grid; refit on the
      whole training half; score once on the test half. Then mark 2b as built.
+     A model's `grid` in the config; 3 inner splits at 0.5, by ROC-AUC.
 2. [ ] Smallest complete selector comparison on SCAN-B (tasks 1-2): all
    selector entries of `configs/smoke_scanb.yaml`, k = 10, 50, 250,
    logistic regression with tuned C, the five subtype tasks, 5 splits. Write

@@ -7,6 +7,7 @@ validation half into selection, and a resume that neither duplicates nor drops
 work.
 """
 
+import json
 import resource
 from pathlib import Path
 
@@ -16,12 +17,16 @@ import pytest
 import yaml
 from joblib.externals.loky.process_executor import TerminatedWorkerError
 from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
+from sklearn.preprocessing import StandardScaler
 
 import featsel.run as run_module
 from featsel.analysis import kuncheva_index, summarize
 from featsel.metrics import KEY_COLUMNS, g_mean
 from featsel.run import build_tasks, load_config, load_dataset, run, run_config
-from featsel.selectors import FeatureSelector
+from featsel.selectors import ANOVAFSelector, FeatureSelector
 
 
 @pytest.fixture
@@ -184,6 +189,51 @@ def test_run_takes_arrays_in_memory(experiment):
 
     assert len(df) == 1 * 2 * 1 * 1 * 3 * 2  # one binary task, default train size, preprocess
     assert set(df.train_size) == {0.5}
+
+
+GRID = {'C': [0.01, 1.0, 100.0]}
+
+
+class TestTuning:
+    """Tests for choosing a model's parameters on inner splits of the training half."""
+
+    @pytest.fixture
+    def tuned(self, experiment):
+        X, y = make_classification(n_samples=120, n_features=50, n_informative=5,
+                                   n_classes=2, random_state=0)
+        config = {
+            'output': experiment['output'],
+            'n_splits': 2,
+            'selectors': [{'name': 'ANOVAFSelector', 'k': [10]}],
+            'models': [{'name': 'logistic_regression', 'grid': GRID},
+                       {'name': 'knn'}],
+        }
+        return X, y, pd.read_csv(run(X, y, config))
+
+    def test_tuned_values_are_recorded(self, tuned):
+        """Test that a tuned model records its choice and an untuned one records none."""
+        _, _, df = tuned
+        chosen = df.loc[df.model == 'logistic_regression', 'tuned_params'].map(json.loads)
+
+        assert all(c['C'] in GRID['C'] for c in chosen)
+        assert set(df.loc[df.model == 'knn', 'tuned_params']) == {'{}'}
+
+    def test_choice_uses_the_training_half_only(self, tuned):
+        """Test that the choice and score match tuning on the training half by hand."""
+        X, y, df = tuned
+        train, test = next(StratifiedShuffleSplit(n_splits=2, train_size=0.5,
+                                                  random_state=42).split(X, y))
+        scaler = StandardScaler().fit(X[train])
+        selector = ANOVAFSelector(n_features=10).fit(scaler.transform(X[train]), y[train])
+        X_train = selector.transform(scaler.transform(X[train]))
+        X_test = selector.transform(scaler.transform(X[test]))
+        inner = StratifiedShuffleSplit(n_splits=3, train_size=0.5, random_state=42)
+        search = GridSearchCV(LogisticRegression(random_state=42), GRID,
+                              scoring='roc_auc', cv=inner).fit(X_train, y[train])
+
+        row = df[(df.model == 'logistic_regression') & (df.split == 0)].iloc[0]
+        assert json.loads(row.tuned_params) == search.best_params_
+        assert row.accuracy == accuracy_score(y[test], search.predict(X_test))
 
 
 def test_parallel_run_matches_sequential(experiment, tmp_path):

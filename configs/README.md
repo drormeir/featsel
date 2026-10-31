@@ -52,7 +52,8 @@ supports classification only.
 | `output` | required | Output CSV, relative to this file |
 | `target` | dataset default | Target column to predict |
 | `selectors` | required | List of `{name, k, params, label}`. `name` is a selector class name, case-insensitive, such as `ANOVAFSelector` |
-| `models` | required | List of `{name, params, label}`. `name` is one of `logistic_regression`, `linear_svm`, `random_forest`, `knn`, `lda` (and `xgboost` if installed) |
+| `models` | required | List of `{name, params, label, grid}`. `name` is one of `logistic_regression`, `linear_svm`, `random_forest`, `knn`, `lda` (and `xgboost` if installed). `grid`, such as `{C: [0.01, 0.1, 1, 10, 100]}`, tunes those parameters inside each split (see below) |
+| `tuning` | `{n_splits: 3, train_size: 0.5, scoring: roc_auc}` | Inner splits for models with a `grid`. `scoring` is a scikit-learn scorer name |
 | `seed` | `42` | Global seed; each split derives its own |
 | `n_splits` | `100` | Stratified Monte Carlo splits |
 | `train_sizes` | `[0.5]` | Training fractions |
@@ -70,6 +71,13 @@ selectors have no `n_features` and choose their own count: `FDRSelector`,
 `FWESelector`, `PercentileSelector` and `RFECVSelector`. Leave out `k` for
 them. A `k` fails at the first split. A `k` is a feature count for one
 dataset, so it lives in the experiment config, not in the dataset module.
+
+A model with a `grid` is tuned inside each split
+(`docs/experiment_design.md` 2b). Inner stratified Monte Carlo splits of the
+training half score every value in the grid. The model is refit on the whole
+training half with the best values and scored once on the test half. The CSV
+column `tuned_params` holds the chosen values, `{}` for an untuned model.
+`fit_time_s` then includes the tuning.
 
 ## Running
 

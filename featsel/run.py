@@ -40,7 +40,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import QuantileTransformer, StandardScaler
 from sklearn.svm import LinearSVC
@@ -154,6 +154,7 @@ DEFAULTS = {
     'metrics': list(METRICS),
     'n_jobs': 1,
     'max_worker_memory_gb': None,
+    'tuning': {'n_splits': 3, 'train_size': 0.5, 'scoring': 'roc_auc'},
 }
 
 
@@ -291,6 +292,8 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 continue
 
             model = _instantiate(MODELS, model_spec, split_seed)
+            if 'grid' in model_spec:
+                model = _tuned(model, model_spec['grid'], config['tuning'], split_seed)
             try:
                 start = time.perf_counter()
                 model.fit(X_train_sel, y_train)
@@ -323,11 +326,25 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 'predict_time_s': predict_time,
                 'selector_params': json.dumps(sel_spec.get('params') or {}),
                 'model_params': json.dumps(model_spec.get('params') or {}),
+                'tuned_params': json.dumps(getattr(model, 'best_params_', {})),
                 'selected_indices': ' '.join(str(i) for i in support),
                 **recovery,
             }
             row.update({name: fn(y_test, y_pred) for name, fn in metrics.items()})
             yield row
+
+
+def _tuned(model, grid, tuning, seed):
+    """
+    Wrap a model so that fit chooses its parameters from grid on inner splits.
+
+    The inner splits are stratified Monte Carlo draws from the training half
+    only (docs/experiment_design.md 2b). fit then refits on the whole
+    training half with the best values, and predict uses that refit model.
+    """
+    inner = StratifiedShuffleSplit(n_splits=tuning['n_splits'],
+                                   train_size=tuning['train_size'], random_state=seed)
+    return GridSearchCV(model, grid, scoring=tuning['scoring'], cv=inner)
 
 
 def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip, truth):
@@ -520,6 +537,12 @@ def print_plan(config, X, y, tasks, target, name, total):
     print("Models       :")
     for spec in config['models']:
         print(f"  {_label(spec):<16} {spec.get('params') or {}}")
+        if 'grid' in spec:
+            print(f"  {'':<16} tuned over {spec['grid']}")
+    if any('grid' in spec for spec in config['models']):
+        tuning = config['tuning']
+        print(f"Tuning       : {tuning['n_splits']} inner splits at train_size "
+              f"{tuning['train_size']} of each training half, best {tuning['scoring']}")
 
     print(f"\nTotal        : {total} executions "
           f"({len(tasks)} tasks x {config['n_splits']} splits x "
@@ -545,6 +568,7 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
     selection that is truly informative).
     """
     config = {**DEFAULTS, **config}
+    config['tuning'] = {**DEFAULTS['tuning'], **config['tuning']}
 
     out_path = Path(config['output'])
     out_path.parent.mkdir(parents=True, exist_ok=True)
