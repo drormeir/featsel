@@ -46,8 +46,8 @@ Mann-Whitney U test, C is tuned inside each split.
    MannWhitneySelector (its config now names it; the committed figures
    still show the F-test ANOVA run).
 
-Open question: a `demos/tutorial.ipynb` for MannWhitneySelector, which every
-other selector has.
+Done 2026-10-31: MannWhitneySelector has its `demos/tutorial.ipynb`, like
+every other selector.
 
 Not part of this program: the full SCAN-B grid (about four days). Park
 anything else in `docs/ideas.md`.
