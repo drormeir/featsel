@@ -1,0 +1,87 @@
+# Software and Implementation
+
+Draft. This chapter covers task 3: the infrastructure that makes the
+comparison fast. The measurement is in `docs/speed_benchmark.md`.
+
+## The package
+
+`featsel` has two parts.
+
+**Selectors** (`featsel/selectors/`). Every selector subclasses
+`FeatureSelector`, which inherits scikit-learn's `BaseEstimator` and
+`SelectorMixin`. A selector lists its parameters in `__init__` and sets
+`support_` in `fit`. It therefore works in a scikit-learn `Pipeline`, with
+`clone`, `cross_val_score` and `GridSearchCV`. A selector that wraps a
+scikit-learn method has two tests: it selects the same features as that
+method, and it is at most 5% slower.
+
+**The runner** (`featsel/run.py`). One YAML config names the dataset, the
+splits, the selectors with their `k` values, the classifiers and the metrics.
+`python -m featsel.run --config <file>` runs every combination and writes
+one CSV row per execution: one task, split, selector, `k` and classifier.
+
+## What makes the runner fast
+
+Plain scikit-learn repeats work that the runner does once.
+
+**Each split is prepared once.** Imputation and scaling do not use the
+labels. The runner fits them once per split, on the training half, and
+shares the result with every task, selector and classifier.
+
+**Each selector ranks once per split.** Mann-Whitney, Lasso, tree importance
+and RFE rank every feature in one fit. The runner cuts that ranking at each
+`k`. For the first three the fit does not use `k`. RFE is fit down to the
+smallest `k`. With a fixed step, its rounds for a larger `k` are the same
+up to that `k`'s last round. So the features ranked by when they were
+removed, and within a round by weight, give RFE's selection at every larger
+`k`. Tests check that each cut equals a separate fit at that `k`.
+
+**Jobs run in parallel and share memory.** One job is one selector on one
+task of one split. Jobs run on worker processes through joblib. The
+prepared split is saved once to shared memory (`/dev/shm`) and every worker
+maps it read-only, so there is one copy of the data, not one per worker.
+
+The measured effect, on 3000 SCAN-B genes: the runner is 3.4 times faster
+than scikit-learn's `cross_validate` on one core, and 5.3 times faster on
+all 12 cores of the test machine, with identical scores.
+
+## Running safely on a small machine
+
+Full SCAN-B needs several GB per worker. Two mechanisms keep a long run
+alive.
+
+- **A memory cap per worker** (`--max-worker-memory-gb`). A job past the cap
+  gets a `MemoryError`. The runner skips that cell, lists it at the end, and
+  goes on.
+- **Resume** (`--resume`). Rows are written as they finish. A stopped run
+  continues where it stopped, without repeating or dropping work.
+
+Both were needed on a 16 GB machine. Six workers ran out of memory and the
+operating system stopped the run; it resumed with fewer workers. With a cap
+of 3 GB the U-test selectors were skipped, and a second resume at a higher
+cap filled them in.
+
+## Nested tuning
+
+A model entry with a `grid` is tuned inside each split
+(`docs/experiment_design.md` 2b). The runner wraps the classifier in
+scikit-learn's `GridSearchCV`, with stratified Monte Carlo splits of the
+training half as its inner splits. The chosen values are stored with each
+row.
+
+## Reproducibility
+
+- **Seeds.** One global seed, 42. Split `s` uses 42 + `s` for every random
+  step in it. Re-running a config gives the same features and scores; the
+  number of workers changes only the time.
+- **Environment.** Python 3.13.18, scikit-learn 1.9.1, NumPy 2.5.3, SciPy
+  1.18.1, pandas 3.0.6, joblib 1.6.0. Install with
+  `pip install -r requirements.txt`.
+- **Re-running.** From the repository root:
+
+      python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 2 --max-worker-memory-gb 4.5
+      python -m featsel.run --config configs/comparison_breastmnist.yaml --n-jobs -1
+      python scripts/summarize_comparison.py results/comparison_scanb.csv --n-features 28552 --out <file>
+      python scripts/benchmark_speed.py --n-genes 3000 --out <file>
+
+  The first command downloads GSE96058 (592 MB) once.

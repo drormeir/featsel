@@ -37,9 +37,10 @@ Mann-Whitney U test, C is tuned inside each split.
 4. [x] Measure the speedup (task 3), as in `docs/experiment_design.md` 2e:
    the runner against plain scikit-learn on a small grid.
    `scripts/benchmark_speed.py`, result in `docs/speed_benchmark.md`.
-5. [ ] Write each report chapter right after its step: Methodology after
-   1, Results after 2-3, Implementation after 4. Methodology drafted in
-   `docs/report/04_methodology.md`.
+5. [x] Write each report chapter right after its step: Methodology after
+   1, Results after 2-3, Implementation after 4. Drafted in
+   `docs/report/04_methodology.md`, `05_implementation.md` and
+   `06_results.md`.
 6. [ ] Only then, depth: more splits, more k, PAM50 gene recovery, HC
    behaviour, rerun `notebooks/02_classifier_behaviour.ipynb` with
    MannWhitneySelector (its config now names it; the committed figures
