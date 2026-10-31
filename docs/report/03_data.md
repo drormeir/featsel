@@ -179,8 +179,11 @@ The report states both unmet assumptions as the reason HC behaves this way
 on SCAN-B. BreastMNIST is where to check whether HC behaves differently: what
 fraction of its 2,048 embedding features carry signal is not yet checked.
 
-Open: keep alpha0 = 0.1 and report the edge, or raise it so HC finds its
-own peak. Raising it departs from both papers and must be stated.
+Decided 2026-10-31: alpha0 stays 0.1, as in both papers. A selector must
+not assume what it is meant to find, and we treat the genes that define the
+label as unknown. Raising alpha0 because we know SCAN-B's signal is
+widespread would tune HC to the answer. The report states that on SCAN-B HC
+reached the edge of its search range, and why.
 
 **Consequence for recovering the PAM50 genes.** A selector can predict well
 from genes that move with the 50, and still find few of the 50 themselves.
