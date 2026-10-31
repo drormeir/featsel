@@ -1,0 +1,6 @@
+classifier,selector,best_k,best_macro_f1,iqr_over_splits,gain_at_best_k,gain_at_k10,gain_at_max_k
+logistic_regression,MannWhitneySelector,1000,0.8768,0.0061,0.032,0.2265,0.032
+random_forest,MannWhitneySelector,1000,0.8663,0.0072,0.0681,0.2082,0.0681
+lda_shrinkage,MannWhitneySelector,250,0.8587,0.0095,0.0276,0.2057,-0.0148
+knn,MannWhitneySelector,250,0.8536,0.0114,0.1344,0.2176,0.1365
+linear_svm,MannWhitneySelector,50,0.8403,0.0079,0.065,0.2337,0.0333

@@ -1,0 +1,5 @@
+run,seconds,speed-up over scikit-learn on 1 core,setting
+"scikit-learn, 1 core",32.5,1.0,"SCAN-B, Basal vs rest, 3000 random genes of 28552, 2976 patients. 5 splits at train fraction 0.5. Lasso and RFE (step 0.5) at k = 10, 50, 250, logistic regression with fixed C. 12 cores. All 30 test macro-F1 scores are equal on every run."
+"runner, 1 core",9.3,3.5,"SCAN-B, Basal vs rest, 3000 random genes of 28552, 2976 patients. 5 splits at train fraction 0.5. Lasso and RFE (step 0.5) at k = 10, 50, 250, logistic regression with fixed C. 12 cores. All 30 test macro-F1 scores are equal on every run."
+"scikit-learn, 12 cores",23.1,1.4,"SCAN-B, Basal vs rest, 3000 random genes of 28552, 2976 patients. 5 splits at train fraction 0.5. Lasso and RFE (step 0.5) at k = 10, 50, 250, logistic regression with fixed C. 12 cores. All 30 test macro-F1 scores are equal on every run."
+"runner, 12 cores",6.2,5.2,"SCAN-B, Basal vs rest, 3000 random genes of 28552, 2976 patients. 5 splits at train fraction 0.5. Lasso and RFE (step 0.5) at k = 10, 50, 250, logistic regression with fixed C. 12 cores. All 30 test macro-F1 scores are equal on every run."

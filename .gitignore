@@ -206,12 +206,14 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Data
-*.csv
+# Data: downloaded datasets and their caches
 *.gz
 *.part
 *.npz
-results/
+
+# Results are tracked, so the report's tables can be rebuilt from git. The
+# old full BreastMNIST grid (36 MB) is not: its config regenerates it.
+results/experiment_breastmnist.csv
 
 # Claude Code local files (private working notes)
 .claude/
