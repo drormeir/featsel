@@ -1,0 +1,60 @@
+# The smallest complete selector comparison on BreastMNIST (task 4, NEXT.md
+# step 3): the same design as comparison_scanb.yaml on 780 ultrasound images
+# as 2,048 ResNet-50 embedding dimensions, malignant vs benign or normal.
+# One binary task. k = 250 stays below the 390 training images.
+# Run with: python -m featsel.run --config configs/comparison_breastmnist.yaml --n-jobs 6
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/comparison_breastmnist.csv"
+
+seed: 42
+n_splits: 5
+train_sizes: [0.5]
+preprocess: ["standard"]
+
+metrics:
+  - accuracy
+  - macro_f1
+  - balanced_accuracy
+  - mcc
+  - g_mean
+
+tuning:
+  n_splits: 3
+  train_size: 0.5
+  scoring: roc_auc
+
+selectors:
+  - name: RandomSelector
+    k: [10, 50, 250]
+  - name: MannWhitneySelector
+    k: [10, 50, 250]
+  - name: LassoSelector
+    k: [10, 50, 250]
+    params:
+      C: 1.0
+  - name: TreeImportanceSelector
+    k: [10, 50, 250]
+    params:
+      n_estimators: 200
+  - name: RFESelector
+    k: [10, 50, 250]
+    params:
+      C: 0.01
+  - name: HigherCriticismSelector
+    label: HC2004
+    params:
+      variant: "2004"
+  - name: HigherCriticismSelector
+    label: HC2008
+    params:
+      variant: "2008"
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
+    grid:
+      C: [0.01, 0.1, 1, 10, 100]
