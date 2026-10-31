@@ -13,6 +13,7 @@ Usage:
 import argparse
 import json
 
+import numpy as np
 import pandas as pd
 
 from featsel.analysis import kuncheva_index
@@ -43,8 +44,33 @@ def _table(frame, index, columns, values, digits=3):
     return _markdown(table.unstack(columns).fillna(''))
 
 
+def _own_count_gains(df):
+    """
+    Each own-count method against fixed-k methods at its own size.
+
+    For every task and split, a method without k (Higher Criticism) is
+    compared with each fixed-k method run at the k nearest its feature
+    count, if that k is within 1% of it. Returns rows of (selector,
+    against, split, gain), the gain averaged over tasks.
+    """
+    fixed = df[df.k.notna()]
+    ks = np.sort(fixed.k.unique())
+    rows = []
+    for _, own in df[df.k.isna()].iterrows():
+        k = ks[np.argmin(np.abs(ks - own.n_selected))]
+        if abs(k - own.n_selected) > 0.01 * own.n_selected:
+            continue
+        same = fixed[(fixed.task == own.task) & (fixed.split == own.split) & (fixed.k == k)]
+        rows += [{'selector': own.selector, 'against': f'{other.selector}, k = {int(k)}',
+                  'task': own.task, 'split': own.split,
+                  'gain': own.macro_f1 - other.macro_f1} for _, other in same.iterrows()]
+    gains = pd.DataFrame(rows, columns=['selector', 'against', 'task', 'split', 'gain'])
+    return gains.groupby(['selector', 'against', 'split'], as_index=False).gain.mean()
+
+
 def summarize(df, n_features):
     stability = kuncheva_index(df, n_features)
+    own_gains = _own_count_gains(df)
     selectors = list(dict.fromkeys(df.selector))
     labels = [*sorted({_k_label(k) for k in df.k} - {'own'}, key=int), 'own']
     df = df.assign(k=pd.Categorical(df.k.map(_k_label), labels, ordered=True),
@@ -63,6 +89,11 @@ def summarize(df, n_features):
     sections.append('## Gain in macro-F1 over RandomSelector, same k and split\n\n'
                     + _table(gain[gain.selector != 'RandomSelector'],
                              'selector', 'k', 'gain'))
+    if len(own_gains):
+        sections.append('## Own-count methods against fixed-k methods at the same size\n\n'
+                        'Macro-F1 of the own-count method minus that of the fixed-k method '
+                        'at the k nearest its feature count, same task and split.\n\n'
+                        + _table(own_gains, 'selector', 'against', 'gain'))
 
     for k in labels[:-1]:
         sections.append(f'## Macro-F1 per task, k = {k}\n\n'

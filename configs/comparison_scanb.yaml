@@ -30,9 +30,9 @@ tuning:
 
 selectors:
   - name: RandomSelector
-    k: [10, 50, 250]
+    k: [10, 50, 250, 2855]   # 2855: HC2008's count, to compare it at equal size
   - name: MannWhitneySelector
-    k: [10, 50, 250]
+    k: [10, 50, 250, 2855]   # 2855: HC2008's count, to compare it at equal size
   - name: LassoSelector
     k: [10, 50, 250]
     params:
