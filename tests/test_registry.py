@@ -100,11 +100,3 @@ def test_aliases_are_not_inherited():
 
     assert FeatureSelector.lookup('family') is Parent
     assert FeatureSelector.lookup('child') is Child
-
-
-def test_abstract_classes_do_not_register():
-    """Test that a class leaving fit() unimplemented stays out."""
-    class HalfDone(FeatureSelector):
-        pass
-
-    assert 'halfdone' not in FeatureSelector._registry

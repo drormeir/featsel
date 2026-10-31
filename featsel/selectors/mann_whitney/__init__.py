@@ -54,6 +54,8 @@ class MannWhitneySelector(FeatureSelector):
     [0, 1, 2, 4]
     """
 
+    rank_once = True
+
     def __init__(self, n_features=None, check_input=True):
         self.n_features = n_features
         self.check_input = check_input
@@ -79,5 +81,5 @@ class MannWhitneySelector(FeatureSelector):
 
         self.log_pvalues_, self.auc_ = log_mannwhitneyu(X, y)
         self.feature_importances_ = -self.log_pvalues_
-        self.support_ = self._top(self.feature_importances_)
+        self.support_ = self._top()
         return self

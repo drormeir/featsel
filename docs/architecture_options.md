@@ -286,13 +286,14 @@ the default and nobody notices. Adding a selector means editing three places.
   opt-in with `set_output(transform='pandas')`. The old base class returned
   a DataFrame for DataFrame input.
 - One instance handles one selection method.
-- Every concrete subclass registers itself automatically, through
+- Every subclass registers itself automatically, through
   `__init_subclass__`, under its class name. It may add aliases as a class
   keyword, `aliases: None | str | list[str]`, for example
-  `class ANOVAFSelector(FeatureSelector, aliases=['anova', 'anova_f'])`. A
+  `class MySelector(FeatureSelector, aliases=['mine', 'my_sel'])`. A
   keyword is not inherited, so a subclass never re-registers its parent's
-  aliases. An alias equal to the class name is ignored. Abstract classes do
-  not register.
+  aliases. An alias equal to the class name is ignored. Skipping abstract
+  classes was built and removed 2026-10-31: no selector had an abstract
+  parent.
 - Names are stored lowercased in one dict, so lookup is case-insensitive. Two
   classes claiming the same lowercased name raise an error when the second is
   defined.
@@ -365,9 +366,9 @@ intersection and voting modes for combining methods.
 - The class name is a public identifier. It appears in configs and results
   files. Renaming a class needs an alias for configs. Old results files keep
   the old name.
+- Aliases are added only when a rename actually happens.
 - A class registers only when its module is imported. `featsel/__init__.py`
   imports `featsel.selectors`, which imports every selector.
-- Aliases are added only when a rename actually happens.
 - Results files written before the switch to class names use the old method
   names (`random`, `anova_f`). They are not comparable by name with new runs,
   and `--resume` on them recomputes everything. Notebook 02 names its control

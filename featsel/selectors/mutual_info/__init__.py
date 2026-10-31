@@ -71,15 +71,9 @@ class MutualInfoSelector(FeatureSelector):
         self._require_n_features()
         X, y = self._validate(X, y)
 
-        if self.task == 'classification':
-            mi_func = mutual_info_classif
-        elif self.task == 'regression':
-            mi_func = mutual_info_regression
-        else:
-            raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
-
+        mi_func = self._by_task(mutual_info_classif, mutual_info_regression)
         self.feature_importances_ = mi_func(
             X, y, n_neighbors=self.n_neighbors, random_state=self.random_state
         )
-        self.support_ = self._top(self.feature_importances_)
+        self.support_ = self._top()
         return self

@@ -96,20 +96,6 @@ def build_tasks(y):
     return [(f'ovr_{label}', np.where(y == label, str(label), 'rest')) for label in labels]
 
 
-# Selectors whose top k of feature_importances_, fit at the smallest k, is
-# their selection at every larger k. Most do not use n_features in fit at
-# all; RFESelector eliminates down to it, and its ranking covers every larger
-# k. The runner fits them once per split and cuts the ranking at each k: the
-# same genes, one fit instead of one per k. Their selection_time_s and
-# selection_peak_mb are that one fit's, on every k.
-RANK_ONCE = {'LassoSelector', 'MannWhitneySelector', 'RFESelector',
-             'TreeImportanceSelector'}
-
-# Rank-once selectors that never select a feature of zero importance, so a
-# cut at k can hold fewer than k features.
-NONZERO_ONLY = {'LassoSelector'}
-
-
 class WorkerDiedError(RuntimeError):
     """A worker process died mid-split, most likely out of memory."""
 
@@ -249,7 +235,7 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
     split_seed = context['seed']
     metrics = {name: METRICS[name] for name in config['metrics']}
     sel_name = _selector_label(sel_spec)
-    rank_once = (FeatureSelector.lookup(sel_spec['name']).__name__ in RANK_ONCE
+    rank_once = (FeatureSelector.lookup(sel_spec['name']).rank_once
                  and None not in k_values)
     ranking = None
 
@@ -275,11 +261,10 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 tracemalloc.stop()
             selection_time = time.perf_counter() - start
             if rank_once:
-                # The same argsort as FeatureSelector._top, so each cut
-                # equals a fit with n_features=k.
-                ranking = np.argsort(selector.feature_importances_)[::-1]
-                if type(selector).__name__ in NONZERO_ONLY:
-                    ranking = ranking[selector.feature_importances_[ranking] != 0]
+                # A selector with rank_once set: each cut of its ranking
+                # equals a fit with n_features=k. selection_time_s and
+                # selection_peak_mb are this one fit's, on every k.
+                ranking = selector.ranking()
 
         if rank_once:
             support = np.sort(ranking[:k])
@@ -397,7 +382,7 @@ def _k_groups(sel_spec):
     job and a slow selector spreads over the workers.
     """
     k_values = sel_spec.get('k', [None])
-    if FeatureSelector.lookup(sel_spec['name']).__name__ in RANK_ONCE:
+    if FeatureSelector.lookup(sel_spec['name']).rank_once:
         return [k_values]
     return [[k] for k in k_values]
 

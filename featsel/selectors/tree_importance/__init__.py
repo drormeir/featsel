@@ -48,6 +48,8 @@ class TreeImportanceSelector(FeatureSelector):
     (100, 10)
     """
 
+    rank_once = True
+
     def __init__(self, n_features=None, n_estimators=200, task='classification',
                  max_depth=None, random_state=None, n_jobs=1, check_input=True):
         self.n_features = n_features
@@ -77,12 +79,7 @@ class TreeImportanceSelector(FeatureSelector):
         self._require_n_features()
         X, y = self._validate(X, y)
 
-        if self.task == 'classification':
-            forest_class = RandomForestClassifier
-        elif self.task == 'regression':
-            forest_class = RandomForestRegressor
-        else:
-            raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
+        forest_class = self._by_task(RandomForestClassifier, RandomForestRegressor)
 
         forest = forest_class(
             n_estimators=self.n_estimators, max_depth=self.max_depth,
@@ -90,5 +87,5 @@ class TreeImportanceSelector(FeatureSelector):
         ).fit(X, y)
 
         self.feature_importances_ = forest.feature_importances_
-        self.support_ = self._top(self.feature_importances_)
+        self.support_ = self._top()
         return self

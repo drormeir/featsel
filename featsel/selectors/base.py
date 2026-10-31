@@ -13,17 +13,6 @@ from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted, validate_data
 
 
-def _has_abstract_methods(cls):
-    """
-    Whether cls still leaves an abstract method unimplemented.
-
-    ABCMeta sets __abstractmethods__ only after __init_subclass__ has run, so
-    registration has to inspect the methods itself.
-    """
-    return any(getattr(getattr(cls, name, None), '__isabstractmethod__', False)
-               for name in dir(cls))
-
-
 class FeatureSelector(SelectorMixin, BaseEstimator):
     """
     Base class of every feature selector: a scikit-learn estimator.
@@ -42,24 +31,26 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     fit, as scikit-learn's own check_input does. Use it only when X is already
     a finite 2-D NumPy array and y a 1-D array.
 
-    Every concrete subclass registers itself when it is defined, under its
-    class name and any aliases given as a class keyword:
+    Every subclass registers itself when it is defined, under its class name
+    and any aliases given as a class keyword:
 
-        class ANOVAFSelector(FeatureSelector, aliases=['anova', 'anova_f']): ...
+        class MySelector(FeatureSelector, aliases=['mine', 'my_sel']): ...
 
     In Python, import the class. FeatureSelector.create(name, **params) is for
     names that arrive as text, such as a YAML config; lookup ignores case. The
     base class never imports its subclasses.
     """
 
-    # lowercased name or alias -> concrete selector class
+    # lowercased name or alias -> selector class
     _registry: ClassVar[dict[str, type[FeatureSelector]]] = {}
+
+    # True when the top k of ranking(), fit with any n_features <= k, is the
+    # selection a fit with n_features=k would make. The runner then fits once
+    # per split and cuts the ranking at each k.
+    rank_once: ClassVar[bool] = False
 
     def __init_subclass__(cls, aliases: str | list[str] | None = None, **kwargs):
         super().__init_subclass__(**kwargs)
-        if _has_abstract_methods(cls):
-            return
-
         names = [cls.__name__, *([aliases] if isinstance(aliases, str) else aliases or [])]
         for name in {n.lower() for n in names}:
             owner = FeatureSelector._registry.setdefault(name, cls)
@@ -111,6 +102,19 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
             return validate_data(self, X), None
         return validate_data(self, X, y)
 
+    def ranking(self):
+        """Feature indices by feature_importances_, strongest first."""
+        check_is_fitted(self, 'feature_importances_')
+        return np.argsort(self.feature_importances_)[::-1]
+
+    def _by_task(self, classification, regression):
+        """Whichever of the two matches self.task."""
+        if self.task == 'classification':
+            return classification
+        if self.task == 'regression':
+            return regression
+        raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
+
     def _require_n_features(self):
         if self.n_features is None:
             raise ValueError(f"{type(self).__name__} requires n_features to be specified")
@@ -121,6 +125,6 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         mask[indices] = True
         return mask
 
-    def _top(self, scores):
-        """A mask selecting the n_features highest scores."""
-        return self._mask(np.argsort(scores)[::-1][:self.n_features])
+    def _top(self):
+        """A mask selecting the first n_features of ranking(); all of it if None."""
+        return self._mask(self.ranking()[:self.n_features])

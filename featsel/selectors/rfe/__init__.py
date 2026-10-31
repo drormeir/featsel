@@ -63,6 +63,8 @@ class RFESelector(FeatureSelector):
     (100, 5)
     """
 
+    rank_once = True
+
     def __init__(self, n_features=None, step=0.1, C=1.0, max_iter=1000,
                  random_state=None, check_input=True):
         self.n_features = n_features

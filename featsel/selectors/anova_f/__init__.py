@@ -72,12 +72,7 @@ class ANOVAFSelector(FeatureSelector):
         """
         X, y = self._validate(X, y)
 
-        if self.task == 'classification':
-            scores, pvalues = f_classif(X, y)
-        elif self.task == 'regression':
-            scores, pvalues = f_regression(X, y)
-        else:
-            raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
+        scores, pvalues = self._by_task(f_classif, f_regression)(X, y)
 
         # Constant features give NaN; rank them last.
         self.scores_ = np.nan_to_num(scores, nan=0.0)
@@ -85,7 +80,7 @@ class ANOVAFSelector(FeatureSelector):
         self.feature_importances_ = self.scores_
 
         if self.n_features is not None:
-            self.support_ = self._top(self.scores_)
+            self.support_ = self._top()
         else:
             self.support_ = self.pvalues_ < self.alpha
         return self

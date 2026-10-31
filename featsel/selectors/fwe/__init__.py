@@ -76,12 +76,7 @@ class FWESelector(FeatureSelector):
         """
         X, y = self._validate(X, y)
 
-        if self.task == 'classification':
-            score_func = f_classif
-        elif self.task == 'regression':
-            score_func = f_regression
-        else:
-            raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
+        score_func = self._by_task(f_classif, f_regression)
 
         fwe = SelectFwe(score_func, alpha=self.alpha).fit(X, y)
         self.scores_ = fwe.scores_

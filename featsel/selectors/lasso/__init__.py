@@ -60,6 +60,8 @@ class LassoSelector(FeatureSelector):
     (100, 10)
     """
 
+    rank_once = True
+
     def __init__(self, n_features=None, C=1.0, alpha=0.01, task='classification',
                  max_iter=1000, random_state=None, check_input=True):
         self.n_features = n_features
@@ -88,22 +90,15 @@ class LassoSelector(FeatureSelector):
         """
         X, y = self._validate(X, y)
 
-        if self.task == 'classification':
-            model = LogisticRegression(
-                l1_ratio=1, C=self.C, solver='liblinear',
-                max_iter=self.max_iter, random_state=self.random_state
-            )
-            # liblinear is the fast L1 solver but is binary only, so multiclass
-            # goes through an explicit one-vs-rest wrapper.
-            if len(np.unique(y)) > 2:
-                model = OneVsRestClassifier(model)
-        elif self.task == 'regression':
-            model = Lasso(
-                alpha=self.alpha, max_iter=self.max_iter,
-                random_state=self.random_state
-            )
-        else:
-            raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
+        model = self._by_task(
+            LogisticRegression(l1_ratio=1, C=self.C, solver='liblinear',
+                               max_iter=self.max_iter, random_state=self.random_state),
+            Lasso(alpha=self.alpha, max_iter=self.max_iter, random_state=self.random_state),
+        )
+        # liblinear is the fast L1 solver but is binary only, so multiclass
+        # goes through an explicit one-vs-rest wrapper.
+        if isinstance(model, LogisticRegression) and len(np.unique(y)) > 2:
+            model = OneVsRestClassifier(model)
 
         model.fit(X, y)
         if isinstance(model, OneVsRestClassifier):
@@ -115,11 +110,7 @@ class LassoSelector(FeatureSelector):
         # it matters for any class, so sum the absolute values.
         self.feature_importances_ = np.abs(np.atleast_2d(self.coef_)).sum(axis=0)
 
-        # A zero coefficient means the model dropped the feature, so it is never
-        # selected, even when fewer than n_features are nonzero.
-        self.support_ = self.feature_importances_ != 0
-        if self.n_features is not None:
-            self.support_ &= self._top(self.feature_importances_)
+        self.support_ = self._top()
 
         if not self.support_.any():
             raise ValueError(
@@ -127,3 +118,13 @@ class LassoSelector(FeatureSelector):
                 "Increase C (classification) or decrease alpha (regression)."
             )
         return self
+
+    def ranking(self):
+        """
+        Features with a non-zero coefficient, largest absolute value first.
+
+        A zero coefficient means the model dropped the feature, so it is never
+        selected, even when fewer than n_features are non-zero.
+        """
+        ranking = super().ranking()
+        return ranking[self.feature_importances_[ranking] != 0]

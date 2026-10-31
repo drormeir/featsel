@@ -26,7 +26,13 @@ import featsel.run as run_module
 from featsel.analysis import kuncheva_index, summarize
 from featsel.metrics import KEY_COLUMNS, g_mean
 from featsel.run import build_tasks, load_config, load_dataset, run, run_config
-from featsel.selectors import ANOVAFSelector, FeatureSelector
+from featsel.selectors import (
+    ANOVAFSelector,
+    FeatureSelector,
+    LassoSelector,
+    RFESelector,
+    TreeImportanceSelector,
+)
 
 
 @pytest.fixture
@@ -287,7 +293,8 @@ def test_ranking_once_selects_the_same_genes_as_one_fit_per_k(experiment, monkey
         {'name': 'LassoSelector', 'label': 'sparse_lasso', 'k': [5, 100], 'params': {'C': 0.3}},
     ]
     once = pd.read_csv(run_config(experiment))
-    monkeypatch.setattr(run_module, 'RANK_ONCE', set())
+    for cls in (LassoSelector, TreeImportanceSelector, RFESelector):
+        monkeypatch.setattr(cls, 'rank_once', False)
     per_k = pd.read_csv(run_config(experiment))
 
     pd.testing.assert_series_equal(once['selected_indices'], per_k['selected_indices'])
