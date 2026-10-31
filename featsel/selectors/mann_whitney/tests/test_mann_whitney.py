@@ -39,6 +39,22 @@ class TestMannWhitneySelector:
 
         np.testing.assert_array_equal(raw, transformed)
 
+    def test_float32_input_gives_the_float64_selection(self):
+        """
+        Test that float32 data scores as float64 does, with features at a
+        floor value in almost every sample, as many genes are.
+        """
+        X, y = _two_classes(n_samples=1500, n_features=300, n_signal=20, shift=0.3)
+        rare = np.random.default_rng(1).random(X.shape) < 0.995
+        X[:, 20:][rare[:, 20:]] = -3.3  # a shared floor value
+        X = X.astype(np.float32)  # the same values in both runs
+
+        wide = MannWhitneySelector(n_features=20).fit(X.astype(np.float64), y)
+        narrow = MannWhitneySelector(n_features=20).fit(X, y)
+
+        np.testing.assert_allclose(narrow.log_pvalues_, wide.log_pvalues_, rtol=1e-6)
+        np.testing.assert_array_equal(narrow.get_support(), wide.get_support())
+
     def test_ranks_where_scipy_gives_zero(self):
         """Test that p-values below 1e-308 still order the features."""
         X, y = _two_classes(n_samples=3000, n_signal=5, shift=3.0)

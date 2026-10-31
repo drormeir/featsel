@@ -145,12 +145,14 @@ def log_mannwhitneyu(X, y):
     n1 = len(y) - n2
     n = n1 + n2
 
+    # Ranks keep X's dtype. They are exact in float32, but their sums are not,
+    # so the sums are taken in float64.
     low = rankdata(X, method='min', axis=0)
     high = rankdata(X, method='max', axis=0)
-    u = ((low + high)[second] / 2).sum(axis=0) - n2 * (n2 + 1) / 2
+    u = ((low + high)[second] / 2).sum(axis=0, dtype=np.float64) - n2 * (n2 + 1) / 2
 
     # A group of t tied values adds t^3 - t; each of its t members adds t^2 - 1.
-    ties = ((high - low + 1) ** 2 - 1).sum(axis=0)
+    ties = ((high - low + 1) ** 2 - 1).sum(axis=0, dtype=np.float64)
     sigma = np.sqrt(n1 * n2 / 12 * ((n + 1) - ties / (n * (n - 1))))
 
     with np.errstate(divide='ignore', invalid='ignore'):  # a constant feature has sigma 0

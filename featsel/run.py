@@ -436,7 +436,8 @@ def iter_rows(X, y, config, failures, skip=frozenset(), truth=None):
     of workers.
     """
     seed = config['seed']
-    X_array = X.values if isinstance(X, pd.DataFrame) else np.asarray(X)
+    # float32 halves memory; the data are not measured to more than 7 digits.
+    X_array = np.asarray(X, dtype=np.float32)
     y_array = y.values if isinstance(y, pd.Series) else np.asarray(y)
     tasks = build_tasks(y_array)
     shm = Path('/dev/shm')
