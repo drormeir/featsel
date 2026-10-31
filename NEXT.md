@@ -5,25 +5,44 @@ file, and nothing else claims attention while it is open.
 
 ## Open
 
-**Write the Methodology chapter, `docs/report/04_methodology.md`.**
+**The restart program: the smallest complete answer to each of the four
+tasks, breadth first (`SCOPE.md` 5), then depth.**
 
-The methods are now settled and running: binary subtype-vs-rest tasks,
-stratified Monte Carlo splits shared by all tasks, selection inside the
-split, the random control, the selectors including both Higher Criticism
-variants and the U test, and the metrics. The chapter is missing; the
-outline (`docs/report/00_report_outline.md`) lists it.
+Decided 2026-10-31. One step at a time; commit and push after each small
+step; tick the step here when done.
 
-Done means: the chapter describes the selection methods, the evaluation
-protocol and the metrics as the code runs them today, cites the sources in
-`references/bibliography.md`, and is committed. Decisions already recorded
-in `docs/experiment_design.md` and `docs/report/03_data.md` are referenced,
-not repeated.
+Protocol decisions (recorded in `docs/experiment_design.md`): 5 stratified
+Monte Carlo splits at train fraction 0.5, every filter scores genes by the
+Mann-Whitney U test, C is tuned inside each split.
 
-Not part of this step: new runs, the full SCAN-B grid, other chapters. Park
+1. Fix the protocol on paper and in code.
+   - [x] 1a. Rewrite `docs/experiment_design.md` to the decided protocol.
+     Committed in `511f5aa`.
+   - [x] 1b. Add `MannWhitneySelector` (top-k by U test) and use it in place
+     of ANOVA in every experiment config. Committed in `8a6abfc`.
+   - [ ] 1c. Build nested tuning of C (`docs/experiment_design.md` 2b):
+     inside each outer training half, inner stratified splits choose C for
+     logistic regression and linear SVM from a small fixed grid; refit on the
+     whole training half; score once on the test half. Then mark 2b as built.
+2. [ ] Smallest complete selector comparison on SCAN-B (tasks 1-2): all
+   selector entries of `configs/smoke_scanb.yaml`, k = 10, 50, 250,
+   logistic regression with tuned C, the five subtype tasks, 5 splits. Write
+   a config for it, run it, commit the config and a summary.
+3. [ ] The same on BreastMNIST (task 4).
+4. [ ] Measure the speedup (task 3), as in `docs/experiment_design.md` 2e:
+   the runner against plain scikit-learn on a small grid.
+5. [ ] Write each report chapter right after its step: Methodology after
+   1, Results after 2-3, Implementation after 4.
+6. [ ] Only then, depth: more splits, more k, PAM50 gene recovery, HC
+   behaviour, rerun `notebooks/02_classifier_behaviour.ipynb` with
+   MannWhitneySelector (its config now names it; the committed figures
+   still show the F-test ANOVA run).
+
+Open question: a `demos/tutorial.ipynb` for MannWhitneySelector, which every
+other selector has.
+
+Not part of this program: the full SCAN-B grid (about four days). Park
 anything else in `docs/ideas.md`.
-
-First move: list what `docs/experiment_design.md` says that no longer
-matches the code, such as nested tuning, before writing.
 
 ## Done
 
