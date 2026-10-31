@@ -44,6 +44,28 @@ Cited in `docs/selection_strength.md`.
 | Glaysher, P., Katzy, J. M. and An, S. (2019). Iterative subtraction method for Feature Ranking. https://arxiv.org/abs/1906.05718 | `local/Glaysher_2019_Iterative_Subtraction.pdf` |
 | Tian, C. J., Lv, J. and Xu, X. F. (2021). Evaluation of Feature Selection Methods for Mammographic Breast Cancer Diagnosis in a Unified Framework. *BioMed Research International* 2021, 6079163. https://doi.org/10.1155/2021/6079163 | none: the site blocks automated download |
 
+## Methods and comparative studies
+
+Cited in the report, chapters 2, 4 and 7. Checked on Crossref or jmlr.org,
+2026-10-31; Kuncheva (2007) against citing papers.
+
+| Work | Local copy |
+|------|------------|
+| Guyon, I. and Elisseeff, A. (2003). An introduction to variable and feature selection. *Journal of Machine Learning Research* 3, 1157-1182. https://www.jmlr.org/papers/v3/guyon03a.html | none |
+| Saeys, Y., Inza, I. and Larrañaga, P. (2007). A review of feature selection techniques in bioinformatics. *Bioinformatics* 23(19), 2507-2517. https://doi.org/10.1093/bioinformatics/btm344 | none |
+| Kohavi, R. and John, G. H. (1997). Wrappers for feature subset selection. *Artificial Intelligence* 97(1-2), 273-324. https://doi.org/10.1016/S0004-3702(97)00043-X | none |
+| Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. *Journal of the Royal Statistical Society, Series B* 58(1), 267-288. https://doi.org/10.1111/j.2517-6161.1996.tb02080.x | none |
+| Breiman, L. (2001). Random forests. *Machine Learning* 45(1), 5-32. https://doi.org/10.1023/A:1010933404324 | none |
+| Guyon, I., Weston, J., Barnhill, S. and Vapnik, V. (2002). Gene selection for cancer classification using support vector machines. *Machine Learning* 46(1-3), 389-422. https://doi.org/10.1023/A:1012487302797. SVM-RFE. | none |
+| Mann, H. B. and Whitney, D. R. (1947). On a test of whether one of two random variables is stochastically larger than the other. *Annals of Mathematical Statistics* 18(1), 50-60. https://doi.org/10.1214/aoms/1177730491 | none |
+| Hanley, J. A. and McNeil, B. J. (1982). The meaning and use of the area under a receiver operating characteristic (ROC) curve. *Radiology* 143(1), 29-36. https://doi.org/10.1148/radiology.143.1.7063747. The U statistic is the AUC. | none |
+| Benjamini, Y. and Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. *Journal of the Royal Statistical Society, Series B* 57(1), 289-300. https://doi.org/10.1111/j.2517-6161.1995.tb02031.x | none |
+| Dudoit, S., Fridlyand, J. and Speed, T. P. (2002). Comparison of discrimination methods for the classification of tumors using gene expression data. *Journal of the American Statistical Association* 97(457), 77-87. https://doi.org/10.1198/016214502753479248 | none |
+| Statnikov, A., Aliferis, C. F., Tsamardinos, I., et al. (2005). A comprehensive evaluation of multicategory classification methods for microarray gene expression cancer diagnosis. *Bioinformatics* 21(5), 631-643. https://doi.org/10.1093/bioinformatics/bti033 | none |
+| Bolón-Canedo, V., Sánchez-Maroño, N., Alonso-Betanzos, A., et al. (2014). A review of microarray datasets and applied feature selection methods. *Information Sciences* 282, 111-135. https://doi.org/10.1016/j.ins.2014.05.042 | none |
+| Bengio, Y. and Grandvalet, Y. (2004). No unbiased estimator of the variance of K-fold cross-validation. *Journal of Machine Learning Research* 5, 1089-1105. https://www.jmlr.org/papers/v5/grandvalet04a.html | none |
+| Kuncheva, L. I. (2007). A stability index for feature selection. *Proceedings of the 25th IASTED International Multi-Conference: Artificial Intelligence and Applications*, Innsbruck, 390-395. The stability index. | none |
+
 ## Notes on Higher Criticism
 
 The 2004 paper defines the Higher Criticism statistic, for detection. The
