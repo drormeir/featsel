@@ -32,7 +32,8 @@ Mann-Whitney U test, C is tuned inside each split.
    `configs/comparison_scanb.yaml`, summary in `docs/comparison_scanb.md`.
    Along the way: RFE ranks once per task (about 11 times faster in the
    run), Lasso never selects a zero weight.
-3. [ ] The same on BreastMNIST (task 4).
+3. [x] The same on BreastMNIST (task 4). `configs/comparison_breastmnist.yaml`,
+   summary in `docs/comparison_breastmnist.md`.
 4. [ ] Measure the speedup (task 3), as in `docs/experiment_design.md` 2e:
    the runner against plain scikit-learn on a small grid.
 5. [ ] Write each report chapter right after its step: Methodology after
