@@ -224,7 +224,7 @@ extrapolated to the full design.
 
 Built 2026-10-31: `scripts/benchmark_speed.py`, result in
 `docs/speed_benchmark.md`. On a 3000-gene subset of SCAN-B the runner is
-3.4 times faster on one core and 5.3 times faster on every core.
+3.5 times faster on one core and 5.2 times faster on every core.
 
 **Why it matters.** Extrapolated from the 12-split run, the full design (300
 splits, 6 selectors, nested tuning) needs about 30-35 CPU-hours without linear

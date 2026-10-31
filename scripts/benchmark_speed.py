@@ -34,6 +34,7 @@ from sklearn.svm import LinearSVC
 from featsel.run import run
 from featsel_datasets.scanb_gse96058.featsel_view import load_xy
 
+ROOT = Path(__file__).resolve().parent.parent
 SEED = 42
 N_SPLITS = 5
 K_VALUES = [10, 50, 250]
@@ -100,6 +101,8 @@ def main():
     parser.add_argument('--n-genes', type=int, default=3000,
                         help='Random genes to keep, so the grid runs in minutes')
     parser.add_argument('--out', required=True, help='Markdown file to write')
+    parser.add_argument('--csv', default=str(ROOT / 'results' / 'speed_benchmark.csv'),
+                        help='CSV of the timings, read by scripts/report_tables.py')
     args = parser.parse_args()
 
     X, y = load_xy(target='pam50 subtype')
@@ -125,19 +128,21 @@ def main():
         np.testing.assert_allclose(other.values, reference.values, err_msg=label)
 
     base = times['scikit-learn, 1 core']
-    lines = [
-        '| Run | Seconds | Speed-up over scikit-learn on 1 core |',
-        '|---|---|---|',
-        *[f'| {label} | {seconds:.1f} | {base / seconds:.1f} |'
-          for label, seconds in times.items()],
-    ]
-    header = (f'SCAN-B, {TASK} vs rest, {args.n_genes} random genes of {n_total}, '
-              f'{len(y)} patients. {N_SPLITS} splits at train fraction 0.5. Lasso and RFE '
-              f'(step 0.5) at k = {", ".join(map(str, K_VALUES))}, logistic regression with '
-              f'fixed C. {cores} cores. All {len(reference)} test macro-F1 scores are equal '
-              f'on every run.\n\n')
-    Path(args.out).write_text(header + '\n'.join(lines) + '\n')
-    print(header + '\n'.join(lines))
+    table = pd.DataFrame({
+        'run': list(times),
+        'seconds': [round(s, 1) for s in times.values()],
+        'speed-up over scikit-learn on 1 core': [round(base / s, 1) for s in times.values()],
+    })
+    setting = (f'SCAN-B, {TASK} vs rest, {args.n_genes} random genes of {n_total}, '
+               f'{len(y)} patients. {N_SPLITS} splits at train fraction 0.5. Lasso and RFE '
+               f'(step 0.5) at k = {", ".join(map(str, K_VALUES))}, logistic regression with '
+               f'fixed C. {cores} cores. All {len(reference)} test macro-F1 scores are equal '
+               f'on every run.')
+    table.assign(setting=setting).to_csv(args.csv, index=False)
+    lines = ['| ' + ' | '.join(table.columns) + ' |', '|---|---|---|',
+             *['| ' + ' | '.join(map(str, row)) + ' |' for row in table.itertuples(index=False)]]
+    Path(args.out).write_text(setting + '\n\n' + '\n'.join(lines) + '\n')
+    print(setting + '\n\n' + '\n'.join(lines))
 
 
 if __name__ == '__main__':
