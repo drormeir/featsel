@@ -2,7 +2,9 @@
 # step 2): every selector of smoke_scanb.yaml, k = 10, 50 and 250, logistic
 # regression with C tuned inside each split, the five PAM50 subtype-vs-rest
 # tasks, 5 splits. Protocol: docs/experiment_design.md.
-# Run with: python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 6 --max-worker-memory-gb 3.5
+# Run with: python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 2 --max-worker-memory-gb 4.5
+# On 16 GB of RAM: 6 workers ran out of memory, and the U-test selectors need
+# more than 3 GB per worker.
 
 dataset: "featsel_datasets.scanb_gse96058.featsel_view"
 target: "pam50 subtype"
