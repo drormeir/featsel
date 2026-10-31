@@ -8,8 +8,12 @@ with a pair of lines:
     <!-- generated: scanb_macro_f1 -->
     <!-- end generated -->
 
-and this script replaces what lies between them with the table named in
-TABLES.
+and this script replaces what lies between them with the table of that
+name (see build). A single number in the text is marked inline,
+
+    <!-- fact: scanb_patients -->3,273<!-- /fact -->
+
+and refilled from results/data_facts.csv (scripts/data_facts.py).
 
 Usage:
     python scripts/report_tables.py docs/report/05_implementation.md docs/report/06_results.md
@@ -25,6 +29,7 @@ from summarize_comparison import _markdown, gain_table, macro_f1_table, own_coun
 
 ROOT = Path(__file__).resolve().parent.parent
 BLOCK = re.compile(r'(<!-- generated: (\w+) -->\n).*?(<!-- end generated -->)', re.DOTALL)
+FACT = re.compile(r'(<!-- fact: (\w+) -->).*?(<!-- /fact -->)', re.DOTALL)
 
 
 @cache
@@ -52,9 +57,16 @@ def build(name):
     return COMPARISON[table](_results(f'comparison_{dataset}'))
 
 
+def _fact(name):
+    """One value from results/data_facts.csv, as scripts/data_facts.py wrote it."""
+    facts = _results('data_facts').set_index('name').value
+    return facts[name]
+
+
 def fill(text):
-    """The text with every generated block rebuilt from its results file."""
-    return BLOCK.sub(lambda m: f'{m.group(1)}{build(m.group(2))}\n{m.group(3)}', text)
+    """The text with every generated block and fact rebuilt from its results file."""
+    text = BLOCK.sub(lambda m: f'{m.group(1)}{build(m.group(2))}\n{m.group(3)}', text)
+    return FACT.sub(lambda m: f'{m.group(1)}{_fact(m.group(2))}{m.group(3)}', text)
 
 
 def main():
