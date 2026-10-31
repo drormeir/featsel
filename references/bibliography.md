@@ -28,7 +28,7 @@ not be redistributed. Download missing papers from the link.
 |------|------------|
 | Donoho, D. and Jin, J. (2004). Higher criticism for detecting sparse heterogeneous mixtures. *Annals of Statistics* 32(3), 962-994. https://arxiv.org/abs/math/0410072 | `local/Donoho_Jin_2004_Higher_Criticism.pdf` |
 | Donoho, D. and Jin, J. (2008). Higher criticism thresholding: Optimal feature selection when useful features are rare and weak. *PNAS* 105(39), 14790-14795. https://pmc.ncbi.nlm.nih.gov/articles/PMC2553037/ | none |
-| Donoho, D. and Jin, J. (2008). Feature selection by Higher Criticism thresholding: optimal phase diagram. https://arxiv.org/abs/0812.2263 | `local/Donoho_Jin_2008_HC_Thresholding_Phase_Diagram.pdf` |
+| Donoho, D. and Jin, J. (2009). Feature selection by higher criticism thresholding achieves the optimal phase diagram. *Philosophical Transactions of the Royal Society A* 367(1906), 4449-4470. https://doi.org/10.1098/rsta.2009.0129. Preprint 2008: https://arxiv.org/abs/0812.2263 | `local/Donoho_Jin_2008_HC_Thresholding_Phase_Diagram.pdf` |
 
 ## Evaluating selection methods
 

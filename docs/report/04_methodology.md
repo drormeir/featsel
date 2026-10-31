@@ -34,7 +34,7 @@ malignant against benign or normal.
 | Tree importance | embedded | Largest mean impurity decrease in a random forest | 200 trees |
 | RFE | wrapper | Recursive elimination with a linear SVM, squared hinge loss (Guyon et al. 2002). Each round removes 50% of the starting features, so two rounds reach `k` | C = 0.01, step 0.5 |
 | HC 2004 | filter, own count | Higher Criticism threshold on U-test p-values (Donoho and Jin 2004) | alpha0 = 0.1 |
-| HC 2008 | filter, own count | Higher Criticism thresholding with the exact null mean i/(N+1) (Donoho and Jin 2008) | alpha0 = 0.1 |
+| HC 2008 | filter, own count | Higher Criticism thresholding with the exact null mean i/(N+1) (Donoho and Jin 2008, 2009) | alpha0 = 0.1 |
 
 Every filter uses the Mann-Whitney U test. Gene values are on an arbitrary
 monotone scale, log2(FPKM + 0.1), and the U test uses only their order. One

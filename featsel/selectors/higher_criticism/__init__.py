@@ -25,7 +25,7 @@ class HigherCriticismSelector(FeatureSelector):
                 The HC thresholding of Donoho and Jin (2008), with each
                 ordered p-value centred and scaled by its exact null mean,
                 i/(N+1), the mean of Beta(i, N-i+1), in place of the
-                approximation i/N of their eq. 1.1.
+                approximation i/N of eq. 1.1 in Donoho and Jin (2009).
 
     The maximum is taken over 1 <= i <= alpha0 N. Every feature with a p-value
     at or below p(i) at the maximum is kept, so the selector picks its own

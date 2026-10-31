@@ -280,7 +280,7 @@ against the published MD5.
   <!-- fact: bm_benign_or_normal -->570<!-- /fact --> vs <!-- fact: bm_malignant -->210<!-- /fact -->.
 - MedMNIST fixes a split of <!-- fact: bm_split_train -->546<!-- /fact --> / <!-- fact: bm_split_val -->78<!-- /fact --> / <!-- fact: bm_split_test -->156<!-- /fact --> images.
 
-**Features.** Each image goes through an ImageNet ResNet-50 (torchvision,
+**Features.** Each image goes through an ImageNet ResNet-50 (He et al. 2016; torchvision,
 `IMAGENET1K_V2` weights) with its last layer removed, giving 2,048 numbers.
 The grayscale image is repeated over three channels and normalized as
 ImageNet images are. The embeddings are computed once and cached; on this

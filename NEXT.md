@@ -50,7 +50,9 @@ Mann-Whitney U test, C is tuned inside each split.
    (`scripts/report_tables.py`). Decided 2026-10-31: step 7 before step 6.
    - [x] 7a. `02_related_work.md`. References checked on Crossref and
      jmlr.org.
-   - [ ] 7b. `09_references.md`: every work cited in chapters 1-8.
+   - [x] 7b. `09_references.md`: every work cited in chapters 1-8. The
+     phase-diagram paper is Donoho and Jin (2009), not 2008. Kuncheva
+     (2007) not yet checked against an index.
    - [ ] 7c. `07_discussion.md`.
    - [ ] 7d. `08_conclusion.md`.
    - [x] PAM50 gene recovery, 2 splits: `docs/pam50_recovery.md`.
