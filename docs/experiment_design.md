@@ -54,7 +54,8 @@ invariant to monotone transforms. It may also *hurt*: the transform is
 rank-based, so it discards the magnitude of a fold change, and its quantiles
 are estimated on the training half only, so at `train_size=0.5` the mapping is
 noisy and out-of-range test values are clipped. A measured check on SCAN-B
-found 96.7% of columns rejecting normality (median excess kurtosis 1.15), so
+found 98.1% of genes rejecting normality (D'Agostino-Pearson at p < 0.05,
+median excess kurtosis 1.44; `results/data_facts.csv`), so
 there is something for it to fix. Result still unknown: the run was started and
 cancelled.
 
