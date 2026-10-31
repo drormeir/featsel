@@ -25,10 +25,13 @@ Mann-Whitney U test, C is tuned inside each split.
      logistic regression and linear SVM from a small fixed grid; refit on the
      whole training half; score once on the test half. Then mark 2b as built.
      A model's `grid` in the config; 3 inner splits at 0.5, by ROC-AUC.
-2. [ ] Smallest complete selector comparison on SCAN-B (tasks 1-2): all
+2. [x] Smallest complete selector comparison on SCAN-B (tasks 1-2): all
    selector entries of `configs/smoke_scanb.yaml`, k = 10, 50, 250,
    logistic regression with tuned C, the five subtype tasks, 5 splits. Write
    a config for it, run it, commit the config and a summary.
+   `configs/comparison_scanb.yaml`, summary in `docs/comparison_scanb.md`.
+   Along the way: RFE ranks once per task (about 11 times faster in the
+   run), Lasso never selects a zero weight.
 3. [ ] The same on BreastMNIST (task 4).
 4. [ ] Measure the speedup (task 3), as in `docs/experiment_design.md` 2e:
    the runner against plain scikit-learn on a small grid.
