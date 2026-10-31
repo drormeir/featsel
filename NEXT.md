@@ -53,7 +53,8 @@ Mann-Whitney U test, C is tuned inside each split.
    - [x] 7b. `09_references.md`: every work cited in chapters 1-8. The
      phase-diagram paper is Donoho and Jin (2009), not 2008. Kuncheva
      (2007) not yet checked against an index.
-   - [ ] 7c. `07_discussion.md`.
+   - [x] 7c. `07_discussion.md`. In words, no result numbers: facts cover
+     only the data.
    - [ ] 7d. `08_conclusion.md`.
    - [x] PAM50 gene recovery, 2 splits: `docs/pam50_recovery.md`.
    - [x] HC behaviour: HC2008 stops at its search edge on both datasets,
