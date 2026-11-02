@@ -313,6 +313,15 @@ the default and nobody notices. Adding a selector means editing three places.
   A generator kept in the instance was rejected: scikit-learn's `clone` does
   not copy it, and its draws would depend on the order of fits. Added
   2026-11-01.
+- The U test (`log_mannwhitneyu`) ranks in NumPy by default, or in PyTorch
+  on a GPU with `device='cuda'`. Added 2026-11-03. Inputs and outputs stay
+  NumPy arrays. The GPU computes only U and the tie term, which are exact
+  in float64; NumPy finishes the p-value on every device, so results are
+  identical. Torch is imported only on that path (the `gpu` extra). JAX was
+  rejected: a new dependency, it reserves most GPU memory per process, and
+  it recompiles per data shape. A hand-written Numba kernel was rejected
+  while library sorts suffice. Limit: each worker process on the GPU holds
+  its own CUDA context, so a run with `device: cuda` needs few workers.
 - How a selector computes its result is its own business. It may wrap
   scikit-learn, or be its own CPU or GPU implementation. Replacing one with
   another keeps the class name and parameters, so configs and results do not

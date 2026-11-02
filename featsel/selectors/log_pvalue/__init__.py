@@ -5,7 +5,8 @@ A float64 p-value below 1e-308 is stored as 0. Here the log is taken before
 anything is multiplied together, so no intermediate value underflows.
 
 - log_mannwhitneyu: the Mann-Whitney U test, per feature. Used by
-  MannWhitneySelector and HigherCriticismSelector.
+  MannWhitneySelector and HigherCriticismSelector. Its ranking runs in
+  NumPy, or in PyTorch on a GPU with device='cuda', with identical results.
 - log_f_sf: the F-test, kept to compare its p-values with the U test's.
   scipy's f.sf returns 0 below 1e-308, and f.logsf returns -inf, because it
   takes the log after computing p.
@@ -110,7 +111,7 @@ def log_f_sf(f, dfn, dfd):
     return out
 
 
-def log_mannwhitneyu(X, y):
+def log_mannwhitneyu(X, y, device='cpu'):
     """
     Natural log of the two-sided Mann-Whitney U p-value of each feature, and its AUC.
 
@@ -130,6 +131,10 @@ def log_mannwhitneyu(X, y):
     y : np.ndarray of shape (n_samples,)
         Exactly two classes. The second in sorted order is the one whose AUC
         is reported.
+    device : str, default='cpu'
+        Where the ranking runs: 'cpu' uses NumPy; any other PyTorch device,
+        such as 'cuda', uses PyTorch on it (the `gpu` extra). Inputs and
+        outputs are NumPy arrays either way, and the results are identical.
 
     Returns
     -------
@@ -145,7 +150,28 @@ def log_mannwhitneyu(X, y):
     n1 = len(y) - n2
     n = n1 + n2
 
-    # One sort per feature gives both the average ranks and the tie groups.
+    if device == 'cpu':
+        u, ties = _u_and_ties(X, second)
+    else:
+        u, ties = _u_and_ties_torch(X, second, device)
+
+    # The rest is per feature and cheap. It stays in NumPy for every device,
+    # so the results do not depend on the device.
+    sigma = np.sqrt(n1 * n2 / 12 * ((n + 1) - ties / (n * (n - 1))))
+    with np.errstate(divide='ignore', invalid='ignore'):  # a constant feature has sigma 0
+        z = (np.abs(u - n1 * n2 / 2) - 0.5) / sigma
+    log_p = np.minimum(np.log(2) + norm.logsf(z), 0.0)
+    return log_p, u / (n1 * n2)
+
+
+def _u_and_ties(X, second):
+    """
+    U of the second class, and the tie term sum(t^3 - t), per feature, in NumPy.
+
+    One sort per feature gives both the average ranks and the tie groups.
+    """
+    n = len(second)
+    n2 = second.sum()
     # Each feature is a row of Xt, so the sort runs over contiguous memory.
     Xt = np.ascontiguousarray(X.T)
     order = np.argsort(Xt, axis=1)
@@ -173,9 +199,52 @@ def log_mannwhitneyu(X, y):
     # A group of t tied values adds t^3 - t; each of its t members adds t^2 - 1.
     t = end - start + 1
     ties = (np.square(t, dtype=np.float64) - 1).sum(axis=1)
-    sigma = np.sqrt(n1 * n2 / 12 * ((n + 1) - ties / (n * (n - 1))))
+    return u, ties
 
-    with np.errstate(divide='ignore', invalid='ignore'):  # a constant feature has sigma 0
-        z = (np.abs(u - n1 * n2 / 2) - 0.5) / sigma
-    log_p = np.minimum(np.log(2) + norm.logsf(z), 0.0)
-    return log_p, u / (n1 * n2)
+
+# Features ranked per batch on a PyTorch device. At 2,678 samples a batch
+# peaks near 420 MB.
+_TORCH_BATCH = 4096
+
+
+def _u_and_ties_torch(X, second, device):
+    """
+    The same as _u_and_ties, in PyTorch on `device`, _TORCH_BATCH features at a time.
+
+    U and the tie term are sums of whole and half numbers, exact in float64
+    on any device, so they equal the NumPy result exactly.
+    """
+    try:
+        import torch
+    except ImportError as error:
+        raise ImportError(f"device={device!r} needs PyTorch: pip install -e '.[gpu]'") from error
+
+    n = len(second)
+    n2 = int(second.sum())
+    second_t = torch.as_tensor(second, device=device)
+    position = torch.arange(n, dtype=torch.int32, device=device)
+    u = np.empty(X.shape[1])
+    ties = np.empty(X.shape[1])
+
+    for g0 in range(0, X.shape[1], _TORCH_BATCH):
+        g1 = g0 + _TORCH_BATCH
+        block = torch.as_tensor(np.ascontiguousarray(X[:, g0:g1].T), device=device)
+        values, order = torch.sort(block, dim=1)
+        del block
+
+        first = torch.empty(values.shape, dtype=torch.bool, device=device)
+        first[:, 0] = True
+        torch.ne(values[:, 1:], values[:, :-1], out=first[:, 1:])
+        del values
+        last = torch.empty_like(first)
+        last[:, -1] = True
+        last[:, :-1] = first[:, 1:]
+        start = torch.cummax(torch.where(first, position, 0), dim=1).values
+        end = torch.cummin(torch.where(last, position, n).flip(1), dim=1).values.flip(1)
+        del first, last
+
+        rank_sum = torch.where(second_t[order], start + end, 0).sum(1, dtype=torch.float64)
+        u[g0:g1] = (rank_sum / 2 + n2 - n2 * (n2 + 1) / 2).cpu().numpy()
+        t = (end - start + 1).to(torch.float64)
+        ties[g0:g1] = (t * t - 1).sum(1).cpu().numpy()
+    return u, ties

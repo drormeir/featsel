@@ -55,6 +55,9 @@ class HigherCriticismSelector(FeatureSelector):
     alpha0 : float, default=0.1
         Fraction of the smallest p-values the maximum searches, as in both
         papers.
+    device : str, default='cpu'
+        Where the U test ranks: 'cpu' (NumPy) or a PyTorch device such as
+        'cuda' (needs the `gpu` extra). The selection is identical either way.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
@@ -78,9 +81,10 @@ class HigherCriticismSelector(FeatureSelector):
     [0, 1, 2, 4]
     """
 
-    def __init__(self, variant='2008', alpha0=0.1, check_input=True):
+    def __init__(self, variant='2008', alpha0=0.1, device='cpu', check_input=True):
         self.variant = variant
         self.alpha0 = alpha0
+        self.device = device
         self.check_input = check_input
 
     def fit(self, X, y):
@@ -103,7 +107,7 @@ class HigherCriticismSelector(FeatureSelector):
             raise ValueError(f"variant must be '2004' or '2008', got '{self.variant}'")
         X, y = self._validate(X, y)
 
-        self.log_pvalues_, self.auc_ = log_mannwhitneyu(X, y)
+        self.log_pvalues_, self.auc_ = log_mannwhitneyu(X, y, self.device)
         self.feature_importances_ = -self.log_pvalues_
 
         n = self.n_features_in_

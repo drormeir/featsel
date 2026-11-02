@@ -258,7 +258,8 @@ from featsel.selectors import (
 # Filters
 VarianceThreshold(threshold=0.01)                        # drop near-constant features
 ANOVAFSelector(n_features=100)                           # univariate F-test
-MannWhitneySelector(n_features=100)                      # univariate U test (AUC); binary only
+MannWhitneySelector(n_features=100)                      # univariate U test (AUC); binary only;
+                                                         # device='cuda' ranks on a GPU (the gpu extra)
 FDRSelector(alpha=0.05)                                  # F-test, Benjamini-Hochberg; own count
 FWESelector(alpha=0.05)                                  # F-test, Bonferroni; own count
 PercentileSelector(percentile=1)                         # F-test, top 1%
@@ -345,7 +346,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 - Designed for PyPI distribution but currently in development (version 0.1.0)
 - Support for Python 3.9-3.13
 - Core dependencies: numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, pyyaml, tqdm
-- Optional dependencies: jupyter (dev), optuna (hyperparameter optimization), torch and torchvision (embeddings: only to compute the BreastMNIST embeddings)
+- Optional dependencies: jupyter (dev), optuna (hyperparameter optimization), torch and torchvision (embeddings: only to compute the BreastMNIST embeddings), torch (gpu: only for the U test with `device='cuda'`)
 
 ### Index Alignment
 - The DataLoader automatically handles mismatches between feature and metadata sample indices

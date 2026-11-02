@@ -9,6 +9,7 @@ from scipy.stats import f as f_dist
 from scipy.stats import mannwhitneyu
 from scipy.stats import t as t_dist
 
+from featsel.selectors import log_pvalue
 from featsel.selectors.log_pvalue import log_f_sf, log_mannwhitneyu
 
 # Two classes and 3,000 patients, as in a SCAN-B subtype-vs-rest task.
@@ -117,3 +118,50 @@ class TestLogMannWhitneyU:
         log_p, _ = log_mannwhitneyu(X, y)
 
         assert (log_p == 0.0).all()
+
+
+def _tied_data():
+    """Two classes, heavy ties, a floor, a constant feature and a separating one."""
+    rng = np.random.default_rng(0)
+    y = np.repeat([3, 7], [120, 80])
+    X = rng.normal(size=(200, 50)).astype(np.float32)
+    X[:, :15] = np.round(X[:, :15])
+    X[:, 15:25] = np.maximum(X[:, 15:25], 0)
+    X[y == 7, 25:40] += 1.5
+    X[:, -1] = 1.0
+    X[:, -2] = np.where(y == 7, 5.0, 0.0)
+    return X, y
+
+
+class TestTorchRanking:
+    """The PyTorch ranking equals the NumPy ranking exactly, on any device."""
+
+    @pytest.fixture(autouse=True)
+    def small_batches(self, monkeypatch):
+        """Several batches even on 50 features."""
+        monkeypatch.setattr(log_pvalue, '_TORCH_BATCH', 7)
+
+    def test_torch_on_cpu_equals_numpy(self):
+        """Test U and the tie term from PyTorch on the CPU against NumPy."""
+        pytest.importorskip('torch')
+        X, y = _tied_data()
+        second = y == 7
+
+        u, ties = log_pvalue._u_and_ties_torch(X, second, 'cpu')
+        u_ref, ties_ref = log_pvalue._u_and_ties(X, second)
+
+        np.testing.assert_array_equal(u, u_ref)
+        np.testing.assert_array_equal(ties, ties_ref)
+
+    def test_cuda_equals_numpy(self):
+        """Test log p and AUC with device='cuda' against the NumPy default."""
+        torch = pytest.importorskip('torch')
+        if not torch.cuda.is_available():
+            pytest.skip('no CUDA GPU')
+        X, y = _tied_data()
+
+        log_p, auc = log_mannwhitneyu(X, y, device='cuda')
+        log_p_ref, auc_ref = log_mannwhitneyu(X, y)
+
+        np.testing.assert_array_equal(log_p, log_p_ref)
+        np.testing.assert_array_equal(auc, auc_ref)

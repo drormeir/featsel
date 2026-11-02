@@ -66,6 +66,11 @@ embeddings = [
     "torch>=2.0",
     "torchvision>=0.15",
 ]
+# Only for the U test on a GPU (device='cuda' on MannWhitneySelector and
+# HigherCriticismSelector).
+gpu = [
+    "torch>=2.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/drormeir/featsel"

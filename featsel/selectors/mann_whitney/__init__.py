@@ -31,6 +31,9 @@ class MannWhitneySelector(FeatureSelector):
     ----------
     n_features : int
         Number of features to keep.
+    device : str, default='cpu'
+        Where the U test ranks: 'cpu' (NumPy) or a PyTorch device such as
+        'cuda' (needs the `gpu` extra). The selection is identical either way.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
@@ -56,8 +59,9 @@ class MannWhitneySelector(FeatureSelector):
 
     rank_once = True
 
-    def __init__(self, n_features=None, check_input=True):
+    def __init__(self, n_features=None, device='cpu', check_input=True):
         self.n_features = n_features
+        self.device = device
         self.check_input = check_input
 
     def fit(self, X, y):
@@ -79,7 +83,7 @@ class MannWhitneySelector(FeatureSelector):
         self._require_n_features()
         X, y = self._validate(X, y)
 
-        self.log_pvalues_, self.auc_ = log_mannwhitneyu(X, y)
+        self.log_pvalues_, self.auc_ = log_mannwhitneyu(X, y, self.device)
         self.feature_importances_ = -self.log_pvalues_
         self.support_ = self._top()
         return self
