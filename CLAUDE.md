@@ -170,7 +170,7 @@ featsel/
 │   │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb
 │   ├── __init__.py          # Imports every selector, which registers it
 │   ├── base.py              # FeatureSelector: scikit-learn base, registration, create()
-│   ├── log_pvalue.py        # U-test and F-test log p-values that stay finite below 1e-308
+│   ├── log_pvalue/          # U-test and F-test log p-values that stay finite below 1e-308
 │   ├── anova_f/             # ANOVAFSelector
 │   ├── correlation/         # CorrelationSelector
 │   ├── fdr/                 # FDRSelector
