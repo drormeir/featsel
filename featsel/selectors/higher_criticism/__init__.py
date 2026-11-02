@@ -55,9 +55,10 @@ class HigherCriticismSelector(FeatureSelector):
     alpha0 : float, default=0.1
         Fraction of the smallest p-values the maximum searches, as in both
         papers.
-    device : str, default='cpu'
-        Where the U test ranks: 'cpu' (NumPy) or a PyTorch device such as
-        'cuda' (needs the `gpu` extra). The selection is identical either way.
+    device : str, default='auto'
+        Where the U test ranks: 'auto' uses a CUDA GPU when one can be used
+        (the `gpu` extra), else NumPy; 'cpu' always NumPy; 'cuda' always the
+        GPU, raising if it cannot. The selection is identical on every device.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
@@ -81,7 +82,7 @@ class HigherCriticismSelector(FeatureSelector):
     [0, 1, 2, 4]
     """
 
-    def __init__(self, variant='2008', alpha0=0.1, device='cpu', check_input=True):
+    def __init__(self, variant='2008', alpha0=0.1, device='auto', check_input=True):
         self.variant = variant
         self.alpha0 = alpha0
         self.device = device

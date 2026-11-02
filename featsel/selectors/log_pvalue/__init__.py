@@ -6,7 +6,7 @@ anything is multiplied together, so no intermediate value underflows.
 
 - log_mannwhitneyu: the Mann-Whitney U test, per feature. Used by
   MannWhitneySelector and HigherCriticismSelector. Its ranking runs in
-  NumPy, or in PyTorch on a GPU with device='cuda', with identical results.
+  PyTorch on a GPU when one can be used, else in NumPy, with identical results.
 - log_f_sf: the F-test, kept to compare its p-values with the U test's.
   scipy's f.sf returns 0 below 1e-308, and f.logsf returns -inf, because it
   takes the log after computing p.
@@ -111,7 +111,7 @@ def log_f_sf(f, dfn, dfd):
     return out
 
 
-def log_mannwhitneyu(X, y, device='cpu'):
+def log_mannwhitneyu(X, y, device='auto'):
     """
     Natural log of the two-sided Mann-Whitney U p-value of each feature, and its AUC.
 
@@ -131,10 +131,12 @@ def log_mannwhitneyu(X, y, device='cpu'):
     y : np.ndarray of shape (n_samples,)
         Exactly two classes. The second in sorted order is the one whose AUC
         is reported.
-    device : str, default='cpu'
-        Where the ranking runs: 'cpu' uses NumPy; any other PyTorch device,
-        such as 'cuda', uses PyTorch on it (the `gpu` extra). Inputs and
-        outputs are NumPy arrays either way, and the results are identical.
+    device : str, default='auto'
+        Where the ranking runs. 'auto' uses a CUDA GPU through PyTorch when
+        one can be used, else NumPy. 'cpu' always uses NumPy. Any other
+        PyTorch device, such as 'cuda', always uses PyTorch on it and raises
+        if it cannot. Inputs and outputs are NumPy arrays on every device,
+        and the results are identical.
 
     Returns
     -------
@@ -150,7 +152,10 @@ def log_mannwhitneyu(X, y, device='cpu'):
     n1 = len(y) - n2
     n = n1 + n2
 
-    if device == 'cpu':
+    if device == 'auto':
+        on_gpu = _u_and_ties_on_gpu_if_possible(X, second)
+        u, ties = on_gpu if on_gpu is not None else _u_and_ties(X, second)
+    elif device == 'cpu':
         u, ties = _u_and_ties(X, second)
     else:
         u, ties = _u_and_ties_torch(X, second, device)
@@ -207,44 +212,81 @@ def _u_and_ties(X, second):
 _TORCH_BATCH = 4096
 
 
+def _u_and_ties_on_gpu_if_possible(X, second):
+    """
+    U and the tie term on a CUDA GPU, or None when no GPU can be used.
+
+    None when PyTorch is missing or cannot load (under a tight address-space
+    cap, such as the runner's per-worker memory cap, it fails to map its
+    libraries), when no GPU is present, or when the GPU runs out of memory
+    because other processes share it.
+    """
+    try:
+        import torch
+    except ImportError:
+        return None
+    if not torch.cuda.is_available():
+        return None
+    try:
+        return _u_and_ties_torch(X, second, 'cuda')
+    except RuntimeError as error:
+        # torch.OutOfMemoryError, or a raw CUDA out-of-memory error
+        # (torch.AcceleratorError in recent PyTorch); both say this.
+        if 'out of memory' not in str(error):
+            raise
+    torch.cuda.empty_cache()
+    return None
+
+
 def _u_and_ties_torch(X, second, device):
     """
     The same as _u_and_ties, in PyTorch on `device`, _TORCH_BATCH features at a time.
 
     U and the tie term are sums of whole and half numbers, exact in float64
-    on any device, so they equal the NumPy result exactly.
+    on any device, so they equal the NumPy result exactly. Afterwards the
+    GPU memory PyTorch cached is released, so an idle worker holds little.
     """
     try:
         import torch
     except ImportError as error:
-        raise ImportError(f"device={device!r} needs PyTorch: pip install -e '.[gpu]'") from error
+        raise ImportError(f"device={device!r} could not import PyTorch. "
+                          "If it is missing: pip install -e '.[gpu]'") from error
 
-    n = len(second)
-    n2 = int(second.sum())
     second_t = torch.as_tensor(second, device=device)
-    position = torch.arange(n, dtype=torch.int32, device=device)
+    position = torch.arange(len(second), dtype=torch.int32, device=device)
     u = np.empty(X.shape[1])
     ties = np.empty(X.shape[1])
-
     for g0 in range(0, X.shape[1], _TORCH_BATCH):
         g1 = g0 + _TORCH_BATCH
-        block = torch.as_tensor(np.ascontiguousarray(X[:, g0:g1].T), device=device)
-        values, order = torch.sort(block, dim=1)
-        del block
-
-        first = torch.empty(values.shape, dtype=torch.bool, device=device)
-        first[:, 0] = True
-        torch.ne(values[:, 1:], values[:, :-1], out=first[:, 1:])
-        del values
-        last = torch.empty_like(first)
-        last[:, -1] = True
-        last[:, :-1] = first[:, 1:]
-        start = torch.cummax(torch.where(first, position, 0), dim=1).values
-        end = torch.cummin(torch.where(last, position, n).flip(1), dim=1).values.flip(1)
-        del first, last
-
-        rank_sum = torch.where(second_t[order], start + end, 0).sum(1, dtype=torch.float64)
-        u[g0:g1] = (rank_sum / 2 + n2 - n2 * (n2 + 1) / 2).cpu().numpy()
-        t = (end - start + 1).to(torch.float64)
-        ties[g0:g1] = (t * t - 1).sum(1).cpu().numpy()
+        # Passed straight in, so the batch can free it once sorted.
+        u[g0:g1], ties[g0:g1] = _u_and_ties_batch(
+            torch, torch.as_tensor(np.ascontiguousarray(X[:, g0:g1].T), device=device),
+            second_t, position)
+    del second_t, position
+    if torch.cuda.is_initialized():
+        torch.cuda.empty_cache()
     return u, ties
+
+
+def _u_and_ties_batch(torch, block, second, position):
+    """U and the tie term of one batch, features as rows, as NumPy arrays."""
+    n = block.shape[1]
+    n2 = int(second.sum())
+    values, order = torch.sort(block, dim=1)
+    del block
+
+    first = torch.empty(values.shape, dtype=torch.bool, device=values.device)
+    first[:, 0] = True
+    torch.ne(values[:, 1:], values[:, :-1], out=first[:, 1:])
+    del values
+    last = torch.empty_like(first)
+    last[:, -1] = True
+    last[:, :-1] = first[:, 1:]
+    start = torch.cummax(torch.where(first, position, 0), dim=1).values
+    end = torch.cummin(torch.where(last, position, n).flip(1), dim=1).values.flip(1)
+    del first, last
+
+    rank_sum = torch.where(second[order], start + end, 0).sum(1, dtype=torch.float64)
+    u = rank_sum / 2 + n2 - n2 * (n2 + 1) / 2
+    t = (end - start + 1).to(torch.float64)
+    return u.cpu().numpy(), (t * t - 1).sum(1).cpu().numpy()

@@ -259,7 +259,7 @@ from featsel.selectors import (
 VarianceThreshold(threshold=0.01)                        # drop near-constant features
 ANOVAFSelector(n_features=100)                           # univariate F-test
 MannWhitneySelector(n_features=100)                      # univariate U test (AUC); binary only;
-                                                         # device='cuda' ranks on a GPU (the gpu extra)
+                                                         # ranks on a GPU when it can (the gpu extra)
 FDRSelector(alpha=0.05)                                  # F-test, Benjamini-Hochberg; own count
 FWESelector(alpha=0.05)                                  # F-test, Bonferroni; own count
 PercentileSelector(percentile=1)                         # F-test, top 1%

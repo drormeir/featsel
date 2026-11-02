@@ -2,6 +2,8 @@
 Tests for the U-test and F-test log p-values.
 """
 
+import sys
+
 import mpmath
 import numpy as np
 import pytest
@@ -165,3 +167,60 @@ class TestTorchRanking:
 
         np.testing.assert_array_equal(log_p, log_p_ref)
         np.testing.assert_array_equal(auc, auc_ref)
+
+
+class TestAutoDevice:
+    """device='auto' uses the GPU when it can and NumPy otherwise, with equal results."""
+
+    def test_auto_equals_cpu(self):
+        """Test that the default gives the NumPy result, whichever device it used."""
+        X, y = _tied_data()
+
+        log_p, auc = log_mannwhitneyu(X, y)
+        log_p_ref, auc_ref = log_mannwhitneyu(X, y, device='cpu')
+
+        np.testing.assert_array_equal(log_p, log_p_ref)
+        np.testing.assert_array_equal(auc, auc_ref)
+
+    def test_falls_back_without_torch(self, monkeypatch):
+        """Test that auto uses NumPy when PyTorch cannot be imported."""
+        monkeypatch.setitem(sys.modules, 'torch', None)   # import torch now raises ImportError
+
+        assert log_pvalue._u_and_ties_on_gpu_if_possible(*_tied_xs()) is None
+
+    def test_falls_back_when_gpu_is_out_of_memory(self, monkeypatch):
+        """Test that auto uses NumPy when the GPU runs out of memory."""
+        torch = pytest.importorskip('torch')
+        monkeypatch.setattr(torch.cuda, 'is_available', lambda: True)
+        monkeypatch.setattr(torch.cuda, 'empty_cache', lambda: None)
+
+        def out_of_memory(*args):
+            raise RuntimeError('CUDA error: out of memory')
+        monkeypatch.setattr(log_pvalue, '_u_and_ties_torch', out_of_memory)
+
+        assert log_pvalue._u_and_ties_on_gpu_if_possible(*_tied_xs()) is None
+
+    def test_other_gpu_errors_are_raised(self, monkeypatch):
+        """Test that auto does not hide a GPU error other than out of memory."""
+        torch = pytest.importorskip('torch')
+        monkeypatch.setattr(torch.cuda, 'is_available', lambda: True)
+
+        def broken(*args):
+            raise RuntimeError('CUDA error: an illegal memory access was encountered')
+        monkeypatch.setattr(log_pvalue, '_u_and_ties_torch', broken)
+
+        with pytest.raises(RuntimeError, match='illegal memory access'):
+            log_pvalue._u_and_ties_on_gpu_if_possible(*_tied_xs())
+
+    def test_explicit_cuda_without_torch_says_so(self, monkeypatch):
+        """Test that device='cuda' raises when PyTorch cannot be imported."""
+        monkeypatch.setitem(sys.modules, 'torch', None)
+
+        with pytest.raises(ImportError, match="device='cuda' could not import PyTorch"):
+            log_mannwhitneyu(*_tied_data(), device='cuda')
+
+
+def _tied_xs():
+    """_tied_data as (X, second), the arguments of the ranking helpers."""
+    X, y = _tied_data()
+    return X, y == 7
