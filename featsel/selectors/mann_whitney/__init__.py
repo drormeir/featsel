@@ -25,7 +25,7 @@ class MannWhitneySelector(FeatureSelector):
     log expression with many values tied at a floor
     Pros: no normality assumption; invariant to monotone transforms
     Cons: one feature at a time, so correlated features all pass together;
-    two classes only; ranking costs about 10 s on 1,500 x 28,500
+    two classes only; ranking costs about 3 s on 1,500 x 28,500
 
     Parameters
     ----------

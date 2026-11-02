@@ -46,7 +46,7 @@ class HigherCriticismSelector(FeatureSelector):
     Pros: fast, no count to choose, adapts the count to the data
     Cons: one feature at a time, so correlated features all pass together;
     the 2004 form can stop at a few features when the strongest p-values are
-    extremely small; ranking costs about 10 s on 1,500 x 28,500
+    extremely small; ranking costs about 3 s on 1,500 x 28,500
 
     Parameters
     ----------

@@ -13,7 +13,7 @@ anything is multiplied together, so no intermediate value underflows.
 
 import numpy as np
 from scipy.special import betaln
-from scipy.stats import norm, rankdata
+from scipy.stats import norm
 
 # Continued-fraction settings, as in Numerical Recipes' betacf.
 _MAX_TERMS = 1000
@@ -145,14 +145,34 @@ def log_mannwhitneyu(X, y):
     n1 = len(y) - n2
     n = n1 + n2
 
-    # Ranks keep X's dtype. They are exact in float32, but their sums are not,
-    # so the sums are taken in float64.
-    low = rankdata(X, method='min', axis=0)
-    high = rankdata(X, method='max', axis=0)
-    u = ((low + high)[second] / 2).sum(axis=0, dtype=np.float64) - n2 * (n2 + 1) / 2
+    # One sort per feature gives both the average ranks and the tie groups.
+    # Each feature is a row of Xt, so the sort runs over contiguous memory.
+    Xt = np.ascontiguousarray(X.T)
+    order = np.argsort(Xt, axis=1)
+    values = np.take_along_axis(Xt, order, axis=1)
+    del Xt
+
+    # In sorted order, a tie group runs from position `start` to `end`.
+    first = np.empty(values.shape, dtype=bool)
+    first[:, 0] = True
+    np.not_equal(values[:, 1:], values[:, :-1], out=first[:, 1:])
+    del values
+    last = np.empty_like(first)
+    last[:, -1] = True
+    last[:, :-1] = first[:, 1:]
+    position = np.arange(n, dtype=np.int32)
+    start = np.maximum.accumulate(np.where(first, position, 0), axis=1)
+    end = np.minimum.accumulate(np.where(last, position, n)[:, ::-1], axis=1)[:, ::-1]
+    del first, last
+
+    # Average rank, 1-based: (start + end) / 2 + 1. Summed over the second
+    # class, in float64 so the sum is exact.
+    rank_sum = np.where(second[order], start + end, 0).sum(axis=1, dtype=np.float64) / 2 + n2
+    u = rank_sum - n2 * (n2 + 1) / 2
 
     # A group of t tied values adds t^3 - t; each of its t members adds t^2 - 1.
-    ties = ((high - low + 1) ** 2 - 1).sum(axis=0, dtype=np.float64)
+    t = end - start + 1
+    ties = (np.square(t, dtype=np.float64) - 1).sum(axis=1)
     sigma = np.sqrt(n1 * n2 / 12 * ((n + 1) - ties / (n * (n - 1))))
 
     with np.errstate(divide='ignore', invalid='ignore'):  # a constant feature has sigma 0
