@@ -126,20 +126,20 @@ class RFESelector(FeatureSelector):
 
         X, y = self._validate(X, y, keep_gpu_tensor=True)
         self.device_ = gpu.resolve(self.device, X)
-        classes = np.unique(y)
-        if self.device_ == 'cpu':
-            rounds = linear_svm.Elimination(np.asarray(X, dtype=np.float64), y, classes,
+        with gpu.exclusive(self.device_):
+            rounds = linear_svm.Elimination(self._newton_input(X), y, np.unique(y),
                                             self.C, self.max_iter)
             self._eliminate(X.shape[1], rounds.squared_weights)
-            return self
-        torch = gpu.import_torch(self.device_)
-        with gpu.exclusive(self.device_):
-            X = torch.as_tensor(X if isinstance(X, torch.Tensor)
-                                else np.require(X, requirements=['W']),
-                                dtype=torch.float64, device=self.device_)
-            rounds = linear_svm.Elimination(X, y, classes, self.C, self.max_iter)
-            self._eliminate(X.shape[1], rounds.squared_weights)
         return self
+
+    def _newton_input(self, X):
+        """X in float64 on device_: a NumPy array for the CPU, else a tensor."""
+        if self.device_ == 'cpu':
+            return np.asarray(X, dtype=np.float64)
+        torch = gpu.import_torch(self.device_)
+        return torch.as_tensor(X if isinstance(X, torch.Tensor)
+                               else np.require(X, requirements=['W']),
+                               dtype=torch.float64, device=self.device_)
 
     def _liblinear_weights(self, X, y):
         """Squared LinearSVC weights per feature, summed over classes, as RFE ranks."""
@@ -147,12 +147,14 @@ class RFESelector(FeatureSelector):
         svm.fit(X, y)
         return (svm.coef_ ** 2).sum(axis=0)
 
-    def _eliminate(self, n_total, squared_weights):
+    def _eliminate(self, n_total, squared_weights, after_fit=None):
         """
         Remove the features with the smallest squared weights, round by round.
 
         squared_weights(features) gives the weights of the surviving features,
-        sorted indices, from an SVM fit on them alone.
+        sorted indices, from an SVM fit on them alone. after_fit(features),
+        if given, is called after every fit, including one more fit on the
+        final survivors, as scikit-learn's RFE scores its steps for RFECV.
         """
         # As scikit-learn's RFE: a fraction of the starting count, at least 1.
         step = int(max(1, self.step * n_total)) if 0 < self.step < 1 else int(self.step)
@@ -164,12 +166,18 @@ class RFESelector(FeatureSelector):
         while support.sum() > self.n_features:
             features = np.flatnonzero(support)
             # As scikit-learn's RFE: squared weights, summed over classes.
-            order = np.argsort(squared_weights(features))
+            order = np.argsort(squared_weights(features), kind='stable')
+            if after_fit is not None:
+                after_fit(features)
             cut = min(step, len(features) - self.n_features)
             dropped, kept = features[order[:cut]], features[order[cut:]]
             removed.append(dropped)
             support[dropped] = False
             ranking[~support] += 1
+        if after_fit is not None:
+            features = np.flatnonzero(support)
+            squared_weights(features)
+            after_fit(features)
 
         elimination = np.concatenate([*removed, kept])
         self.feature_importances_ = np.empty(n_total)

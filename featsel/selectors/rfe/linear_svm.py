@@ -39,6 +39,7 @@ import warnings
 import numpy as np
 from scipy.linalg import blas, cho_factor, cho_solve
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.svm import LinearSVC
 
 # Bisection steps of the line search; 2^-50 of the step is far below float64
 # resolution of the objective.
@@ -63,6 +64,7 @@ class Elimination:
 
     def __init__(self, X, y, classes, C, max_iter):
         self.X = X
+        self.classes = classes
         self.C = C
         self.max_iter = max_iter
         self.K = _gram(X) + 1.0
@@ -79,19 +81,34 @@ class Elimination:
         if len(dropped):
             self.K -= _gram(self.X[:, dropped])
             self.kept = now
-        total = np.zeros(len(features))
+        self.coef, self.intercept = [], []
         for i, signs in enumerate(self.signs):
             gamma, self.inside[i] = dual_coefficients(self.K, signs, self.C, self.max_iter,
                                                       self.inside[i])
             # One product with all of X: cheaper than copying out the survivors.
-            total += _transposed_times(self.X, gamma)[features] ** 2
-        return total
+            self.coef.append(_transposed_times(self.X, gamma)[features])
+            self.intercept.append(gamma.sum())   # the weight on the constant feature
+        return (np.array(self.coef) ** 2).sum(axis=0)
+
+    def linear_svc(self):
+        """The last round's SVM as a fitted LinearSVC, to predict and score with."""
+        svm = LinearSVC()
+        svm.classes_ = self.classes
+        svm.coef_ = np.array(self.coef)
+        svm.intercept_ = np.array(self.intercept)
+        svm.n_features_in_ = svm.coef_.shape[1]
+        return svm
+
+
+def to_numpy(array):
+    """A NumPy array, from a NumPy array or a PyTorch tensor on any device."""
+    return array if isinstance(array, np.ndarray) else array.cpu().numpy()
 
 
 def _gram(X):
     """X X^T as a NumPy array, X a NumPy array or a tensor on any device."""
     if not isinstance(X, np.ndarray):
-        return (X @ X.T).cpu().numpy()
+        return to_numpy(X @ X.T)
     # X.T is column-major, as BLAS wants, without a copy. syrk fills one
     # triangle, at half the work of a full product.
     upper = blas.dsyrk(1.0, np.ascontiguousarray(X).T, trans=1)
@@ -101,7 +118,7 @@ def _gram(X):
 def _transposed_times(X, v):
     """X^T v as a NumPy array, X a NumPy array or a tensor on any device."""
     if not isinstance(X, np.ndarray):
-        return (X.T @ X.new_tensor(v)).cpu().numpy()
+        return to_numpy(X.T @ X.new_tensor(v))
     return blas.dgemv(1.0, X.T, v)
 
 

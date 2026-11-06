@@ -67,3 +67,45 @@ class TestRFECVSelector:
     def test_not_slower_than_sklearn(self, narrow_data):
         """Test that fit is at most 5% slower than scikit-learn's RFECV with a linear SVM."""
         assert_not_slower(*_with_sklearn(), *narrow_data)
+
+
+class TestNewtonRFECV:
+    """RFECVSelector with solver='newton'."""
+
+    @pytest.mark.parametrize('scoring', [None, 'f1_macro'])
+    def test_matches_sklearn_with_converged_svm(self, narrow_data, scoring):
+        """Test count, ranking and scores against RFECV with a converged LinearSVC."""
+        X, y = narrow_data
+        reference = RFECV(LinearSVC(tol=1e-10, max_iter=100_000), step=0.1, cv=3,
+                          scoring=scoring).fit(X, y)
+
+        ours = RFECVSelector(step=0.1, cv=3, scoring=scoring, solver='newton').fit(X, y)
+
+        assert ours.n_features_ == reference.n_features_
+        np.testing.assert_array_equal(ours.ranking_, reference.ranking_)
+        np.testing.assert_array_equal(ours.cv_results_['n_features'],
+                                      reference.cv_results_['n_features'])
+        np.testing.assert_allclose(ours.cv_results_['mean_test_score'],
+                                   reference.cv_results_['mean_test_score'])
+
+    def test_three_classes(self, narrow_data):
+        """Test a one-vs-rest target against scikit-learn."""
+        X, _ = narrow_data
+        y = np.arange(len(X)) % 3
+        reference = RFECV(LinearSVC(tol=1e-10, max_iter=100_000), step=0.1, cv=3).fit(X, y)
+
+        ours = RFECVSelector(step=0.1, cv=3, solver='newton').fit(X, y)
+
+        assert ours.n_features_ == reference.n_features_
+        np.testing.assert_array_equal(ours.support_, reference.support_)
+
+    def test_cuda_matches_cpu(self, narrow_data):
+        """Test that the GPU products give the CPU's choice."""
+        torch = pytest.importorskip('torch')
+        if not torch.cuda.is_available():
+            pytest.skip('no CUDA GPU')
+        cpu = RFECVSelector(cv=3, solver='newton').fit(*narrow_data)
+        cuda = RFECVSelector(cv=3, solver='newton', device='cuda').fit(*narrow_data)
+
+        np.testing.assert_array_equal(cuda.ranking_, cpu.ranking_)
+        assert cuda.device_ == 'cuda'
