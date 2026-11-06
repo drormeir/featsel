@@ -315,19 +315,26 @@ the default and nobody notices. Adding a selector means editing three places.
   2026-11-01.
 - The U test (`log_mannwhitneyu`) ranks in PyTorch on a GPU or in NumPy.
   Added 2026-11-03. The default, `device='auto'`, uses the GPU when it can:
-  PyTorch loads, a GPU is present, and the GPU has room. Otherwise it uses
-  NumPy, which costs only time. `'cpu'` and `'cuda'` force one, and
-  `'cuda'` raises if it cannot. Inputs and outputs stay
-  NumPy arrays. The GPU computes only U and the tie term, which are exact
+  PyTorch loads, a GPU is present, and no other fit holds it (2026-11-07).
+  Otherwise it uses NumPy, which costs only time. `'cpu'` and `'cuda'`
+  force one; `'cuda'` waits for the GPU and raises if it cannot run.
+  Outputs stay NumPy arrays. The GPU computes only U and the tie term, which are exact
   in float64; NumPy finishes the p-value on every device, so results are
   identical. Torch is imported only on that path (the `gpu` extra). JAX was
   rejected: a new dependency, it reserves most GPU memory per process, and
   it recompiles per data shape. A hand-written Numba kernel was rejected
-  while library sorts suffice. Limits: PyTorch cannot load under a
-  per-worker address-space cap below about 5 GB, so capped workers run on
-  the CPU. The GPU has room for about 5 SCAN-B-sized U tests at once; a
-  worker that finds it full runs that call on the CPU. After a call a
-  worker releases its cached GPU memory and holds about 64 MB.
+  while library sorts suffice. After a call a worker releases its cached
+  GPU memory and holds about 64 MB.
+- GPU fits share one machine safely (2026-11-07, `selectors/gpu.py`). A
+  file lock lets one fit at a time hold the GPU; the others wait, or with
+  `'auto'` run on the CPU. Batch sizes come from the GPU's free memory. A
+  GPU out-of-memory error becomes `MemoryError`, which the runner skips
+  like any other. The runner caps each worker's data memory, not its
+  address space: PyTorch's CUDA libraries reserve address space they never
+  use, and could not load under an address-space cap below about 5 GB.
+  Selectors whose GPU result differs from the CPU one default to `'cpu'`
+  and never switch device on their own; each result row records the
+  device used.
 - How a selector computes its result is its own business. It may wrap
   scikit-learn, or be its own CPU or GPU implementation. Replacing one with
   another keeps the class name and parameters, so configs and results do not

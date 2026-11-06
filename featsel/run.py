@@ -34,7 +34,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yaml
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, effective_n_jobs
 from joblib.externals.loky.process_executor import TerminatedWorkerError
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
@@ -146,7 +146,7 @@ DEFAULTS = {
     'preprocess': ['standard'],
     'metrics': list(METRICS),
     'n_jobs': 1,
-    'max_worker_memory_gb': None,
+    'max_worker_memory_gb': 'auto',
     'tuning': {'n_splits': 3, 'train_size': 0.5, 'scoring': 'roc_auc'},
 }
 
@@ -316,6 +316,7 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 'n_selected': len(support),
                 'selection_time_s': selection_time,
                 'selection_peak_mb': peak_bytes / 1024 ** 2,
+                'selection_device': getattr(selector, 'device_', 'cpu'),
                 'fit_time_s': fit_time,
                 'predict_time_s': predict_time,
                 'selector_params': json.dumps(sel_spec.get('params') or {}),
@@ -350,16 +351,19 @@ def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip
     folder holds the split's prepared X_train.npy and X_test.npy. They are
     opened read-only and memory-mapped, so all workers share one copy.
 
-    With config['max_worker_memory_gb'] set, the process's address space is
+    With config['max_worker_memory_gb'] set, the process's data memory is
     capped at that size while the job runs. An allocation past the cap
     raises MemoryError, which skips the cell instead of letting the kernel
-    kill a process. The cap counts reserved memory, including the mapped data
-    and math-library thread buffers, so it needs headroom above real use.
+    kill a process. Data memory is what the process writes: arrays, thread
+    buffers, its own copies. It leaves out the mapped split, which every
+    worker shares, and the address space CUDA reserves without using, so a
+    worker can use the GPU under a cap of a few GB. An address-space cap
+    would refuse PyTorch's CUDA libraries below about 5 GB.
     """
     limit_gb = config['max_worker_memory_gb']
-    previous = resource.getrlimit(resource.RLIMIT_AS)
+    previous = resource.getrlimit(resource.RLIMIT_DATA)
     if limit_gb is not None:
-        resource.setrlimit(resource.RLIMIT_AS, (int(limit_gb * 1024 ** 3), previous[1]))
+        resource.setrlimit(resource.RLIMIT_DATA, (int(limit_gb * 1024 ** 3), previous[1]))
 
     rows, failures = [], []
     try:
@@ -369,7 +373,7 @@ def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip
                                     k_values, config, skip, truth, failures))
     finally:
         # Workers are reused for later jobs and later runs, so lift the cap.
-        resource.setrlimit(resource.RLIMIT_AS, previous)
+        resource.setrlimit(resource.RLIMIT_DATA, previous)
     return rows, failures
 
 
@@ -515,7 +519,7 @@ def print_plan(config, X, y, tasks, target, name, total):
     print(f"Workers      : {config['n_jobs']} (parallel over task x selector jobs, "
           f"one shared copy of each split)")
     if config['max_worker_memory_gb'] is not None:
-        print(f"Memory cap   : {config['max_worker_memory_gb']} GB per worker")
+        print(f"Memory cap   : {config['max_worker_memory_gb']:.1f} GB of data per worker")
 
     print("Selectors    :")
     for spec in config['selectors']:
@@ -561,57 +565,57 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
     features, as a simulation knows them. Each row then also records
     truth_recall (share of them selected) and truth_precision (share of the
     selection that is truly informative).
+
+    A run is meant to last hours unattended. If a worker dies, as compiled
+    code does when memory is refused, the run resumes from the rows already
+    written with half the workers, each under a cap twice as large. It stops
+    only when a worker dies with one worker left.
     """
     config = {**DEFAULTS, **config}
     config['tuning'] = {**DEFAULTS['tuning'], **config['tuning']}
 
     out_path = Path(config['output'])
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    skip = _done_keys(out_path) if resume else set()
-    if resume and skip:
-        print(f"Resuming: {len(skip)} executions already in {out_path}")
-    elif not resume and out_path.exists():
+    if not resume and out_path.exists():
         out_path.unlink()
 
     n_k = sum(len(s.get('k', [None])) for s in config['selectors'])
     tasks = build_tasks(y)
     total = (len(tasks) * config['n_splits'] * len(config['train_sizes'])
              * len(config['preprocess']) * n_k * len(config['models']))
+    auto_cap = config['max_worker_memory_gb'] == 'auto'
+    config['n_jobs'] = effective_n_jobs(config['n_jobs'])
+    if auto_cap:
+        config['max_worker_memory_gb'] = _auto_worker_cap_gb(X, config['n_jobs'])
     print_plan(config, X, y, tasks, target, name, total)
 
-    written, start = 0, time.perf_counter()
-    writer = None
+    start = time.perf_counter()
+    written = 0
     failures = []
-    has_header = out_path.exists() and out_path.stat().st_size > 0
-    # The bar counts every execution in the grid, including any skipped by
-    # --resume, so its total matches the number printed above.
-    progress = tqdm(total=total, initial=len(skip), unit='exec',
-                    smoothing=0.05, dynamic_ncols=True)
-    try:
-        with progress, open(out_path, 'a', newline='') as handle:
-            for row in iter_rows(X, y, config, failures, skip=skip, truth=truth):
-                if writer is None:
-                    writer = csv.DictWriter(handle, fieldnames=list(row))
-                    if not has_header:
-                        writer.writeheader()
-
-                writer.writerow(row)
-                handle.flush()  # a killed run keeps everything already finished
-                written += 1
-                progress.update(1)
-                progress.set_postfix_str(
-                    f"{row['task']} {row['selector']} k={row['k']} {row['model']}",
-                    refresh=False,
-                )
-    except TerminatedWorkerError:
-        raise WorkerDiedError(
-            "Stopped: a worker process died, most likely out of memory. Compiled "
-            "code such as liblinear aborts when memory is refused, instead of "
-            "raising MemoryError, so the cell could not be skipped.\n"
-            f"{written} executions are saved in {out_path}.\n"
-            "Rerun with --resume and fewer workers (--n-jobs) or a higher "
-            "--max-worker-memory-gb."
-        ) from None
+    while True:
+        skip = _done_keys(out_path)
+        if skip:
+            print(f"Resuming: {len(skip)} executions already in {out_path}")
+        try:
+            written += _write_rows(X, y, config, failures, skip, truth, out_path, total)
+            break
+        except TerminatedWorkerError:
+            saved = len(_done_keys(out_path))
+            if config['n_jobs'] == 1:
+                raise WorkerDiedError(
+                    "Stopped: the only worker process died, most likely out of memory. "
+                    "Compiled code such as liblinear aborts when memory is refused, "
+                    "instead of raising MemoryError, so the cell could not be skipped.\n"
+                    f"{saved} executions are saved in {out_path}.\n"
+                    "Rerun with --resume and a higher --max-worker-memory-gb."
+                ) from None
+            config['n_jobs'] = max(1, config['n_jobs'] // 2)
+            if auto_cap:
+                config['max_worker_memory_gb'] = _auto_worker_cap_gb(X, config['n_jobs'])
+            print(f"\nA worker process died, most likely out of memory. {saved} executions "
+                  f"are saved. Resuming with {config['n_jobs']} workers"
+                  + (f", {config['max_worker_memory_gb']:.1f} GB each."
+                     if config['max_worker_memory_gb'] is not None else "."))
 
     print(f"Wrote {written} executions to {out_path} "
           f"in {time.perf_counter() - start:.0f}s")
@@ -622,6 +626,76 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
         print("Rerun with --resume and fewer workers or a higher memory cap "
               "to fill them in.")
     return out_path
+
+
+def _write_rows(X, y, config, failures, skip, truth, out_path, total):
+    """
+    Append every execution not in skip to out_path; return how many were written.
+
+    Refuses to append to a file whose columns differ from this run's, which
+    would misalign every new row under the old header.
+    """
+    written = 0
+    writer = None
+    has_header = out_path.exists() and out_path.stat().st_size > 0
+    # The bar counts every execution in the grid, including any skipped by
+    # --resume, so its total matches the number printed above.
+    progress = tqdm(total=total, initial=len(skip), unit='exec',
+                    smoothing=0.05, dynamic_ncols=True)
+    with progress, open(out_path, 'a', newline='') as handle:
+        for row in iter_rows(X, y, config, failures, skip=skip, truth=truth):
+            if writer is None:
+                writer = csv.DictWriter(handle, fieldnames=list(row))
+                if not has_header:
+                    writer.writeheader()
+                elif _header(out_path) != list(row):
+                    raise ValueError(
+                        f"{out_path} has other columns than this run writes; resuming "
+                        "it would misalign the rows. Write to a new --out instead.")
+
+            writer.writerow(row)
+            handle.flush()  # a killed run keeps everything already finished
+            written += 1
+            progress.update(1)
+            progress.set_postfix_str(
+                f"{row['task']} {row['selector']} k={row['k']} {row['model']}",
+                refresh=False,
+            )
+    return written
+
+
+def _header(path):
+    """The column names in the first line of a CSV."""
+    with open(path, newline='') as handle:
+        return next(csv.reader(handle))
+
+
+def _auto_worker_cap_gb(X, n_jobs):
+    """
+    A per-worker memory cap that keeps every worker together within the RAM
+    free now, or None where the free RAM cannot be read (outside Linux).
+
+    The prepared splits live in shared memory, which counts against RAM: up
+    to three at once, each the size of X in float32. One more GB is left for
+    this process and the system.
+    """
+    available = _available_bytes()
+    if available is None:
+        return None
+    reserve = 3 * X.shape[0] * X.shape[1] * 4 + 1024 ** 3
+    return max(0.5, (available - reserve) / n_jobs / 1024 ** 3)
+
+
+def _available_bytes():
+    """MemAvailable from /proc/meminfo, or None where it does not exist."""
+    try:
+        with open('/proc/meminfo') as handle:
+            for line in handle:
+                if line.startswith('MemAvailable:'):
+                    return int(line.split()[1]) * 1024
+    except FileNotFoundError:
+        pass
+    return None
 
 
 def run_config(config, resume=False):

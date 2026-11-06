@@ -372,12 +372,12 @@ class GreedySelector(FeatureSelector):
         return self
 
 
-def _address_space_gb():
-    """This process's current virtual memory, from /proc."""
+def _data_gb():
+    """This process's current data memory, the size RLIMIT_DATA caps, from /proc."""
     for line in Path('/proc/self/status').read_text().splitlines():
-        if line.startswith('VmSize:'):
+        if line.startswith('VmData:'):
             return int(line.split()[1]) / 1024 ** 2
-    raise RuntimeError('No VmSize in /proc/self/status')
+    raise RuntimeError('No VmData in /proc/self/status')
 
 
 class TestMemoryCap:
@@ -386,7 +386,7 @@ class TestMemoryCap:
     def test_cell_past_the_cap_is_skipped_and_reported(self, experiment, capsys):
         """Test that the greedy selector's cells are skipped and the rest written."""
         experiment['selectors'] = [{'name': 'GreedySelector'}, {'name': 'ANOVAFSelector', 'k': [5]}]
-        experiment['max_worker_memory_gb'] = _address_space_gb() + 0.5
+        experiment['max_worker_memory_gb'] = _data_gb() + 0.5
 
         df = pd.read_csv(run_config(experiment))
 
@@ -398,12 +398,21 @@ class TestMemoryCap:
 
     def test_cap_is_lifted_after_the_split(self, experiment):
         """Test that the process gets its old limit back, so later work is not capped."""
-        before = resource.getrlimit(resource.RLIMIT_AS)
-        experiment['max_worker_memory_gb'] = _address_space_gb() + 2
+        before = resource.getrlimit(resource.RLIMIT_DATA)
+        experiment['max_worker_memory_gb'] = _data_gb() + 2
 
         run_config(experiment)
 
-        assert resource.getrlimit(resource.RLIMIT_AS) == before
+        assert resource.getrlimit(resource.RLIMIT_DATA) == before
+
+    def test_auto_cap_shares_free_memory(self, experiment, monkeypatch, capsys):
+        """Test that the default cap is the free memory, less the reserve, per worker."""
+        monkeypatch.setattr(run_module, '_available_bytes', lambda: 9 * 1024 ** 3)
+        experiment['n_jobs'] = 2
+
+        run_config(experiment)
+
+        assert 'Memory cap   : 4.0 GB of data per worker' in capsys.readouterr().out
 
 
 def test_dead_worker_stops_with_a_message(experiment, monkeypatch):
@@ -423,6 +432,41 @@ def test_dead_worker_stops_with_a_message(experiment, monkeypatch):
     assert 'most likely out of memory' in str(stopped.value.code)
     assert '1 executions are saved' in str(stopped.value.code)
     assert len(pd.read_csv(experiment['output'])) == 1
+
+
+def test_dead_worker_resumes_with_fewer_workers(experiment, monkeypatch, capsys):
+    """Test that a worker death with workers to spare resumes and completes the grid."""
+    full = pd.read_csv(run_config(experiment))
+    real_iter_rows = run_module.iter_rows
+    calls = []
+
+    def dies_once(*args, **kwargs):
+        calls.append(args[2]['n_jobs'])
+        rows = real_iter_rows(*args, **kwargs)
+        if len(calls) == 1:
+            yield next(rows)
+            raise TerminatedWorkerError('worker aborted')
+        yield from rows
+
+    monkeypatch.setattr(run_module, 'iter_rows', dies_once)
+    experiment['n_jobs'] = 4
+
+    resumed = pd.read_csv(run_config(experiment))
+
+    assert calls == [4, 2]
+    assert 'Resuming with 2 workers' in capsys.readouterr().out
+    assert len(resumed) == len(full)
+    assert not resumed.duplicated(KEY_COLUMNS).any()
+
+
+def test_resume_refuses_other_columns(experiment):
+    """Test that resuming into a CSV with another header raises instead of misaligning."""
+    out = Path(experiment['output'])
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(','.join(KEY_COLUMNS) + '\n')
+
+    with pytest.raises(ValueError, match='other columns'):
+        run_config(experiment, resume=True)
 
 
 class TestSharedSplits:

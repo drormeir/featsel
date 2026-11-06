@@ -61,14 +61,19 @@ the worker processes takes much of the run.
 
 ## Running safely on a small machine
 
-Full SCAN-B needs several GB per worker. Two mechanisms keep a long run
+Full SCAN-B needs several GB per worker. Three mechanisms keep a long run
 alive.
 
 - **A memory cap per worker** (`--max-worker-memory-gb`). A job past the cap
   gets a `MemoryError`. The runner skips that cell, lists it at the end, and
-  goes on.
+  goes on. The cap counts data memory, what the worker writes. By default
+  the RAM free at the start is shared among the workers.
 - **Resume** (`--resume`). Rows are written as they finish. A stopped run
   continues where it stopped, without repeating or dropping work.
+- **Restart with fewer workers.** Compiled code such as liblinear aborts
+  the worker instead of raising `MemoryError`. The runner then resumes on
+  its own with half the workers, each with twice the cap. It stops only
+  when its last worker dies.
 
 Both were needed on a 16 GB machine. Six workers ran out of memory and the
 operating system stopped the run; it resumed with fewer workers. With a cap
