@@ -520,3 +520,16 @@ def test_resume_with_a_selector_without_k_does_not_duplicate(experiment):
 
     assert len(again) == len(first)
     assert not again.duplicated(KEY_COLUMNS).any()
+
+
+def test_writes_its_settings_beside_the_csv(experiment):
+    """Test that a JSON file beside the CSV records the config and the environment."""
+    import json
+
+    out = run_config(experiment)
+
+    details = json.loads(out.with_suffix('.json').read_text())
+    assert details['config']['n_splits'] == experiment['n_splits']
+    assert details['finished'] is not None
+    assert details['written'] == len(pd.read_csv(out))
+    assert 'cpu' in details['environment']

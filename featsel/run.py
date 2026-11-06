@@ -46,6 +46,7 @@ from sklearn.preprocessing import QuantileTransformer, StandardScaler
 from sklearn.svm import LinearSVC
 from tqdm.auto import tqdm
 
+from . import environment
 from .data_loader import DataLoader
 from .metrics import KEY_COLUMNS, METRICS
 from .selectors import FeatureSelector
@@ -566,6 +567,10 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
     truth_recall (share of them selected) and truth_precision (share of the
     selection that is truly informative).
 
+    Beside the CSV, a JSON file of the same name records the config, the
+    machine, the library versions and the git commit, and when the run
+    started and finished.
+
     A run is meant to last hours unattended. If a worker dies, as compiled
     code does when memory is refused, the run resumes from the rows already
     written with half the workers, each under a cap twice as large. It stops
@@ -588,6 +593,10 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
     if auto_cap:
         config['max_worker_memory_gb'] = _auto_worker_cap_gb(X, config['n_jobs'])
     print_plan(config, X, y, tasks, target, name, total)
+    details = {'started': environment.now(), 'resumed': resume,
+               'dataset': name, 'target': target,
+               'n_samples': X.shape[0], 'n_features': X.shape[1], 'config': config}
+    environment.write_json(out_path.with_suffix('.json'), **details, finished=None)
 
     start = time.perf_counter()
     written = 0
@@ -619,6 +628,9 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
 
     print(f"Wrote {written} executions to {out_path} "
           f"in {time.perf_counter() - start:.0f}s")
+    environment.write_json(out_path.with_suffix('.json'), **details,
+                           finished=environment.now(),
+                           written=written, out_of_memory=failures)
     if failures:
         print(f"\nOut of memory, skipped ({len(failures)}):")
         for failure in failures:

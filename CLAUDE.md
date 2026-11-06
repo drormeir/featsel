@@ -166,6 +166,7 @@ featsel/
 ├── analysis.py              # summarize() and kuncheva_index() over the runner's CSV
 ├── metrics.py               # Predictive metrics and the CSV's key columns
 ├── strength.py              # loo_confusion(): nested leave-one-out score of chosen genes
+├── environment.py           # Machine, versions and commit, saved as JSON beside results
 ├── selectors/               # Feature selection methods, one subpackage each:
 │   │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb
 │   ├── __init__.py          # Imports every selector, which registers it
@@ -332,6 +333,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 ### Data Files
 - Downloaded data is not tracked in git: `.gitignore` ignores `*.gz`, `*.npz`, `*.part` and `*.txt` anywhere, and a file that must be tracked is named as an exception (e.g. `!requirements.txt`); the loader code is tracked
 - Results in `results/` are tracked, so the report's generated tables (`scripts/report_tables.py`) can be rebuilt from git. The one exception is the 36 MB `results/experiment_breastmnist.csv`
+- `results/local/` is gitignored: benchmark series and exploratory runs, each a CSV plus a JSON of its settings and environment, for plotting
 - GSE96058's gene expression file is 592 MB; loading it takes about a minute
 - BreastMNIST's images are 31 MB; its cached embeddings 4 MB
 - When working with data loading, test on a subset first to avoid long load times
