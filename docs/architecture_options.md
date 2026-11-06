@@ -364,6 +364,15 @@ the default and nobody notices. Adding a selector means editing three places.
   scikit-learn's: a different method, not a faster one. The selector's own
   `n_jobs` is the speed-up: 21.5 s on one thread, 4.2 s on 12. In the runner,
   threads per worker times workers should not exceed the cores.
+- Mutual information for classification is computed by sorting
+  (2026-11-07, `selectors/mutual_info/knn_1d.py`). A feature is
+  one-dimensional, so scikit-learn's KD-tree searches become a sort per
+  class for the k-th neighbor and a binary search for the count within the
+  radius. The noise, the distances and the order of every mean are
+  scikit-learn's, so the result is identical, bit for bit. A class of 2 to
+  7 samples goes to scikit-learn, which switches to brute-force distances
+  there; so does regression. No GPU path: the GTX 1650's float64 is slow,
+  and float32 would change the noise of 1e-10 that breaks ties.
 - How a selector computes its result is its own business. It may wrap
   scikit-learn, or be its own CPU or GPU implementation. Replacing one with
   another keeps the class name and parameters, so configs and results do not

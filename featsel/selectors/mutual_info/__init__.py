@@ -5,6 +5,7 @@ Mutual information: rank features by their dependence on the target.
 from sklearn.feature_selection import mutual_info_classif, mutual_info_regression
 
 from ..base import FeatureSelector
+from . import knn_1d
 
 
 class MutualInfoSelector(FeatureSelector):
@@ -14,6 +15,11 @@ class MutualInfoSelector(FeatureSelector):
     Best for: Capturing non-linear relationships, both classification and regression
     Pros: Detects any relationship (linear/non-linear), model-agnostic
     Cons: Computationally expensive (O(n*m*log(n))), requires hyperparameter tuning
+
+    Classification computes scikit-learn's mutual_info_classif by sorting
+    each feature instead of building KD-trees (see knn_1d.py), with the same
+    result, bit for bit. A class of 2 to 7 samples, where scikit-learn
+    switches to brute force, goes to scikit-learn itself, as does regression.
 
     Parameters
     ----------
@@ -71,9 +77,14 @@ class MutualInfoSelector(FeatureSelector):
         self._require_n_features()
         X, y = self._validate(X, y)
 
-        mi_func = self._by_task(mutual_info_classif, mutual_info_regression)
-        self.feature_importances_ = mi_func(
-            X, y, n_neighbors=self.n_neighbors, random_state=self.random_state
-        )
+        if self.task == 'classification' and knn_1d.matches_sklearn(y, self.n_neighbors):
+            # The same estimate by sorting; scikit-learn's result exactly.
+            self.feature_importances_ = knn_1d.mutual_info_classif(
+                X, y, self.n_neighbors, self.random_state)
+        else:
+            mi_func = self._by_task(mutual_info_classif, mutual_info_regression)
+            self.feature_importances_ = mi_func(
+                X, y, n_neighbors=self.n_neighbors, random_state=self.random_state
+            )
         self.support_ = self._top()
         return self
