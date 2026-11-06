@@ -169,6 +169,42 @@ class TestTorchRanking:
         np.testing.assert_array_equal(auc, auc_ref)
 
 
+class TestTensorInput:
+    """Tensors in give the same NumPy arrays out as NumPy arrays in."""
+
+    def test_cpu_tensors(self):
+        """Test X and y as CPU tensors, with each device setting."""
+        torch = pytest.importorskip('torch')
+        X, y = _tied_data()
+        log_p_ref, auc_ref = log_mannwhitneyu(X, y, device='cpu')
+
+        for device in ('cpu', 'auto'):
+            log_p, auc = log_mannwhitneyu(torch.from_numpy(X), torch.from_numpy(y),
+                                          device=device)
+
+            assert isinstance(log_p, np.ndarray)
+            np.testing.assert_array_equal(log_p, log_p_ref)
+            np.testing.assert_array_equal(auc, auc_ref)
+
+    def test_gpu_tensor_is_ranked_on_its_device(self, monkeypatch):
+        """Test that a GPU tensor ranks on the GPU even with device='cpu'."""
+        torch = pytest.importorskip('torch')
+        if not torch.cuda.is_available():
+            pytest.skip('no CUDA GPU')
+        monkeypatch.setattr(log_pvalue, '_TORCH_BATCH', 7)
+        X, y = _tied_data()
+        log_p_ref, auc_ref = log_mannwhitneyu(X, y, device='cpu')
+
+        def no_numpy(*args):
+            raise AssertionError('ranked in NumPy')
+        monkeypatch.setattr(log_pvalue, '_u_and_ties', no_numpy)
+        log_p, auc = log_mannwhitneyu(torch.from_numpy(X).cuda(), torch.from_numpy(y).cuda(),
+                                      device='cpu')
+
+        np.testing.assert_array_equal(log_p, log_p_ref)
+        np.testing.assert_array_equal(auc, auc_ref)
+
+
 class TestAutoDevice:
     """device='auto' uses the GPU when it can and NumPy otherwise, with equal results."""
 

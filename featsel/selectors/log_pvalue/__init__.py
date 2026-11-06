@@ -12,6 +12,8 @@ anything is multiplied together, so no intermediate value underflows.
   takes the log after computing p.
 """
 
+import sys
+
 import numpy as np
 from scipy.special import betaln
 from scipy.stats import norm
@@ -127,16 +129,18 @@ def log_mannwhitneyu(X, y, device='auto'):
 
     Parameters
     ----------
-    X : np.ndarray of shape (n_samples, n_features)
-    y : np.ndarray of shape (n_samples,)
+    X : np.ndarray or torch.Tensor of shape (n_samples, n_features)
+        A tensor on a GPU is ranked there, whatever `device` says, without
+        a copy to the CPU. A tensor on the CPU is treated as a NumPy array.
+    y : np.ndarray or torch.Tensor of shape (n_samples,)
         Exactly two classes. The second in sorted order is the one whose AUC
         is reported.
     device : str, default='auto'
         Where the ranking runs. 'auto' uses a CUDA GPU through PyTorch when
         one can be used, else NumPy. 'cpu' always uses NumPy. Any other
         PyTorch device, such as 'cuda', always uses PyTorch on it and raises
-        if it cannot. Inputs and outputs are NumPy arrays on every device,
-        and the results are identical.
+        if it cannot. Outputs are NumPy arrays on every device, and the
+        results are identical.
 
     Returns
     -------
@@ -144,6 +148,15 @@ def log_mannwhitneyu(X, y, device='auto'):
         log p per feature; 0 (p = 1) for a feature with a single value.
     auc : np.ndarray of shape (n_features,)
     """
+    torch = sys.modules.get('torch')   # a tensor exists only once PyTorch is imported
+    if torch is not None and isinstance(y, torch.Tensor):
+        y = y.cpu().numpy()
+    if torch is not None and isinstance(X, torch.Tensor):
+        if X.device.type == 'cpu':
+            X = X.numpy()
+        else:
+            device = str(X.device)
+
     labels = np.unique(y)
     if len(labels) != 2:
         raise ValueError(f"The Mann-Whitney U test needs two classes, got {len(labels)}")
@@ -258,10 +271,12 @@ def _u_and_ties_torch(X, second, device):
     ties = np.empty(X.shape[1])
     for g0 in range(0, X.shape[1], _TORCH_BATCH):
         g1 = g0 + _TORCH_BATCH
+        block = X[:, g0:g1].T
+        if isinstance(block, np.ndarray):
+            block = np.ascontiguousarray(block)
         # Passed straight in, so the batch can free it once sorted.
         u[g0:g1], ties[g0:g1] = _u_and_ties_batch(
-            torch, torch.as_tensor(np.ascontiguousarray(X[:, g0:g1].T), device=device),
-            second_t, position)
+            torch, torch.as_tensor(block, device=device).contiguous(), second_t, position)
     del second_t, position
     if torch.cuda.is_initialized():
         torch.cuda.empty_cache()
