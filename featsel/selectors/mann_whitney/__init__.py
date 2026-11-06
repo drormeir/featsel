@@ -25,7 +25,7 @@ class MannWhitneySelector(FeatureSelector):
     log expression with many values tied at a floor
     Pros: no normality assumption; invariant to monotone transforms
     Cons: one feature at a time, so correlated features all pass together;
-    two classes only; ranking costs about 3 s on 1,500 x 28,500
+    two classes only
 
     Parameters
     ----------
@@ -34,12 +34,15 @@ class MannWhitneySelector(FeatureSelector):
     device : str, default='auto'
         Where the U test ranks: 'auto' uses a CUDA GPU when one can be used
         (the `gpu` extra), else NumPy; 'cpu' always NumPy; 'cuda' always the
-        GPU, raising if it cannot. The selection is identical on every device.
+        GPU, waiting while another fit holds it and raising if it cannot run.
+        The selection is identical on every device.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
     Attributes
     ----------
+    device_ : str
+        The device the U test ran on: 'cpu' or 'cuda'.
     auc_ : np.ndarray
         AUC of each feature for the second class in sorted order.
     log_pvalues_ : np.ndarray
@@ -82,9 +85,10 @@ class MannWhitneySelector(FeatureSelector):
             Fitted selector.
         """
         self._require_n_features()
-        X, y = self._validate(X, y)
+        X, y = self._validate(X, y, keep_gpu_tensor=True)
 
-        self.log_pvalues_, self.auc_ = log_mannwhitneyu(X, y, self.device)
+        self.log_pvalues_, self.auc_, self.device_ = log_mannwhitneyu(
+            X, y, self.device, return_device=True)
         self.feature_importances_ = -self.log_pvalues_
         self.support_ = self._top()
         return self

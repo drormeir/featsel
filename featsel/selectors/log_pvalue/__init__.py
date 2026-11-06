@@ -18,6 +18,8 @@ import numpy as np
 from scipy.special import betaln
 from scipy.stats import norm
 
+from .. import gpu
+
 # Continued-fraction settings, as in Numerical Recipes' betacf.
 _MAX_TERMS = 1000
 _EPS = 1e-15
@@ -113,7 +115,7 @@ def log_f_sf(f, dfn, dfd):
     return out
 
 
-def log_mannwhitneyu(X, y, device='auto'):
+def log_mannwhitneyu(X, y, device='auto', return_device=False):
     """
     Natural log of the two-sided Mann-Whitney U p-value of each feature, and its AUC.
 
@@ -137,16 +139,21 @@ def log_mannwhitneyu(X, y, device='auto'):
         is reported.
     device : str, default='auto'
         Where the ranking runs. 'auto' uses a CUDA GPU through PyTorch when
-        one can be used, else NumPy. 'cpu' always uses NumPy. Any other
-        PyTorch device, such as 'cuda', always uses PyTorch on it and raises
-        if it cannot. Outputs are NumPy arrays on every device, and the
+        one is present and no other fit holds it, else NumPy. 'cpu' always
+        uses NumPy. Any other PyTorch device, such as 'cuda', always uses
+        PyTorch on it, waits for the GPU if another fit holds it, and raises
+        if it cannot run. Outputs are NumPy arrays on every device, and the
         results are identical.
+    return_device : bool, default=False
+        Also return the device the ranking ran on, as text.
 
     Returns
     -------
     log_p : np.ndarray of shape (n_features,)
         log p per feature; 0 (p = 1) for a feature with a single value.
     auc : np.ndarray of shape (n_features,)
+    device : str
+        Only with return_device: 'cpu' for NumPy, else the PyTorch device.
     """
     torch = sys.modules.get('torch')   # a tensor exists only once PyTorch is imported
     if torch is not None and isinstance(y, torch.Tensor):
@@ -166,12 +173,12 @@ def log_mannwhitneyu(X, y, device='auto'):
     n = n1 + n2
 
     if device == 'auto':
-        on_gpu = _u_and_ties_on_gpu_if_possible(X, second)
-        u, ties = on_gpu if on_gpu is not None else _u_and_ties(X, second)
+        u, ties, device = _u_and_ties_auto(X, second)
     elif device == 'cpu':
         u, ties = _u_and_ties(X, second)
     else:
-        u, ties = _u_and_ties_torch(X, second, device)
+        with gpu.exclusive(device):
+            u, ties = _u_and_ties_torch(X, second, device)
 
     # The rest is per feature and cheap. It stays in NumPy for every device,
     # so the results do not depend on the device.
@@ -179,6 +186,8 @@ def log_mannwhitneyu(X, y, device='auto'):
     with np.errstate(divide='ignore', invalid='ignore'):  # a constant feature has sigma 0
         z = (np.abs(u - n1 * n2 / 2) - 0.5) / sigma
     log_p = np.minimum(np.log(2) + norm.logsf(z), 0.0)
+    if return_device:
+        return log_p, u / (n1 * n2), device
     return log_p, u / (n1 * n2)
 
 
@@ -220,66 +229,54 @@ def _u_and_ties(X, second):
     return u, ties
 
 
-# Features ranked per batch on a PyTorch device. At 2,678 samples a batch
-# peaks near 420 MB.
-_TORCH_BATCH = 4096
-
-
-def _u_and_ties_on_gpu_if_possible(X, second):
+def _u_and_ties_auto(X, second):
     """
-    U and the tie term on a CUDA GPU, or None when no GPU can be used.
+    U, the tie term and the device used: the GPU if it is free now, else NumPy.
 
-    None when PyTorch is missing or cannot load (under a tight address-space
-    cap, such as the runner's per-worker memory cap, it fails to map its
-    libraries), when no GPU is present, or when the GPU runs out of memory
-    because other processes share it.
+    NumPy when PyTorch is missing or cannot load (under a tight address-space
+    cap it fails to map its libraries), when no GPU is present, when another
+    fit holds the GPU, or when the GPU runs out of memory. The results are
+    the same either way, so waiting for the GPU would only lose time.
     """
-    try:
-        import torch
-    except ImportError:
-        return None
-    if not torch.cuda.is_available():
-        return None
-    try:
-        return _u_and_ties_torch(X, second, 'cuda')
-    except RuntimeError as error:
-        # torch.OutOfMemoryError, or a raw CUDA out-of-memory error
-        # (torch.AcceleratorError in recent PyTorch); both say this.
-        if 'out of memory' not in str(error):
-            raise
-    torch.cuda.empty_cache()
-    return None
+    if gpu.cuda_usable():
+        try:
+            with gpu.exclusive('cuda', wait=False) as held:
+                if held:
+                    return (*_u_and_ties_torch(X, second, 'cuda'), 'cuda')
+        except MemoryError:
+            pass
+    return (*_u_and_ties(X, second), 'cpu')
+
+
+# Peak bytes per sample of one feature in _u_and_ties_batch: the float32
+# values, the int64 sort order, the int32 group bounds and their temporaries.
+_BYTES_PER_VALUE = 40
 
 
 def _u_and_ties_torch(X, second, device):
     """
-    The same as _u_and_ties, in PyTorch on `device`, _TORCH_BATCH features at a time.
+    The same as _u_and_ties, in PyTorch on `device`, in batches of features
+    that fit the device's free memory.
 
     U and the tie term are sums of whole and half numbers, exact in float64
-    on any device, so they equal the NumPy result exactly. Afterwards the
-    GPU memory PyTorch cached is released, so an idle worker holds little.
+    on any device, so they equal the NumPy result exactly.
     """
-    try:
-        import torch
-    except ImportError as error:
-        raise ImportError(f"device={device!r} could not import PyTorch. "
-                          "If it is missing: pip install -e '.[gpu]'") from error
-
+    torch = gpu.import_torch(device)
+    n, n_features = X.shape
+    batch = gpu.batch_size(torch, device, _BYTES_PER_VALUE * n, n_features)
     second_t = torch.as_tensor(second, device=device)
-    position = torch.arange(len(second), dtype=torch.int32, device=device)
-    u = np.empty(X.shape[1])
-    ties = np.empty(X.shape[1])
-    for g0 in range(0, X.shape[1], _TORCH_BATCH):
-        g1 = g0 + _TORCH_BATCH
+    position = torch.arange(n, dtype=torch.int32, device=device)
+    u = np.empty(n_features)
+    ties = np.empty(n_features)
+    for g0 in range(0, n_features, batch):
+        g1 = g0 + batch
         block = X[:, g0:g1].T
         if isinstance(block, np.ndarray):
-            block = np.ascontiguousarray(block)
+            # PyTorch wants a writable array; the runner's data is read-only.
+            block = np.require(block, requirements=['C', 'W'])
         # Passed straight in, so the batch can free it once sorted.
         u[g0:g1], ties[g0:g1] = _u_and_ties_batch(
             torch, torch.as_tensor(block, device=device).contiguous(), second_t, position)
-    del second_t, position
-    if torch.cuda.is_initialized():
-        torch.cuda.empty_cache()
     return u, ties
 
 

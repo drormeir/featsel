@@ -2,6 +2,7 @@
 Tests for the U-test and F-test log p-values.
 """
 
+import fcntl
 import sys
 
 import mpmath
@@ -11,7 +12,7 @@ from scipy.stats import f as f_dist
 from scipy.stats import mannwhitneyu
 from scipy.stats import t as t_dist
 
-from featsel.selectors import log_pvalue
+from featsel.selectors import gpu, log_pvalue
 from featsel.selectors.log_pvalue import log_f_sf, log_mannwhitneyu
 
 # Two classes and 3,000 patients, as in a SCAN-B subtype-vs-rest task.
@@ -141,7 +142,7 @@ class TestTorchRanking:
     @pytest.fixture(autouse=True)
     def small_batches(self, monkeypatch):
         """Several batches even on 50 features."""
-        monkeypatch.setattr(log_pvalue, '_TORCH_BATCH', 7)
+        monkeypatch.setattr(gpu, 'batch_size', lambda *args: 7)
 
     def test_torch_on_cpu_equals_numpy(self):
         """Test U and the tie term from PyTorch on the CPU against NumPy."""
@@ -191,7 +192,7 @@ class TestTensorInput:
         torch = pytest.importorskip('torch')
         if not torch.cuda.is_available():
             pytest.skip('no CUDA GPU')
-        monkeypatch.setattr(log_pvalue, '_TORCH_BATCH', 7)
+        monkeypatch.setattr(gpu, 'batch_size', lambda *args: 7)
         X, y = _tied_data()
         log_p_ref, auc_ref = log_mannwhitneyu(X, y, device='cpu')
 
@@ -222,31 +223,47 @@ class TestAutoDevice:
         """Test that auto uses NumPy when PyTorch cannot be imported."""
         monkeypatch.setitem(sys.modules, 'torch', None)   # import torch now raises ImportError
 
-        assert log_pvalue._u_and_ties_on_gpu_if_possible(*_tied_xs()) is None
+        assert log_pvalue._u_and_ties_auto(*_tied_xs())[2] == 'cpu'
 
     def test_falls_back_when_gpu_is_out_of_memory(self, monkeypatch):
         """Test that auto uses NumPy when the GPU runs out of memory."""
         torch = pytest.importorskip('torch')
-        monkeypatch.setattr(torch.cuda, 'is_available', lambda: True)
-        monkeypatch.setattr(torch.cuda, 'empty_cache', lambda: None)
+        monkeypatch.setattr(gpu, 'cuda_usable', lambda: True)
+        monkeypatch.setattr(torch.cuda, 'is_initialized', lambda: False)
 
         def out_of_memory(*args):
             raise RuntimeError('CUDA error: out of memory')
         monkeypatch.setattr(log_pvalue, '_u_and_ties_torch', out_of_memory)
 
-        assert log_pvalue._u_and_ties_on_gpu_if_possible(*_tied_xs()) is None
+        u, _, device = log_pvalue._u_and_ties_auto(*_tied_xs())
+
+        assert device == 'cpu'
+        np.testing.assert_array_equal(u, log_pvalue._u_and_ties(*_tied_xs())[0])
+
+    def test_falls_back_when_gpu_is_held(self, monkeypatch):
+        """Test that auto does not wait for a GPU another fit holds."""
+        monkeypatch.setattr(gpu, 'cuda_usable', lambda: True)
+        with open(gpu._LOCK_FILE, 'w') as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX)
+            # flock locks per open file, so a second open in this process is
+            # refused like another process would be.
+            assert log_pvalue._u_and_ties_auto(*_tied_xs())[2] == 'cpu'
 
     def test_other_gpu_errors_are_raised(self, monkeypatch):
         """Test that auto does not hide a GPU error other than out of memory."""
-        torch = pytest.importorskip('torch')
-        monkeypatch.setattr(torch.cuda, 'is_available', lambda: True)
+        pytest.importorskip('torch')
+        monkeypatch.setattr(gpu, 'cuda_usable', lambda: True)
 
         def broken(*args):
             raise RuntimeError('CUDA error: an illegal memory access was encountered')
         monkeypatch.setattr(log_pvalue, '_u_and_ties_torch', broken)
 
         with pytest.raises(RuntimeError, match='illegal memory access'):
-            log_pvalue._u_and_ties_on_gpu_if_possible(*_tied_xs())
+            log_pvalue._u_and_ties_auto(*_tied_xs())
+
+    def test_reports_its_device(self):
+        """Test that return_device names NumPy as 'cpu'."""
+        assert log_mannwhitneyu(*_tied_data(), device='cpu', return_device=True)[2] == 'cpu'
 
     def test_explicit_cuda_without_torch_says_so(self, monkeypatch):
         """Test that device='cuda' raises when PyTorch cannot be imported."""

@@ -4,6 +4,7 @@ The base class of every feature selector.
 
 from __future__ import annotations
 
+import sys
 from abc import abstractmethod
 from typing import ClassVar
 
@@ -25,7 +26,12 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     with Pipeline, clone(), cross_val_score() and GridSearchCV.
 
     As in scikit-learn, transform() returns a NumPy array. Call
-    set_output(transform='pandas') to keep DataFrame columns.
+    set_output(transform='pandas') to keep DataFrame columns. Given a PyTorch
+    tensor, transform() returns a tensor on the same device.
+
+    X may be a PyTorch tensor. A selector with a GPU path keeps a tensor on
+    a GPU there, with no copy to the CPU; every other selector, and every
+    tensor on the CPU, goes through NumPy. y may be a tensor too.
 
     Every subclass takes check_input=True. False skips validating X and y in
     fit, as scikit-learn's own check_input does. Use it only when X is already
@@ -84,27 +90,58 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         # Check fitting first: SelectorMixin would otherwise validate X against
         # an unfitted selector and warn about feature names before failing.
         check_is_fitted(self, 'support_')
+        torch = sys.modules.get('torch')   # a tensor exists only once PyTorch is imported
+        if torch is not None and isinstance(X, torch.Tensor):
+            if X.ndim != 2 or X.shape[1] != self.n_features_in_:
+                raise ValueError(f"X has shape {tuple(X.shape)}, but {type(self).__name__} "
+                                 f"was fitted on {self.n_features_in_} features")
+            return X[:, torch.as_tensor(np.flatnonzero(self.support_), device=X.device)]
         return super().transform(X)
 
     def _get_support_mask(self):
         check_is_fitted(self, 'support_')
         return self.support_
 
-    def _validate(self, X, y=None, requires_y=True):
+    def _validate(self, X, y=None, requires_y=True, keep_gpu_tensor=False):
         """
         Validate the training data and record the input feature count and names.
 
         With check_input=False only the feature count is recorded, and X and y
         are returned as given.
+
+        A PyTorch tensor y becomes a NumPy array. A tensor X on a GPU is
+        returned as it is with keep_gpu_tensor, checked on its device, and
+        copied to a NumPy array otherwise; a tensor X on the CPU becomes a
+        NumPy array without a copy.
         """
         if y is None and requires_y:
             raise ValueError(f"{type(self).__name__} requires target values (y)")
+        torch = sys.modules.get('torch')
+        if torch is not None:
+            if isinstance(y, torch.Tensor):
+                y = y.detach().cpu().numpy()
+            if isinstance(X, torch.Tensor):
+                if keep_gpu_tensor and X.device.type != 'cpu':
+                    return self._validate_gpu_tensor(torch, X, y), y
+                X = X.detach().cpu().numpy()
         if not self.check_input:
             self.n_features_in_ = X.shape[1]
             return X, y
         if y is None:
             return validate_data(self, X), None
         return validate_data(self, X, y)
+
+    def _validate_gpu_tensor(self, torch, X, y):
+        """Check a tensor on a GPU where it is, as validate_data checks an array."""
+        if X.ndim != 2:
+            raise ValueError(f"Expected a 2-D tensor, got shape {tuple(X.shape)}")
+        if y is not None and len(y) != X.shape[0]:
+            raise ValueError(f"X has {X.shape[0]} samples but y has {len(y)}")
+        if self.check_input and not torch.isfinite(X).all():
+            raise ValueError("Input X contains NaN or infinity.")
+        self.n_features_in_ = X.shape[1]
+        self.__dict__.pop('feature_names_in_', None)   # a refit on a tensor has no names
+        return X
 
     def ranking(self):
         """Feature indices by feature_importances_, strongest first."""

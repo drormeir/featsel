@@ -46,7 +46,7 @@ class HigherCriticismSelector(FeatureSelector):
     Pros: fast, no count to choose, adapts the count to the data
     Cons: one feature at a time, so correlated features all pass together;
     the 2004 form can stop at a few features when the strongest p-values are
-    extremely small; ranking costs about 3 s on 1,500 x 28,500
+    extremely small
 
     Parameters
     ----------
@@ -58,12 +58,15 @@ class HigherCriticismSelector(FeatureSelector):
     device : str, default='auto'
         Where the U test ranks: 'auto' uses a CUDA GPU when one can be used
         (the `gpu` extra), else NumPy; 'cpu' always NumPy; 'cuda' always the
-        GPU, raising if it cannot. The selection is identical on every device.
+        GPU, waiting while another fit holds it and raising if it cannot run.
+        The selection is identical on every device.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
     Attributes
     ----------
+    device_ : str
+        The device the U test ran on: 'cpu' or 'cuda'.
     auc_ : np.ndarray
         AUC of each feature for the second class in sorted order.
     log_pvalues_ : np.ndarray
@@ -106,9 +109,10 @@ class HigherCriticismSelector(FeatureSelector):
         """
         if self.variant not in ('2004', '2008'):
             raise ValueError(f"variant must be '2004' or '2008', got '{self.variant}'")
-        X, y = self._validate(X, y)
+        X, y = self._validate(X, y, keep_gpu_tensor=True)
 
-        self.log_pvalues_, self.auc_ = log_mannwhitneyu(X, y, self.device)
+        self.log_pvalues_, self.auc_, self.device_ = log_mannwhitneyu(
+            X, y, self.device, return_device=True)
         self.feature_importances_ = -self.log_pvalues_
 
         n = self.n_features_in_

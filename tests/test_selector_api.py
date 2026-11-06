@@ -202,3 +202,31 @@ def test_embedded_methods_agree_on_informative_data(small_classification_data):
 
     overlap = set(lasso.get_support(indices=True)) & set(trees.get_support(indices=True))
     assert len(overlap) >= 2
+
+
+def _tensor_devices():
+    """'cpu', and 'cuda' when a GPU is present; none without PyTorch."""
+    try:
+        import torch
+    except ImportError:
+        return []
+    return ['cpu', 'cuda'] if torch.cuda.is_available() else ['cpu']
+
+
+@pytest.mark.parametrize('device', _tensor_devices())
+@pytest.mark.parametrize('selector', SELECTORS, ids=IDS)
+def test_tensor_input_selects_as_numpy(selector, device, small_classification_data):
+    """Test that X and y as PyTorch tensors select what NumPy arrays select."""
+    import torch
+    X, y = small_classification_data
+    X, y = np.array(X, dtype=np.float32), np.array(y)  # writable, as PyTorch wants
+    expected = clone(selector).fit(X, y).get_support()
+
+    X_t, y_t = torch.from_numpy(X).to(device), torch.from_numpy(y).to(device)
+    fitted = clone(selector).fit(X_t, y_t)
+    selected = fitted.transform(X_t)
+
+    np.testing.assert_array_equal(fitted.get_support(), expected)
+    assert isinstance(selected, torch.Tensor)
+    assert selected.device == X_t.device
+    assert torch.equal(selected, X_t[:, torch.from_numpy(np.flatnonzero(expected)).to(device)])
