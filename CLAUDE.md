@@ -277,6 +277,8 @@ RFESelector(n_features=100, C=0.01, solver='newton')     # the same SVM solved e
                                                          # device='cuda' runs its products on a GPU
 RFECVSelector(cv=5, C=0.01, random_state=42)             # SVM-RFE, count chosen by inner CV
 SequentialSelector(n_features=10, cv=5)                  # greedy forward; slow, prefilter first
+SequentialSelector(n_features=10, solver='newton', device='cuda')  # every candidate of a step
+                                                         # solved at once on the GPU; binary only
 # Control
 RandomSelector(n_features=100, random_state=42)          # the control
 ```

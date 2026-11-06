@@ -347,6 +347,15 @@ the default and nobody notices. Adding a selector means editing three places.
   speed, so on this machine the GPU path is no faster than the CPU path.
   liblinear stays the default, so the selector stays a drop-in for
   scikit-learn's RFE.
+- Forward sequential selection can solve all of a step's candidates at
+  once (`solver='newton'`, 2026-11-07, `selectors/sequential/logistic.py`):
+  batched Newton's method on the logistic regressions, in PyTorch, float64.
+  The candidates share the chosen features, so every Hessian block is one
+  product over all candidates and no design matrix is built. Each fit starts
+  from that candidate's solution at the previous step. It selects what
+  scikit-learn does with a converged LogisticRegression. It covers what the
+  project uses: two classes, forward, accuracy; anything else raises. Here
+  the GPU wins: the work is wide elementwise passes and large products.
 - How a selector computes its result is its own business. It may wrap
   scikit-learn, or be its own CPU or GPU implementation. Replacing one with
   another keeps the class name and parameters, so configs and results do not
