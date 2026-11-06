@@ -335,6 +335,18 @@ the default and nobody notices. Adding a selector means editing three places.
   Selectors whose GPU result differs from the CPU one default to `'cpu'`
   and never switch device on their own; each result row records the
   device used.
+- RFE can solve its SVM by Newton's method (`solver='newton'`, 2026-11-07,
+  `selectors/rfe/linear_svm.py`). With fewer samples than genes the SVM is
+  solved through the samples' kernel, n x n, kept between rounds. It reaches
+  the exact minimum, in float64. liblinear stops at a tolerance, and on
+  correlated genes that changes the selection: on synthetic SCAN-B-shaped
+  data with correlated genes, liblinear's default tolerance (1e-4) shared 32
+  of 50 genes with the exact answer, and a tolerance of 1e-8 all 50. float32
+  products changed the selection as much, so the GPU path also runs in
+  float64. The GTX 1650 runs float64 at a small fraction of its float32
+  speed, so on this machine the GPU path is no faster than the CPU path.
+  liblinear stays the default, so the selector stays a drop-in for
+  scikit-learn's RFE.
 - How a selector computes its result is its own business. It may wrap
   scikit-learn, or be its own CPU or GPU implementation. Replacing one with
   another keeps the class name and parameters, so configs and results do not

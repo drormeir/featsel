@@ -273,6 +273,8 @@ LassoSelector(n_features=None, C=0.1, random_state=42)   # L1 model, picks its o
 TreeImportanceSelector(n_features=100, random_state=42)  # random forest importance
 # Wrappers
 RFESelector(n_features=100, C=0.01, random_state=42)     # SVM-RFE; small C when p >> n
+RFESelector(n_features=100, C=0.01, solver='newton')     # the same SVM solved exactly; faster;
+                                                         # device='cuda' runs its products on a GPU
 RFECVSelector(cv=5, C=0.01, random_state=42)             # SVM-RFE, count chosen by inner CV
 SequentialSelector(n_features=10, cv=5)                  # greedy forward; slow, prefilter first
 # Control

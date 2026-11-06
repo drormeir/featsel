@@ -5,7 +5,9 @@ Recursive feature elimination: drop the weakest features of a linear SVM, refit,
 import numpy as np
 from sklearn.svm import LinearSVC
 
+from .. import gpu
 from ..base import FeatureSelector
+from . import linear_svm
 
 
 class RFESelector(FeatureSelector):
@@ -23,6 +25,13 @@ class RFESelector(FeatureSelector):
     later first, and within a round by its weight then. With a fixed step,
     the top k of that ranking is RFE's selection for any k >= n_features, so
     one fit to the smallest k serves every larger k.
+
+    With solver='newton' each round's SVM is solved exactly, by Newton's
+    method (see linear_svm.py), instead of by liblinear to a tolerance. Its
+    selection is liblinear's at a tight tolerance. At liblinear's default
+    tolerance, 1e-4, the two can differ where features' weights nearly tie,
+    as correlated genes' weights do: the default stops before those ties
+    are resolved.
 
     Best for: multivariate selection tailored to a linear classifier
     Pros: judges each feature alongside the others, not alone
@@ -42,12 +51,22 @@ class RFESelector(FeatureSelector):
     max_iter : int, default=1000
         Maximum solver iterations per SVM fit.
     random_state : int, default=42
-        Random seed for the SVM solver.
+        Random seed for the SVM solver. The GPU solver is deterministic.
+    solver : {'liblinear', 'newton'}, default='liblinear'
+        'liblinear' fits scikit-learn's LinearSVC. 'newton' solves the same
+        SVM exactly, in float64.
+    device : str, default='cpu'
+        Where the newton solver's products with X run: 'cpu' in NumPy;
+        'cuda', or another PyTorch device, there, waiting while another fit
+        holds the GPU; 'auto' on a GPU when one is present. A tensor X on a
+        GPU runs there. liblinear runs on the CPU only.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
     Attributes
     ----------
+    device_ : str
+        The device the SVM fits ran on.
     ranking_ : np.ndarray
         1 for kept features; larger numbers were removed in earlier rounds.
     feature_importances_ : np.ndarray
@@ -66,12 +85,14 @@ class RFESelector(FeatureSelector):
     rank_once = True
 
     def __init__(self, n_features=None, step=0.1, C=1.0, max_iter=1000,
-                 random_state=42, check_input=True):
+                 random_state=42, solver='liblinear', device='cpu', check_input=True):
         self.n_features = n_features
         self.step = step
         self.C = C
         self.max_iter = max_iter
         self.random_state = random_state
+        self.solver = solver
+        self.device = device
         self.check_input = check_input
 
     def fit(self, X, y):
@@ -91,9 +112,48 @@ class RFESelector(FeatureSelector):
             Fitted selector.
         """
         self._require_n_features()
-        X, y = self._validate(X, y)
+        if self.solver == 'liblinear':
+            if self.device != 'cpu':
+                raise ValueError("solver='liblinear' runs on the CPU only; "
+                                 "use solver='newton' for another device")
+            X, y = self._validate(X, y)
+            self.device_ = 'cpu'
+            self._eliminate(X.shape[1],
+                            lambda features: self._liblinear_weights(X[:, features], y))
+            return self
+        if self.solver != 'newton':
+            raise ValueError(f"solver must be 'liblinear' or 'newton', got {self.solver!r}")
 
-        n_total = X.shape[1]
+        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        self.device_ = gpu.resolve(self.device, X)
+        classes = np.unique(y)
+        if self.device_ == 'cpu':
+            rounds = linear_svm.Elimination(np.asarray(X, dtype=np.float64), y, classes,
+                                            self.C, self.max_iter)
+            self._eliminate(X.shape[1], rounds.squared_weights)
+            return self
+        torch = gpu.import_torch(self.device_)
+        with gpu.exclusive(self.device_):
+            X = torch.as_tensor(X if isinstance(X, torch.Tensor)
+                                else np.require(X, requirements=['W']),
+                                dtype=torch.float64, device=self.device_)
+            rounds = linear_svm.Elimination(X, y, classes, self.C, self.max_iter)
+            self._eliminate(X.shape[1], rounds.squared_weights)
+        return self
+
+    def _liblinear_weights(self, X, y):
+        """Squared LinearSVC weights per feature, summed over classes, as RFE ranks."""
+        svm = LinearSVC(C=self.C, max_iter=self.max_iter, random_state=self.random_state)
+        svm.fit(X, y)
+        return (svm.coef_ ** 2).sum(axis=0)
+
+    def _eliminate(self, n_total, squared_weights):
+        """
+        Remove the features with the smallest squared weights, round by round.
+
+        squared_weights(features) gives the weights of the surviving features,
+        sorted indices, from an SVM fit on them alone.
+        """
         # As scikit-learn's RFE: a fraction of the starting count, at least 1.
         step = int(max(1, self.step * n_total)) if 0 < self.step < 1 else int(self.step)
         support = np.ones(n_total, dtype=bool)
@@ -103,10 +163,8 @@ class RFESelector(FeatureSelector):
 
         while support.sum() > self.n_features:
             features = np.flatnonzero(support)
-            svm = LinearSVC(C=self.C, max_iter=self.max_iter, random_state=self.random_state)
-            svm.fit(X[:, features], y)
             # As scikit-learn's RFE: squared weights, summed over classes.
-            order = np.argsort((svm.coef_ ** 2).sum(axis=0))
+            order = np.argsort(squared_weights(features))
             cut = min(step, len(features) - self.n_features)
             dropped, kept = features[order[:cut]], features[order[cut:]]
             removed.append(dropped)
