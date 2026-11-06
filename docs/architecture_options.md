@@ -356,6 +356,14 @@ the default and nobody notices. Adding a selector means editing three places.
   scikit-learn does with a converged LogisticRegression. It covers what the
   project uses: two classes, forward, accuracy; anything else raises. Here
   the GPU wins: the work is wide elementwise passes and large products.
+- Tree importance stays on scikit-learn's forest (2026-11-07). XGBoost's
+  random forest was tried on synthetic SCAN-B-shaped data (1,488 x 28,552)
+  and rejected. On the GTX 1650 it ran out of memory even with 64 bins,
+  needing 3.4 GB. On the CPU one fit took 339 s, against 4.2 s for
+  scikit-learn on 12 threads, and only 21 of its top 50 genes were
+  scikit-learn's: a different method, not a faster one. The selector's own
+  `n_jobs` is the speed-up: 21.5 s on one thread, 4.2 s on 12. In the runner,
+  threads per worker times workers should not exceed the cores.
 - How a selector computes its result is its own business. It may wrap
   scikit-learn, or be its own CPU or GPU implementation. Replacing one with
   another keeps the class name and parameters, so configs and results do not
