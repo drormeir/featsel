@@ -4,6 +4,7 @@ Tests for the random_selection selector.
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from featsel.selectors import RandomSelector
 
@@ -59,3 +60,17 @@ class TestRandomSelector:
         X_selected = selector.fit_transform(X, y)
 
         assert X_selected.shape[1] == X.shape[1]
+
+    def test_gpu_tensor_stays_on_gpu(self, small_classification_data, monkeypatch):
+        """Test that a GPU tensor is not copied to the CPU and selects as NumPy."""
+        torch = pytest.importorskip('torch')
+        if not torch.cuda.is_available():
+            pytest.skip('no CUDA GPU')
+        X, y = small_classification_data
+        X_gpu = torch.tensor(np.asarray(X), device='cuda')
+        monkeypatch.setattr(torch.Tensor, 'cpu', lambda self: pytest.fail('copied to the CPU'))
+
+        on_gpu = RandomSelector(n_features=5, random_state=42).fit(X_gpu, y)
+        on_cpu = RandomSelector(n_features=5, random_state=42).fit(np.asarray(X), y)
+
+        np.testing.assert_array_equal(on_gpu.get_support(), on_cpu.get_support())

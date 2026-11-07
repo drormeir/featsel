@@ -55,8 +55,9 @@ class RandomSelector(FeatureSelector):
 
         Parameters
         ----------
-        X : pd.DataFrame or np.ndarray of shape (n_samples, n_features)
-            Training data. Only its shape is used.
+        X : pd.DataFrame, np.ndarray or torch.Tensor of shape (n_samples, n_features)
+            Training data. Only its shape is used. A tensor on a GPU stays
+            there: it is checked there, not copied to the CPU.
         y : ignored
             Not used, present for API consistency.
 
@@ -68,7 +69,7 @@ class RandomSelector(FeatureSelector):
         self._require_n_features()
         if self.n_features < 1:
             raise ValueError(f"n_features must be >= 1, got {self.n_features}")
-        self._validate(X, requires_y=False)
+        self._validate(X, requires_y=False, keep_gpu_tensor=True)
 
         rng = self._rng()
         n_select = min(self.n_features, self.n_features_in_)

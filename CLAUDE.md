@@ -301,7 +301,9 @@ HigherCriticism.
 - `'cuda'` waits for the GPU.
 
 RFE, RFECV and Sequential use a GPU only with `solver='newton'`, and default
-to the CPU. The rest copy a GPU tensor to the CPU.
+to the CPU. RandomSelector reads only the shape, so it leaves a GPU tensor
+where it is. Lasso, TreeImportance and MutualInfo copy a GPU tensor to the
+CPU.
 
 ### High-Dimensional Use Case (few samples, many features)
 
