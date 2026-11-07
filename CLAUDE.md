@@ -167,8 +167,10 @@ featsel/
 ├── metrics.py               # Predictive metrics and the CSV's key columns
 ├── strength.py              # loo_confusion(): nested leave-one-out score of chosen genes
 ├── environment.py           # Machine, versions and commit, saved as JSON beside results
+├── benchmark.py             # Each selector against its original: speed, reproducibility
 ├── selectors/               # Feature selection methods, one subpackage each:
-│   │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb
+│   │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb,
+│   │                        #   demos/speed.ipynb (featsel.benchmark on synthetic data)
 │   ├── __init__.py          # Imports every selector, which registers it
 │   ├── base.py              # FeatureSelector: scikit-learn base, registration, create()
 │   ├── log_pvalue/          # U-test and F-test log p-values that stay finite below 1e-308
