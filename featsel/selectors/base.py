@@ -4,6 +4,9 @@ The base class of every feature selector.
 
 from __future__ import annotations
 
+import functools
+import numbers
+import random
 import sys
 from abc import abstractmethod
 from typing import ClassVar
@@ -12,6 +15,29 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted, validate_data
+
+_DEFAULT_SEED = 42
+
+
+def _seeded(fit):
+    """fit, after seeding the shared random generators from the selector."""
+    @functools.wraps(fit)
+    def seeded_fit(self, *args, **kwargs):
+        seed = getattr(self, 'random_state', _DEFAULT_SEED)
+        if isinstance(seed, numbers.Integral):
+            random.seed(seed)
+            np.random.seed(seed)
+            torch = sys.modules.get('torch')
+            if torch is not None:
+                # The CPU and CUDA generators directly: torch.manual_seed also
+                # visits every other backend, at about 0.3 ms per fit. CUDA
+                # only once started: before, the call is queued with a stack
+                # trace, at about 0.1 ms per fit.
+                torch.default_generator.manual_seed(seed)
+                if torch.cuda.is_initialized():
+                    torch.cuda.manual_seed_all(seed)
+        return fit(self, *args, **kwargs)
+    return seeded_fit
 
 
 class FeatureSelector(SelectorMixin, BaseEstimator):
@@ -41,6 +67,13 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     repeats without a seed being passed. It passes the seed to scikit-learn,
     or draws from _rng(), a generator built afresh on every fit.
 
+    Every fit also first seeds the shared generators of Python, NumPy and,
+    once imported, PyTorch (its CUDA generators once CUDA has started): from
+    random_state when it is an integer, from 42
+    when the selector takes none. So randomness drawn from shared state,
+    here or in a library, repeats too. random_state=None or a generator
+    leaves the shared state alone.
+
     Every subclass registers itself when it is defined, under its class name
     and any aliases given as a class keyword:
 
@@ -61,6 +94,8 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
 
     def __init_subclass__(cls, aliases: str | list[str] | None = None, **kwargs):
         super().__init_subclass__(**kwargs)
+        if 'fit' in cls.__dict__:
+            cls.fit = _seeded(cls.__dict__['fit'])  # type: ignore[method-assign]
         names = [cls.__name__, *([aliases] if isinstance(aliases, str) else aliases or [])]
         for name in {n.lower() for n in names}:
             owner = FeatureSelector._registry.setdefault(name, cls)
