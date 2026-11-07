@@ -223,7 +223,7 @@ class TestAutoDevice:
         """Test that auto uses NumPy when PyTorch cannot be imported."""
         monkeypatch.setitem(sys.modules, 'torch', None)   # import torch now raises ImportError
 
-        assert log_pvalue._u_and_ties_auto(*_tied_xs())[2] == 'cpu'
+        assert log_mannwhitneyu(*_tied_data(), return_device=True)[2] == 'cpu'
 
     def test_falls_back_when_gpu_is_out_of_memory(self, monkeypatch):
         """Test that auto uses NumPy when the GPU runs out of memory."""
@@ -235,10 +235,10 @@ class TestAutoDevice:
             raise RuntimeError('CUDA error: out of memory')
         monkeypatch.setattr(log_pvalue, '_u_and_ties_torch', out_of_memory)
 
-        u, _, device = log_pvalue._u_and_ties_auto(*_tied_xs())
+        log_p, _, device = log_mannwhitneyu(*_tied_data(), return_device=True)
 
         assert device == 'cpu'
-        np.testing.assert_array_equal(u, log_pvalue._u_and_ties(*_tied_xs())[0])
+        np.testing.assert_array_equal(log_p, log_mannwhitneyu(*_tied_data(), device='cpu')[0])
 
     def test_falls_back_when_gpu_is_held(self, monkeypatch):
         """Test that auto does not wait for a GPU another fit holds."""
@@ -247,7 +247,7 @@ class TestAutoDevice:
             fcntl.flock(handle, fcntl.LOCK_EX)
             # flock locks per open file, so a second open in this process is
             # refused like another process would be.
-            assert log_pvalue._u_and_ties_auto(*_tied_xs())[2] == 'cpu'
+            assert log_mannwhitneyu(*_tied_data(), return_device=True)[2] == 'cpu'
 
     def test_other_gpu_errors_are_raised(self, monkeypatch):
         """Test that auto does not hide a GPU error other than out of memory."""
@@ -259,7 +259,7 @@ class TestAutoDevice:
         monkeypatch.setattr(log_pvalue, '_u_and_ties_torch', broken)
 
         with pytest.raises(RuntimeError, match='illegal memory access'):
-            log_pvalue._u_and_ties_auto(*_tied_xs())
+            log_mannwhitneyu(*_tied_data(), return_device=True)
 
     def test_reports_its_device(self):
         """Test that return_device names NumPy as 'cpu'."""
@@ -273,7 +273,3 @@ class TestAutoDevice:
             log_mannwhitneyu(*_tied_data(), device='cuda')
 
 
-def _tied_xs():
-    """_tied_data as (X, second), the arguments of the ranking helpers."""
-    X, y = _tied_data()
-    return X, y == 7

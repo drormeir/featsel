@@ -18,6 +18,7 @@ without it.
 import fcntl
 import sys
 import tempfile
+import warnings
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -59,6 +60,46 @@ def resolve(device, X=None):
     if device == 'auto':
         return 'cuda' if cuda_usable() else 'cpu'
     return device
+
+
+def run(device, X, on_cpu, on_device):
+    """
+    on_cpu(X) or on_device(X, device), and the device it ran on, as text.
+
+    The device policy of every selector with a `device` parameter:
+
+    - A tensor X on a GPU runs on its own device, whatever `device` says.
+      A tensor on the CPU becomes a NumPy array, without a copy.
+    - 'auto' runs on_device on a CUDA GPU if it is free now, else on_cpu:
+      when PyTorch is missing or cannot load, when no GPU is present, when
+      another fit holds the GPU, or when the GPU runs out of memory. The
+      results agree, so waiting for the GPU would only lose time.
+    - 'cpu' runs on_cpu.
+    - Any other device, such as 'cuda', runs on_device there, waiting while
+      another fit holds the GPU and raising if it cannot run.
+
+    on_cpu gets a NumPy array; on_device gets X as it is, an array or a
+    tensor, to move to the device itself.
+    """
+    torch = sys.modules.get('torch')   # a tensor exists only once PyTorch is imported
+    if torch is not None and isinstance(X, torch.Tensor):
+        if X.device.type == 'cpu':
+            X = X.numpy()
+        else:
+            device = str(X.device)
+    if device == 'auto':
+        if cuda_usable():
+            try:
+                with exclusive('cuda', wait=False) as held:
+                    if held:
+                        return on_device(X, 'cuda'), 'cuda'
+            except MemoryError:
+                pass
+        return on_cpu(X), 'cpu'
+    if device == 'cpu':
+        return on_cpu(X), 'cpu'
+    with exclusive(device):
+        return on_device(X, device), device
 
 
 def on_gpu(device):
@@ -112,3 +153,20 @@ def batch_size(torch, device, bytes_per_item, total):
         return total
     free, _ = torch.cuda.mem_get_info(device)
     return max(1, min(total, int(free // 2 // bytes_per_item)))
+
+
+def float64_columns(torch, X, device, bytes_per_value):
+    """
+    X's columns in float64 on device, in batches that fit its memory, to read only.
+
+    bytes_per_value is the peak memory the caller uses per value of a batch.
+    """
+    n_rows, n_columns = X.shape
+    size = batch_size(torch, device, bytes_per_value * n_rows, n_columns)
+    for start in range(0, n_columns, size):
+        with warnings.catch_warnings():
+            # A read-only array (pandas often gives one) warns that the tensor
+            # shares its memory. Callers only read the batches.
+            warnings.filterwarnings('ignore', message='The given NumPy array is not writable')
+            block = torch.as_tensor(X[:, start:start + size], device=device)
+        yield block.to(torch.float64)

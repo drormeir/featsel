@@ -158,11 +158,6 @@ def log_mannwhitneyu(X, y, device='auto', return_device=False):
     torch = sys.modules.get('torch')   # a tensor exists only once PyTorch is imported
     if torch is not None and isinstance(y, torch.Tensor):
         y = y.cpu().numpy()
-    if torch is not None and isinstance(X, torch.Tensor):
-        if X.device.type == 'cpu':
-            X = X.numpy()
-        else:
-            device = str(X.device)
 
     labels = np.unique(y)
     if len(labels) != 2:
@@ -172,13 +167,8 @@ def log_mannwhitneyu(X, y, device='auto', return_device=False):
     n1 = len(y) - n2
     n = n1 + n2
 
-    if device == 'auto':
-        u, ties, device = _u_and_ties_auto(X, second)
-    elif device == 'cpu':
-        u, ties = _u_and_ties(X, second)
-    else:
-        with gpu.exclusive(device):
-            u, ties = _u_and_ties_torch(X, second, device)
+    (u, ties), device = gpu.run(device, X, lambda X: _u_and_ties(X, second),
+                                lambda X, device: _u_and_ties_torch(X, second, device))
 
     # The rest is per feature and cheap. It stays in NumPy for every device,
     # so the results do not depend on the device.
@@ -227,25 +217,6 @@ def _u_and_ties(X, second):
     t = end - start + 1
     ties = (np.square(t, dtype=np.float64) - 1).sum(axis=1)
     return u, ties
-
-
-def _u_and_ties_auto(X, second):
-    """
-    U, the tie term and the device used: the GPU if it is free now, else NumPy.
-
-    NumPy when PyTorch is missing or cannot load (under a tight address-space
-    cap it fails to map its libraries), when no GPU is present, when another
-    fit holds the GPU, or when the GPU runs out of memory. The results are
-    the same either way, so waiting for the GPU would only lose time.
-    """
-    if gpu.cuda_usable():
-        try:
-            with gpu.exclusive('cuda', wait=False) as held:
-                if held:
-                    return (*_u_and_ties_torch(X, second, 'cuda'), 'cuda')
-        except MemoryError:
-            pass
-    return (*_u_and_ties(X, second), 'cpu')
 
 
 # Peak bytes per sample of one feature in _u_and_ties_batch: the float32
