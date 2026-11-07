@@ -116,6 +116,17 @@ class TestGPU:
             knn_1d.mutual_info_classif(X, y, 3, 42, device='cuda'),
             mutual_info_classif(X, y, n_neighbors=3, random_state=42))
 
+    @pytest.mark.parametrize('layout', ['column-major', 'one gene'])
+    def test_identical_in_numpy_sum_order(self, layout):
+        """Test the layouts in which NumPy sums each gene pairwise, not sample by sample."""
+        _cuda()
+        X, y = _binary(200, 0.2)
+        X = np.asfortranarray(X) if layout == 'column-major' else X[:, :1].copy()
+
+        np.testing.assert_array_equal(
+            knn_1d.mutual_info_classif(X, y, 3, 42, device='cuda'),
+            mutual_info_classif(X, y, n_neighbors=3, random_state=42))
+
     def test_cuda_selects_as_cpu(self):
         """Test that the selector gives the CPU's scores on the GPU and says where it ran."""
         _cuda()

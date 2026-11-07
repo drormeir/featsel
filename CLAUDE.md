@@ -270,7 +270,7 @@ FWESelector(alpha=0.05)                                  # F-test, Bonferroni; o
 PercentileSelector(percentile=1)                         # F-test, top 1%
 HigherCriticismSelector(variant='2008')                  # U test, HC threshold; own count; or '2004'; binary only
 MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slower; scikit-learn's
-                                                         # scores exactly, its searches on a GPU
+                                                         # scores exactly, on a GPU when it can
 CorrelationSelector(n_features=100, target_threshold=0.1,
                     inter_feature_threshold=0.95)        # drops redundant pairs
 # Embedded

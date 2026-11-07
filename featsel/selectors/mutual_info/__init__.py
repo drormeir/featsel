@@ -24,9 +24,9 @@ class MutualInfoSelector(FeatureSelector):
     result, bit for bit. A class of 2 to 7 samples, where scikit-learn
     switches to brute force, goes to scikit-learn itself, as does regression.
 
-    The sorted estimate's neighbor searches can run on a GPU, with the same
-    result, bit for bit. The scaling, the noise, digamma and the means stay
-    on the CPU.
+    The sorted estimate can run on a GPU, with the same result, bit for
+    bit: X stays there, and only scikit-learn's random noise is drawn on the
+    CPU and sent over.
 
     Parameters
     ----------
@@ -40,7 +40,7 @@ class MutualInfoSelector(FeatureSelector):
     random_state : int, default=42
         Random seed for reproducibility.
     device : str, default='auto'
-        Where the neighbor searches run: 'auto' uses a CUDA GPU when one can
+        Where the sorted estimate runs: 'auto' uses a CUDA GPU when one can
         be used (the `gpu` extra), else NumPy; 'cpu' always NumPy; 'cuda'
         always the GPU, waiting while another fit holds it and raising if it
         cannot run. A tensor X on a GPU runs there. Regression and a class of
@@ -52,7 +52,7 @@ class MutualInfoSelector(FeatureSelector):
     Attributes
     ----------
     device_ : str
-        The device the neighbor searches ran on: 'cpu' or 'cuda'.
+        The device the estimate ran on: 'cpu' or 'cuda'.
     feature_importances_ : np.ndarray
         Mutual information scores for each feature.
 
@@ -96,7 +96,7 @@ class MutualInfoSelector(FeatureSelector):
         if self.task == 'classification' and knn_1d.matches_sklearn(y, self.n_neighbors):
             # The same estimate by sorting; scikit-learn's result exactly.
             def mi(X, device='cpu'):
-                return knn_1d.mutual_info_classif(_on_cpu(X), y, self.n_neighbors,
+                return knn_1d.mutual_info_classif(X, y, self.n_neighbors,
                                                   self.random_state, device)
             self.feature_importances_, self.device_ = gpu.run(self.device, X, mi, mi)
         else:
