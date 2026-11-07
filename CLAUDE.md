@@ -173,6 +173,8 @@ featsel/
 │   │                        #   demos/speed.ipynb (featsel.benchmark on synthetic data)
 │   ├── __init__.py          # Imports every selector, which registers it
 │   ├── base.py              # FeatureSelector: scikit-learn base, registration, create()
+│   ├── gpu.py               # The device policy (run), the GPU lock, batch sizes
+│   ├── f_test.py            # f_classif and f_regression on the CPU or a GPU
 │   ├── log_pvalue/          # U-test and F-test log p-values that stay finite below 1e-308
 │   ├── anova_f/             # ANOVAFSelector
 │   ├── correlation/         # CorrelationSelector
@@ -287,6 +289,19 @@ RandomSelector(n_features=100, random_state=42)          # the control
 
 Every selector takes `check_input=True`. `False` skips input validation in
 `fit`; use it only for a clean NumPy array.
+
+Every selector accepts a NumPy array or a PyTorch tensor. Eight selectors
+follow one device policy, `featsel.selectors.gpu.run`: VarianceThreshold,
+ANOVA-F, FDR, FWE, Percentile, Correlation, MannWhitney and
+HigherCriticism.
+
+- A tensor on a GPU runs there, whatever `device` says.
+- `'auto'`, the default, uses the GPU when it is free, else the CPU.
+- `'cpu'` always uses the CPU.
+- `'cuda'` waits for the GPU.
+
+RFE, RFECV and Sequential use a GPU only with `solver='newton'`, and default
+to the CPU. The rest copy a GPU tensor to the CPU.
 
 ### High-Dimensional Use Case (few samples, many features)
 

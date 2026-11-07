@@ -244,13 +244,18 @@ class TestTuning:
 
 
 def test_parallel_run_matches_sequential(experiment, tmp_path):
-    """Test that the number of workers changes nothing but the runtime."""
+    """
+    Test that the number of workers changes nothing but the runtime and the
+    device: with device='auto' a selector takes the GPU only when no other
+    worker holds it.
+    """
     sequential = pd.read_csv(run_config(experiment))
 
     experiment.update(n_jobs=2, output=str(tmp_path / 'parallel.csv'))
     parallel = pd.read_csv(run_config(experiment))
 
-    timing = [c for c in sequential.columns if c.endswith(('_time_s', '_peak_mb'))]
+    timing = [c for c in sequential.columns
+              if c.endswith(('_time_s', '_peak_mb')) or c == 'selection_device']
     pd.testing.assert_frame_equal(sequential.drop(columns=timing),
                                   parallel.drop(columns=timing))
 

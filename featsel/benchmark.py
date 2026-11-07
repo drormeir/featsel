@@ -79,7 +79,7 @@ def _svm(C):
 
 def _pandas_correlation(**params):
     """CorrelationSelector finding redundant pairs from the full pandas matrix, as it once did."""
-    selector = FeatureSelector.lookup('CorrelationSelector')(**params)
+    selector = FeatureSelector.lookup('CorrelationSelector')(**params, device='cpu')
 
     def pairs(X):
         corr = X.corr(method=selector.method).abs().to_numpy()
@@ -123,7 +123,15 @@ ORIGINALS = {
 
 # selector -> this package's variants: label -> parameters added to PARAMS.
 # A selector not listed has one, 'featsel', with PARAMS as they are.
+_CPU_AND_GPU = {'featsel, CPU': {'device': 'cpu'}, 'featsel, GPU': {'device': 'cuda'}}
+
 VARIANTS = {
+    'VarianceThreshold': _CPU_AND_GPU,
+    'ANOVAFSelector': _CPU_AND_GPU,
+    'FDRSelector': _CPU_AND_GPU,
+    'FWESelector': _CPU_AND_GPU,
+    'PercentileSelector': _CPU_AND_GPU,
+    'CorrelationSelector': _CPU_AND_GPU,
     'MannWhitneySelector': {'GPU': {'device': 'cuda'}},
     'HigherCriticismSelector': {'GPU': {'device': 'cuda'}},
     'TreeImportanceSelector': {'featsel, all threads': {'n_jobs': -1}},
