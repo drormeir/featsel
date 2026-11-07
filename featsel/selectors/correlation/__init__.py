@@ -4,8 +4,13 @@ Correlation: rank features by target correlation and drop redundant pairs.
 
 import numpy as np
 import pandas as pd
+from scipy.stats import rankdata
 
 from ..base import FeatureSelector
+
+# Candidate features compared per block in the redundancy step. A block's
+# correlations are _BLOCK x n_candidates float64 values: 80 MB at 10,000.
+_BLOCK = 1024
 
 
 class CorrelationSelector(FeatureSelector):
@@ -15,6 +20,11 @@ class CorrelationSelector(FeatureSelector):
     Best for: Removing redundancy, simple linear relationships
     Pros: Simple (O(m^2*n)), interpretable, reduces multicollinearity
     Cons: Only linear correlation, may remove important correlated features
+
+    The redundancy step never holds the full correlation matrix. For
+    Pearson and Spearman it standardizes the candidates once and finds the
+    pairs above the threshold block by block, with one matrix product per
+    block. Kendall goes through pandas.
 
     Strategy:
     1. Compute correlation of each feature with target
@@ -98,14 +108,10 @@ class CorrelationSelector(FeatureSelector):
             )
 
         # 3. Remove highly correlated feature pairs
-        corr_matrix = X[candidates].corr(method=self.method).abs()
-        upper_tri = np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
-
         to_drop = set()
-        for i, j in zip(*np.where((corr_matrix.values > self.inter_feature_threshold) & upper_tri)):
+        for i, j in self._redundant_pairs(X[candidates]):
             # Drop feature with lower target correlation
-            feat_i = corr_matrix.index[i]
-            feat_j = corr_matrix.columns[j]
+            feat_i, feat_j = candidates[i], candidates[j]
             if self.target_corr_[feat_i] > self.target_corr_[feat_j]:
                 to_drop.add(feat_j)
             else:
@@ -124,3 +130,21 @@ class CorrelationSelector(FeatureSelector):
         self.feature_importances_ = self.target_corr_.values
         self.support_ = np.isin(names, selected)
         return self
+
+    def _redundant_pairs(self, X):
+        """Pairs (i, j), i < j, of columns of X correlated above the threshold."""
+        if self.method == 'kendall':
+            corr = X.corr(method='kendall').abs().to_numpy()
+            return zip(*np.nonzero(np.triu(corr > self.inter_feature_threshold, k=1)))
+        Z = X.to_numpy(dtype=np.float64)
+        if self.method == 'spearman':
+            Z = rankdata(Z, axis=0)          # average ranks, as pandas ranks
+        Z = Z - Z.mean(axis=0)
+        Z /= np.linalg.norm(Z, axis=0)
+        pairs = []
+        for i0 in range(0, Z.shape[1], _BLOCK):
+            # Only columns from i0 on: pairs with i < j.
+            corr = np.abs(Z[:, i0:i0 + _BLOCK].T @ Z[:, i0:])
+            i, j = np.nonzero(np.triu(corr > self.inter_feature_threshold, k=1))
+            pairs.extend(zip(i + i0, j + i0))
+        return pairs

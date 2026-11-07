@@ -4,8 +4,9 @@ Tests for the correlation selector.
 
 import numpy as np
 import pandas as pd
+import pytest
 
-from featsel.selectors import CorrelationSelector
+from featsel.selectors import CorrelationSelector, correlation
 
 
 class TestCorrelationSelector:
@@ -34,3 +35,27 @@ class TestCorrelationSelector:
 
         # Should remove one of the redundant features
         assert selector.get_support().sum() < 6
+
+
+def _pandas_pairs(X, threshold, method):
+    """The redundant pairs as the selector found them before: the full pandas matrix."""
+    corr = X.corr(method=method).abs().to_numpy()
+    return set(zip(*np.nonzero(np.triu(corr > threshold, k=1))))
+
+
+class TestBlockwisePairs:
+    """The blockwise redundancy step finds the pairs the full pandas matrix does."""
+
+    @pytest.mark.parametrize('method', ['pearson', 'spearman', 'kendall'])
+    def test_same_pairs_as_pandas(self, method, monkeypatch):
+        """Test on correlated groups, with blocks smaller than the feature count."""
+        monkeypatch.setattr(correlation, '_BLOCK', 7)
+        rng = np.random.default_rng(0)
+        base = rng.normal(size=(150, 6))
+        X = pd.DataFrame(np.repeat(base, 5, axis=1) + rng.normal(size=(150, 30)) * 0.25)
+        selector = CorrelationSelector(inter_feature_threshold=0.7, method=method)
+
+        ours = {(int(i), int(j)) for i, j in selector._redundant_pairs(X)}
+
+        assert ours == _pandas_pairs(X, 0.7, method)
+        assert ours   # the groups do give pairs above the threshold
