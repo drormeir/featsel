@@ -94,6 +94,13 @@ class CorrelationSelector(FeatureSelector):
         X, y = self._validate(X, y)
         names = list(getattr(self, 'feature_names_in_', range(self.n_features_in_)))
         X = pd.DataFrame(X, columns=names)
+        y = np.asarray(y)
+        if not np.issubdtype(y.dtype, np.number):
+            # Two class labels code as 0 and 1; more have no numeric order.
+            classes, y = np.unique(y, return_inverse=True)
+            if len(classes) != 2:
+                raise ValueError(
+                    f"A non-numeric target needs exactly two classes, got {len(classes)}")
 
         # 1. Compute correlation with target
         self.target_corr_ = X.corrwith(pd.Series(y), method=self.method).abs()

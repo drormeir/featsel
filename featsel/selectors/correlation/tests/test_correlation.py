@@ -36,6 +36,24 @@ class TestCorrelationSelector:
         # Should remove one of the redundant features
         assert selector.get_support().sum() < 6
 
+    def test_text_labels_code_as_zero_and_one(self):
+        """Test that two text classes select as their 0/1 codes do."""
+        rng = np.random.default_rng(0)
+        X = pd.DataFrame(rng.normal(size=(80, 20)))
+        codes = (X[3] + rng.normal(size=80) * 0.5 > 0).astype(int)
+        labels = np.where(codes == 1, 'Basal', 'rest')
+
+        by_text = CorrelationSelector(n_features=5, method='spearman').fit(X, labels)
+        by_code = CorrelationSelector(n_features=5, method='spearman').fit(X, codes)
+
+        assert list(by_text.get_support(indices=True)) == list(by_code.get_support(indices=True))
+
+    def test_three_text_classes_raise(self):
+        """Test that more than two text classes raise: they have no numeric order."""
+        X = pd.DataFrame(np.random.default_rng(0).normal(size=(30, 4)))
+        with pytest.raises(ValueError, match='exactly two classes'):
+            CorrelationSelector().fit(X, np.array(['a', 'b', 'c'] * 10))
+
 
 def _pandas_pairs(X, threshold, method):
     """The redundant pairs as the selector found them before: the full pandas matrix."""
