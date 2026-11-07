@@ -181,7 +181,7 @@ featsel/
 │   ├── fdr/                 # FDRSelector
 │   ├── fwe/                 # FWESelector
 │   ├── higher_criticism/    # HigherCriticismSelector
-│   ├── lasso/               # LassoSelector
+│   ├── lasso/               # LassoSelector; ppdna.py: its GPU solver
 │   ├── mann_whitney/        # MannWhitneySelector
 │   ├── mutual_info/         # MutualInfoSelector
 │   ├── percentile/          # PercentileSelector
@@ -274,6 +274,8 @@ CorrelationSelector(n_features=100, target_threshold=0.1,
                     inter_feature_threshold=0.95)        # drops redundant pairs
 # Embedded
 LassoSelector(n_features=None, C=0.1, random_state=42)   # L1 model, picks its own count
+LassoSelector(C=0.1, solver='ppdna', device='cuda')      # the same L1 model solved to a tight
+                                                         # tolerance on the GPU (PPDNA); faster
 TreeImportanceSelector(n_features=100, random_state=42)  # random forest importance
 # Wrappers
 RFESelector(n_features=100, C=0.01, random_state=42)     # SVM-RFE; small C when p >> n
@@ -300,10 +302,14 @@ HigherCriticism.
 - `'cpu'` always uses the CPU.
 - `'cuda'` waits for the GPU.
 
-RFE, RFECV and Sequential use a GPU only with `solver='newton'`, and default
-to the CPU. RandomSelector reads only the shape, so it leaves a GPU tensor
-where it is. Lasso, TreeImportance and MutualInfo copy a GPU tensor to the
-CPU.
+RFE, RFECV and Sequential use a GPU only with `solver='newton'`, and Lasso
+only with `solver='ppdna'`; all four default to the CPU. RandomSelector reads
+only the shape, so it leaves a GPU tensor where it is. TreeImportance and
+MutualInfo copy a GPU tensor to the CPU.
+
+LassoSelector's default, liblinear at its tolerance of 1e-4, stops far from
+the solution on SCAN-B: on Basal against the rest it keeps 350 genes where
+the solution has 196. `solver='ppdna'` reaches the solution.
 
 ### High-Dimensional Use Case (few samples, many features)
 

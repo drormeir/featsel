@@ -134,6 +134,9 @@ VARIANTS = {
     'CorrelationSelector': _CPU_AND_GPU,
     'MannWhitneySelector': {'GPU': {'device': 'cuda'}},
     'HigherCriticismSelector': {'GPU': {'device': 'cuda'}},
+    # PPDNA on the CPU is about five times slower than liblinear; it pays
+    # only on a GPU.
+    'LassoSelector': {'featsel PPDNA, GPU': {'solver': 'ppdna', 'device': 'cuda'}},
     'TreeImportanceSelector': {'featsel, all threads': {'n_jobs': -1}},
     'RFESelector': {'featsel Newton, CPU': {'solver': 'newton'},
                     'featsel Newton, GPU': {'solver': 'newton', 'device': 'cuda'}},

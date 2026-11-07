@@ -6,7 +6,9 @@ import numpy as np
 from sklearn.linear_model import Lasso, LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
 
+from .. import gpu
 from ..base import FeatureSelector
+from . import ppdna
 
 
 class LassoSelector(FeatureSelector):
@@ -21,6 +23,12 @@ class LassoSelector(FeatureSelector):
     For classification this is L1-penalized logistic regression, for regression
     it is Lasso. Feature importance is the absolute coefficient, summed over
     classes in the multiclass case.
+
+    With solver='ppdna' the same L1 logistic regression is solved by a dual
+    Newton proximal point method (see ppdna.py) to a tight tolerance, on a
+    GPU or the CPU. Its selection is liblinear's at a tight tolerance. At
+    liblinear's default tolerance, 1e-4, liblinear stops early and keeps
+    slightly different features.
 
     Parameters
     ----------
@@ -37,15 +45,26 @@ class LassoSelector(FeatureSelector):
     task : str, default='classification'
         Type of task: 'classification' or 'regression'.
     max_iter : int, default=1000
-        Maximum solver iterations.
+        Maximum solver iterations: liblinear's, or PPDNA's outer steps.
     random_state : int, default=42
-        Random seed for the solver.
+        Random seed for the solver. PPDNA is deterministic.
+    solver : {'liblinear', 'ppdna'}, default='liblinear'
+        'liblinear' fits scikit-learn's LogisticRegression or Lasso. 'ppdna'
+        solves the same L1 logistic regression to a tight tolerance;
+        classification only.
+    device : str, default='cpu'
+        Where PPDNA runs: 'cpu'; 'cuda', or another PyTorch device, there,
+        waiting while another fit holds the GPU; 'auto' on a GPU when one is
+        present. A tensor X on a GPU runs there. liblinear runs on the CPU
+        only.
 
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
     Attributes
     ----------
+    device_ : str
+        The device the fit ran on.
     coef_ : np.ndarray
         Fitted model coefficients.
     feature_importances_ : np.ndarray
@@ -63,13 +82,16 @@ class LassoSelector(FeatureSelector):
     rank_once = True
 
     def __init__(self, n_features=None, C=1.0, alpha=0.01, task='classification',
-                 max_iter=1000, random_state=42, check_input=True):
+                 max_iter=1000, random_state=42, solver='liblinear', device='cpu',
+                 check_input=True):
         self.n_features = n_features
         self.C = C
         self.alpha = alpha
         self.task = task
         self.max_iter = max_iter
         self.random_state = random_state
+        self.solver = solver
+        self.device = device
         self.check_input = check_input
 
     def fit(self, X, y):
@@ -88,8 +110,46 @@ class LassoSelector(FeatureSelector):
         self : LassoSelector
             Fitted selector.
         """
-        X, y = self._validate(X, y)
+        if self.solver == 'ppdna':
+            self._fit_ppdna(X, y)
+        elif self.solver == 'liblinear':
+            if self.device != 'cpu':
+                raise ValueError("solver='liblinear' runs on the CPU only; "
+                                 "use solver='ppdna' for another device")
+            self._fit_liblinear(*self._validate(X, y))
+            self.device_ = 'cpu'
+        else:
+            raise ValueError(f"solver must be 'liblinear' or 'ppdna', got {self.solver!r}")
 
+        # Multiclass gives one coefficient row per class; a feature matters if
+        # it matters for any class, so sum the absolute values.
+        self.feature_importances_ = np.abs(np.atleast_2d(self.coef_)).sum(axis=0)
+
+        self.support_ = self._top()
+
+        if not self.support_.any():
+            raise ValueError(
+                "L1 regularization zeroed every coefficient. "
+                "Increase C (classification) or decrease alpha (regression)."
+            )
+        return self
+
+    def _fit_ppdna(self, X, y):
+        """coef_ by PPDNA: one problem for two classes, else one per class against the rest."""
+        if self.task != 'classification':
+            raise ValueError("solver='ppdna' is for classification only")
+        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        self.device_ = gpu.resolve(self.device, X)
+        classes = np.unique(y)
+        with gpu.exclusive(self.device_):
+            # As liblinear: the second class against the first, or each against the rest.
+            self.coef_ = np.array([
+                ppdna.l1_logistic(X, (y == label) * 2.0 - 1.0, self.C, self.device_,
+                                  self.max_iter)[0]
+                for label in (classes[1:] if len(classes) == 2 else classes)])
+
+    def _fit_liblinear(self, X, y):
+        """coef_ by scikit-learn's LogisticRegression (liblinear) or Lasso."""
         model = self._by_task(
             LogisticRegression(l1_ratio=1, C=self.C, solver='liblinear',
                                max_iter=self.max_iter, random_state=self.random_state),
@@ -105,19 +165,6 @@ class LassoSelector(FeatureSelector):
             self.coef_ = np.vstack([est.coef_ for est in model.estimators_])
         else:
             self.coef_ = model.coef_
-
-        # Multiclass gives one coefficient row per class; a feature matters if
-        # it matters for any class, so sum the absolute values.
-        self.feature_importances_ = np.abs(np.atleast_2d(self.coef_)).sum(axis=0)
-
-        self.support_ = self._top()
-
-        if not self.support_.any():
-            raise ValueError(
-                "L1 regularization zeroed every coefficient. "
-                "Increase C (classification) or decrease alpha (regression)."
-            )
-        return self
 
     def ranking(self):
         """
