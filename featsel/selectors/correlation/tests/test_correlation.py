@@ -5,8 +5,9 @@ Tests for the correlation selector.
 import numpy as np
 import pandas as pd
 import pytest
+from scipy.stats import rankdata
 
-from featsel.selectors import CorrelationSelector, correlation
+from featsel.selectors import CorrelationSelector, correlation, gpu
 
 
 class TestCorrelationSelector:
@@ -77,3 +78,72 @@ class TestBlockwisePairs:
 
         assert ours == _pandas_pairs(X, 0.7, method)
         assert ours   # the groups do give pairs above the threshold
+
+
+def _tied_groups():
+    """Correlated groups, rounded so Spearman meets ties, and a binary target."""
+    rng = np.random.default_rng(1)
+    base = rng.normal(size=(200, 8))
+    X = np.round(np.repeat(base, 4, axis=1) + rng.normal(size=(200, 32)) * 0.3, 1)
+    y = (base[:, 0] + base[:, 1] + rng.normal(size=200) > 0).astype(int)
+    return X, y
+
+
+class TestDevice:
+    """Pearson and Spearman select the same features on every device."""
+
+    def test_average_ranks_as_scipy(self):
+        """Test the PyTorch ranks, with ties, against scipy's average ranks."""
+        torch = pytest.importorskip('torch')
+        X, _ = _tied_groups()
+
+        ranks = correlation._average_ranks(torch, torch.as_tensor(X))
+
+        np.testing.assert_array_equal(ranks.numpy(), rankdata(X, axis=0))
+
+    @pytest.mark.parametrize('method', ['pearson', 'spearman'])
+    def test_torch_path_selects_as_numpy(self, method, monkeypatch):
+        """Test the PyTorch path, run on the CPU, in small batches and blocks."""
+        pytest.importorskip('torch')
+        monkeypatch.setattr(gpu, 'batch_size', lambda *args: 5)
+        monkeypatch.setattr(correlation, '_BLOCK', 7)
+        X, y = _tied_groups()
+        selector = CorrelationSelector(target_threshold=0.05, inter_feature_threshold=0.8,
+                                       method=method)
+
+        target_corr, candidates, pairs = selector._on_device(X, y, 'cpu')
+        target_ref, candidates_ref, pairs_ref = selector._on_cpu(X, y, list(range(32)))
+
+        np.testing.assert_allclose(target_corr, target_ref, rtol=1e-12)
+        np.testing.assert_array_equal(candidates, candidates_ref)
+        assert len(pairs) > 0
+        assert {(int(i), int(j)) for i, j in pairs} == {(int(i), int(j)) for i, j in pairs_ref}
+
+    @pytest.mark.parametrize('method', ['pearson', 'spearman'])
+    def test_gpu_selects_as_cpu(self, method):
+        """Test device='cuda', and a GPU tensor with device='cpu', against the CPU."""
+        torch = pytest.importorskip('torch')
+        if not torch.cuda.is_available():
+            pytest.skip('no CUDA GPU')
+        X, y = _tied_groups()
+        params = {'n_features': 6, 'target_threshold': 0.05, 'inter_feature_threshold': 0.8,
+                  'method': method}
+        cpu = CorrelationSelector(device='cpu', **params).fit(X, y)
+
+        cuda = CorrelationSelector(device='cuda', **params).fit(X, y)
+        tensor = CorrelationSelector(device='cpu', **params).fit(
+            torch.as_tensor(X, device='cuda'), y)
+
+        assert cuda.device_ == 'cuda'
+        assert tensor.device_.startswith('cuda')
+        np.testing.assert_array_equal(cuda.get_support(), cpu.get_support())
+        np.testing.assert_array_equal(tensor.get_support(), cpu.get_support())
+
+    def test_kendall_refuses_a_gpu(self):
+        """Test that Kendall raises with a GPU device and runs on the CPU with auto."""
+        X, y = _tied_groups()
+
+        with pytest.raises(ValueError, match="kendall' runs on the CPU only"):
+            CorrelationSelector(method='kendall', device='cuda').fit(X, y)
+        assert CorrelationSelector(method='kendall', target_threshold=0.05).fit(X, y).device_ \
+            == 'cpu'
