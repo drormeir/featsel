@@ -66,18 +66,46 @@ def short(selector):
     return selector.removesuffix('Selector')
 
 
+def place_labels(ax, labels):
+    """
+    Write each (x, y, text, size, color) label right of its point, top first,
+    moving it down past any label already placed that it would overlap. A
+    moved label gets a thin line back to its point.
+    """
+    points_per_pixel = 72 / ax.figure.dpi
+    placed = []   # boxes in display pixels: (left, bottom, right, top)
+    for x, y, text, size, color in sorted(labels, key=lambda item: -item[1]):
+        px, py = ax.transData.transform((x, y))
+        width = len(text) * size * 0.6 / points_per_pixel
+        height = size * 1.3 / points_per_pixel
+        # Frontier labels (INK) sit above their point: the frontier line runs
+        # right from it.
+        left = px + 6 / points_per_pixel
+        bottom = py + (height * 0.3 if color == INK else -height / 2)
+        while any(left < r and l < left + width and bottom < t and b < bottom + height
+                  for l, b, r, t in placed):
+            bottom -= height / 2
+        placed.append((left, bottom, left + width, bottom + height))
+        moved = abs(py - (bottom + height / 2)) > height
+        ax.annotate(text, (x, y), xytext=((left - px) * points_per_pixel,
+                                          (bottom + height / 2 - py) * points_per_pixel),
+                    textcoords='offset points', fontsize=size, color=color, va='center',
+                    arrowprops={'arrowstyle': '-', 'color': OTHER, 'linewidth': 0.6}
+                    if moved else None)
+
+
 def plot(table, on, metric, caption, out):
     fig, ax = plt.subplots(figsize=(9, 5.5))
     # Each selector's k values joined in gray and named once, at its best
     # point, so a point off the frontier still says what it is.
+    labels = []
     for selector, part in table.groupby('selector'):
         part = part.sort_values('k')
         ax.plot(part['selection_time_s'], part[metric], color=OTHER, linewidth=1,
                 alpha=0.6, zorder=1)
         best = part.loc[part[metric].idxmax()]
         if not on[best.name]:
-            ax.annotate(short(selector), (best['selection_time_s'], best[metric]),
-                        xytext=(6, 4), textcoords='offset points', fontsize=7, color=MUTED)
+            labels.append((best['selection_time_s'], best[metric], short(selector), 7, MUTED))
     for mask, color, size in [(~on, OTHER, 22), (on, FRONTIER, 36)]:
         part = table[mask]
         ax.errorbar(part['selection_time_s'], part[metric], yerr=part[f'{metric}_std'],
@@ -87,11 +115,12 @@ def plot(table, on, metric, caption, out):
     line = table[on].sort_values('selection_time_s')
     ax.step(line['selection_time_s'], line[metric], where='post', color=FRONTIER,
             linewidth=2, zorder=2)
-    for _, row in line.iterrows():
-        ax.annotate(label(row), (row['selection_time_s'], row[metric]),
-                    xytext=(6, -12), textcoords='offset points', fontsize=8, color=INK)
+    labels += [(row['selection_time_s'], row[metric], label(row), 8, INK)
+               for _, row in line.iterrows()]
 
     ax.set_xscale('log')
+    times = table['selection_time_s']
+    ax.set_xlim(times.min() / 1.5, times.max() * 4)   # room for the rightmost label
     ax.set_xlabel('Selection time per fit, seconds (median, log scale)', color=INK)
     ax.set_ylabel(f'Test {metric.replace("_", " ").upper()} (mean over tasks and splits)',
                   color=INK)
@@ -103,6 +132,7 @@ def plot(table, on, metric, caption, out):
     ax.set_title('Feature selection: cost against quality', loc='left', color=INK)
     fig.text(0.01, 0.01, caption, fontsize=7, color=MUTED, ha='left', va='bottom')
     fig.tight_layout(rect=(0, 0.04, 1, 1))
+    place_labels(ax, labels)
     fig.savefig(out, dpi=150)
     plt.close(fig)
 
@@ -123,7 +153,7 @@ def main(argv=None):
     env = details['environment']
     caption = (f"{details.get('dataset')}, {results['task'].nunique()} tasks x "
                f"{results['split'].nunique()} splits, {results['model'].iloc[0]}. "
-               f"{env['cpu']}, {env.get('gpu', 'no GPU')}. "
+               f"{env['cpu']}, {env.get('gpu', 'GPU not recorded')}. "
                f"Commit {str(env['git_commit'])[:7]}{' (modified)' if env['git_dirty'] else ''}.")
 
     out = args.out or args.csv.with_name(f"{args.csv.stem}_{args.metric}.png")
