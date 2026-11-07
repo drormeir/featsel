@@ -7,6 +7,7 @@ validation half into selection, and a resume that neither duplicates nor drops
 work.
 """
 
+import itertools
 import json
 import resource
 from pathlib import Path
@@ -551,3 +552,50 @@ def test_unknown_metric_raises(experiment):
 
     with pytest.raises(ValueError, match='acuracy'):
         run_config(experiment)
+
+
+class TestSelectionRepeats:
+    """Each selection is fit selection_repeats times; the time is their median."""
+
+    def test_time_is_the_median_of_the_repeats(self, experiment, monkeypatch):
+        """Test with fits timed 1, 5 and 2 seconds: the median is 2."""
+        experiment['selection_repeats'] = 3
+        experiment['n_splits'] = 1
+        experiment['selectors'] = [{'name': 'ANOVAFSelector', 'k': [5]}]
+        durations = itertools.cycle([1.0, 5.0, 2.0])   # the same three for every task
+        clock = [0.0]
+
+        def fit(self, X, y):
+            clock[0] += next(durations)
+            self.n_features_in_ = X.shape[1]
+            self.feature_importances_ = np.arange(X.shape[1], 0, -1)
+            self.support_ = self._mask(np.arange(self.n_features))
+            return self
+
+        monkeypatch.setattr(run_module.time, 'perf_counter', lambda: clock[0])
+        monkeypatch.setattr(ANOVAFSelector, 'fit', fit)
+        df = pd.read_csv(run_config(experiment))
+
+        assert (df['selection_time_s'] == 2.0).all()
+        assert (df['selection_repeats'] == 3).all()
+
+    def test_repeats_of_a_seeded_selector_are_stable(self, experiment):
+        """Test that every seeded selector chooses the same features on every repeat."""
+        df = pd.read_csv(run_config(experiment))
+
+        assert (df['selection_repeats'] == 10).all()
+        assert df['selection_stable'].all()
+
+    def test_unseeded_repeats_are_flagged(self, experiment):
+        """Test that random_state=None draws differently each repeat, and says so."""
+        experiment['selectors'] = [{'name': 'RandomSelector', 'k': [5],
+                                    'params': {'random_state': None}}]
+
+        assert not pd.read_csv(run_config(experiment))['selection_stable'].any()
+
+    def test_zero_repeats_raise(self, experiment):
+        """Test that fewer than one repeat is refused before any work."""
+        experiment['selection_repeats'] = 0
+
+        with pytest.raises(ValueError, match='selection_repeats'):
+            run_config(experiment)

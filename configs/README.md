@@ -58,6 +58,7 @@ supports classification only.
 | `tuning` | `{n_splits: 3, train_size: 0.5, scoring: roc_auc}` | Inner splits for models with a `grid`. `scoring` is a scikit-learn scorer name |
 | `seed` | `42` | Global seed; each split derives its own |
 | `n_splits` | `100` | Stratified Monte Carlo splits |
+| `selection_repeats` | `10` | Fits of each selection, each by a fresh selector. `selection_time_s` is their median; `selection_peak_mb` is the first fit's. `selection_stable` says whether every fit chose the same features |
 | `train_sizes` | `[0.5]` | Training fractions |
 | `preprocess` | `["standard"]` | `none`, `standard` or `quantile_normal`, fit on the training part |
 | `metrics` | all but `roc_auc` | `accuracy`, `macro_f1`, `balanced_accuracy`, `mcc`, `g_mean` from the predicted labels; `roc_auc` from the model's continuous score (`decision_function`, else `predict_proba`) |

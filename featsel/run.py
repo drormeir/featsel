@@ -143,6 +143,7 @@ def _make_selector(spec, k, seed):
 DEFAULTS = {
     'seed': 42,
     'n_splits': 100,
+    'selection_repeats': 10,
     'train_sizes': [0.5],
     'preprocess': ['standard'],
     'metrics': list(METRICS),
@@ -249,24 +250,18 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
             continue
 
         if ranking is None:
-            selector = _make_selector(sel_spec, min(k_values) if rank_once else k,
-                                      split_seed)
-            tracemalloc.start()
-            start = time.perf_counter()
             try:
-                selector.fit(X_train, y_train)
+                selector, selection = _repeated_selection(
+                    sel_spec, min(k_values) if rank_once else k, split_seed,
+                    X_train, y_train, config['selection_repeats'], rank_once)
             except MemoryError:
                 failures.append(f"{context['task']} split {context['split']} "
                                 f"train_size {context['train_size']}: {sel_name} k={k}")
                 continue
-            finally:
-                _, peak_bytes = tracemalloc.get_traced_memory()
-                tracemalloc.stop()
-            selection_time = time.perf_counter() - start
             if rank_once:
                 # A selector with rank_once set: each cut of its ranking
-                # equals a fit with n_features=k. selection_time_s and
-                # selection_peak_mb are this one fit's, on every k.
+                # equals a fit with n_features=k. The selection_ columns
+                # are these fits', on every k.
                 ranking = selector.ranking()
 
         if rank_once:
@@ -317,9 +312,7 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 'n_train': len(y_train),
                 'n_test': len(y_test),
                 'n_selected': len(support),
-                'selection_time_s': selection_time,
-                'selection_peak_mb': peak_bytes / 1024 ** 2,
-                'selection_device': getattr(selector, 'device_', 'cpu'),
+                **selection,
                 'fit_time_s': fit_time,
                 'predict_time_s': predict_time,
                 'selector_params': json.dumps(sel_spec.get('params') or {}),
@@ -333,6 +326,41 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 y_score = _positive_score(model, X_test_sel)
                 row.update({name: fn(y_test, y_score) for name, fn in score_metrics.items()})
             yield row
+
+
+def _repeated_selection(sel_spec, k, seed, X_train, y_train, repeats, rank_once):
+    """
+    Fit a fresh selector `repeats` times; return the last and its CSV columns.
+
+    selection_time_s is the median fit time. selection_peak_mb is the first
+    fit's, the only one traced: tracing slows a fit. selection_device lists
+    every device a fit ran on, as 'cpu+cuda' when 'auto' moved between them.
+    selection_stable says whether every fit chose the same features, in the
+    same ranked order for a rank_once selector.
+    """
+    times, choices, devices = [], [], set()
+    for repeat in range(repeats):
+        selector = _make_selector(sel_spec, k, seed)
+        if repeat == 0:
+            tracemalloc.start()
+        start = time.perf_counter()
+        try:
+            selector.fit(X_train, y_train)
+        finally:
+            if repeat == 0:
+                _, peak_bytes = tracemalloc.get_traced_memory()
+                tracemalloc.stop()
+        times.append(time.perf_counter() - start)
+        choices.append(selector.ranking() if rank_once
+                       else selector.get_support(indices=True))
+        devices.add(getattr(selector, 'device_', 'cpu'))
+    return selector, {
+        'selection_time_s': float(np.median(times)),
+        'selection_repeats': repeats,
+        'selection_stable': all(np.array_equal(choices[0], c) for c in choices[1:]),
+        'selection_peak_mb': peak_bytes / 1024 ** 2,
+        'selection_device': '+'.join(sorted(devices)),
+    }
 
 
 def _positive_score(model, X):
@@ -533,6 +561,8 @@ def print_plan(config, X, y, tasks, target, name, total):
         print(f"  train_size {train_size}: {n_train} train / "
               f"{n_samples - n_train} validation")
 
+    print(f"Repeats      : {config['selection_repeats']} fits per selection, "
+          f"median time recorded")
     print(f"Preprocess   : {', '.join(config['preprocess'])}")
     print(f"Metrics      : {', '.join(config['metrics'])}")
     print(f"Workers      : {config['n_jobs']} (parallel over task x selector jobs, "
@@ -600,6 +630,9 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
     if unknown:
         raise ValueError(f"Unknown metrics {sorted(unknown)}. "
                          f"Available: {', '.join([*METRICS, *SCORE_METRICS])}")
+    if config['selection_repeats'] < 1:
+        raise ValueError(f"selection_repeats must be at least 1, "
+                         f"got {config['selection_repeats']}")
 
     out_path = Path(config['output'])
     out_path.parent.mkdir(parents=True, exist_ok=True)
