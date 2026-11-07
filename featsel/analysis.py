@@ -8,7 +8,7 @@ per (task, split, train size, preprocessing, selector, k, model) execution.
 import numpy as np
 import pandas as pd
 
-from .metrics import KEY_COLUMNS, METRICS
+from .metrics import KEY_COLUMNS, METRICS, SCORE_METRICS
 
 # One experiment cell: every key except the split, which varies inside it.
 CELL_COLUMNS = [c for c in KEY_COLUMNS if c != 'split']
@@ -26,7 +26,7 @@ def summarize(results):
     The median and interquartile range describe split-to-split variation
     without assuming it is symmetric.
     """
-    columns = [c for c in [*METRICS, *COST_COLUMNS] if c in results.columns]
+    columns = [c for c in [*METRICS, *SCORE_METRICS, *COST_COLUMNS] if c in results.columns]
     grouped = results.groupby(CELL_COLUMNS, dropna=False)[columns]
 
     summary = pd.concat({

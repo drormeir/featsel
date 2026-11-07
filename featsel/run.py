@@ -48,7 +48,7 @@ from tqdm.auto import tqdm
 
 from . import environment
 from .data_loader import DataLoader
-from .metrics import KEY_COLUMNS, METRICS
+from .metrics import KEY_COLUMNS, METRICS, SCORE_METRICS
 from .selectors import FeatureSelector
 
 # name -> sklearn estimator class. Parameters come from the config, not here,
@@ -234,7 +234,9 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
     description to failures; the rest of the job goes on.
     """
     split_seed = context['seed']
-    metrics = {name: METRICS[name] for name in config['metrics']}
+    metrics = {name: METRICS[name] for name in config['metrics'] if name in METRICS}
+    score_metrics = {name: SCORE_METRICS[name] for name in config['metrics']
+                     if name in SCORE_METRICS}
     sel_name = _selector_label(sel_spec)
     rank_once = (FeatureSelector.lookup(sel_spec['name']).rank_once
                  and None not in k_values)
@@ -327,7 +329,23 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 **recovery,
             }
             row.update({name: fn(y_test, y_pred) for name, fn in metrics.items()})
+            if score_metrics:
+                y_score = _positive_score(model, X_test_sel)
+                row.update({name: fn(y_test, y_score) for name, fn in score_metrics.items()})
             yield row
+
+
+def _positive_score(model, X):
+    """
+    The model's continuous score for its second class, model.classes_[1].
+
+    decision_function where the model has one, else the predicted
+    probability. Every task is binary, and the second class in sorted order
+    is the one roc_auc_score treats as positive.
+    """
+    if hasattr(model, 'decision_function'):
+        return model.decision_function(X)
+    return model.predict_proba(X)[:, 1]
 
 
 def _tuned(model, grid, tuning, seed):
@@ -578,6 +596,10 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
     """
     config = {**DEFAULTS, **config}
     config['tuning'] = {**DEFAULTS['tuning'], **config['tuning']}
+    unknown = set(config['metrics']) - set(METRICS) - set(SCORE_METRICS)
+    if unknown:
+        raise ValueError(f"Unknown metrics {sorted(unknown)}. "
+                         f"Available: {', '.join([*METRICS, *SCORE_METRICS])}")
 
     out_path = Path(config['output'])
     out_path.parent.mkdir(parents=True, exist_ok=True)

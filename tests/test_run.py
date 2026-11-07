@@ -533,3 +533,21 @@ def test_writes_its_settings_beside_the_csv(experiment):
     assert details['finished'] is not None
     assert details['written'] == len(pd.read_csv(out))
     assert 'cpu' in details['environment']
+
+
+def test_roc_auc_from_the_models_score(experiment):
+    """Test that roc_auc is recorded for every row, between 0 and 1."""
+    experiment['metrics'] = ['roc_auc', 'accuracy']
+
+    df = pd.read_csv(run_config(experiment))
+
+    assert df['roc_auc'].between(0, 1).all()
+    assert df['roc_auc'].notna().all()
+
+
+def test_unknown_metric_raises(experiment):
+    """Test that a misspelled metric is refused before any work."""
+    experiment['metrics'] = ['roc_auc', 'acuracy']
+
+    with pytest.raises(ValueError, match='acuracy'):
+        run_config(experiment)

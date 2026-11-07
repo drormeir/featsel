@@ -13,6 +13,7 @@ from sklearn.metrics import (
     f1_score,
     matthews_corrcoef,
     recall_score,
+    roc_auc_score,
 )
 
 
@@ -36,6 +37,12 @@ METRICS = {
     'balanced_accuracy': balanced_accuracy_score,
     'mcc': matthews_corrcoef,
     'g_mean': g_mean,
+}
+
+# name -> callable(y_true, y_score) -> float, from the model's continuous
+# score for the second class in sorted order, as roc_auc_score expects.
+SCORE_METRICS = {
+    'roc_auc': roc_auc_score,
 }
 
 # Columns that identify an execution. Used to skip finished work on --resume.
