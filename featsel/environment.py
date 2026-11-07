@@ -9,7 +9,6 @@ import json
 import os
 import platform
 import subprocess
-import sys
 from datetime import datetime
 from importlib import metadata
 from pathlib import Path
@@ -29,11 +28,9 @@ def describe():
         'git_commit': _git('rev-parse', 'HEAD'),
         'git_dirty': bool(_git('status', '--porcelain', '--untracked-files=no')),
     }
-    torch = sys.modules.get('torch')
-    if torch is not None and torch.cuda.is_available():
-        props = torch.cuda.get_device_properties(0)
-        info['gpu'] = props.name
-        info['gpu_memory_gb'] = round(props.total_memory / 1024 ** 3, 1)
+    gpu = _gpu()
+    if gpu is not None:
+        info['gpu'], info['gpu_memory_gb'] = gpu
     return info
 
 
@@ -70,6 +67,23 @@ def _git(*args):
                               cwd=Path(__file__).parent).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return None
+
+
+def _gpu():
+    """
+    The first NVIDIA GPU's name and memory in GB, from nvidia-smi, or None.
+
+    Asked of the driver, not of PyTorch: the process writing the JSON may
+    never import PyTorch while its workers use the GPU.
+    """
+    try:
+        line = subprocess.run(
+            ['nvidia-smi', '--query-gpu=name,memory.total', '--format=csv,noheader,nounits'],
+            capture_output=True, text=True, check=True).stdout.splitlines()[0]
+    except (OSError, subprocess.CalledProcessError, IndexError):
+        return None
+    name, mib = line.rsplit(',', 1)
+    return name.strip(), round(int(mib) / 1024, 1)
 
 
 def _cpu_name():
