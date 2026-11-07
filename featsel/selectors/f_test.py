@@ -54,12 +54,14 @@ def _f_classif_torch(X, y, device):
     classes, codes = np.unique(y, return_inverse=True)
     counts = np.bincount(codes)
     n_samples, n_classes = len(y), len(classes)
-    one_hot = torch.as_tensor(np.eye(n_classes)[codes], device=device)
+    members = torch.as_tensor(np.eye(n_classes)[:, codes], device=device)  # class x sample
     parts = []
     for block in gpu.float64_columns(torch, X, device, _BYTES_PER_VALUE):
-        class_sums = one_hot.T @ block                          # (n_classes, batch)
-        squares = (block * block).sum(0)
-        parts.append(torch.vstack([class_sums, squares[None]]).cpu().numpy())
+        # One vector product per class, not one matrix product for all: with
+        # a few classes the matrix product is far slower on a GPU.
+        class_sums = [member @ block for member in members]
+        squares = torch.linalg.vector_norm(block, dim=0) ** 2  # faster than (block ** 2).sum(0)
+        parts.append(torch.stack([*class_sums, squares]).cpu().numpy())
     sums = np.hstack(parts)
     class_sums, ss_alldata = sums[:-1], sums[-1]
     square_of_sums_alldata = class_sums.sum(0) ** 2
@@ -82,7 +84,7 @@ def _f_regression_torch(X, y, device):
     parts = []
     for block in gpu.float64_columns(torch, X, device, _BYTES_PER_VALUE):
         means = block.mean(0)
-        norms = torch.sqrt((block * block).sum(0) - n_samples * means ** 2)
+        norms = torch.sqrt(torch.linalg.vector_norm(block, dim=0) ** 2 - n_samples * means ** 2)
         parts.append((y_t @ block / norms).cpu().numpy())
     corr = np.hstack(parts) / np.linalg.norm(y)
     corr[np.isnan(corr)] = 0.0                                # a constant feature
