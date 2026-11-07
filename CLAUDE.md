@@ -183,7 +183,7 @@ featsel/
 │   ├── higher_criticism/    # HigherCriticismSelector
 │   ├── lasso/               # LassoSelector; ppdna.py: its GPU solver
 │   ├── mann_whitney/        # MannWhitneySelector
-│   ├── mutual_info/         # MutualInfoSelector
+│   ├── mutual_info/         # MutualInfoSelector; knn_1d.py: the estimate by sorting, CPU or GPU
 │   ├── percentile/          # PercentileSelector
 │   ├── random_selection/    # RandomSelector (not `random`: shadows the stdlib)
 │   ├── rfe/                 # RFESelector
@@ -269,7 +269,8 @@ FDRSelector(alpha=0.05)                                  # F-test, Benjamini-Hoc
 FWESelector(alpha=0.05)                                  # F-test, Bonferroni; own count
 PercentileSelector(percentile=1)                         # F-test, top 1%
 HigherCriticismSelector(variant='2008')                  # U test, HC threshold; own count; or '2004'; binary only
-MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slower
+MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slower; scikit-learn's
+                                                         # scores exactly, its searches on a GPU
 CorrelationSelector(n_features=100, target_threshold=0.1,
                     inter_feature_threshold=0.95)        # drops redundant pairs
 # Embedded
@@ -292,10 +293,10 @@ RandomSelector(n_features=100, random_state=42)          # the control
 Every selector takes `check_input=True`. `False` skips input validation in
 `fit`; use it only for a clean NumPy array.
 
-Every selector accepts a NumPy array or a PyTorch tensor. Eight selectors
+Every selector accepts a NumPy array or a PyTorch tensor. Nine selectors
 follow one device policy, `featsel.selectors.gpu.run`: VarianceThreshold,
-ANOVA-F, FDR, FWE, Percentile, Correlation, MannWhitney and
-HigherCriticism.
+ANOVA-F, FDR, FWE, Percentile, Correlation, MannWhitney, HigherCriticism
+and MutualInfo.
 
 - A tensor on a GPU runs there, whatever `device` says.
 - `'auto'`, the default, uses the GPU when it is free, else the CPU.
@@ -304,8 +305,9 @@ HigherCriticism.
 
 RFE, RFECV and Sequential use a GPU only with `solver='newton'`, and Lasso
 only with `solver='ppdna'`; all four default to the CPU. RandomSelector reads
-only the shape, so it leaves a GPU tensor where it is. TreeImportance and
-MutualInfo copy a GPU tensor to the CPU.
+only the shape, so it leaves a GPU tensor where it is. TreeImportance
+copies a GPU tensor to the CPU. MutualInfo runs regression, and a class of
+2 to 7 samples, in scikit-learn on the CPU.
 
 LassoSelector's default, liblinear at its tolerance of 1e-4, stops far from
 the solution on SCAN-B: on Basal against the rest it keeps 350 genes where
@@ -377,7 +379,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 - Designed for PyPI distribution but currently in development (version 0.1.0)
 - Support for Python 3.9-3.13
 - Core dependencies: numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, pyyaml, tqdm
-- Optional dependencies: jupyter (dev), optuna (hyperparameter optimization), torch and torchvision (embeddings: only to compute the BreastMNIST embeddings), torch (gpu: only for the U test with `device='cuda'`)
+- Optional dependencies: jupyter (dev), optuna (hyperparameter optimization), torch and torchvision (embeddings: only to compute the BreastMNIST embeddings), torch (gpu: every selector's GPU path, `device='cuda'` or `'auto'`)
 
 ### Index Alignment
 - The DataLoader automatically handles mismatches between feature and metadata sample indices

@@ -28,6 +28,8 @@ from scipy.special import digamma
 from sklearn.preprocessing import scale
 from sklearn.utils import check_random_state
 
+from .. import gpu
+
 
 def matches_sklearn(y, n_neighbors):
     """
@@ -43,18 +45,27 @@ def matches_sklearn(y, n_neighbors):
     return bool(np.all(np.minimum(n_neighbors, counts - 1) < counts // 2))
 
 
-# Features handled per batch: the batch's sorted copies and neighbor
-# distances are a few times n_samples * _BATCH float64 values.
+# Features handled per batch on the CPU: the batch's sorted copies and
+# neighbor distances are a few times n_samples * _BATCH float64 values.
 _BATCH = 1024
 
+# Peak bytes per value of a batch on a GPU: the batch, its sorted copy and
+# sort order, the radii, the shifted differences and the search ends.
+_GPU_BYTES_PER_VALUE = 128
 
-def mutual_info_classif(X, y, n_neighbors=3, random_state=None):
+
+def mutual_info_classif(X, y, n_neighbors=3, random_state=None, device='cpu'):
     """
     Mutual information of each feature with a discrete target, in nats.
 
     Equal to sklearn.feature_selection.mutual_info_classif(X, y,
     n_neighbors=n_neighbors, random_state=random_state) with continuous
     features.
+
+    device is where the neighbor searches run: 'cpu' in NumPy, or a PyTorch
+    device such as 'cuda', in float64, batched over features. Either way the
+    scaling, the noise, digamma and the means run in NumPy on the CPU, so
+    the result is the same, bit for bit. X is a NumPy array or array-like.
     """
     X = scale(np.array(X, dtype=np.float64), with_mean=False, copy=False)
     rng = check_random_state(random_state)
@@ -66,21 +77,48 @@ def mutual_info_classif(X, y, n_neighbors=3, random_state=None):
     k_all = np.minimum(n_neighbors, n_class - 1)
     constant = (digamma(used.sum()) + np.mean(digamma(k_all[used]))
                 - np.mean(digamma(n_class[used])))
+    # Each class's members among the used samples, and its k.
+    groups = [(codes[used] == label, min(n_neighbors, counts[label] - 1))
+              for label in np.flatnonzero(counts > 1)]
+    # digamma of every count a sample can have, 1 to all used samples.
+    table = digamma(np.arange(1, used.sum() + 1, dtype=np.float64))
 
+    batches = (_counts_numpy(X, used, groups) if device == 'cpu'
+               else _counts_torch(X, used, groups, device))
     mi = np.empty(X.shape[1])
+    for g0, m in batches:
+        # m is features x samples. Each feature's mean over a contiguous
+        # row, summed pairwise as NumPy sums the one-dimensional array
+        # scikit-learn averages.
+        mi[g0:g0 + len(m)] = np.maximum(0, constant - table[m - 1].mean(axis=1))
+    return mi
+
+
+def _counts_numpy(X, used, groups):
+    """(first feature, counts m as features x samples) per batch, in NumPy."""
     for g0 in range(0, X.shape[1], _BATCH):
         block = X[used, g0:g0 + _BATCH]
         radius = np.empty_like(block)
-        for label in np.flatnonzero(counts > 1):
-            members = codes[used] == label
-            radius[members] = _kth_neighbor_distance(block[members], k_all[used][members][0])
-        radius = np.nextafter(radius, 0)
-        m = _counts_within(block, radius)
-        # Each feature's mean over a contiguous row, summed pairwise as
-        # NumPy sums the one-dimensional array scikit-learn averages.
-        mean_m = np.ascontiguousarray(digamma(m).T).mean(axis=1)
-        mi[g0:g0 + _BATCH] = np.maximum(0, constant - mean_m)
-    return mi
+        for members, k in groups:
+            radius[members] = _kth_neighbor_distance(block[members], k)
+        yield g0, np.ascontiguousarray(_counts_within(block, np.nextafter(radius, 0)).T)
+
+
+def _counts_torch(X, used, groups, device):
+    """(first feature, counts m as features x samples) per batch, on a PyTorch device."""
+    torch = gpu.import_torch(device)
+    members_t = [(torch.as_tensor(np.flatnonzero(members), device=device), k)
+                 for members, k in groups]
+    zero = torch.zeros((), dtype=torch.float64, device=device)
+    size = gpu.batch_size(torch, device, _GPU_BYTES_PER_VALUE * used.sum(), X.shape[1])
+    for g0 in range(0, X.shape[1], size):
+        # Features as rows, so each feature's samples are contiguous.
+        block = torch.as_tensor(X[used, g0:g0 + size], device=device).T.contiguous()
+        radius = torch.empty_like(block)
+        for members, k in members_t:
+            radius[:, members] = _kth_neighbor_distance_torch(torch, block[:, members], k)
+        m = _counts_within_torch(torch, block, torch.nextafter(radius, zero))
+        yield g0, m.to(torch.int32).cpu().numpy()
 
 
 def _kth_neighbor_distance(values, k):
@@ -136,6 +174,56 @@ def _counts_within(values, radius):
         step_hi = np.where((hi < n) & inside(hi), 1,
                            np.where((hi > 0) & ~inside(hi - 1), -1, 0))
         if not (step_lo.any() or step_hi.any()):
+            break
+        lo += step_lo
+        hi += step_hi
+    return hi - lo
+
+
+
+def _kth_neighbor_distance_torch(torch, values, k):
+    """
+    _kth_neighbor_distance on a PyTorch device, with features as rows.
+
+    The same subtractions, minima and maxima. With L_0 = R_0 = 0 the terms
+    a = 0 and a = k are R_k and L_k. A missing left neighbor is padded with
+    -inf, so its distance is inf at once.
+    """
+    n = values.shape[1]
+    s, order = torch.sort(values, dim=1, stable=True)
+    pad = s.new_full((len(s), k), torch.inf)
+    padded = torch.cat([-pad, s, pad], dim=1)
+
+    def left(a):
+        return s - padded[:, k - a:k - a + n]
+
+    def right(b):
+        return padded[:, k + b:k + b + n] - s
+
+    kth = torch.minimum(left(k), right(k))
+    for a in range(1, k):
+        kth = torch.minimum(kth, torch.maximum(left(a), right(k - a)))
+    return torch.empty_like(kth).scatter_(1, order, kth)
+
+
+def _counts_within_torch(torch, values, radius):
+    """_counts_within on a PyTorch device, with features as rows."""
+    s = torch.sort(values, dim=1).values
+    lo = torch.searchsorted(s, values - radius, side='left')
+    hi = torch.searchsorted(s, values + radius, side='right')
+
+    def inside(index):
+        """Whether sorted position index (clipped) is within each sample's radius."""
+        at = s.gather(1, index.clamp(0, n - 1))
+        return (at - values).abs() <= radius
+
+    n = s.shape[1]
+    for _ in range(n):   # rounding moves an end by a position or two at most
+        step_lo = torch.where((lo > 0) & inside(lo - 1), -1,
+                              torch.where((lo < n) & ~inside(lo), 1, 0))
+        step_hi = torch.where((hi < n) & inside(hi), 1,
+                              torch.where((hi > 0) & ~inside(hi - 1), -1, 0))
+        if not (step_lo.any() | step_hi.any()):
             break
         lo += step_lo
         hi += step_hi

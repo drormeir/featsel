@@ -2,8 +2,11 @@
 Mutual information: rank features by their dependence on the target.
 """
 
+import sys
+
 from sklearn.feature_selection import mutual_info_classif, mutual_info_regression
 
+from .. import gpu
 from ..base import FeatureSelector
 from . import knn_1d
 
@@ -21,6 +24,10 @@ class MutualInfoSelector(FeatureSelector):
     result, bit for bit. A class of 2 to 7 samples, where scikit-learn
     switches to brute force, goes to scikit-learn itself, as does regression.
 
+    The sorted estimate's neighbor searches can run on a GPU, with the same
+    result, bit for bit. The scaling, the noise, digamma and the means stay
+    on the CPU.
+
     Parameters
     ----------
     n_features : int
@@ -32,12 +39,20 @@ class MutualInfoSelector(FeatureSelector):
         Lower values = more sensitive to local structure.
     random_state : int, default=42
         Random seed for reproducibility.
-
+    device : str, default='auto'
+        Where the neighbor searches run: 'auto' uses a CUDA GPU when one can
+        be used (the `gpu` extra), else NumPy; 'cpu' always NumPy; 'cuda'
+        always the GPU, waiting while another fit holds it and raising if it
+        cannot run. A tensor X on a GPU runs there. Regression and a class of
+        2 to 7 samples run in scikit-learn on the CPU, whatever the device.
+        The result is identical on every device.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
     Attributes
     ----------
+    device_ : str
+        The device the neighbor searches ran on: 'cpu' or 'cuda'.
     feature_importances_ : np.ndarray
         Mutual information scores for each feature.
 
@@ -51,11 +66,12 @@ class MutualInfoSelector(FeatureSelector):
     """
 
     def __init__(self, n_features=None, task='classification', n_neighbors=3,
-                 random_state=42, check_input=True):
+                 random_state=42, device='auto', check_input=True):
         self.n_features = n_features
         self.task = task
         self.n_neighbors = n_neighbors
         self.random_state = random_state
+        self.device = device
         self.check_input = check_input
 
     def fit(self, X, y):
@@ -75,16 +91,27 @@ class MutualInfoSelector(FeatureSelector):
             Fitted selector.
         """
         self._require_n_features()
-        X, y = self._validate(X, y)
+        X, y = self._validate(X, y, keep_gpu_tensor=True)
 
         if self.task == 'classification' and knn_1d.matches_sklearn(y, self.n_neighbors):
             # The same estimate by sorting; scikit-learn's result exactly.
-            self.feature_importances_ = knn_1d.mutual_info_classif(
-                X, y, self.n_neighbors, self.random_state)
+            def mi(X, device='cpu'):
+                return knn_1d.mutual_info_classif(_on_cpu(X), y, self.n_neighbors,
+                                                  self.random_state, device)
+            self.feature_importances_, self.device_ = gpu.run(self.device, X, mi, mi)
         else:
             mi_func = self._by_task(mutual_info_classif, mutual_info_regression)
             self.feature_importances_ = mi_func(
-                X, y, n_neighbors=self.n_neighbors, random_state=self.random_state
+                _on_cpu(X), y, n_neighbors=self.n_neighbors, random_state=self.random_state
             )
+            self.device_ = 'cpu'
         self.support_ = self._top()
         return self
+
+
+def _on_cpu(X):
+    """X, a GPU tensor copied to a NumPy array; anything else as it is."""
+    torch = sys.modules.get('torch')
+    if torch is not None and isinstance(X, torch.Tensor):
+        return X.cpu().numpy()
+    return X

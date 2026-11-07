@@ -132,6 +132,8 @@ VARIANTS = {
     'FWESelector': _CPU_AND_GPU,
     'PercentileSelector': _CPU_AND_GPU,
     'CorrelationSelector': _CPU_AND_GPU,
+    # 'featsel' keeps the label of the CPU series measured before the GPU path.
+    'MutualInfoSelector': {'featsel': {'device': 'cpu'}, 'featsel, GPU': {'device': 'cuda'}},
     'MannWhitneySelector': {'GPU': {'device': 'cuda'}},
     'HigherCriticismSelector': {'GPU': {'device': 'cuda'}},
     # PPDNA on the CPU is about five times slower than liblinear; it pays
