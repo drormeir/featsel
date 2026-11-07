@@ -7,7 +7,10 @@ import pytest
 from sklearn.feature_selection import SelectFwe, f_classif
 
 from featsel.selectors import FDRSelector, FWESelector
-from tests.sklearn_reference import assert_not_slower, assert_same_selection
+from tests.sklearn_reference import (
+    assert_not_slower,
+    assert_same_selection_on_every_device,
+)
 
 
 def _with_sklearn():
@@ -51,8 +54,8 @@ class TestFWESelector:
             FWESelector().fit(X, None)
 
     def test_matches_sklearn(self, sklearn_reference_data):
-        """Test that it selects the same features as SelectFwe(f_classif)."""
-        assert_same_selection(*_with_sklearn(), *sklearn_reference_data)
+        """Test that it selects the same features as SelectFwe(f_classif), on every device."""
+        assert_same_selection_on_every_device(*_with_sklearn(), *sklearn_reference_data)
 
     def test_not_slower_than_sklearn(self, sklearn_timing_data):
         """Test that fit is at most 5% slower than SelectFwe(f_classif)."""

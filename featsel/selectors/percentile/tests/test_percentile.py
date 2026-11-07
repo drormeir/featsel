@@ -7,7 +7,10 @@ import pytest
 from sklearn.feature_selection import SelectPercentile, f_classif
 
 from featsel.selectors import ANOVAFSelector, PercentileSelector
-from tests.sklearn_reference import assert_not_slower, assert_same_selection
+from tests.sklearn_reference import (
+    assert_not_slower,
+    assert_same_selection_on_every_device,
+)
 
 
 def _with_sklearn():
@@ -49,8 +52,8 @@ class TestPercentileSelector:
             PercentileSelector().fit(X, None)
 
     def test_matches_sklearn(self, sklearn_reference_data):
-        """Test that it selects the same features as SelectPercentile(f_classif)."""
-        assert_same_selection(*_with_sklearn(), *sklearn_reference_data)
+        """Test that it selects the same features as SelectPercentile(f_classif), on every device."""
+        assert_same_selection_on_every_device(*_with_sklearn(), *sklearn_reference_data)
 
     def test_not_slower_than_sklearn(self, sklearn_timing_data):
         """Test that fit is at most 5% slower than SelectPercentile(f_classif)."""

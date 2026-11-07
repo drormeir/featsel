@@ -3,9 +3,9 @@ False discovery rate: keep features whose F-test p-values pass Benjamini-Hochber
 """
 
 import numpy as np
-from sklearn.feature_selection import SelectFdr, f_classif, f_regression
 
 from ..base import FeatureSelector
+from ..f_test import f_test
 
 
 class FDRSelector(FeatureSelector):
@@ -16,7 +16,8 @@ class FDRSelector(FeatureSelector):
     Benjamini-Hochberg procedure: on average at most a fraction alpha of the
     kept features are false discoveries. Picks its own feature count.
 
-    Wraps scikit-learn's SelectFdr.
+    Applies scikit-learn's SelectFdr rule to the F-test of f_test, which runs
+    on the CPU or a GPU.
 
     Best for: a principled count when many features carry signal
     Pros: fast, a clear statistical guarantee, adapts the count to the data
@@ -29,11 +30,19 @@ class FDRSelector(FeatureSelector):
         Target false discovery rate.
     task : str, default='classification'
         'classification' uses f_classif, 'regression' uses f_regression.
+    device : str, default='auto'
+        Where the F-test's sums run: 'auto' uses a CUDA GPU when one is free
+        (the `gpu` extra), else NumPy; 'cpu' always scikit-learn's own
+        function; 'cuda' always the GPU, waiting while another fit holds it.
+        A tensor on a GPU runs there whatever this says. The GPU sums in
+        float64 and rounds differently, so near-ties can order differently.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
     Attributes
     ----------
+    device_ : str
+        The device the F-test ran on: 'cpu' or 'cuda'.
     scores_ : np.ndarray
         F statistic for each feature.
     pvalues_ : np.ndarray
@@ -52,9 +61,11 @@ class FDRSelector(FeatureSelector):
     [0, 1, 2, 4]
     """
 
-    def __init__(self, alpha=0.05, task='classification', check_input=True):
+    def __init__(self, alpha=0.05, task='classification', device='auto',
+                 check_input=True):
         self.alpha = alpha
         self.task = task
+        self.device = device
         self.check_input = check_input
 
     def fit(self, X, y):
@@ -73,15 +84,18 @@ class FDRSelector(FeatureSelector):
         self : FDRSelector
             Fitted selector.
         """
-        X, y = self._validate(X, y)
+        X, y = self._validate(X, y, keep_gpu_tensor=True)
 
-        score_func = self._by_task(f_classif, f_regression)
-
-        fdr = SelectFdr(score_func, alpha=self.alpha).fit(X, y)
-        self.scores_ = fdr.scores_
-        self.pvalues_ = fdr.pvalues_
+        self.scores_, self.pvalues_, self.device_ = f_test(X, y, self.task, self.device)
         self.feature_importances_ = self.scores_
-        self.support_ = fdr.get_support()
+
+        # Benjamini-Hochberg, as SelectFdr: the largest p-value under its
+        # rank's share of alpha, and every p-value up to it.
+        n_features = len(self.pvalues_)
+        ordered = np.sort(self.pvalues_)
+        passing = ordered[ordered <= self.alpha / n_features * np.arange(1, n_features + 1)]
+        self.support_ = (self.pvalues_ <= passing.max() if passing.size
+                         else np.zeros(n_features, dtype=bool))
 
         if not np.any(self.support_):
             raise ValueError(f"No feature passes the false discovery rate at alpha={self.alpha}. "

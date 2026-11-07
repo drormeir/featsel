@@ -9,6 +9,8 @@ import time
 
 import numpy as np
 
+from featsel.selectors import gpu
+
 # 50 fits per side, then one comparison of the medians. With 10, two equal
 # implementations drifted up to 5% apart from timing noise alone.
 REPEATS = 50
@@ -19,6 +21,25 @@ def assert_same_selection(ours, reference, X, y):
     """Both, fitted on X and y, keep exactly the same features."""
     np.testing.assert_array_equal(ours.fit(X, y).get_support(),
                                   reference.fit(X, y).get_support())
+
+
+def assert_same_selection_on_every_device(ours, reference, X, y):
+    """
+    As assert_same_selection, with ours on the CPU, on a GPU if one is
+    present, and on X as a tensor on that GPU with device='cpu', which a
+    GPU tensor overrides.
+    """
+    expected = reference.fit(X, y).get_support()
+    has_gpu = gpu.cuda_usable()
+    for device in ('cpu', 'cuda') if has_gpu else ('cpu',):
+        fitted = ours.set_params(device=device).fit(X, y)
+        assert fitted.device_ == device
+        np.testing.assert_array_equal(fitted.get_support(), expected)
+    if has_gpu:
+        import torch
+        fitted = ours.set_params(device='cpu').fit(torch.as_tensor(np.asarray(X), device='cuda'), y)
+        assert fitted.device_.startswith('cuda')
+        np.testing.assert_array_equal(fitted.get_support(), expected)
 
 
 def _median_selection_time(selector, X, y):

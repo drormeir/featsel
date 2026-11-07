@@ -3,9 +3,9 @@ ANOVA F-test: rank features by their univariate F statistic.
 """
 
 import numpy as np
-from sklearn.feature_selection import f_classif, f_regression
 
 from ..base import FeatureSelector
+from ..f_test import f_test
 
 
 class ANOVAFSelector(FeatureSelector):
@@ -27,11 +27,19 @@ class ANOVAFSelector(FeatureSelector):
         Type of task: 'classification' or 'regression'.
         Determines whether to use f_classif or f_regression.
 
+    device : str, default='auto'
+        Where the F-test's sums run: 'auto' uses a CUDA GPU when one is free
+        (the `gpu` extra), else NumPy; 'cpu' always scikit-learn's own
+        function; 'cuda' always the GPU, waiting while another fit holds it.
+        A tensor on a GPU runs there whatever this says. The GPU sums in
+        float64 and rounds differently, so near-ties can order differently.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
     Attributes
     ----------
+    device_ : str
+        The device the F-test ran on: 'cpu' or 'cuda'.
     scores_ : np.ndarray
         F-statistic for each feature.
     pvalues_ : np.ndarray
@@ -48,10 +56,12 @@ class ANOVAFSelector(FeatureSelector):
     (100, 10)
     """
 
-    def __init__(self, n_features=None, alpha=0.05, task='classification', check_input=True):
+    def __init__(self, n_features=None, alpha=0.05, task='classification', device='auto',
+                 check_input=True):
         self.n_features = n_features
         self.alpha = alpha
         self.task = task
+        self.device = device
         self.check_input = check_input
 
     def fit(self, X, y):
@@ -70,9 +80,9 @@ class ANOVAFSelector(FeatureSelector):
         self : ANOVAFSelector
             Fitted selector.
         """
-        X, y = self._validate(X, y)
+        X, y = self._validate(X, y, keep_gpu_tensor=True)
 
-        scores, pvalues = self._by_task(f_classif, f_regression)(X, y)
+        scores, pvalues, self.device_ = f_test(X, y, self.task, self.device)
 
         # Constant features give NaN; rank them last.
         self.scores_ = np.nan_to_num(scores, nan=0.0)
