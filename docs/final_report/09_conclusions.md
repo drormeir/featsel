@@ -47,8 +47,8 @@
    the methods found on average at most 13% of the 50 genes that define
    PAM50 (26% on the best task), while predicting it well. Tree importance scored best and was the least stable.
    Report stability next to accuracy.
-7. **Simple is enough.** A one-gene-at-a-time rank test is within about
-   0.01 to 0.03 of the best method on SCAN-B, is by far the most stable,
+7. **Simple is enough.** A one-gene-at-a-time rank test is within 0.03
+   macro-F1 of the best method on SCAN-B at every `k`, is by far the most stable,
    and on a GPU takes under a second.
 8. **The best method depends on the data.** Tree importance led on gene
    expression; Lasso led on image embeddings. The broad pattern (selection

@@ -60,8 +60,8 @@ at small `k`.*
    gain is a few hundredths. 250 random genes of 28,552 already carry most
    of the signal, because the signal is spread over thousands of correlated
    genes (chapter 2).
-2. **Tree importance is best up to k = 500**, by about 0.01 to 0.03 over
-   Mann-Whitney. At k = 1000 the two are equal.
+2. **Tree importance is best up to k = 500**, by 0.004 to 0.027 over
+   Mann-Whitney (median paired difference). At k = 1000 the two are equal.
 3. **Mann-Whitney, the simplest method, is close behind**, and it is by far
    the most stable (section 7.4).
 4. **Lasso stops improving at k = 20.** At C = 1 it gives a non-zero weight
