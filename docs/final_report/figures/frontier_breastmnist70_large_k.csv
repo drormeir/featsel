@@ -1,0 +1,12 @@
+selector,k,roc_auc,roc_auc_std,n_selected_mean,selection_time_s
+Lasso_liblinear,500,0.9015,0.0148,222.4,0.058
+Lasso_liblinear,1000,0.9015,0.0148,222.4,0.058
+MannWhitneySelector,500,0.8912,0.0257,500.0,0.0099
+MannWhitneySelector,1000,0.9123,0.0112,1000.0,0.0099
+RFE_newton,500,0.912,0.0159,500.0,0.1597
+RFE_newton,1000,0.9188,0.0206,1000.0,0.1597
+RandomSelector,500,0.8701,0.0267,500.0,0.0005
+RandomSelector,1000,0.9139,0.0094,1000.0,0.001
+RandomSelector,2048,0.9207,0.0178,2048.0,0.0011
+TreeImportanceSelector,500,0.9046,0.025,500.0,0.499
+TreeImportanceSelector,1000,0.9043,0.0168,1000.0,0.499

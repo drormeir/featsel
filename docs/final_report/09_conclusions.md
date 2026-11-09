@@ -59,16 +59,14 @@
 10. **Wrappers did not pay.** RFE, RFECV and Sequential selection were the
     slowest and scored below the simple filters on SCAN-B. RFECV's default
     inner score, accuracy, made it keep a single gene on imbalanced tasks.
-    With AUC as its inner score it recovered (0.961 on SCAN-B), and on
-    BreastMNIST it scored best (0.916), keeping far more features than
-    our largest fixed `k`. A wrapper is only as good as its inner score.
+    With AUC as its inner score it recovered (0.961 on SCAN-B). A wrapper
+    is only as good as its inner score.
 
 **About cost.**
 
 11. **The cheap corner wins.** On SCAN-B, sub-second GPU filters reach AUC
     0.97; nothing slower is clearly better. On BreastMNIST everything is
-    cheap; Lasso is best at a fixed `k`, and RFECV scored by AUC best
-    overall.
+    cheap; Lasso is best at k ≤ 250.
 12. **A GPU helps sorting and matrix products, not everything.** A cheap
     GPU computes in 64 bits slowly, has little memory, and needs the data
     copied to it. RFE stayed faster on the CPU, and the random forest could
@@ -76,6 +74,9 @@
 13. **Exactness has a price in agreement.** Faster exact solvers for Lasso
     and RFE pick different genes than scikit-learn's default, because the
     default stops before reaching the solution.
+14. **Selection is not always needed.** On BreastMNIST, all 2,048 features
+    gave AUC 0.921, more than any selected subset. Selection there buys a
+    smaller model, not a better one. Know which of the two you want.
 
 ## 9.3 Answer to the main question
 

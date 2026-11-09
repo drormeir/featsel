@@ -33,7 +33,8 @@ complex methods here, and much faster.
 | Does Higher Criticism pick its own count? | No: on both datasets it stopped at the edge of its search, because the signal is neither rare nor independent. | [7.5](07_results_quality.md#75-higher-criticism-did-not-choose-its-own-count) |
 | Do methods find the genes that define the label? | Rarely at small `k`, yet they predict it well: correlated genes stand in for them. | [7.6](07_results_quality.md#76-does-selection-find-the-pam50-genes) |
 | How much faster did we make it? | The runner 3.2 to 5.3 times over plain scikit-learn; GPU filters 2.6 to 49 times; Sequential selection 39 times; same features. | [6](06_making_it_fast.md) |
-| Why did RFECV fail, and can it be fixed? | Its default inner score, accuracy, made it keep 1 or 2 genes on imbalanced tasks. Scored by AUC it recovers to 0.961 on SCAN-B and is the best method on BreastMNIST (0.916). | [8.6](08_results_frontier.md#86-rfecv-testing-the-hypothesis) |
+| Why did RFECV fail, and can it be fixed? | Its default inner score, accuracy, made it keep 1 or 2 genes on imbalanced tasks. Scored by AUC it recovers to 0.961 on SCAN-B, still below a sub-second filter. | [8.6](08_results_frontier.md#86-rfecv-testing-the-hypothesis) |
+| Is selection always worth it? | No. On BreastMNIST all 2,048 features give AUC 0.921, more than any selected subset; selection pays only when few features are allowed. | [8.7](08_results_frontier.md#87-breastmnist-at-larger-k-is-selection-needed-at-all) |
 
 ## Table of contents
 

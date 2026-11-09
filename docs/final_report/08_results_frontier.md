@@ -213,12 +213,10 @@ What the rerun shows:
   cost. It reaches 0.961, below Mann-Whitney at k = 1000 (0.966), and
   takes 41 s per fit against 0.66 s. It also keeps thousands of genes, so
   it does not answer "which few genes matter".
-- **On BreastMNIST, RFECV scored by AUC is the best method**: 0.916 in
-  1.4 s, ahead of Lasso k = 250 (0.902). It joins the frontier. Here it can
-  choose any count, and it keeps 416 to 1,436 of the 2,048 features, more
-  than the largest fixed `k` of 250. Part of its lead may come from that
-  larger count rather than from better choices; we did not test Lasso
-  beyond k = 250.
+- **On BreastMNIST, RFECV scored by AUC beats every method capped at
+  k = 250**: 0.916 in 1.4 s, ahead of Lasso k = 250 (0.902). But it keeps
+  416 to 1,436 of the 2,048 features, more than that cap. Section 8.7
+  shows that its lead comes from the larger count, not from better choices.
 - With 5 splits these differences are not tested for significance
   (section 8.3, point 5).
 
@@ -226,12 +224,48 @@ Configs: [`configs/frontier_scanb70_rfecv_auc.yaml`](../../configs/frontier_scan
 [`configs/frontier_breastmnist70_rfecv_auc.yaml`](../../configs/frontier_breastmnist70_rfecv_auc.yaml).
 The SCAN-B run took 85 minutes; BreastMNIST 41 seconds.
 
-## 8.7 Summary
+## 8.7 BreastMNIST at larger `k`: is selection needed at all?
+
+To test where RFECV's lead came from, we reran BreastMNIST on the same
+five splits at k = 500 and 1,000, and with all 2,048 features (random
+selection of every feature, that is, no selection).
+
+| Method | k = 250 | k = 500 | k = 1000 | Time per fit |
+|---|---|---|---|---|
+| Random | 0.835 | 0.870 | 0.914 | < 0.001 s |
+| Mann-Whitney | 0.867 | 0.891 | 0.912 | 0.01 s |
+| Lasso, liblinear | 0.902 | 0.902 (keeps 207 to 240) | the same | 0.06 to 0.11 s |
+| Tree importance | 0.888 | 0.905 | 0.904 | 0.5 s |
+| RFE, Newton | 0.900 | 0.912 | 0.919 | 0.16 to 0.24 s |
+| RFECV, scored by AUC | | | 0.916 (own count, 416 to 1,436) | 1.4 s |
+| **All 2,048 features** | | | **0.921** | none |
+
+Mean test AUC over 5 splits. The k = 250 column is from section 8.5; times
+differ slightly between the two runs. Table:
+[`figures/frontier_breastmnist70_large_k.csv`](figures/frontier_breastmnist70_large_k.csv).
+Config: [`configs/frontier_breastmnist70_large_k.yaml`](../../configs/frontier_breastmnist70_large_k.yaml).
+
+What it shows:
+
+- **No selection is best for AUC on BreastMNIST.** All 2,048 features give
+  0.921. Random 1,000 features already reach 0.914. RFECV's 0.916 is not a
+  better choice of features; it is close to keeping them all.
+- **Selection pays only when few features are allowed.** At k = 10 to 250
+  the methods beat random clearly (section 8.5); by k = 1000 they do not.
+  This is the same pattern as on SCAN-B (chapter 7).
+- **Lasso stops at its own count.** With C = 1 its model keeps only 207 to
+  240 non-zero coefficients, so a larger `k` changes nothing.
+- These differences are within one or two standard deviations over 5
+  splits (0.01 to 0.03) and are not tested for significance.
+
+## 8.8 Summary
 
 - On SCAN-B, sub-second GPU filters (Mann-Whitney, HC2008) give the best
   AUC for their cost; a 200-tree forest ties them at 17 times the cost.
-- On BreastMNIST, Lasso is best at a fixed `k`, and every method is cheap.
+- On BreastMNIST, Lasso is best at k ≤ 250, and every method is cheap. With
+  no limit on the count, using all 2,048 features is best: selection there
+  buys a smaller model, not a better one.
 - Wrappers cost the most and gave the least on both datasets.
 - RFECV with its default inner score fails on imbalanced tasks. Scored by
-  AUC, it recovers on SCAN-B (0.961) but stays slow, and on BreastMNIST it
-  becomes the best method (0.916).
+  AUC, it recovers on SCAN-B (0.961) but stays slow; on BreastMNIST it
+  keeps most features and scores like using them all.

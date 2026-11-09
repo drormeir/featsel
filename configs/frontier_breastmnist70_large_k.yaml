@@ -1,0 +1,47 @@
+# The BreastMNIST frontier at larger k, on the same splits as
+# frontier_breastmnist70_gpu.yaml. RFECV scored by AUC kept 416 to 1,436 of
+# the 2,048 features and beat every method capped at k = 250. This run asks
+# whether that lead comes from its choices or only from keeping more
+# features. Random at k = 2048 is every feature, no selection.
+# Lasso never selects a feature its model dropped, so it may keep fewer than k.
+# Run with: python -m featsel.run --config configs/frontier_breastmnist70_large_k.yaml --n-jobs 1
+#
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/local/frontier_breastmnist70_large_k.csv"
+
+seed: 42
+n_splits: 5
+train_sizes: [0.7]
+preprocess: ["standard"]
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  - name: RandomSelector
+    k: [500, 1000, 2048]
+  - name: MannWhitneySelector
+    k: [500, 1000]
+    params: {device: "cuda"}
+  - name: LassoSelector
+    label: Lasso_liblinear
+    k: [500, 1000]
+    params: {C: 1.0}
+  - name: TreeImportanceSelector
+    k: [500, 1000]
+    params: {n_estimators: 200, n_jobs: 4}
+  - name: RFESelector
+    label: RFE_newton
+    k: [500, 1000]
+    params: {C: 0.01, solver: "newton", device: "cpu"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000

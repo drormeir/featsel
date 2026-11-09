@@ -36,6 +36,7 @@ CSV with the exact versions, the machine and the git commit.
 | Frontier, SCAN-B (chapter 8) | `.venv/bin/python -m featsel.run --config configs/frontier_scanb70_gpu.yaml --n-jobs 1`, then `..._seq.yaml --n-jobs 1`, then `..._cpu.yaml --n-jobs 2` | `results/local/frontier_scanb70_*.csv` |
 | Frontier, BreastMNIST (chapter 8) | the same with `configs/frontier_breastmnist70_*.yaml` | `results/local/frontier_breastmnist70_*.csv` |
 | RFECV scored by AUC (section 8.6) | `.venv/bin/python -m featsel.run --config configs/frontier_scanb70_rfecv_auc.yaml --n-jobs 2`, and the same with `frontier_breastmnist70_rfecv_auc.yaml`; one split, three inner scores: `.venv/bin/python scripts/rfecv_scoring.py` | `results/local/frontier_*70_rfecv_auc.csv` |
+| BreastMNIST at larger `k` (section 8.7) | `.venv/bin/python -m featsel.run --config configs/frontier_breastmnist70_large_k.yaml --n-jobs 1` | `results/local/frontier_breastmnist70_large_k.csv` |
 | Frontier plots | `.venv/bin/python scripts/plot_frontier.py <the three CSVs> --out results/local/frontier_scanb70_roc_auc.png` | one PNG and CSV for all tasks, and one per task |
 
 Add `--resume` to any runner command to continue a stopped run. Files in
