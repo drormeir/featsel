@@ -21,7 +21,7 @@ genes. After the choices below, the project uses **2,976 patients and
 |---|---|
 | Keep only samples sequenced on the HiSeq 2000 machine (3,069 of 3,409). | Two machines can give different values for technical reasons alone. Mixing them would add a difference that has nothing to do with the tumour. |
 | Keep one sample per patient (2,976 patients). | 93 patients were sequenced twice, to test reproducibility. If a patient's two samples fall on both sides of a train/test split, the model is tested on a patient it has already seen. |
-| Drop genes with a single value across all samples (2,236 genes). | They carry no information. |
+| Drop genes with a single value across the kept patients (2,313 genes). | They carry no information. |
 
 The course's own copy of the data kept the repeat samples. Every result
 computed on it carries that leak. We measured that the two samples of one
