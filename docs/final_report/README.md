@@ -23,6 +23,17 @@ faster, many of them on a GPU, and measured cost against quality on one
 plot. The main finding: a simple one-gene-at-a-time test is as good as the
 complex methods here, and much faster.
 
+## Key results at a glance
+
+| Question | Answer | Where |
+|---|---|---|
+| Does selection beat random genes? | Yes, by 0.26 to 0.29 macro-F1 at 5 genes on SCAN-B; the gain shrinks to a few hundredths by 250 genes. | [7.2](07_results_quality.md#72-scan-b) |
+| Which method selects best? | Tree importance on gene expression, Lasso on image embeddings; Mann-Whitney is close behind and by far the most stable. | [7.2](07_results_quality.md#72-scan-b), [7.8](07_results_quality.md#78-breastmnist) |
+| Which is the best value for time? | On SCAN-B, a GPU Mann-Whitney or Higher Criticism filter: AUC 0.97 in 0.66 s. Nothing slower is clearly better. | [8.3](08_results_frontier.md#83-scan-b-all-five-tasks) |
+| Does Higher Criticism pick its own count? | No: on both datasets it stopped at the edge of its search, because the signal is neither rare nor independent. | [7.5](07_results_quality.md#75-higher-criticism-did-not-choose-its-own-count) |
+| Do methods find the genes that define the label? | Rarely at small `k`, yet they predict it well: correlated genes stand in for them. | [7.6](07_results_quality.md#76-does-selection-find-the-pam50-genes) |
+| How much faster did we make it? | The runner 3.2 to 5.3 times over plain scikit-learn; GPU filters 2.6 to 28 times; Sequential selection 39 times; same features. | [6](06_making_it_fast.md) |
+
 ## Table of contents
 
 | # | Chapter | What you will learn |
