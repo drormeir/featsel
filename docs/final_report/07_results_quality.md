@@ -158,7 +158,7 @@ two datasets, HC thresholding reduces to a top-k filter at k = alpha0 · N.
 
 The PAM50 label is computed from 50 known genes. So we can check where
 those genes lie in each method's ranking. A strong method should rank them
-high. Two splits, all five tasks.
+high. Ten splits, half the patients for training, all five tasks.
 
 **Share of the 50 PAM50 genes found in the top `k`**, mean over tasks and
 splits:
@@ -166,13 +166,13 @@ splits:
 | Method | k = 50 | 250 | 1000 | 5000 | 10000 |
 |---|---|---|---|---|---|
 | Random (expected) | 0.00 | 0.01 | 0.04 | 0.18 | 0.35 |
-| Mann-Whitney | **0.13** | 0.25 | 0.42 | **0.73** | **0.85** |
-| Tree importance | 0.10 | 0.25 | **0.43** | 0.56 | 0.64 |
-| RFE | 0.02 | 0.07 | 0.13 | 0.34 | 0.46 |
-| Lasso | 0.06 | 0.12 | 0.15 | 0.15 | 0.15 |
+| Mann-Whitney | **0.12** | **0.25** | **0.42** | **0.73** | **0.85** |
+| Tree importance | 0.10 | **0.25** | **0.42** | 0.56 | 0.64 |
+| RFE | 0.03 | 0.07 | 0.14 | 0.33 | 0.46 |
+| Lasso | 0.07 | 0.12 | 0.16 | 0.16 | 0.16 |
 
 - Every method finds PAM50 genes much faster than chance. Mann-Whitney is
-  best: half of the 50 lie in its top 1,058 genes, where random selection
+  best: half of the 50 lie in its top 1,041 genes, where random selection
   would need about 14,300.
 - **But recall at k = 50 is low for every method**: at most 26% (Mann-Whitney
   on LumA). Yet the same methods predict the label well at k = 50.

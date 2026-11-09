@@ -18,7 +18,6 @@ research beyond the project's scope.
 | **RFECV scored by AUC in the 16-split comparison.** The frontier rerun (5 splits) fixed its collapse. | Would give it the paired tests of chapter 7. | About 6 hours on SCAN-B. |
 | **RFE with a finer step and a forest with more trees in the comparison.** The comparison used RFE removing half the genes per round and 50 trees. | Both were chosen for speed. The frontier used step 0.1 and 200 trees, and RFE stayed weakest, so the conclusion is unlikely to change. | Hours. |
 | **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The comparison uses one classifier and one train fraction. | About four days on this laptop; skipped by decision. |
-| **PAM50 gene recovery on more splits.** It used 2 splits. | Its numbers are means of 10 values (5 tasks × 2 splits). | About an hour. |
 | **A measured target on SCAN-B**, such as the pathologist's ER status. | Every SCAN-B task here predicts a computed label. A measured label would show whether the conclusions hold for clinical truth. | One config; the loader already supports it. |
 | **The size of the repeat-sample leak.** 93 patients appear twice in the course's copy. | Says how much the course's earlier results are inflated. | A paired run with and without the repeats. |
 

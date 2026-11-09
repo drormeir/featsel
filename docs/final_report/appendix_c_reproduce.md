@@ -30,7 +30,7 @@ CSV with the exact versions, the machine and the git commit.
 | Its tables | `.venv/bin/python scripts/summarize_comparison.py results/comparison_scanb.csv --n-features 28552 --out <file>` | Markdown tables |
 | Paired tests (chapter 7) | `.venv/bin/python scripts/paired_tests.py results/comparison_scanb.csv --metric macro_f1` | table of tests |
 | Classifier study (chapter 7) | `.venv/bin/python -m featsel.run --config configs/experiment_classifiers.yaml --n-splits 3` | `results/experiment_classifiers.csv`; figures from `notebooks/02_classifier_behaviour.ipynb` |
-| PAM50 gene recovery (chapter 7) | `.venv/bin/python scripts/pam50_recovery.py --n-splits 2 --out docs/pam50_recovery.md` | `docs/pam50_recovery.md` tables |
+| PAM50 gene recovery (chapter 7) | `.venv/bin/python scripts/pam50_recovery.py --n-splits 10 --out <file>` | the tables in `docs/pam50_recovery.md` (the script overwrites its output file, so write elsewhere and paste) |
 | Runner against scikit-learn (chapter 6) | `.venv/bin/python scripts/benchmark_speed.py --n-genes 3000 --out <file>` | `docs/speed_benchmark.md` table |
 | Speed of each method (chapter 6) | run `featsel/selectors/<name>/demos/speed.ipynb` | `results/local/speed/<name>.csv` |
 | Frontier, SCAN-B (chapter 8) | `.venv/bin/python -m featsel.run --config configs/frontier_scanb70_gpu.yaml --n-jobs 1`, then `..._seq.yaml --n-jobs 1`, then `..._cpu.yaml --n-jobs 2` | `results/local/frontier_scanb70_*.csv` |

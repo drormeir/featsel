@@ -44,7 +44,7 @@
    together. Random genes catch up fast, and many different gene sets
    predict equally well.
 6. **A gene list is therefore not a unique answer.** In their top 50,
-   the methods found on average at most 13% of the 50 genes that define
+   the methods found on average at most 12% of the 50 genes that define
    PAM50 (26% on the best task), while predicting it well. Tree importance scored best and was the least stable.
    Report stability next to accuracy.
 7. **Simple is enough.** A one-gene-at-a-time rank test is within 0.03
