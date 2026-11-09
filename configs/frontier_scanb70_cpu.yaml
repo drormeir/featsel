@@ -1,0 +1,47 @@
+# The cost-quality frontier on SCAN-B, training on 70% of the patients: the
+# selectors that run on the CPU, because they have no GPU path or are faster
+# without it (RFE's float64 products on this GPU). frontier_scanb70_gpu.yaml
+# runs the rest on the same splits; scripts/plot_frontier.py draws both.
+# Run with: python -m featsel.run --config configs/frontier_scanb70_cpu.yaml --n-jobs 2
+#
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.scanb_gse96058.featsel_view"
+target: "pam50 subtype"
+
+output: "../results/local/frontier_scanb70_cpu.csv"
+
+seed: 42
+n_splits: 5
+train_sizes: [0.7]
+preprocess: ["standard"]
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  - name: LassoSelector
+    label: Lasso_liblinear
+    k: [10, 50, 250, 1000]
+    params: {C: 1.0}
+  - name: TreeImportanceSelector
+    k: [10, 50, 250, 1000]
+    params: {n_estimators: 200, n_jobs: 4}
+  - name: RFESelector
+    label: RFE_liblinear
+    k: [10, 50, 250, 1000]
+    params: {C: 0.01}
+  - name: RFESelector
+    label: RFE_newton
+    k: [10, 50, 250, 1000]
+    params: {C: 0.01, solver: "newton", device: "cpu"}
+  - name: RFECVSelector
+    label: RFECV_newton
+    params: {C: 0.01, cv: 5, solver: "newton", device: "cpu"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000

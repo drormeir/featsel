@@ -1,6 +1,6 @@
 """
 The cost-quality frontier: selection time against ROC AUC, one point per
-selector and k, from a runner CSV.
+selector and k, from one or more runner CSVs of the same splits.
 
 Each point is the mean over every task and split of one (selector label, k)
 cell: its median selection time on the x axis, log scale, and its mean
@@ -9,11 +9,20 @@ splits. A point is on the frontier when no other point is both faster and
 better. Frontier points are drawn in color and labelled; the rest are gray.
 
 The machine and the code version come from the JSON the runner writes
-beside its CSV, and go into the figure's caption: a time means something
+beside each CSV, and go into the figure's caption: a time means something
 only on the machine it was taken on.
+
+One plot covers every task; each task then gets its own plot, named
+<out>_<task>.png, with means over the splits only. Each plot has a CSV of
+its table beside it.
+
+Several CSVs are read as one table, such as a run of the GPU selectors and
+a run of the CPU selectors; --out is then required.
 
 Usage:
     python scripts/plot_frontier.py results/local/frontier_scanb.csv
+    python scripts/plot_frontier.py results/local/frontier_scanb70_gpu.csv \
+        results/local/frontier_scanb70_cpu.csv --out results/local/frontier_scanb70.png
 """
 
 import argparse
@@ -94,7 +103,7 @@ def place_labels(ax, labels):
                     if moved else None)
 
 
-def plot(table, on, metric, caption, out):
+def plot(table, on, metric, caption, out, title, over):
     fig, ax = plt.subplots(figsize=(9, 5.5))
     # Each selector's k values joined in gray and named once, at its best
     # point, so a point off the frontier still says what it is.
@@ -122,14 +131,13 @@ def plot(table, on, metric, caption, out):
     times = table['selection_time_s']
     ax.set_xlim(times.min() / 1.5, times.max() * 4)   # room for the rightmost label
     ax.set_xlabel('Selection time per fit, seconds (median, log scale)', color=INK)
-    ax.set_ylabel(f'Test {metric.replace("_", " ").upper()} (mean over tasks and splits)',
-                  color=INK)
+    ax.set_ylabel(f'Test {metric.replace("_", " ").upper()} (mean over {over})', color=INK)
     ax.grid(True, which='major', color='#e3e5e8', linewidth=0.8)
     ax.set_axisbelow(True)
     for side in ('top', 'right'):
         ax.spines[side].set_visible(False)
     ax.tick_params(colors=MUTED)
-    ax.set_title('Feature selection: cost against quality', loc='left', color=INK)
+    ax.set_title(title, loc='left', color=INK)
     fig.text(0.01, 0.01, caption, fontsize=7, color=MUTED, ha='left', va='bottom')
     fig.tight_layout(rect=(0, 0.04, 1, 1))
     place_labels(ax, labels)
@@ -140,27 +148,37 @@ def plot(table, on, metric, caption, out):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('csv', type=Path)
+    parser.add_argument('csv', type=Path, nargs='+')
     parser.add_argument('--metric', default='roc_auc')
     parser.add_argument('--out', type=Path, help='PNG to write; default beside the CSV')
     args = parser.parse_args(argv)
+    if len(args.csv) > 1 and args.out is None:
+        parser.error('--out is required with more than one CSV')
 
-    results = pd.read_csv(args.csv)
-    table = cells(results, args.metric)
-    on = frontier(table, args.metric)
+    results = pd.concat([pd.read_csv(path) for path in args.csv], ignore_index=True)
 
-    details = json.loads(args.csv.with_suffix('.json').read_text())
-    env = details['environment']
-    caption = (f"{details.get('dataset')}, {results['task'].nunique()} tasks x "
-               f"{results['split'].nunique()} splits, {results['model'].iloc[0]}. "
-               f"{env['cpu']}, {env.get('gpu', 'GPU not recorded')}. "
-               f"Commit {str(env['git_commit'])[:7]}{' (modified)' if env['git_dirty'] else ''}.")
+    runs = [json.loads(path.with_suffix('.json').read_text()) for path in args.csv]
+    env = runs[0]['environment']
+    commits = ', '.join(dict.fromkeys(
+        f"{str(run['environment']['git_commit'])[:7]}"
+        f"{' (modified)' if run['environment']['git_dirty'] else ''}" for run in runs))
+    machine = f"{env['cpu']}, {env.get('gpu', 'GPU not recorded')}. Commit {commits}."
 
-    out = args.out or args.csv.with_name(f"{args.csv.stem}_{args.metric}.png")
-    plot(table, on, args.metric, caption, out)
-    table.assign(on_frontier=on).to_csv(out.with_suffix('.csv'), index=False)
-    print(f"Wrote {out} and its table {out.with_suffix('.csv')}")
-    print(table.assign(on_frontier=on).sort_values('selection_time_s').to_string(index=False))
+    out = args.out or args.csv[0].with_name(f"{args.csv[0].stem}_{args.metric}.png")
+    # All tasks together, then each task on its own.
+    parts = [(out, results, 'Feature selection: cost against quality', 'tasks and splits')]
+    parts += [(out.with_name(f'{out.stem}_{task}.png'), part,
+               f'Feature selection: cost against quality, {task}', 'splits')
+              for task, part in results.groupby('task')]
+    for path, part, title, over in parts:
+        table = cells(part, args.metric)
+        on = frontier(table, args.metric)
+        caption = (f"{runs[0].get('dataset')}, {part['task'].nunique()} tasks x "
+                   f"{part['split'].nunique()} splits, {part['model'].iloc[0]}. {machine}")
+        plot(table, on, args.metric, caption, path, title, over)
+        table.assign(on_frontier=on).to_csv(path.with_suffix('.csv'), index=False)
+        print(f"Wrote {path} and its table {path.with_suffix('.csv')}")
+        print(table.assign(on_frontier=on).sort_values('selection_time_s').to_string(index=False))
 
 
 if __name__ == '__main__':
