@@ -4,13 +4,12 @@
 
 ## 1.1 What feature selection is
 
-A dataset is a table. Each row is a sample, here a patient or an image.
-Each column is a feature, here a gene or one number that describes an
-image. A classifier learns to predict a label, such as a cancer subtype,
-from the features.
+A dataset describes samples, here patients or images, by features, here
+genes or numbers that describe an image. A classifier learns to predict a
+label, such as a cancer subtype, from the features.
 
 Feature selection chooses a subset of the features and gives the
-classifier only those. It answers the question: which few columns carry
+classifier only those. It answers the question: which few features carry
 the information about the label?
 
 There are three reasons to do it.

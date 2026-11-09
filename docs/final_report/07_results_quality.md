@@ -232,6 +232,9 @@ hundred non-zero weights are most of what `k` asks for. RFE is weakest at
 small `k` but catches up from k = 100: with only 2,048 features, removing
 half per round costs less.
 
+The comparison stops at k = 250. Chapter 8 (section 8.7) goes further and
+finds that, on this dataset, using all 2,048 features scores best in AUC.
+
 ## 7.9 Summary
 
 - Every method except RFE beats random selection clearly at small `k`; the

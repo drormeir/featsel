@@ -37,7 +37,7 @@ model, such as Lasso or a random forest.
 **F-test (ANOVA).** A test of whether the class means of a feature differ,
 assuming normal values with equal spread.
 
-**Feature.** One column of the data: a gene, or one embedding number.
+**Feature.** One measured quantity per sample: a gene, or one embedding number.
 
 **Filter.** A selection method that scores features from the data alone,
 without a classifier.
@@ -105,7 +105,7 @@ removes the features with the smallest weights, and repeats.
 **RFECV.** RFE that picks the number of features by inner
 cross-validation.
 
-**Sample.** One row of the data: a patient or an image.
+**Sample.** One unit the data describes: a patient or an image.
 
 **scikit-learn.** The standard Python machine learning library. Our
 selectors follow its interface.
