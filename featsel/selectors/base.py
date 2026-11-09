@@ -15,8 +15,6 @@ from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted, validate_data
 
-_DEFAULT_SEED = 42
-
 
 class FeatureSelector(SelectorMixin, BaseEstimator):
     """
@@ -41,16 +39,7 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     fit, as scikit-learn's own check_input does. Use it only when X is already
     a finite 2-D NumPy array and y a 1-D array.
 
-    A subclass that uses randomness takes random_state, default 42, so a fit
-    repeats without a seed being passed. It passes the seed to scikit-learn,
-    or draws from _rng(), a generator built afresh on every fit.
-
-    Every fit also first seeds the shared generators of Python, NumPy and,
-    once imported, PyTorch (its CUDA generators once CUDA has started): from
-    random_state when it is an integer, from 42
-    when the selector takes none. So randomness drawn from shared state,
-    here or in a library, repeats too. random_state=None or a generator
-    leaves the shared state alone.
+    A subclass that uses randomness derives from FeatureSelectorRandom.
 
     Every subclass registers itself when it is defined, under its class name
     and any aliases given as a class keyword:
@@ -70,8 +59,11 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     # per split and cuts the ranking at each k.
     rank_once: ClassVar[bool] = False
 
-    def __init_subclass__(cls, aliases: str | list[str] | None = None, **kwargs):
+    def __init_subclass__(cls, aliases: str | list[str] | None = None, register: bool = True,
+                          **kwargs):
         super().__init_subclass__(**kwargs)
+        if not register:
+            return
         names =[cls.__name__, *([aliases] if isinstance(aliases, str) else aliases or [])]
         for name in {n.lower() for n in names}:
             owner = FeatureSelector._registry.setdefault(name, cls)
@@ -94,20 +86,7 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         return cls.lookup(name)(**params)
 
     def fit(self, X, y=None):
-        """Seed the shared random generators from the selector, then run _fit."""
-        seed = getattr(self, 'random_state', _DEFAULT_SEED)
-        if isinstance(seed, numbers.Integral):
-            random.seed(seed)
-            np.random.seed(seed)
-            torch = sys.modules.get('torch')
-            if torch is not None:
-                # The CPU and CUDA generators directly: torch.manual_seed also
-                # visits every other backend, at about 0.3 ms per fit. CUDA
-                # only once started: before, the call is queued with a stack
-                # trace, at about 0.1 ms per fit.
-                torch.default_generator.manual_seed(seed)
-                if torch.cuda.is_initialized():
-                    torch.cuda.manual_seed_all(seed)
+        """Learn which features to keep and return self."""
         return self._fit(X, y)
 
     @abstractmethod
@@ -184,15 +163,6 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
             return regression
         raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
 
-    def _rng(self):
-        """
-        A fresh generator seeded by self.random_state.
-
-        Built anew on every fit, so refitting repeats the same draws whatever
-        else ran before.
-        """
-        return np.random.default_rng(self.random_state)
-
     def _require_n_features(self):
         if self.n_features is None:
             raise ValueError(f"{type(self).__name__} requires n_features to be specified")
@@ -206,3 +176,48 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     def _top(self):
         """A mask selecting the first n_features of ranking(); all of it if None."""
         return self._mask(self.ranking()[:self.n_features])
+
+
+class FeatureSelectorRandom(FeatureSelector, register=False):
+    """
+    Base class of every selector that uses randomness.
+
+    A subclass takes random_state, default 42, so a fit repeats without a seed
+    being passed, and calls super().__init__(random_state). It passes the seed
+    to scikit-learn, or draws from _rng(), a generator built afresh on every
+    fit.
+
+    Every fit first seeds the shared generators of Python, NumPy and, once
+    imported, PyTorch (its CUDA generators once CUDA has started). So
+    randomness drawn from shared state, here or in a library, repeats too.
+    random_state must be an integer.
+    """
+
+    def __init__(self, random_state=42):
+        assert isinstance(random_state, numbers.Integral), \
+            f"random_state must be an integer, got {random_state!r}"
+        self.random_state = random_state
+
+    def fit(self, X, y=None):
+        """Seed the shared random generators, then learn which features to keep."""
+        random.seed(self.random_state)
+        np.random.seed(self.random_state)
+        torch = sys.modules.get('torch')
+        if torch is not None:
+            # The CPU and CUDA generators directly: torch.manual_seed also
+            # visits every other backend, at about 0.3 ms per fit. CUDA
+            # only once started: before, the call is queued with a stack
+            # trace, at about 0.1 ms per fit.
+            torch.default_generator.manual_seed(self.random_state)
+            if torch.cuda.is_initialized():
+                torch.cuda.manual_seed_all(self.random_state)
+        return super().fit(X, y)
+
+    def _rng(self):
+        """
+        A fresh generator seeded by self.random_state.
+
+        Built anew on every fit, so refitting repeats the same draws whatever
+        else ran before.
+        """
+        return np.random.default_rng(self.random_state)

@@ -7,16 +7,16 @@ import random
 import numpy as np
 import pytest
 
-from featsel.selectors import FeatureSelector
+from featsel.selectors import FeatureSelector, FeatureSelectorRandom
 
 
 @pytest.fixture
 def shared_draw():
     """A selector that picks features from the shared generators, then is unregistered."""
-    class SharedDraw(FeatureSelector):
+    class SharedDraw(FeatureSelectorRandom):
         def __init__(self, n_features=3, random_state=42):
+            super().__init__(random_state)
             self.n_features = n_features
-            self.random_state = random_state
 
         def _fit(self, X, y=None):
             self.n_features_in_ = X.shape[1]
@@ -46,9 +46,11 @@ def test_seed_follows_random_state(shared_draw):
     assert shared_draw(random_state=1).fit(X).draws_ != shared_draw().fit(X).draws_
 
 
-def test_none_leaves_shared_state_alone(shared_draw):
-    """Test that random_state=None does not reseed: two fits draw differently."""
-    assert shared_draw(random_state=None).fit(X).draws_ != shared_draw(random_state=None).fit(X).draws_
+@pytest.mark.parametrize('bad', [None, 1.5, '42', np.random.default_rng(0)])
+def test_non_integer_random_state_is_rejected(shared_draw, bad):
+    """Test that the constructor refuses a random_state that is not an integer."""
+    with pytest.raises(AssertionError, match='random_state must be an integer'):
+        shared_draw(random_state=bad)
 
 
 def test_torch_is_seeded(shared_draw):

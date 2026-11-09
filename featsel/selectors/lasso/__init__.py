@@ -7,11 +7,11 @@ from sklearn.linear_model import Lasso, LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
 
 from .. import gpu
-from ..base import FeatureSelector
+from ..base import FeatureSelectorRandom
 from . import ppdna
 
 
-class LassoSelector(FeatureSelector):
+class LassoSelector(FeatureSelectorRandom):
     """
     Select features by the magnitude of L1-regularized model coefficients.
 
@@ -84,12 +84,12 @@ class LassoSelector(FeatureSelector):
     def __init__(self, n_features=None, C=1.0, alpha=0.01, task='classification',
                  max_iter=1000, random_state=42, solver='liblinear', device='cpu',
                  check_input=True):
+        super().__init__(random_state)
         self.n_features = n_features
         self.C = C
         self.alpha = alpha
         self.task = task
         self.max_iter = max_iter
-        self.random_state = random_state
         self.solver = solver
         self.device = device
         self.check_input = check_input

@@ -7,10 +7,10 @@ module whenever it lands on the import path.
 
 import numpy as np
 
-from ..base import FeatureSelector
+from ..base import FeatureSelectorRandom
 
 
-class RandomSelector(FeatureSelector):
+class RandomSelector(FeatureSelectorRandom):
     """
     Select n_features columns uniformly at random, ignoring X values and y.
 
@@ -45,8 +45,8 @@ class RandomSelector(FeatureSelector):
     """
 
     def __init__(self, n_features=None, random_state=42, check_input=True):
+        super().__init__(random_state)
         self.n_features = n_features
-        self.random_state = random_state
         self.check_input = check_input
 
     def _fit(self, X, y=None):

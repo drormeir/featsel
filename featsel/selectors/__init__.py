@@ -6,7 +6,7 @@ FeatureSelector.
 """
 
 from .anova_f import ANOVAFSelector
-from .base import FeatureSelector
+from .base import FeatureSelector, FeatureSelectorRandom
 from .correlation import CorrelationSelector
 from .fdr import FDRSelector
 from .fwe import FWESelector
@@ -28,6 +28,7 @@ __all__ = [
     'FDRSelector',
     'FWESelector',
     'FeatureSelector',
+    'FeatureSelectorRandom',
     'HigherCriticismSelector',
     'LassoSelector',
     'MannWhitneySelector',

@@ -6,11 +6,11 @@ import numpy as np
 from sklearn.svm import LinearSVC
 
 from .. import gpu
-from ..base import FeatureSelector
+from ..base import FeatureSelectorRandom
 from . import linear_svm
 
 
-class RFESelector(FeatureSelector):
+class RFESelector(FeatureSelectorRandom):
     """
     Select features by recursive feature elimination with a linear SVM (SVM-RFE).
 
@@ -86,11 +86,11 @@ class RFESelector(FeatureSelector):
 
     def __init__(self, n_features=None, step=0.1, C=1.0, max_iter=1000,
                  random_state=42, solver='liblinear', device='cpu', check_input=True):
+        super().__init__(random_state)
         self.n_features = n_features
         self.step = step
         self.C = C
         self.max_iter = max_iter
-        self.random_state = random_state
         self.solver = solver
         self.device = device
         self.check_input = check_input

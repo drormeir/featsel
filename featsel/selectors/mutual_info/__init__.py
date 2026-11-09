@@ -7,11 +7,11 @@ import sys
 from sklearn.feature_selection import mutual_info_classif, mutual_info_regression
 
 from .. import gpu
-from ..base import FeatureSelector
+from ..base import FeatureSelectorRandom
 from . import knn_1d
 
 
-class MutualInfoSelector(FeatureSelector):
+class MutualInfoSelector(FeatureSelectorRandom):
     """
     Select features based on mutual information with target.
 
@@ -67,10 +67,10 @@ class MutualInfoSelector(FeatureSelector):
 
     def __init__(self, n_features=None, task='classification', n_neighbors=3,
                  random_state=42, device='auto', check_input=True):
+        super().__init__(random_state)
         self.n_features = n_features
         self.task = task
         self.n_neighbors = n_neighbors
-        self.random_state = random_state
         self.device = device
         self.check_input = check_input
 

@@ -4,10 +4,10 @@ Tree importance: rank features by random forest impurity decrease.
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from ..base import FeatureSelector
+from ..base import FeatureSelectorRandom
 
 
-class TreeImportanceSelector(FeatureSelector):
+class TreeImportanceSelector(FeatureSelectorRandom):
     """
     Select features by random forest impurity-based importance.
 
@@ -52,11 +52,11 @@ class TreeImportanceSelector(FeatureSelector):
 
     def __init__(self, n_features=None, n_estimators=200, task='classification',
                  max_depth=None, random_state=42, n_jobs=1, check_input=True):
+        super().__init__(random_state)
         self.n_features = n_features
         self.n_estimators = n_estimators
         self.task = task
         self.max_depth = max_depth
-        self.random_state = random_state
         self.n_jobs = n_jobs
         self.check_input = check_input
 

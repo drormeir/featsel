@@ -9,11 +9,11 @@ from sklearn.model_selection import check_cv
 from sklearn.svm import LinearSVC
 
 from .. import gpu
-from ..base import FeatureSelector
+from ..base import FeatureSelectorRandom
 from ..rfe import RFESelector, linear_svm
 
 
-class RFECVSelector(FeatureSelector):
+class RFECVSelector(FeatureSelectorRandom):
     """
     SVM-RFE with the number of features chosen by cross-validation.
 
@@ -84,13 +84,13 @@ class RFECVSelector(FeatureSelector):
     def __init__(self, step=0.1, cv=5, scoring=None, min_features_to_select=1,
                  C=1.0, max_iter=1000, random_state=42, n_jobs=1, solver='liblinear',
                  device='cpu', check_input=True):
+        super().__init__(random_state)
         self.step = step
         self.cv = cv
         self.scoring = scoring
         self.min_features_to_select = min_features_to_select
         self.C = C
         self.max_iter = max_iter
-        self.random_state = random_state
         self.n_jobs = n_jobs
         self.solver = solver
         self.device = device

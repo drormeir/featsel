@@ -591,13 +591,6 @@ class TestSelectionRepeats:
         assert (df['selection_repeats'] == 10).all()
         assert df['selection_stable'].all()
 
-    def test_unseeded_repeats_are_flagged(self, experiment):
-        """Test that random_state=None draws differently each repeat, and says so."""
-        experiment['selectors'] = [{'name': 'RandomSelector', 'k': [5],
-                                    'params': {'random_state': None}}]
-
-        assert not pd.read_csv(run_config(experiment))['selection_stable'].any()
-
     def test_zero_repeats_raise(self, experiment):
         """Test that fewer than one repeat is refused before any work."""
         experiment['selection_repeats'] = 0
