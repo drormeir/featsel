@@ -152,7 +152,36 @@ there RFECV works. Section 8.6 tests this hypothesis.
 
 ## 8.6 RFECV: testing the hypothesis
 
-*To be filled in when the check finishes.*
+We refit RFECV on one 70/30 split of four SCAN-B tasks, with three inner
+scores, and scored logistic regression on the genes it kept:
+
+| Task | Inner score | Genes kept | Test AUC |
+|---|---|---|---|
+| Normal vs rest | accuracy (default) | 1 | 0.502 |
+| | ROC AUC | 5,712 | 0.952 |
+| | balanced accuracy | 2,857 | 0.940 |
+| Her2 vs rest | accuracy (default) | 2 | 0.727 |
+| | ROC AUC | 11,422 | 0.975 |
+| | balanced accuracy | 2,857 | 0.975 |
+| LumB vs rest | accuracy (default) | 2 | 0.529 |
+| | ROC AUC | 5,712 | 0.959 |
+| | balanced accuracy | 2,857 | 0.955 |
+| Basal vs rest | all three | 2,857 | 0.987 |
+
+**The hypothesis holds.** With accuracy, RFECV collapses to one or two
+genes on the imbalanced tasks. With an imbalance-aware score it keeps
+thousands of genes and scores like the other methods. On Basal, where the
+classes separate easily, all three scores agree.
+
+**The lesson** is general: a wrapper that tunes itself by cross-validation
+inherits the weakness of its inner score. Accuracy on an imbalanced task
+rewards predicting the majority class, and then the smallest gene set
+wins the tie.
+
+Script: [`scripts/rfecv_scoring.py`](../../scripts/rfecv_scoring.py).
+RFECV scored by AUC on all five frontier splits:
+[`configs/frontier_scanb70_rfecv_auc.yaml`](../../configs/frontier_scanb70_rfecv_auc.yaml);
+*its result is added below when the run finishes.*
 
 ## 8.7 Summary
 
