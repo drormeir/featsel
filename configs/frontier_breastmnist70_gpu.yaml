@@ -1,0 +1,51 @@
+# The cost-quality frontier on BreastMNIST (task 4), training on 70% of the
+# images: the selectors that run on the GPU. The same design as
+# frontier_scanb70_gpu.yaml. frontier_breastmnist70_seq.yaml (Sequential) and
+# frontier_breastmnist70_cpu.yaml run the rest on the same splits;
+# scripts/plot_frontier.py draws all three as one plot.
+# Run with: python -m featsel.run --config configs/frontier_breastmnist70_gpu.yaml --n-jobs 1
+#
+# k stops at 250: 70% of 780 images is 546 training images, and selection
+# here aims at fewer features than samples.
+#
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/local/frontier_breastmnist70_gpu.csv"
+
+seed: 42
+n_splits: 5
+train_sizes: [0.7]
+preprocess: ["standard"]
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  - name: RandomSelector
+    k: [10, 50, 250]
+  - name: MannWhitneySelector
+    k: [10, 50, 250]
+    params: {device: "cuda"}
+  - name: HigherCriticismSelector
+    label: HC2008
+    params: {variant: "2008", device: "cuda"}
+  - name: CorrelationSelector
+    k: [10, 50, 250]
+    params: {method: "spearman", device: "cuda"}
+  - name: MutualInfoSelector
+    k: [10, 50, 250]
+    params: {device: "cuda"}
+  - name: LassoSelector
+    label: Lasso_ppdna
+    k: [10, 50, 250]
+    params: {C: 1.0, solver: "ppdna", device: "cuda"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000

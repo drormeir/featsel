@@ -1,0 +1,47 @@
+# The cost-quality frontier on BreastMNIST (task 4), training on 70% of the
+# images: the selectors that run on the CPU. The same design as
+# frontier_scanb70_cpu.yaml, on the same splits as
+# frontier_breastmnist70_gpu.yaml.
+# Run with: python -m featsel.run --config configs/frontier_breastmnist70_cpu.yaml --n-jobs 2
+#
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/local/frontier_breastmnist70_cpu.csv"
+
+seed: 42
+n_splits: 5
+train_sizes: [0.7]
+preprocess: ["standard"]
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  - name: LassoSelector
+    label: Lasso_liblinear
+    k: [10, 50, 250]
+    params: {C: 1.0}
+  - name: TreeImportanceSelector
+    k: [10, 50, 250]
+    params: {n_estimators: 200, n_jobs: 4}
+  - name: RFESelector
+    label: RFE_liblinear
+    k: [10, 50, 250]
+    params: {C: 0.01}
+  - name: RFESelector
+    label: RFE_newton
+    k: [10, 50, 250]
+    params: {C: 0.01, solver: "newton", device: "cpu"}
+  - name: RFECVSelector
+    label: RFECV_newton
+    params: {C: 0.01, cv: 5, solver: "newton", device: "cpu"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000

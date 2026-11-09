@@ -1,0 +1,35 @@
+# The cost-quality frontier on BreastMNIST (task 4), training on 70% of the
+# images: Sequential selection on the GPU, on the same splits as
+# frontier_breastmnist70_gpu.yaml and frontier_breastmnist70_cpu.yaml.
+# Run with: python -m featsel.run --config configs/frontier_breastmnist70_seq.yaml --n-jobs 1
+#
+# One fit per selection, as on SCAN-B (frontier_scanb70_seq.yaml).
+#
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/local/frontier_breastmnist70_seq.csv"
+
+seed: 42
+n_splits: 5
+train_sizes: [0.7]
+preprocess: ["standard"]
+selection_repeats: 1
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  - name: SequentialSelector
+    label: Sequential_newton
+    k: [5, 10]
+    params: {cv: 5, solver: "newton", device: "cuda"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
