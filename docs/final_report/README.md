@@ -1,4 +1,4 @@
-Status: in progress
+Status: first draft complete
 
 # Choosing Few Genes from Many: Feature Selection for High-Dimensional Data
 
