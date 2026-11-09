@@ -74,9 +74,11 @@
 13. **Exactness has a price in agreement.** Faster exact solvers for Lasso
     and RFE pick different genes than scikit-learn's default, because the
     default stops before reaching the solution.
-14. **Selection is not always needed.** On BreastMNIST, all 2,048 features
-    gave AUC 0.921, more than any selected subset. Selection there buys a
-    smaller model, not a better one. Know which of the two you want.
+14. **Selection buys a smaller model more than a better one.** On
+    BreastMNIST, all 2,048 features gave AUC 0.921, more than any selected
+    subset. On SCAN-B, the best selected sets beat all 28,552 genes by only
+    0.005 on average (0.024 on LumB), with a tenth of the genes or fewer.
+    Know which of the two you want.
 
 ## 9.3 Answer to the main question
 

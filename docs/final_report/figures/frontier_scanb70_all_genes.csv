@@ -1,0 +1,6 @@
+task,roc_auc,roc_auc_std
+ovr_Basal,0.9885,0.0062
+ovr_Her2,0.9786,0.0067
+ovr_LumA,0.9586,0.005
+ovr_LumB,0.9496,0.0105
+ovr_Normal,0.9471,0.013

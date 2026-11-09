@@ -224,7 +224,37 @@ Configs: [`configs/frontier_scanb70_rfecv_auc.yaml`](../../configs/frontier_scan
 [`configs/frontier_breastmnist70_rfecv_auc.yaml`](../../configs/frontier_breastmnist70_rfecv_auc.yaml).
 The SCAN-B run took 85 minutes; BreastMNIST 41 seconds.
 
-## 8.7 BreastMNIST at larger `k`: is selection needed at all?
+## 8.7 Is selection needed at all?
+
+A classifier can also be trained on every feature. This section compares
+that baseline with the selected sets, on the same splits.
+
+### SCAN-B
+
+Logistic regression on all 28,552 genes, against the best selected set on
+each task (sections 8.3 and 8.4):
+
+| Task | All genes | Best selected set |
+|---|---|---|
+| Basal vs rest | 0.989 | 0.993 (Lasso liblinear, k = 250) |
+| Her2 vs rest | 0.979 | 0.985 (HC2008) |
+| LumA vs rest | 0.959 | 0.961 (tree importance, k = 1000) |
+| LumB vs rest | 0.950 | 0.974 (Mann-Whitney, k = 1000) |
+| Normal vs rest | 0.947 | 0.947 (HC2008) |
+| **Mean** | **0.965** | **0.970** (HC2008; tree importance, k = 1000) |
+
+Mean test AUC over 5 splits. Table:
+[`figures/frontier_scanb70_all_genes.csv`](figures/frontier_scanb70_all_genes.csv).
+Config: [`configs/frontier_scanb70_all_genes.yaml`](../../configs/frontier_scanb70_all_genes.yaml).
+
+On gene expression, selection helps a little. The best 1,000 to 2,855
+genes beat all 28,552 by 0.005 on average, and by 0.024 on LumB. On Normal
+they tie. Mann-Whitney k = 1000 (0.966) only matches all genes. The gain
+is about one standard deviation over splits and is not tested for
+significance. The larger gain is size: a model on 1,000 genes instead of
+28,552, at no loss.
+
+### BreastMNIST at larger `k`
 
 To test where RFECV's lead came from, we reran BreastMNIST on the same
 five splits at k = 500 and 1,000, and with all 2,048 features (random
@@ -265,6 +295,8 @@ What it shows:
 - On BreastMNIST, Lasso is best at k ≤ 250, and every method is cheap. With
   no limit on the count, using all 2,048 features is best: selection there
   buys a smaller model, not a better one.
+- On SCAN-B, the best selected sets beat all 28,552 genes by 0.005 AUC on
+  average (0.024 on LumB), with a model a tenth the size or less.
 - Wrappers cost the most and gave the least on both datasets.
 - RFECV with its default inner score fails on imbalanced tasks. Scored by
   AUC, it recovers on SCAN-B (0.961) but stays slow; on BreastMNIST it
