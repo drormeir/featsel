@@ -14,7 +14,8 @@ research beyond the project's scope.
 |---|---|---|
 | **More splits for the frontier.** It has 5 splits; the comparison has 16. | With 5 splits no paired test can reach p < 0.06, so the order among the top methods on the frontier is not established. | About 8 h per 5 extra splits on SCAN-B. |
 | **Tuned classifier in the frontier.** C is fixed at 1 there. | Absolute AUCs may be a little low, and a method needing a different C is disadvantaged. | Multiplies the classifier's cost by about 15. |
-| **RFECV with an imbalance-aware inner score.** Its default, accuracy, made it keep one gene on imbalanced tasks (chapter 8). | A wrapper that fails for a fixable reason is not a fair comparison. | One config line; about 15 minutes to rerun on SCAN-B. |
+| **Larger fixed `k` on BreastMNIST.** RFECV scored by AUC kept 416 to 1,436 features and beat every method capped at k = 250 (chapter 8, section 8.6). | Shows whether its lead comes from better choices or only from more features. | Minutes: add k = 500 and 1000 to the BreastMNIST configs. |
+| **RFECV scored by AUC in the 16-split comparison.** The frontier rerun (5 splits) fixed its collapse. | Would give it the paired tests of chapter 7. | About 6 hours on SCAN-B. |
 | **RFE with a finer step and a forest with more trees in the comparison.** The comparison used RFE removing half the genes per round and 50 trees. | Both were chosen for speed. The frontier used step 0.1 and 200 trees, and RFE stayed weakest, so the conclusion is unlikely to change. | Hours. |
 | **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The comparison uses one classifier and one train fraction. | About four days on this laptop; skipped by decision. |
 | **PAM50 gene recovery on more splits.** It used 2 splits. | Its numbers are means of 10 values (5 tasks × 2 splits). | About an hour. |
@@ -28,7 +29,6 @@ research beyond the project's scope.
 | **Store each test patient's score** (`docs/experiment_design.md` 2c), so new metrics need no new run. | Designed, not built. |
 | **Tune the decision threshold** inside the split. | Not built; macro-F1 and balanced accuracy use 0.5. AUC does not depend on it. |
 | **Random forest on the GPU.** | XGBoost ran out of memory on the 4 GB GPU; NVIDIA's cuML was 3 times slower than scikit-learn. Unresolved; a larger GPU is the next test. |
-| **Mutual information's GPU path in its speed notebook.** | The GPU path is built and tested (identical scores to scikit-learn), but the notebook series has not been rerun with it. |
 | **The RFECV speed notebook's overlap column** at 30,000 genes. | A bug in the benchmark's reference handling makes that one overlap value meaningless. |
 | **Validate a config before the run starts.** | A typo fails only when the first cell that uses it runs. |
 

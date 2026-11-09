@@ -15,7 +15,7 @@
   survives memory exhaustion and can resume. (Tasks 1 and 2.)
 - **Speed** at two levels: the runner is 3.2 to 5.3 times faster than
   plain scikit-learn with identical scores; nine selectors run on a GPU,
-  with the same features as on the CPU, the filters 2.6 to 28 times faster;
+  with the same features as on the CPU, the filters 2.6 to 49 times faster;
   exact solvers make Lasso, RFE, RFECV and Sequential selection faster.
   (Task 3.)
 - **A second dataset**, BreastMNIST image embeddings, run through the same
@@ -57,14 +57,18 @@
    the edge of its search range and acted as a fixed top-10% filter. Its
    assumptions, rare and independent signal, do not hold here.
 10. **Wrappers did not pay.** RFE, RFECV and Sequential selection were the
-    slowest and scored below the simple filters. RFECV's default inner
-    score, accuracy, made it keep a single gene on imbalanced tasks.
+    slowest and scored below the simple filters on SCAN-B. RFECV's default
+    inner score, accuracy, made it keep a single gene on imbalanced tasks.
+    With AUC as its inner score it recovered (0.961 on SCAN-B), and on
+    BreastMNIST it scored best (0.916), keeping far more features than
+    our largest fixed `k`. A wrapper is only as good as its inner score.
 
 **About cost.**
 
 11. **The cheap corner wins.** On SCAN-B, sub-second GPU filters reach AUC
     0.97; nothing slower is clearly better. On BreastMNIST everything is
-    cheap, and Lasso is best.
+    cheap; Lasso is best at a fixed `k`, and RFECV scored by AUC best
+    overall.
 12. **A GPU helps sorting and matrix products, not everything.** A cheap
     GPU computes in 64 bits slowly, has little memory, and needs the data
     copied to it. RFE stayed faster on the CPU, and the random forest could

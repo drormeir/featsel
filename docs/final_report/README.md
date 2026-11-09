@@ -32,7 +32,8 @@ complex methods here, and much faster.
 | Which is the best value for time? | On SCAN-B, a GPU Mann-Whitney or Higher Criticism filter: AUC 0.97 in 0.66 s. Nothing slower is clearly better. | [8.3](08_results_frontier.md#83-scan-b-all-five-tasks) |
 | Does Higher Criticism pick its own count? | No: on both datasets it stopped at the edge of its search, because the signal is neither rare nor independent. | [7.5](07_results_quality.md#75-higher-criticism-did-not-choose-its-own-count) |
 | Do methods find the genes that define the label? | Rarely at small `k`, yet they predict it well: correlated genes stand in for them. | [7.6](07_results_quality.md#76-does-selection-find-the-pam50-genes) |
-| How much faster did we make it? | The runner 3.2 to 5.3 times over plain scikit-learn; GPU filters 2.6 to 28 times; Sequential selection 39 times; same features. | [6](06_making_it_fast.md) |
+| How much faster did we make it? | The runner 3.2 to 5.3 times over plain scikit-learn; GPU filters 2.6 to 49 times; Sequential selection 39 times; same features. | [6](06_making_it_fast.md) |
+| Why did RFECV fail, and can it be fixed? | Its default inner score, accuracy, made it keep 1 or 2 genes on imbalanced tasks. Scored by AUC it recovers to 0.961 on SCAN-B and is the best method on BreastMNIST (0.916). | [8.6](08_results_frontier.md#86-rfecv-testing-the-hypothesis) |
 
 ## Table of contents
 
@@ -61,7 +62,7 @@ them apart:
 
 - **The comparison** (chapter 7): 7 methods, 16 random splits, half the
   patients for training, scored by macro-F1, run 2026-10-31.
-- **The frontier** (chapter 8): 15 method settings, 5 random splits, 70% of
+- **The frontier** (chapter 8): 13 method settings, 5 random splits, 70% of
   the patients for training, scored by ROC AUC, with timing, run 2026-11-09.
 
 Times are from one laptop: Intel i7-9750H (6 cores, 12 threads), 16 GB RAM,

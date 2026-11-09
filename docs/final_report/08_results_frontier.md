@@ -20,7 +20,7 @@ faster.
 | Setting | Value |
 |---|---|
 | Datasets | SCAN-B (five tasks) and BreastMNIST (one task) |
-| Methods | Random; Mann-Whitney, HC2008, Spearman correlation, mutual information and Lasso (PPDNA) on the GPU; Lasso (liblinear), tree importance (200 trees, 4 threads), RFE (liblinear and Newton), RFECV (Newton) on the CPU; Sequential (Newton) on the GPU |
+| Methods | Random; Mann-Whitney, HC2008, Spearman correlation, mutual information and Lasso (PPDNA) on the GPU; Lasso (liblinear), tree importance (200 trees, 4 threads), RFE (liblinear and Newton), RFECV (Newton) on the CPU; Sequential (Newton) on the GPU. RFECV scored by AUC was added later (section 8.6). |
 | `k` | 10, 50, 250, 1000 on SCAN-B; 10, 50, 250 on BreastMNIST; 5 and 10 for Sequential |
 | Splits | 5 random splits, 70% of the samples for training |
 | Classifier | logistic regression, C = 1 (not tuned, to keep the run short) |
@@ -137,7 +137,9 @@ there RFECV works. Section 8.6 tests this hypothesis.
 
 - With 2,048 features and 546 training images, every method takes under
   3 s, so cost hardly matters here.
-- **Lasso is the best choice**: 0.90 in 0.11 s. Here the methods that see
+- **Lasso is the best choice at a fixed `k`**: 0.90 in 0.11 s. (RFECV
+  scored by AUC, which picks its own larger count, does better; section
+  8.6.) Here the methods that see
   features together (Lasso, RFE, trees) beat the one-at-a-time filters by
   about 0.03. Image embedding features are weakly correlated with each
   other, and a combination of them carries more than the sum of single
@@ -179,14 +181,57 @@ rewards predicting the majority class, and then the smallest gene set
 wins the tie.
 
 Script: [`scripts/rfecv_scoring.py`](../../scripts/rfecv_scoring.py).
-RFECV scored by AUC on all five frontier splits:
-[`configs/frontier_scanb70_rfecv_auc.yaml`](../../configs/frontier_scanb70_rfecv_auc.yaml);
-*its result is added below when the run finishes.*
+
+### The full frontier run with AUC as the inner score
+
+We then reran RFECV with `scoring='roc_auc'` on all five frontier splits of
+both datasets, everything else unchanged.
+
+| Task | Default (accuracy): AUC | Inner AUC: AUC | Inner AUC: genes kept (min to max) |
+|---|---|---|---|
+| Basal vs rest | 0.966 | 0.991 | 2,857 to 19,987 |
+| Her2 vs rest | 0.625 | 0.976 | 5,712 to 17,132 |
+| LumA vs rest | 0.960 | 0.959 | 8,567 to 28,552 |
+| LumB vs rest | 0.641 | 0.951 | 5,712 to 22,842 |
+| Normal vs rest | 0.504 | 0.930 | 2,857 to 5,712 |
+| **SCAN-B, mean** | 0.739 | **0.961** | |
+| **BreastMNIST** | 0.869 | **0.916** | 416 to 1,436 |
+
+![Frontier on SCAN-B with RFECV scored by AUC](figures/frontier_scanb70_with_rfecv_auc_roc_auc.png)
+
+*Figure 8.3. SCAN-B frontier with RFECV scored by AUC added. Table:
+[`figures/frontier_scanb70_with_rfecv_auc_roc_auc.csv`](figures/frontier_scanb70_with_rfecv_auc_roc_auc.csv).*
+
+![Frontier on BreastMNIST with RFECV scored by AUC](figures/frontier_breastmnist70_with_rfecv_auc_roc_auc.png)
+
+*Figure 8.4. BreastMNIST frontier with RFECV scored by AUC added. Table:
+[`figures/frontier_breastmnist70_with_rfecv_auc_roc_auc.csv`](figures/frontier_breastmnist70_with_rfecv_auc_roc_auc.csv).*
+
+What the rerun shows:
+
+- **On SCAN-B the collapse is gone**, but RFECV is still not worth its
+  cost. It reaches 0.961, below Mann-Whitney at k = 1000 (0.966), and
+  takes 41 s per fit against 0.66 s. It also keeps thousands of genes, so
+  it does not answer "which few genes matter".
+- **On BreastMNIST, RFECV scored by AUC is the best method**: 0.916 in
+  1.4 s, ahead of Lasso k = 250 (0.902). It joins the frontier. Here it can
+  choose any count, and it keeps 416 to 1,436 of the 2,048 features, more
+  than the largest fixed `k` of 250. Part of its lead may come from that
+  larger count rather than from better choices; we did not test Lasso
+  beyond k = 250.
+- With 5 splits these differences are not tested for significance
+  (section 8.3, point 5).
+
+Configs: [`configs/frontier_scanb70_rfecv_auc.yaml`](../../configs/frontier_scanb70_rfecv_auc.yaml),
+[`configs/frontier_breastmnist70_rfecv_auc.yaml`](../../configs/frontier_breastmnist70_rfecv_auc.yaml).
+The SCAN-B run took 85 minutes; BreastMNIST 41 seconds.
 
 ## 8.7 Summary
 
 - On SCAN-B, sub-second GPU filters (Mann-Whitney, HC2008) give the best
   AUC for their cost; a 200-tree forest ties them at 17 times the cost.
-- On BreastMNIST, Lasso is best, and every method is cheap.
+- On BreastMNIST, Lasso is best at a fixed `k`, and every method is cheap.
 - Wrappers cost the most and gave the least on both datasets.
-- RFECV with its default inner score fails on imbalanced tasks.
+- RFECV with its default inner score fails on imbalanced tasks. Scored by
+  AUC, it recovers on SCAN-B (0.961) but stays slow, and on BreastMNIST it
+  becomes the best method (0.916).
