@@ -89,3 +89,7 @@ class TreeImportanceSelector(FeatureSelectorRandom):
         self.feature_importances_ = forest.feature_importances_
         self.support_ = self._top()
         return self
+
+    def ranking(self):
+        """Feature indices by impurity decrease, largest first."""
+        return self._best_first(self.feature_importances_)

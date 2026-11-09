@@ -178,7 +178,7 @@ class TestHighDimensionalData:
         X, y = high_dim_data
 
         selector = LassoSelector(n_features=50, random_state=42).fit(X, y)
-        n_nonzero = np.count_nonzero(selector.feature_importances_)
+        n_nonzero = len(selector.ranking())
 
         assert selector.transform(X).shape == (X.shape[0], min(50, n_nonzero))
 

@@ -47,8 +47,6 @@ class PercentileSelector(FeatureSelector):
         F statistic for each feature.
     pvalues_ : np.ndarray
         p-value for each feature.
-    feature_importances_ : np.ndarray
-        Alias for scores_.
 
     Examples
     --------
@@ -85,7 +83,6 @@ class PercentileSelector(FeatureSelector):
         X, y = self._validate(X, y, keep_gpu_tensor=True)
 
         self.scores_, self.pvalues_, self.device_ = f_test(X, y, self.task, self.device)
-        self.feature_importances_ = self.scores_
         self.support_ = self._percentile_mask()
         return self
 

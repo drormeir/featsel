@@ -70,7 +70,7 @@ class TestLassoSelector:
         """Test that with fewer non-zero coefficients than n_features, only those are kept."""
         X, y = sklearn_reference_data
         selector = LassoSelector(n_features=150, C=0.01, random_state=0).fit(X, y)
-        nonzero = selector.feature_importances_ != 0
+        nonzero = np.abs(selector.coef_).sum(axis=0) != 0
 
         assert 0 < nonzero.sum() < 150
         np.testing.assert_array_equal(selector.get_support(), nonzero)

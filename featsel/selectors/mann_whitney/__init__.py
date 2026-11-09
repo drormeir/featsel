@@ -47,8 +47,6 @@ class MannWhitneySelector(FeatureSelector):
         AUC of each feature for the second class in sorted order.
     log_pvalues_ : np.ndarray
         Natural log of each feature's p-value. A constant feature gets 0.
-    feature_importances_ : np.ndarray
-        -log_pvalues_: larger is stronger.
 
     Examples
     --------
@@ -89,6 +87,9 @@ class MannWhitneySelector(FeatureSelector):
 
         self.log_pvalues_, self.auc_, self.device_ = log_mannwhitneyu(
             X, y, self.device, return_device=True)
-        self.feature_importances_ = -self.log_pvalues_
         self.support_ = self._top()
         return self
+
+    def ranking(self):
+        """Feature indices by U-test p-value, smallest first."""
+        return self._best_first(-self.log_pvalues_)

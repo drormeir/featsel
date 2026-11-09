@@ -49,11 +49,8 @@ def methods(seed):
 
 def ranks_of(selector, truth):
     """1-based rank of each truth gene in the selector's ranking; inf if never ranked."""
-    importances = selector.feature_importances_
-    order = np.argsort(importances)[::-1]
-    if isinstance(selector, LassoSelector):
-        order = order[importances[order] != 0]
-    position = np.full(len(importances), np.inf)
+    order = selector.ranking()
+    position = np.full(selector.n_features_in_, np.inf)
     position[order] = np.arange(1, len(order) + 1)
     return position[truth]
 

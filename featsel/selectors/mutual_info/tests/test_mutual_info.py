@@ -134,7 +134,7 @@ class TestGPU:
         cpu = MutualInfoSelector(n_features=20, device='cpu').fit(X, y)
         cuda = MutualInfoSelector(n_features=20, device='cuda').fit(X, y)
 
-        np.testing.assert_array_equal(cuda.feature_importances_, cpu.feature_importances_)
+        np.testing.assert_array_equal(cuda.scores_, cpu.scores_)
         assert (cpu.device_, cuda.device_) == ('cpu', 'cuda')
 
     def test_gpu_tensor_runs_on_its_device(self):
@@ -146,7 +146,7 @@ class TestGPU:
         selector = MutualInfoSelector(n_features=20, device='cpu').fit(X_t, y)
 
         assert selector.device_ == str(X_t.device)
-        np.testing.assert_array_equal(selector.feature_importances_,
+        np.testing.assert_array_equal(selector.scores_,
                                       mutual_info_classif(X, y, n_neighbors=3, random_state=42))
 
     def test_small_class_goes_to_sklearn_on_cpu(self):
@@ -160,5 +160,5 @@ class TestGPU:
             torch.as_tensor(X, device='cuda'), y)
 
         assert selector.device_ == 'cpu'
-        np.testing.assert_array_equal(selector.feature_importances_,
+        np.testing.assert_array_equal(selector.scores_,
                                       mutual_info_classif(X, y, n_neighbors=3, random_state=42))

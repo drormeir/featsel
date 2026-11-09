@@ -44,8 +44,6 @@ class ANOVAFSelector(FeatureSelector):
         F-statistic for each feature.
     pvalues_ : np.ndarray
         p-value for each feature.
-    feature_importances_ : np.ndarray
-        Alias for scores_.
 
     Examples
     --------
@@ -87,10 +85,13 @@ class ANOVAFSelector(FeatureSelector):
         # Constant features give NaN; rank them last.
         self.scores_ = np.nan_to_num(scores, nan=0.0)
         self.pvalues_ = np.nan_to_num(pvalues, nan=1.0)
-        self.feature_importances_ = self.scores_
 
         if self.n_features is not None:
             self.support_ = self._top()
         else:
             self.support_ = self.pvalues_ < self.alpha
         return self
+
+    def ranking(self):
+        """Feature indices by F statistic, largest first."""
+        return self._best_first(self.scores_)

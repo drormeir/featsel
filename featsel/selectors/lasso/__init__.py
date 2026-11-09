@@ -67,8 +67,6 @@ class LassoSelector(FeatureSelectorRandom):
         The device the fit ran on.
     coef_ : np.ndarray
         Fitted model coefficients.
-    feature_importances_ : np.ndarray
-        Absolute coefficient per feature.
 
     Examples
     --------
@@ -121,10 +119,6 @@ class LassoSelector(FeatureSelectorRandom):
         else:
             raise ValueError(f"solver must be 'liblinear' or 'ppdna', got {self.solver!r}")
 
-        # Multiclass gives one coefficient row per class; a feature matters if
-        # it matters for any class, so sum the absolute values.
-        self.feature_importances_ = np.abs(np.atleast_2d(self.coef_)).sum(axis=0)
-
         self.support_ = self._top()
 
         if not self.support_.any():
@@ -173,5 +167,8 @@ class LassoSelector(FeatureSelectorRandom):
         A zero coefficient means the model dropped the feature, so it is never
         selected, even when fewer than n_features are non-zero.
         """
-        ranking = super().ranking()
-        return ranking[self.feature_importances_[ranking] != 0]
+        # Multiclass gives one coefficient row per class; a feature matters if
+        # it matters for any class, so sum the absolute values.
+        scores = np.abs(np.atleast_2d(self.coef_)).sum(axis=0)
+        ranking = self._best_first(scores)
+        return ranking[scores[ranking] != 0]

@@ -2,6 +2,7 @@
 Tests for the anova_f selector.
 """
 
+import numpy as np
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.feature_selection import SelectKBest, f_classif
@@ -61,13 +62,15 @@ class TestANOVAFSelector:
         assert clf.get_support().sum() == 10
         assert reg.get_support().sum() == 10
 
-    def test_feature_importances(self, small_classification_data):
-        """Test that feature importances are computed."""
+    def test_ranking_starts_with_the_selection(self, small_classification_data):
+        """Test that the first n_features of the ranking are the selected features."""
         X, y = small_classification_data
 
         selector = ANOVAFSelector(n_features=10).fit(X, y)
 
-        assert len(selector.feature_importances_) == X.shape[1]
+        assert len(selector.scores_) == X.shape[1]
+        np.testing.assert_array_equal(np.sort(selector.ranking()[:10]),
+                                      selector.get_support(indices=True))
 
     def test_matches_sklearn(self, sklearn_reference_data):
         """Test that it selects the same features as SelectKBest(f_classif), on every device."""

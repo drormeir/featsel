@@ -74,10 +74,10 @@ class TestRFESelector:
         """Test that the top k of one fit to k=5 is scikit-learn's RFE at each k."""
         X, y = narrow_data
         selector = RFESelector(n_features=5, step=step, random_state=0).fit(X, y)
-        importances = selector.feature_importances_
+        ranking = selector.ranking()
 
         for k in [5, 10, 20, 35, 50]:
-            top = np.sort(np.argsort(importances)[::-1][:k])
+            top = np.sort(ranking[:k])
             reference = _sklearn(n_features=k, step=step).fit(X, y).get_support(indices=True)
             np.testing.assert_array_equal(top, reference, err_msg=f'k={k}')
 
@@ -139,7 +139,7 @@ class TestNewtonRFE:
         cpu = RFESelector(n_features=10, step=step, solver='newton').fit(X, y)
         cuda = RFESelector(n_features=10, step=step, solver='newton', device='cuda').fit(X, y)
 
-        np.testing.assert_array_equal(cuda.feature_importances_, cpu.feature_importances_)
+        np.testing.assert_array_equal(cuda.elimination_order_, cpu.elimination_order_)
         assert cuda.device_ == 'cuda'
 
     def test_gpu_tensor_runs_on_its_device(self, narrow_data):

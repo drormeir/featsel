@@ -42,8 +42,6 @@ class VarianceThreshold(FeatureSelector):
         The device the variances were computed on: 'cpu' or 'cuda'.
     variances_ : np.ndarray
         Variance of each feature.
-    feature_importances_ : np.ndarray
-        Alias for variances_.
 
     Examples
     --------
@@ -84,7 +82,6 @@ class VarianceThreshold(FeatureSelector):
         if np.all(~np.isfinite(self.variances_) | (self.variances_ <= self.threshold)):
             # scikit-learn's own message; on the CPU it has raised it already.
             raise ValueError(f"No feature in X meets the variance threshold {self.threshold:.5f}")
-        self.feature_importances_ = self.variances_
         self.support_ = self.variances_ > self.threshold
         return self
 

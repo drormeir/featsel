@@ -573,7 +573,7 @@ class TestSelectionRepeats:
         def fit(self, X, y):
             clock[0] += next(durations)
             self.n_features_in_ = X.shape[1]
-            self.feature_importances_ = np.arange(X.shape[1], 0, -1)
+            self.scores_ = np.arange(X.shape[1], 0, -1)
             self.support_ = self._mask(np.arange(self.n_features))
             return self
 

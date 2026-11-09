@@ -21,8 +21,8 @@ class RFESelector(FeatureSelectorRandom):
     Selects the same features as scikit-learn's
     RFE(LinearSVC(C=C), step=step), and also ranks every feature.
 
-    feature_importances_ ranks every feature: by the round it was removed in,
-    later first, and within a round by its weight then. With a fixed step,
+    ranking() orders every feature: by the round it was removed in, later
+    first, and within a round by its weight then. With a fixed step,
     the top k of that ranking is RFE's selection for any k >= n_features, so
     one fit to the smallest k serves every larger k.
 
@@ -69,9 +69,9 @@ class RFESelector(FeatureSelectorRandom):
         The device the SVM fits ran on.
     ranking_ : np.ndarray
         1 for kept features; larger numbers were removed in earlier rounds.
-    feature_importances_ : np.ndarray
-        Position of each feature in the elimination order: larger was kept
-        longer.
+    elimination_order_ : np.ndarray
+        Every feature index in the order removed, first removed first; the
+        survivors last, weakest first.
 
     Examples
     --------
@@ -179,9 +179,11 @@ class RFESelector(FeatureSelectorRandom):
             squared_weights(features)
             after_fit(features)
 
-        elimination = np.concatenate([*removed, kept])
-        self.feature_importances_ = np.empty(n_total)
-        self.feature_importances_[elimination] = np.arange(n_total)
+        self.elimination_order_ = np.concatenate([*removed, kept])
         self.ranking_ = ranking
         self.support_ = support
         return self
+
+    def ranking(self):
+        """Feature indices kept longest first: elimination_order_ reversed."""
+        return self.elimination_order_[::-1]

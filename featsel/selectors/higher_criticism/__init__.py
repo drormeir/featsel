@@ -71,8 +71,6 @@ class HigherCriticismSelector(FeatureSelector):
         AUC of each feature for the second class in sorted order.
     log_pvalues_ : np.ndarray
         Natural log of each feature's p-value. A constant feature gets 0.
-    feature_importances_ : np.ndarray
-        -log_pvalues_: larger is stronger, in the order the selection uses.
 
     Examples
     --------
@@ -113,7 +111,6 @@ class HigherCriticismSelector(FeatureSelector):
 
         self.log_pvalues_, self.auc_, self.device_ = log_mannwhitneyu(
             X, y, self.device, return_device=True)
-        self.feature_importances_ = -self.log_pvalues_
 
         n = self.n_features_in_
         order = np.argsort(self.log_pvalues_, kind='stable')

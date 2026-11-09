@@ -5,8 +5,6 @@ The folder is not named `random`, which would shadow the standard library
 module whenever it lands on the import path.
 """
 
-import numpy as np
-
 from ..base import FeatureSelectorRandom
 
 
@@ -29,11 +27,6 @@ class RandomSelector(FeatureSelectorRandom):
 
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
-
-    Attributes
-    ----------
-    feature_importances_ : np.ndarray
-        All zeros: no feature is more informative than another.
 
     Examples
     --------
@@ -74,7 +67,4 @@ class RandomSelector(FeatureSelectorRandom):
         rng = self._rng()
         n_select = min(self.n_features, self.n_features_in_)
         self.support_ = self._mask(rng.choice(self.n_features_in_, size=n_select, replace=False))
-
-        # No notion of importance: every feature is equally (un)informative.
-        self.feature_importances_ = np.zeros(self.n_features_in_)
         return self

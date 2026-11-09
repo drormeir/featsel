@@ -53,8 +53,8 @@ class MutualInfoSelector(FeatureSelectorRandom):
     ----------
     device_ : str
         The device the estimate ran on: 'cpu' or 'cuda'.
-    feature_importances_ : np.ndarray
-        Mutual information scores for each feature.
+    scores_ : np.ndarray
+        Mutual information of each feature with the target.
 
     Examples
     --------
@@ -98,15 +98,19 @@ class MutualInfoSelector(FeatureSelectorRandom):
             def mi(X, device='cpu'):
                 return knn_1d.mutual_info_classif(X, y, self.n_neighbors,
                                                   self.random_state, device)
-            self.feature_importances_, self.device_ = gpu.run(self.device, X, mi, mi)
+            self.scores_, self.device_ = gpu.run(self.device, X, mi, mi)
         else:
             mi_func = self._by_task(mutual_info_classif, mutual_info_regression)
-            self.feature_importances_ = mi_func(
+            self.scores_ = mi_func(
                 _on_cpu(X), y, n_neighbors=self.n_neighbors, random_state=self.random_state
             )
             self.device_ = 'cpu'
         self.support_ = self._top()
         return self
+
+    def ranking(self):
+        """Feature indices by mutual information, largest first."""
+        return self._best_first(self.scores_)
 
 
 def _on_cpu(X):

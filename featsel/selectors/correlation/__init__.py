@@ -65,8 +65,6 @@ class CorrelationSelector(FeatureSelector):
         The device the correlations were computed on: 'cpu' or 'cuda'.
     target_corr_ : pd.Series
         Absolute correlation of each feature with target.
-    feature_importances_ : np.ndarray
-        Alias for target_corr_ values.
     selected_features_ : list
         Names (DataFrame input) or indices of selected features.
 
@@ -155,7 +153,6 @@ class CorrelationSelector(FeatureSelector):
             selected = self.target_corr_[selected].nlargest(self.n_features).index.tolist()
 
         self.selected_features_ = selected
-        self.feature_importances_ = self.target_corr_.values
         self.support_ = np.isin(names, selected)
         return self
 

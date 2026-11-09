@@ -41,6 +41,12 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
 
     A subclass that uses randomness derives from FeatureSelectorRandom.
 
+    A subclass keeps its per-feature measurement under the name of what it
+    measures, as scikit-learn does: scores_, log_pvalues_, coef_, variances_.
+    A subclass that orders the features also defines ranking(): feature
+    indices, best first, whose first k are exactly what a fit with
+    n_features=k selects. A subclass with no such order has no ranking().
+
     Every subclass registers itself when it is defined, under its class name
     and any aliases given as a class keyword:
 
@@ -54,9 +60,9 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     # lowercased name or alias -> selector class
     _registry: ClassVar[dict[str, type[FeatureSelector]]] = {}
 
-    # True when the top k of ranking(), fit with any n_features <= k, is the
-    # selection a fit with n_features=k would make. The runner then fits once
-    # per split and cuts the ranking at each k.
+    # True when the selector has ranking() and its first k, fit with any
+    # n_features <= k, are the selection a fit with n_features=k would make.
+    # The runner then fits once per split and cuts the ranking at each k.
     rank_once: ClassVar[bool] = False
 
     def __init_subclass__(cls, aliases: str | list[str] | None = None, register: bool = True,
@@ -150,10 +156,10 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         self.__dict__.pop('feature_names_in_', None)   # a refit on a tensor has no names
         return X
 
-    def ranking(self):
-        """Feature indices by feature_importances_, strongest first."""
-        check_is_fitted(self, 'feature_importances_')
-        return np.argsort(self.feature_importances_)[::-1]
+    @staticmethod
+    def _best_first(scores):
+        """Feature indices by score, largest first."""
+        return np.argsort(scores)[::-1]
 
     def _by_task(self, classification, regression):
         """Whichever of the two matches self.task."""

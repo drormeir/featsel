@@ -140,7 +140,7 @@ print("\n9. Feature Importance Report (top 10 features)")
 selector = pipe_multi.named_steps['final_select']
 report = pd.DataFrame({
     'feature': selector.feature_names_in_,
-    'importance': selector.feature_importances_,
+    'importance': selector.scores_,
     'selected': selector.get_support(),
 })
 print(report.nlargest(10, 'importance').to_string(index=False))

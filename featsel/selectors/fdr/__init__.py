@@ -47,8 +47,6 @@ class FDRSelector(FeatureSelector):
         F statistic for each feature.
     pvalues_ : np.ndarray
         p-value for each feature.
-    feature_importances_ : np.ndarray
-        Alias for scores_.
 
     Examples
     --------
@@ -87,7 +85,6 @@ class FDRSelector(FeatureSelector):
         X, y = self._validate(X, y, keep_gpu_tensor=True)
 
         self.scores_, self.pvalues_, self.device_ = f_test(X, y, self.task, self.device)
-        self.feature_importances_ = self.scores_
 
         # Benjamini-Hochberg, as SelectFdr: the largest p-value under its
         # rank's share of alpha, and every p-value up to it.
