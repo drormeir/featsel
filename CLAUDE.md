@@ -198,7 +198,7 @@ featsel/
 
 Every selector subclasses `FeatureSelector`, which inherits scikit-learn's
 `BaseEstimator` and `SelectorMixin`. A selector lists its parameters in
-`__init__` (no `**kwargs`) and sets `support_` in `fit`. It therefore works
+`__init__` (no `**kwargs`) and sets `support_` in `_fit`. It therefore works
 with `Pipeline`, `clone`, `cross_val_score` and `GridSearchCV`, and a
 misspelled parameter raises. As in scikit-learn, `transform` returns a NumPy
 array unless `set_output(transform='pandas')` is set.

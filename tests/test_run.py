@@ -371,7 +371,7 @@ class GreedySelector(FeatureSelector):
     def __init__(self, check_input=True):
         self.check_input = check_input
 
-    def fit(self, X, y):
+    def _fit(self, X, y):
         X, y = self._validate(X, y)
         np.ones(2 ** 28)  # 2 GB of float64
         self.support_ = self._mask([0])
@@ -578,7 +578,7 @@ class TestSelectionRepeats:
             return self
 
         monkeypatch.setattr(run_module.time, 'perf_counter', lambda: clock[0])
-        monkeypatch.setattr(ANOVAFSelector, 'fit', fit)
+        monkeypatch.setattr(ANOVAFSelector, '_fit', fit)
         df = pd.read_csv(run_config(experiment))
 
         assert (df['selection_time_s'] == 2.0).all()

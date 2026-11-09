@@ -18,7 +18,7 @@ def shared_draw():
             self.n_features = n_features
             self.random_state = random_state
 
-        def fit(self, X, y=None):
+        def _fit(self, X, y=None):
             self.n_features_in_ = X.shape[1]
             chosen = np.random.choice(X.shape[1], self.n_features, replace=False)
             self.draws_ = (random.random(), *chosen)

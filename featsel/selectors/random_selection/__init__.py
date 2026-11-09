@@ -49,7 +49,7 @@ class RandomSelector(FeatureSelector):
         self.random_state = random_state
         self.check_input = check_input
 
-    def fit(self, X, y=None):
+    def _fit(self, X, y=None):
         """
         Draw a random subset of feature indices.
 

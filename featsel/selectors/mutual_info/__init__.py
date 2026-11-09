@@ -74,7 +74,7 @@ class MutualInfoSelector(FeatureSelector):
         self.device = device
         self.check_input = check_input
 
-    def fit(self, X, y):
+    def _fit(self, X, y):
         """
         Fit the selector on training data.
 

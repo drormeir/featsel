@@ -59,7 +59,7 @@ class VarianceThreshold(FeatureSelector):
         self.device = device
         self.check_input = check_input
 
-    def fit(self, X, y=None):
+    def _fit(self, X, y=None):
         """
         Fit the selector on training data.
 

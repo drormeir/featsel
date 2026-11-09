@@ -68,7 +68,7 @@ class FDRSelector(FeatureSelector):
         self.device = device
         self.check_input = check_input
 
-    def fit(self, X, y):
+    def _fit(self, X, y):
         """
         Keep every feature the Benjamini-Hochberg procedure accepts at alpha.
 

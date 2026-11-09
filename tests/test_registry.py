@@ -25,7 +25,7 @@ def restore_registry():
 class _Stub(FeatureSelector):
     """Concrete enough to register; the tests only check names."""
 
-    def fit(self, X, y=None):
+    def _fit(self, X, y=None):
         return self
 
 

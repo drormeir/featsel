@@ -34,7 +34,7 @@ Every selector subclasses `FeatureSelector`, which inherits scikit-learn's
 `BaseEstimator` and `SelectorMixin`. A selector:
 
 - lists its parameters in `__init__` and only stores them;
-- does its work in `fit`, and sets `support_`, a boolean mask over the
+- does its work in `_fit`, and sets `support_`, a boolean mask over the
   features;
 - inherits `transform`, `get_support`, `get_params`, `set_params` and
   `clone` from scikit-learn.

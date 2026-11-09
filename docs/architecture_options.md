@@ -211,7 +211,7 @@ A new selector registers itself by being defined, in its own subpackage
 
 ```python
 class CorrelationRankSelector(FeatureSelector, aliases='corr_rank'):
-    def fit(self, X, y):
+    def _fit(self, X, y):
         scores = np.abs([np.corrcoef(col, y)[0, 1] for col in X.T])
         self.mask_ = np.zeros(X.shape[1], dtype=bool)
         self.mask_[np.argsort(scores)[-self.n_features:]] = True

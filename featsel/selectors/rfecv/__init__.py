@@ -96,7 +96,7 @@ class RFECVSelector(FeatureSelector):
         self.device = device
         self.check_input = check_input
 
-    def fit(self, X, y):
+    def _fit(self, X, y):
         """
         Eliminate features and keep the count with the best cross-validated score.
 

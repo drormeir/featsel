@@ -90,7 +90,7 @@ class SequentialSelector(FeatureSelector):
         self.device = device
         self.check_input = check_input
 
-    def fit(self, X, y):
+    def _fit(self, X, y):
         """
         Add or remove features one at a time until n_features remain.
 
