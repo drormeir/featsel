@@ -111,12 +111,13 @@ class RFESelector(FeatureSelectorRandom):
         self : RFESelector
             Fitted selector.
         """
-        self._require_n_features()
+        if self.n_features is None:
+            raise ValueError("RFESelector requires n_features to be specified")
         if self.solver == 'liblinear':
             if self.device != 'cpu':
                 raise ValueError("solver='liblinear' runs on the CPU only; "
                                  "use solver='newton' for another device")
-            X, y = self._validate(X, y)
+            X, y = self._validate(X, y, check_input=self.check_input)
             self.device_ = 'cpu'
             self._eliminate(X.shape[1],
                             lambda features: self._liblinear_weights(X[:, features], y))
@@ -124,7 +125,7 @@ class RFESelector(FeatureSelectorRandom):
         if self.solver != 'newton':
             raise ValueError(f"solver must be 'liblinear' or 'newton', got {self.solver!r}")
 
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
         self.device_ = gpu.resolve(self.device, X)
         with gpu.exclusive(self.device_):
             rounds = linear_svm.Elimination(self._newton_input(X), y, np.unique(y),

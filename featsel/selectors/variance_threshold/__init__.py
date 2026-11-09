@@ -73,7 +73,7 @@ class VarianceThreshold(FeatureSelector):
         self : VarianceThreshold
             Fitted selector.
         """
-        X, _ = self._validate(X, requires_y=False, keep_gpu_tensor=True)
+        X, _ = self._validate(X, requires_y=False, keep_gpu_tensor=True, check_input=self.check_input)
 
         self.variances_, self.device_ = gpu.run(
             self.device, X,

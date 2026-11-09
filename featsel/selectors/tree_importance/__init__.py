@@ -76,10 +76,11 @@ class TreeImportanceSelector(FeatureSelectorRandom):
         self : TreeImportanceSelector
             Fitted selector.
         """
-        self._require_n_features()
-        X, y = self._validate(X, y)
+        if self.n_features is None:
+            raise ValueError("TreeImportanceSelector requires n_features to be specified")
+        X, y = self._validate(X, y, check_input=self.check_input)
 
-        forest_class = self._by_task(RandomForestClassifier, RandomForestRegressor)
+        forest_class = self._by_task(self.task, RandomForestClassifier, RandomForestRegressor)
 
         forest = forest_class(
             n_estimators=self.n_estimators, max_depth=self.max_depth,
@@ -87,7 +88,7 @@ class TreeImportanceSelector(FeatureSelectorRandom):
         ).fit(X, y)
 
         self.feature_importances_ = forest.feature_importances_
-        self.support_ = self._top()
+        self.support_ = self._mask(self.ranking()[:self.n_features])
         return self
 
     def ranking(self):

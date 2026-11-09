@@ -80,7 +80,7 @@ class PercentileSelector(FeatureSelector):
         self : PercentileSelector
             Fitted selector.
         """
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
 
         self.scores_, self.pvalues_, self.device_ = f_test(X, y, self.task, self.device)
         self.support_ = self._percentile_mask()

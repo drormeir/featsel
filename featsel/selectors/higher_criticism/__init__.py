@@ -107,7 +107,7 @@ class HigherCriticismSelector(FeatureSelector):
         """
         if self.variant not in ('2004', '2008'):
             raise ValueError(f"variant must be '2004' or '2008', got '{self.variant}'")
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
 
         self.log_pvalues_, self.auc_, self.device_ = log_mannwhitneyu(
             X, y, self.device, return_device=True)

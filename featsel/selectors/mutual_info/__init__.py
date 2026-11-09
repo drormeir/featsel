@@ -90,8 +90,9 @@ class MutualInfoSelector(FeatureSelectorRandom):
         self : MutualInfoSelector
             Fitted selector.
         """
-        self._require_n_features()
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        if self.n_features is None:
+            raise ValueError("MutualInfoSelector requires n_features to be specified")
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
 
         if self.task == 'classification' and knn_1d.matches_sklearn(y, self.n_neighbors):
             # The same estimate by sorting; scikit-learn's result exactly.
@@ -100,12 +101,12 @@ class MutualInfoSelector(FeatureSelectorRandom):
                                                   self.random_state, device)
             self.scores_, self.device_ = gpu.run(self.device, X, mi, mi)
         else:
-            mi_func = self._by_task(mutual_info_classif, mutual_info_regression)
+            mi_func = self._by_task(self.task, mutual_info_classif, mutual_info_regression)
             self.scores_ = mi_func(
                 _on_cpu(X), y, n_neighbors=self.n_neighbors, random_state=self.random_state
             )
             self.device_ = 'cpu'
-        self.support_ = self._top()
+        self.support_ = self._mask(self.ranking()[:self.n_features])
         return self
 
     def ranking(self):

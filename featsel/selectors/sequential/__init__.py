@@ -106,7 +106,8 @@ class SequentialSelector(FeatureSelector):
         self : SequentialSelector
             Fitted selector.
         """
-        self._require_n_features()
+        if self.n_features is None:
+            raise ValueError("SequentialSelector requires n_features to be specified")
         if self.solver == 'newton':
             return self._fit_newton(X, y)
         if self.solver != 'lbfgs':
@@ -114,7 +115,7 @@ class SequentialSelector(FeatureSelector):
         if self.device != 'cpu':
             raise ValueError("solver='lbfgs' runs on the CPU only; "
                              "use solver='newton' for another device")
-        X, y = self._validate(X, y)
+        X, y = self._validate(X, y, check_input=self.check_input)
         self.device_ = 'cpu'
 
         model = LogisticRegression(C=self.C, max_iter=self.max_iter)
@@ -132,7 +133,7 @@ class SequentialSelector(FeatureSelector):
             raise ValueError("solver='newton' supports direction='forward' only")
         if self.scoring not in (None, 'accuracy'):
             raise ValueError("solver='newton' scores by accuracy only")
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
         labels = np.unique(y)
         if len(labels) != 2:
             raise ValueError(f"solver='newton' needs two classes, got {len(labels)}")

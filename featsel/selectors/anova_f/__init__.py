@@ -78,7 +78,7 @@ class ANOVAFSelector(FeatureSelector):
         self : ANOVAFSelector
             Fitted selector.
         """
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
 
         scores, pvalues, self.device_ = f_test(X, y, self.task, self.device)
 
@@ -87,7 +87,7 @@ class ANOVAFSelector(FeatureSelector):
         self.pvalues_ = np.nan_to_num(pvalues, nan=1.0)
 
         if self.n_features is not None:
-            self.support_ = self._top()
+            self.support_ = self._mask(self.ranking()[:self.n_features])
         else:
             self.support_ = self.pvalues_ < self.alpha
         return self

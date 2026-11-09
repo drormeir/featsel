@@ -106,7 +106,7 @@ class CorrelationSelector(FeatureSelector):
         self : CorrelationSelector
             Fitted selector.
         """
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
         names = list(getattr(self, 'feature_names_in_', range(self.n_features_in_)))
         y = np.asarray(y)
         if not np.issubdtype(y.dtype, np.number):

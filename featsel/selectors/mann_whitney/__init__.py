@@ -82,12 +82,13 @@ class MannWhitneySelector(FeatureSelector):
         self : MannWhitneySelector
             Fitted selector.
         """
-        self._require_n_features()
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        if self.n_features is None:
+            raise ValueError("MannWhitneySelector requires n_features to be specified")
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
 
         self.log_pvalues_, self.auc_, self.device_ = log_mannwhitneyu(
             X, y, self.device, return_device=True)
-        self.support_ = self._top()
+        self.support_ = self._mask(self.ranking()[:self.n_features])
         return self
 
     def ranking(self):

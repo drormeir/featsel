@@ -39,6 +39,8 @@ class RandomSelector(FeatureSelectorRandom):
 
     def __init__(self, n_features=None, random_state=42, check_input=True):
         super().__init__(random_state)
+        assert n_features is None or n_features >= 1, \
+            f"n_features must be >= 1, got {n_features}"
         self.n_features = n_features
         self.check_input = check_input
 
@@ -59,10 +61,9 @@ class RandomSelector(FeatureSelectorRandom):
         self : RandomSelector
             Fitted selector.
         """
-        self._require_n_features()
-        if self.n_features < 1:
-            raise ValueError(f"n_features must be >= 1, got {self.n_features}")
-        self._validate(X, requires_y=False, keep_gpu_tensor=True)
+        if self.n_features is None:
+            raise ValueError("RandomSelector requires n_features to be specified")
+        self._validate(X, requires_y=False, keep_gpu_tensor=True, check_input=self.check_input)
 
         rng = self._rng()
         n_select = min(self.n_features, self.n_features_in_)

@@ -114,12 +114,12 @@ class LassoSelector(FeatureSelectorRandom):
             if self.device != 'cpu':
                 raise ValueError("solver='liblinear' runs on the CPU only; "
                                  "use solver='ppdna' for another device")
-            self._fit_liblinear(*self._validate(X, y))
+            self._fit_liblinear(*self._validate(X, y, check_input=self.check_input))
             self.device_ = 'cpu'
         else:
             raise ValueError(f"solver must be 'liblinear' or 'ppdna', got {self.solver!r}")
 
-        self.support_ = self._top()
+        self.support_ = self._mask(self.ranking()[:self.n_features])
 
         if not self.support_.any():
             raise ValueError(
@@ -132,7 +132,7 @@ class LassoSelector(FeatureSelectorRandom):
         """coef_ by PPDNA: one problem for two classes, else one per class against the rest."""
         if self.task != 'classification':
             raise ValueError("solver='ppdna' is for classification only")
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
         self.device_ = gpu.resolve(self.device, X)
         classes = np.unique(y)
         with gpu.exclusive(self.device_):
@@ -145,6 +145,7 @@ class LassoSelector(FeatureSelectorRandom):
     def _fit_liblinear(self, X, y):
         """coef_ by scikit-learn's LogisticRegression (liblinear) or Lasso."""
         model = self._by_task(
+            self.task,
             LogisticRegression(l1_ratio=1, C=self.C, solver='liblinear',
                                max_iter=self.max_iter, random_state=self.random_state),
             Lasso(alpha=self.alpha, max_iter=self.max_iter, random_state=self.random_state),

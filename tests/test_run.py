@@ -372,7 +372,7 @@ class GreedySelector(FeatureSelector):
         self.check_input = check_input
 
     def _fit(self, X, y):
-        X, y = self._validate(X, y)
+        X, y = self._validate(X, y, check_input=self.check_input)
         np.ones(2 ** 28)  # 2 GB of float64
         self.support_ = self._mask([0])
         return self

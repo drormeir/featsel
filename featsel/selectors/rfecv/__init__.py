@@ -119,7 +119,7 @@ class RFECVSelector(FeatureSelectorRandom):
         if self.device != 'cpu':
             raise ValueError("solver='liblinear' runs on the CPU only; "
                              "use solver='newton' for another device")
-        X, y = self._validate(X, y)
+        X, y = self._validate(X, y, check_input=self.check_input)
         self.device_ = 'cpu'
 
         svm = LinearSVC(C=self.C, max_iter=self.max_iter, random_state=self.random_state)
@@ -135,7 +135,7 @@ class RFECVSelector(FeatureSelectorRandom):
 
     def _fit_newton(self, X, y):
         """RFECV with every SVM solved by Newton's method, as scikit-learn runs it."""
-        X, y = self._validate(X, y, keep_gpu_tensor=True)
+        X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
         self.device_ = gpu.resolve(self.device, X)
         n_total = X.shape[1]
         classes = np.unique(y)

@@ -65,12 +65,16 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
     # The runner then fits once per split and cuts the ranking at each k.
     rank_once: ClassVar[bool] = False
 
+    # Set by fit: support_ by the subclass's _fit, n_features_in_ by _validate.
+    support_: np.ndarray
+    n_features_in_: int
+
     def __init_subclass__(cls, aliases: str | list[str] | None = None, register: bool = True,
                           **kwargs):
         super().__init_subclass__(**kwargs)
         if not register:
             return
-        names =[cls.__name__, *([aliases] if isinstance(aliases, str) else aliases or [])]
+        names = [cls.__name__, *([aliases] if isinstance(aliases, str) else aliases or [])]
         for name in {n.lower() for n in names}:
             owner = FeatureSelector._registry.setdefault(name, cls)
             if owner is not cls:
@@ -115,12 +119,13 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         check_is_fitted(self, 'support_')
         return self.support_
 
-    def _validate(self, X, y=None, requires_y=True, keep_gpu_tensor=False):
+    def _validate(self, X, y=None, requires_y=True, keep_gpu_tensor=False, *, check_input):
         """
         Validate the training data and record the input feature count and names.
 
-        With check_input=False only the feature count is recorded, and X and y
-        are returned as given.
+        Sets n_features_in_, and feature_names_in_ for a DataFrame. With
+        check_input=False only the feature count is recorded, and X and y are
+        returned as given.
 
         A PyTorch tensor y becomes a NumPy array. A tensor X on a GPU is
         returned as it is with keep_gpu_tensor, checked on its device, and
@@ -135,22 +140,22 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
                 y = y.detach().cpu().numpy()
             if isinstance(X, torch.Tensor):
                 if keep_gpu_tensor and X.device.type != 'cpu':
-                    return self._validate_gpu_tensor(torch, X, y), y
+                    return self._validate_gpu_tensor(torch, X, y, check_input), y
                 X = X.detach().cpu().numpy()
-        if not self.check_input:
+        if not check_input:
             self.n_features_in_ = X.shape[1]
             return X, y
         if y is None:
             return validate_data(self, X), None
         return validate_data(self, X, y)
 
-    def _validate_gpu_tensor(self, torch, X, y):
+    def _validate_gpu_tensor(self, torch, X, y, check_input):
         """Check a tensor on a GPU where it is, as validate_data checks an array."""
         if X.ndim != 2:
             raise ValueError(f"Expected a 2-D tensor, got shape {tuple(X.shape)}")
         if y is not None and len(y) != X.shape[0]:
             raise ValueError(f"X has {X.shape[0]} samples but y has {len(y)}")
-        if self.check_input and not torch.isfinite(X).all():
+        if check_input and not torch.isfinite(X).all():
             raise ValueError("Input X contains NaN or infinity.")
         self.n_features_in_ = X.shape[1]
         self.__dict__.pop('feature_names_in_', None)   # a refit on a tensor has no names
@@ -161,27 +166,20 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         """Feature indices by score, largest first."""
         return np.argsort(scores)[::-1]
 
-    def _by_task(self, classification, regression):
-        """Whichever of the two matches self.task."""
-        if self.task == 'classification':
+    @staticmethod
+    def _by_task(task, classification, regression):
+        """Whichever of the two matches task."""
+        if task == 'classification':
             return classification
-        if self.task == 'regression':
+        if task == 'regression':
             return regression
-        raise ValueError(f"task must be 'classification' or 'regression', got '{self.task}'")
-
-    def _require_n_features(self):
-        if self.n_features is None:
-            raise ValueError(f"{type(self).__name__} requires n_features to be specified")
+        raise ValueError(f"task must be 'classification' or 'regression', got '{task}'")
 
     def _mask(self, indices):
         """A boolean mask over the input features with `indices` set."""
         mask = np.zeros(self.n_features_in_, dtype=bool)
         mask[indices] = True
         return mask
-
-    def _top(self):
-        """A mask selecting the first n_features of ranking(); all of it if None."""
-        return self._mask(self.ranking()[:self.n_features])
 
 
 class FeatureSelectorRandom(FeatureSelector, register=False):
