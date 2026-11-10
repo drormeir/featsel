@@ -41,12 +41,12 @@ subtype.
 **The course's copies.** The course provided two copies of this data,
 `scanb_small` and `scanb_full`. Both hold exactly the 3,069 HiSeq samples,
 with the same PAM50 labels as GSE96058. Values were compared on 7 genes of
-`scanb_full` only. They matched to rounding (about 10⁻¹⁶). Both kept the repeat
-samples. So every result computed on them carries the leak above. Its
-size was not measured. `scanb_small` also keeps only 9,264 genes, by an unrecorded rule.
-It lacks 11 of the 50 PAM50 genes: ANLN, BAG1, CDC6, CXXC5, FOXA1, GPR160,
-KRT14, MIA, NUF2, TMEM45B and UBE2T. We therefore load GSE96058 directly
-and do not use the course copies.
+`scanb_full` only. They matched to rounding (about 10⁻¹⁶). Both kept the
+repeat samples. So every result computed on them carries the leak above.
+Its size was not measured. `scanb_small` also keeps only 9,264 genes, by an
+unrecorded rule. It lacks 11 of the 50 PAM50 genes: ANLN, BAG1, CDC6,
+CXXC5, FOXA1, GPR160, KRT14, MIA, NUF2, TMEM45B and UBE2T. We therefore
+load GSE96058 directly and do not use the course copies.
 
 ### What the numbers are
 
@@ -145,13 +145,13 @@ PAM50 uses 50 genes. But each of them rises and falls together with
 hundreds of others across patients. For example, ESR1 moves with the
 estrogen-response genes, and the proliferation genes move with the
 cell-cycle genes. The U test scores each gene alone. So a gene that moves
-with ESR1 separates Basal from the rest about as strongly as ESR1 does.
-As a result, in every task thousands of genes carry signal: more than 10%
-of all genes. On `scanb_small`, with the F-test, 4,792 to 6,964 of the
-9,259 usable genes per task had a p-value below 1/9,259. A one-split test
-on GSE96058 showed the same. This explains three later results. Higher Criticism stops at the edge of its
-search (7.5). Few PAM50 genes are recovered (7.6). Random genes catch up
-fast (7.2).
+with ESR1 separates Basal from the rest about as strongly as ESR1 does. As
+a result, in every task thousands of genes carry signal: more than 10% of
+all genes. On `scanb_small`, with the F-test, 4,792 to 6,964 of the 9,259
+usable genes per task had a p-value below 1/9,259. A one-split test on
+GSE96058 showed the same. This explains three later results. Higher
+Criticism stops at the edge of its search (7.5). Few PAM50 genes are
+recovered (7.6). Random genes catch up fast (7.2).
 
 Loader: [`featsel_datasets/scanb_gse96058/`](../featsel_datasets/scanb_gse96058/).
 Tutorial: [`featsel_datasets/scanb_gse96058/demos/tutorial.ipynb`](../featsel_datasets/scanb_gse96058/demos/tutorial.ipynb).
@@ -239,14 +239,14 @@ Notebooks: [`demos/tutorial.ipynb`](../featsel_datasets/medmnist_breastmnist/dem
 
 ## 2.3 Summary
 
-| | SCAN-B | BreastMNIST |
-|---|---|---|
-| Domain | gene expression (RNA sequencing) | ultrasound images, ResNet-50 embeddings |
-| Samples | 2,976 patients | 780 images |
-| Features | 28,552 genes | 2,048 embedding dimensions |
-| Tasks | 5 (each PAM50 subtype vs rest) | 1 (malignant vs rest) |
-| Label | computed from 50 known genes | assigned by the image source |
-| Signal | widespread, strongly correlated genes | widespread, weakly correlated features |
+| | SCAN-B | BreastMNIST | FGVC-Aircraft (section 8.8) |
+|---|---|---|---|
+| Domain | gene expression (RNA sequencing) | ultrasound images, ResNet-50 embeddings | aircraft photos, ResNet-50 embeddings |
+| Samples | 2,976 patients | 780 images | 1,200 photos |
+| Features | 28,552 genes | 2,048 embedding dimensions | 2,048 embedding dimensions |
+| Tasks | 5 (each PAM50 subtype vs rest) | 1 (malignant vs rest) | 1 (Boeing 737 vs Airbus A320 family) |
+| Label | computed from 50 known genes | assigned by the image source | the aircraft model, from the dataset |
+| Signal | widespread, strongly correlated genes | widespread, weakly correlated features | widespread, weakly correlated features |
 
 Plans and open questions about the data are in
 [Appendix C](appendix_c_data_details.md).

@@ -62,7 +62,7 @@
    expression. Lasso and tree importance shared the lead on image
    embeddings. The broad pattern held on both: selection beats random most
    at small `k`, and RFE is weakest at small `k`.
-9. **Higher Criticism needs rare signal.** On both datasets it stopped at
+9. **Higher Criticism needs rare signal.** On all three datasets it stopped at
    the edge of its search range. It acted as a fixed top-10% filter. Its
    assumptions, rare and independent signal, do not hold here.
 10. **Wrappers did not pay.** RFE, RFECV and Sequential selection were
@@ -82,15 +82,16 @@
     the data copied to it. RFE stayed faster on the CPU. The random forest
     could not move to it.
 13. **Exactness has a price in agreement.** Faster exact solvers can pick
-    different genes than scikit-learn's default. Lasso does on SCAN-B.
-    RFE does on some synthetic data, and in 14 of 100 cells of a
-    preliminary SCAN-B frontier run (section 8.2). The reason is that the default stops before
-    reaching the solution.
+    different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
+    does on some synthetic data, and in 14 of 100 cells of a preliminary
+    SCAN-B frontier run (section 8.2). The reason is that the default stops
+    before reaching the solution.
 14. **Selection buys a smaller model more than a better one.** On
     BreastMNIST, all 2,048 features gave AUC 0.921, more than any selected
-    subset. On FGVC-Aircraft, all features gave 0.864, also the best. On SCAN-B, the best selected sets beat all 28,552 genes by only
-    0.006 on average (0.025 on LumB), with a tenth of the genes or fewer.
-    Know which of the two you want.
+    subset. On FGVC-Aircraft, all features gave 0.864, also the best. On
+    SCAN-B, the best selected sets beat all 28,552 genes by only 0.006 on
+    average (0.025 on LumB), with a tenth of the genes or fewer. Know which
+    of the two you want.
 
 ## 9.3 Answer to the main question
 

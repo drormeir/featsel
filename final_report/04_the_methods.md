@@ -172,12 +172,12 @@ standard 64-bit float rounds to 0. Higher Criticism needs to tell them
 apart. We compute the logarithm of the p-value directly from the normal
 tail, so nothing underflows ([`featsel/selectors/log_pvalue/`](../featsel/selectors/log_pvalue/)).
 On `scanb_small`, 167 genes had an F-test p-value of exactly 0 for the
-five classes. The module's
-tutorial uses 2,000 synthetic features with 1,500 samples per class, 300
-of them with signal. There SciPy gives p = 0 to 170 features with the U
-test, and to 189 with the F-test. The logs keep all of them distinct. Against 50-digit
-arithmetic (mpmath), the relative error of the log is at most 5 × 10⁻¹⁶
-for the U test and 7 × 10⁻¹² for the F-test.
+five classes. The module's tutorial uses 2,000 synthetic features with
+1,500 samples per class, 300 of them with signal. There SciPy gives p = 0
+to 170 features with the U test, and to 189 with the F-test. The logs keep
+all of them distinct. Against 50-digit arithmetic (mpmath), the relative
+error of the log is at most 5 × 10⁻¹⁶ for the U test and 7 × 10⁻¹² for
+the F-test.
 
 **A better model, not built.** Each gene could be described by four
 numbers. Two are the class sizes. The other two are the share of each
@@ -246,6 +246,7 @@ not assume what it is meant to find.
 | The comparison (chapter 7) | Random, Mann-Whitney, Lasso, tree importance, RFE, HC2004, HC2008 |
 | The frontier (chapter 8) | Random, Mann-Whitney, HC2008, correlation (Spearman), mutual information, Lasso (two solvers), tree importance, RFE (two solvers), RFECV, Sequential |
 | The classifier study (chapter 7) | Random and Mann-Whitney, with five classifiers |
+| The unseen dataset (section 8.8) | Random, Mann-Whitney, HC2008, correlation (Spearman), mutual information, Lasso (PPDNA), RFE (Newton), RFECV (Newton, scored by AUC), Sequential (Newton) |
 
 Variance threshold, ANOVA, Percentile, FDR and FWE are in the package and
 tested. They are not in the experiments. The last four use the F-test,

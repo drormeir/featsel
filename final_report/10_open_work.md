@@ -2,7 +2,7 @@
 
 [Back to contents](README.md) · Previous: [9. Conclusions](09_conclusions.md) · Next: [Appendix A: glossary](appendix_a_glossary.md)
 
-This chapter lists what is missing, honestly. Section 10.1 is work that
+This chapter lists what is missing. Section 10.1 is work that
 belongs to this project's four tasks but is not finished. Section 10.2 is
 research beyond the project's scope.
 
@@ -45,10 +45,10 @@ label was made, instead of inferring it. The plan, step by step, is in
 ## 10.2 Beyond this project
 
 **A dataset where Higher Criticism should work.** HC is built for rare,
-weak, independent signal. Both our datasets have widespread, correlated
-signal, so HC acted as a top-10% filter. A dataset with rare signal, or a
-simulation with a known number of useful features, would test whether HC
-picks its own count well. HC with the exact variance of the
+weak, independent signal. All three of our datasets have widespread,
+correlated signal, so HC acted as a top-10% filter. A dataset with rare
+signal, or a simulation with a known number of useful features, would test
+whether HC picks its own count well. HC with the exact variance of the
 sorted p-values needs no test of its own: it selects the same genes as
 HC2008 (section 4.4).
 

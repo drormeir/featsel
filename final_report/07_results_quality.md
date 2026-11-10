@@ -26,8 +26,9 @@ gap over the random control.
 
 **Earlier runs.** Before these final runs, smaller versions of the
 comparison ran while the protocol was being fixed, with other numbers of
-splits, 64-bit data on SCAN-B, and 200 trees in the forest. Their results are not reported. The
-text cites one only where it checks a setting of the final run.
+splits, 64-bit data on SCAN-B, and 200 trees in the forest. Their results
+are not reported. The text cites one only where it checks a setting of the
+final run.
 
 The main score is macro-F1, not AUC, because the runner began recording
 AUC only after the comparison ran. Macro-F1 depends on the classifier's
@@ -107,13 +108,13 @@ C are in [Appendix D](appendix_d_comparison_tables.md).
 5. **RFE is the weakest selector.** It beats random only up to k = 20, and
    falls below it from k = 500. Per task, it fails at small `k` on LumA,
    LumB and Normal. At k = 5 its macro-F1 is 0.35 on LumA, below random
-   selection's 0.61. On Basal and Her2 it is close to the others.
-   A check of its choices showed many near-constant genes: genes at one
-   value in 97% to 100% of patients. Such genes are 12% of all genes. At
-   k = 10 they are 20% to 80% of RFE's picks, per task. Removing half the
-   genes per round is not the cause. A preliminary run of the frontier
-   (section 8.2) used a step of 0.1 and picked them too: 22% to 62% at
-   k = 10. It scored near random there, AUC 0.78 to 0.79 against 0.76. liblinear and the
+   selection's 0.61. On Basal and Her2 it is close to the others. A check
+   of its choices showed many near-constant genes: genes at one value in
+   97% to 100% of patients. Such genes are 12% of all genes. At k = 10 they
+   are 20% to 80% of RFE's picks, per task. Removing half the genes per
+   round is not the cause. A preliminary run of the frontier (section 8.2)
+   used a step of 0.1 and picked them too: 22% to 62% at k = 10. It scored
+   near random there, AUC 0.78 to 0.79 against 0.76. liblinear and the
    exact Newton solver chose the same genes in 86 of 100 cells. So the
    solver is not the cause either. At C = 0.01, the SVM's weights are a
    poor guide on this data.
@@ -124,10 +125,10 @@ C are in [Appendix D](appendix_d_comparison_tables.md).
 ## 7.3 Are the differences real? Paired tests
 
 All methods ran on the same 16 splits. So we compare them split by split.
-The test is the two-sided Wilcoxon signed-rank test (Wilcoxon 1945), on each split's mean
-over tasks. With 16 splits the smallest possible p-value is 3 × 10⁻⁵. We ran 81
-tests on SCAN-B, so we require p < 0.05 / 81 = 0.0006 (Bonferroni) before
-calling a difference real.
+The test is the two-sided Wilcoxon signed-rank test (Wilcoxon 1945), on
+each split's mean over tasks. With 16 splits the smallest possible p-value
+is 3 × 10⁻⁵. We ran 81 tests on SCAN-B, so we require p < 0.05 / 81 =
+0.0006 (Bonferroni) before calling a difference real.
 
 | Comparison on SCAN-B | Result |
 |---|---|
@@ -184,11 +185,6 @@ Mann-Whitney is both good and stable. The forest had only 50 trees here,
 which makes its importances noisier. An earlier run of the BreastMNIST
 comparison used 200 trees. Its scores were within 0.013 of the 50-tree
 scores at every `k`, and the forest's Kuncheva index was 0.32 to 0.51.
-
-![Selection stability](../figures/selection_stability.png)
-
-*Figure 7.1. Mann-Whitney is stable across splits. Random selection is at
-0 by construction. Classifier study, 3 splits.*
 
 ## 7.5 Higher Criticism did not choose its own count
 
@@ -301,12 +297,12 @@ given the model's own regularization.
 
 ![Macro-F1 against k by classifier](../figures/macro_f1_vs_k.png)
 
-*Figure 7.2. Mann-Whitney against random selection, five classifiers,
+*Figure 7.1. Mann-Whitney against random selection, five classifiers,
 SCAN-B, 3 splits. The gap is largest at small `k`.*
 
 ![Gain over random by classifier](../figures/gain_over_random.png)
 
-*Figure 7.3. The gain from selecting, by classifier. It shrinks with `k` for
+*Figure 7.2. The gain from selecting, by classifier. It shrinks with `k` for
 every classifier. For k-NN it stays large. k-NN suffers most from
 irrelevant features.*
 
@@ -320,8 +316,13 @@ irrelevant features.*
 
 ![Gain by subtype](../figures/gain_by_subtype.png)
 
-*Figure 7.4. The gain differs by subtype: at k = 10, from 0.14 (LumA) to
+*Figure 7.3. The gain differs by subtype: at k = 10, from 0.14 (LumA) to
 0.31 (Her2).*
+
+![Selection stability](../figures/selection_stability.png)
+
+*Figure 7.4. Mann-Whitney is stable across splits. Random selection is at
+0 by construction. Classifier study, 3 splits.*
 
 **An earlier run with the F-test.** Before the switch to the U test, the
 same study ran with ANOVA-F selection on 12 splits. It showed the same

@@ -30,7 +30,8 @@ with another shrinkage threshold would give a different list.
 
 ## C.2 The source of PAM50, and recovering its genes
 
-The report discusses where the PAM50 label comes from, and tests whether feature selection recovers the genes that define it.
+The report discusses where the PAM50 label comes from, and tests whether
+feature selection recovers the genes that define it.
 
 **Still open.** How SCAN-B assigned `pam50 subtype`. The GEO notes say
 only that an implementation of Parker's method was used, after centring
@@ -66,11 +67,11 @@ HC score is still rising at that edge. HC2008 kept 2,855 to 2,856 genes on
 every task and split. HC2004 kept 1 to 6 genes, with a median of 1.
 
 HC first scored genes by the F-test. The switch to the U test was checked
-in a one-split test on SCAN-B; the comparison never ran HC with the
-F-test. In that check, HC2008 still kept 2,855 genes on every task. But 9% to 14% of them changed, and its macro-F1 moved from
-0.871 to 0.873. HC2004 kept 1 gene on every task, as before, except 4 on
-LumA. Its macro-F1 moved from 0.744 to 0.707. One split cannot tell these
-changes from noise.
+in a one-split test on SCAN-B; the comparison never ran HC with the F-test.
+In that check, HC2008 still kept 2,855 genes on every task. But 9% to 14%
+of them changed, and its macro-F1 moved from 0.871 to 0.873. HC2004 kept 1
+gene on every task, as before, except 4 on LumA. Its macro-F1 moved from
+0.744 to 0.707. One split cannot tell these changes from noise.
 
 BreastMNIST was the place to check whether HC behaves differently. Its
 signal is not rare either (chapter 2). HC2008

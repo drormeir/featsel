@@ -96,20 +96,19 @@ becomes five binary tasks.
 This is a comparative study, not a new method. The project uses published
 methods. The one change is in HC2008: it centres each sorted p-value at
 its exact mean (section 4.4). The aim is a fair comparison under one
-protocol, and a fast, reliable tool to run it. `docs/SCOPE.md` in the
-repository records what is in and out of scope.
+protocol, and a fast, reliable tool to run it.
 
 ## 1.6 What earlier work found
 
 **Comparative studies on gene expression.** Dudoit et al. (2002) compared
-classifiers on three tumour gene expression datasets. Simple methods did
-as well as complex ones. Examples are diagonal linear discriminant
-analysis and nearest neighbours. Statnikov et al. (2005) compared
-classifiers and gene selection methods on many multiclass cancer
-datasets. They found multiclass SVMs the most accurate classifiers.
-Bolón-Canedo et al. (2014) review the microarray datasets in common use.
-They also review the selection methods applied to them. Saeys et al. (2007) review selection methods for
-bioinformatics as a whole.
+classifiers on three tumour gene expression datasets. Simple methods did as
+well as complex ones. Examples are diagonal linear discriminant analysis
+and nearest neighbours. Statnikov et al. (2005) compared classifiers and
+gene selection methods on many multiclass cancer datasets. They found
+multiclass SVMs the most accurate classifiers. Bolón-Canedo et al. (2014)
+review the microarray datasets in common use. They also review the
+selection methods applied to them. Saeys et al. (2007) review selection
+methods for bioinformatics as a whole.
 
 **How our data differs.** Most of those datasets have tens to a few
 hundred samples. SCAN-B has thousands of patients. So its test sets are
@@ -128,4 +127,5 @@ mislead. Chapter 3 shows how this project handles each.
 **Where this project stands.** It compares methods from all three families,
 and Higher Criticism, under one protocol. It runs on one large gene
 expression cohort and one image dataset. This tests whether the ranking of
-methods carries over between domains.
+methods carries over between domains. A second image dataset, unseen
+during the design, then tests the finished pipeline (section 8.8).

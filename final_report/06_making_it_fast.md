@@ -11,8 +11,8 @@ on several sizes, never from one timing. The speed-ups in this chapter's
 tables come from such series. The text also quotes a few single timings,
 called so where they appear. They explain a design choice, such as RFE's
 step, the Lasso solver's stopping rule or the GPU forest trials, and claim
-no speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM, and an NVIDIA
-GTX 1650 with 4 GB.
+no speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM,
+and an NVIDIA GTX 1650 with 4 GB.
 
 ## 6.1 The runner against plain scikit-learn
 
@@ -70,10 +70,10 @@ both sides alike.
 
 The original design had 100 splits at three training fractions (300 in
 all), 6 selectors and nested tuning. We extrapolated its cost from the
-classifier study's 12-split run with the F-test (section 7.7).
-Without the linear SVM, it needed about 30 to 35 CPU-hours. That is a day
-and a half on one core. More cores shorten it in proportion. RFE removing
-one feature per round would take about 2,300 hours. Removing 10% per round and ranking once
+classifier study's 12-split run with the F-test (section 7.7). Without the
+linear SVM, it needed about 30 to 35 CPU-hours. That is a day and a half on
+one core. More cores shorten it in proportion. RFE removing one feature per
+round would take about 2,300 hours. Removing 10% per round and ranking once
 takes about 3. This is the specification's point that some techniques are
 impractical in this setting. A linear SVM classifier with scikit-learn's
 default solver would have cost hundreds of hours more. We cut the grid

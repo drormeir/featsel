@@ -132,11 +132,12 @@ a score in one selector and a position in another.
 **Seeds.** Every selector that uses randomness subclasses
 `FeatureSelectorRandom`. It takes `random_state`, 42 by default, and it
 must be an integer: `random_state=None` is not allowed, so every fit
-repeats. At the start of `fit` it seeds Python's and NumPy's random generators from it. It
-also seeds PyTorch's, once PyTorch is imported. A repeated fit therefore
-picks the same genes. Selectors without randomness take no seed. We
-rejected a generator kept inside the object. scikit-learn's `clone` does
-not copy it, and its draws would depend on the order of fits.
+repeats. At the start of `fit` it seeds Python's and NumPy's random
+generators from it. It also seeds PyTorch's, once PyTorch is imported. A
+repeated fit therefore picks the same genes. Selectors without randomness
+take no seed. We rejected a generator kept inside the object.
+scikit-learn's `clone` does not copy it, and its draws would depend on the
+order of fits.
 
 **Input.** Every selector accepts a NumPy array, a pandas DataFrame or a
 PyTorch tensor, on the CPU or on a GPU (chapter 6). Input is checked in
@@ -256,8 +257,8 @@ need it.
   what the index protects against.
 - A folder named `datasets/`. The Hugging Face `datasets` library would
   hide it on import.
-- A dataset YAML naming the loader. It repeated the choices `load_xy` already makes, so the two could drift
-  apart.
+- A dataset YAML naming the loader. It repeated the choices `load_xy`
+  already makes, so the two could drift apart.
 
 **Limits.** The runner imports the module a config names. The module
 follows one fixed convention (`NAME`, `TARGET`, `load_xy`), with no
