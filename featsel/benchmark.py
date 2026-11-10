@@ -195,21 +195,24 @@ def benchmark(name, X, y, n_genes=N_GENES, repeats=2, max_seconds=60.0, gpu=None
     (power, heat) shifts all later fits, and more repeats do not remove it.
 
     The genes at each size are the first n_genes columns of X, so each
-    larger set contains the smaller ones.
+    larger set contains the smaller ones. Where the original stopped before
+    a size, the overlap with it is NaN there.
     """
     rows, reference = [], {}
-    for label, build in variants(name, gpu).items():
+    for i, (label, build) in enumerate(variants(name, gpu).items()):
         for n in sorted(n_genes):
             X_n = np.ascontiguousarray(X[:, :n])
             seconds, supports, device = _fits(build, X_n, y, repeats, max_seconds)
-            reference.setdefault(n, supports[0])
+            if i == 0:
+                reference[n] = supports[0]
             rows.append({
                 'variant': label, 'device': device, 'n_genes': n, 'n_patients': len(y),
                 'fits': len(supports), 'median_s': float(np.median(seconds)),
                 'min_s': min(seconds), 'max_s': max(seconds),
                 'n_selected': int(supports[0].sum()),
                 'reproducible': all(np.array_equal(supports[0], s) for s in supports[1:]),
-                'jaccard_vs_original': _jaccard(supports[0], reference[n]),
+                'jaccard_vs_original': (_jaccard(supports[0], reference[n])
+                                        if n in reference else float('nan')),
             })
             if rows[-1]['median_s'] > max_seconds:
                 break
