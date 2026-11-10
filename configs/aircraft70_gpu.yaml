@@ -1,0 +1,62 @@
+# FGVC-Aircraft, Boeing 737 against the Airbus A320 family: an unseen
+# dataset run end to end on the GPU. 1,200 photos, each a 2,048-number
+# ResNet-50 embedding (featsel_datasets/fgvc_aircraft/). Every selector
+# runs with device='cuda'; the embeddings are computed on the GPU too.
+# The classifier is scikit-learn's logistic regression, on the CPU.
+# Run with: python -m featsel.run --config configs/aircraft70_gpu.yaml --n-jobs 1
+#
+# 70% of 1,200 images is 840 training images, so k stops at 500.
+# Random at k = 2048 is every feature, no selection.
+# Three fits per selection, to time each one without a long run.
+
+dataset: "featsel_datasets.fgvc_aircraft.featsel_view"
+target: "family"
+
+output: "../results/aircraft70_gpu.csv"
+
+seed: 42
+n_splits: 10
+train_sizes: [0.7]
+preprocess: ["standard"]
+selection_repeats: 3
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  - name: RandomSelector
+    k: [10, 50, 250, 500, 2048]
+  - name: MannWhitneySelector
+    k: [10, 50, 250, 500]
+    params: {device: "cuda"}
+  - name: HigherCriticismSelector
+    label: HC2008
+    params: {variant: "2008", device: "cuda"}
+  - name: CorrelationSelector
+    k: [10, 50, 250, 500]
+    params: {method: "spearman", device: "cuda"}
+  - name: MutualInfoSelector
+    k: [10, 50, 250, 500]
+    params: {device: "cuda"}
+  - name: LassoSelector
+    label: Lasso_ppdna
+    k: [10, 50, 250, 500]
+    params: {C: 1.0, solver: "ppdna", device: "cuda"}
+  - name: RFESelector
+    label: RFE_newton
+    k: [10, 50, 250, 500]
+    params: {C: 0.01, solver: "newton", device: "cuda"}
+  - name: RFECVSelector
+    label: RFECV_newton_auc
+    params: {C: 0.01, cv: 5, scoring: "roc_auc", solver: "newton", device: "cuda"}
+  - name: SequentialSelector
+    label: Sequential_newton
+    k: [5, 10]
+    params: {cv: 5, solver: "newton", device: "cuda"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
