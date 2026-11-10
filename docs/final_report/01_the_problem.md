@@ -35,9 +35,9 @@ This setting is often written p ≫ n: many more features (p) than samples
 separate any labeling of the training samples perfectly, even random
 labels. A perfect training score then says nothing.
 
-**False discoveries.** Testing 28,552 genes one by one at the usual 5%
-level would flag about 1,400 genes by chance alone, even if no gene were
-related to the label.
+**False discoveries.** Suppose no gene were related to the label. Testing
+28,552 genes one by one at the usual 5% level would still flag about 1,400
+genes by chance alone.
 
 **Correlated features.** Genes work in groups. When one gene of a group
 rises, hundreds of others rise with it. So many different gene sets can
@@ -75,7 +75,7 @@ and writes one row per experiment to a CSV table. See
 [chapter 5](05_the_software.md).
 
 **The main question.** For a given number of features `k`, which method
-gives the best classifier, and by how much does it beat choosing `k`
+gives the best classifier? And by how much does it beat choosing `k`
 features at random? The random control matters: if random genes do almost
 as well, a method has not found much.
 
@@ -92,8 +92,9 @@ tasks.
 ## 1.5 Scope
 
 This is a comparative study, not a new method. The project uses published
-methods only. The aim is a fair comparison under one protocol, and a fast,
-reliable tool to run it. `SCOPE.md` in the repository records what is in
+methods. The one change is in HC2008: it centres each sorted p-value at
+its exact mean (section 4.4). The aim is a fair comparison under one
+protocol, and a fast, reliable tool to run it. `SCOPE.md` in the repository records what is in
 and out of scope.
 
 ## 1.6 What earlier work found

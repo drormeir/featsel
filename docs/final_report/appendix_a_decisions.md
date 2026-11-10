@@ -26,7 +26,7 @@ the project's working sessions. New decisions are added here.
 | 2026-10-17 | Where a dataset's choices live. | In `featsel_view.py`; the experiment config names the module. | A dataset YAML naming the loader (it repeated the choices, so the two could drift); moving `k` into the view (the config would no longer show the whole experiment). |
 | 2026-10-24 | Long runs died silently when memory ran out. | A memory cap per worker turns exhaustion into a Python `MemoryError`; the cell is skipped and the run goes on. Later: resume, and restart with fewer workers. | Running with fewer workers always (wastes the machine). |
 | 2026-10-31 | The runner refit rank-based selectors for every `k`. | A class flag `rank_once`: fit once per split, cut the ranking at each `k`. | A list of class names kept in the runner. |
-| 2026-11-01, 2026-11-07 | Reproducibility with several random generators. | `random_state` defaults to 42; every selector seeds Python's, NumPy's and PyTorch's generators at the start of `fit`. | A generator stored in the instance (scikit-learn's `clone` breaks it); passing one shared generator (breaks repeatability). |
+| 2026-11-01, 2026-11-07 | Reproducibility with several random generators. | `random_state` defaults to 42; every selector that uses randomness seeds Python's, NumPy's and PyTorch's generators at the start of `fit` (since 2026-11-09 through `FeatureSelectorRandom`; selectors without randomness take no seed). | A generator stored in the instance (scikit-learn's `clone` breaks it); passing one shared generator (breaks repeatability). |
 | 2026-11-09 | Per-feature scores all lived under `feature_importances_`, with different meanings. | Each selector names its measurement (`scores_`, `log_pvalues_`, `coef_`, `variances_`); `ranking()` only where a cut equals a fit. | One shared attribute name. |
 
 ## Data
@@ -57,6 +57,7 @@ the project's working sessions. New decisions are added here.
 | 2026-10-31 | Which test the filters use. | Mann-Whitney replaces ANOVA in every experiment config. | Keeping the F-test (cheaper, about 1 s against 10 s, but its assumptions fail here). |
 | 2026-11-07 | Pearson correlation with a gene on an arbitrary scale. | Spearman (rank) correlation in the frontier. | Pearson (its value changes with the transform). |
 | 2026-11-07 | What to time, how often. | Selection time only; median of 10 fits per selection; the device recorded. | One fit (noisy); including classifier time. |
+| 2026-11-10 | `SCOPE.md` allowed published Higher Criticism only, but HC2008 uses i/(N+1) where the papers use i/N. | Keep i/(N+1), say so in section 4.4, and drop the rule from `SCOPE.md`. | Switching HC2008 to i/N (its results in chapters 7 and 8 would need a rerun). |
 
 ## Speed and hardware
 

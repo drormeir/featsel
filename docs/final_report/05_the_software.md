@@ -111,8 +111,8 @@ import the class: a misspelled class name then fails at import, not at run
 time.
 
 **Rank once.** Some methods produce a full ranking whose top `k` equals a
-separate fit at that `k`: Mann-Whitney, Lasso, tree importance and RFE
-(section 4.2). They set a class flag, `rank_once`, and give their order
+separate fit at that `k`. They are Mann-Whitney, Lasso, tree importance
+and RFE (section 4.2). They set a class flag, `rank_once`, and give their order
 through `ranking()`. The runner fits them once per split and cuts the
 ranking at every `k`. Tests check that each cut equals a separate fit.
 
@@ -123,9 +123,11 @@ measurement under the name of what it measures: `scores_`,
 almost every selector set `feature_importances_`, and it meant a score in
 some, a position in RFE, and nothing in the random selector.
 
-**Seeds.** Every selector seeds Python's, NumPy's and PyTorch's random
-generators from its `random_state` (default 42) at the start of `fit`. A
-repeated fit therefore picks the same genes. A generator kept inside the
+**Seeds.** Every selector that uses randomness subclasses
+`FeatureSelectorRandom`. It takes `random_state`, 42 by default. At the
+start of `fit` it seeds Python's, NumPy's and PyTorch's random generators
+from it. A repeated fit therefore picks the same genes. Selectors without
+randomness take no seed. A generator kept inside the
 object was rejected: scikit-learn's `clone` does not copy it, and its draws
 would depend on the order of fits.
 
@@ -194,13 +196,18 @@ columns = sel.get_support(indices=True)          # the 64 chosen dimensions
 
 A small model can then be trained on those 64 dimensions only.
 
-**Rejected selector designs.** Keeping the wrapper (the silent typo stays);
-a hand-written name-to-class table (every selector needs a second edit); a
-short declared name per class (it protects only against renames, which
-aliases cover); one file or folder per family (unmanageable once a method
-has CPU and GPU versions); reimplementing every scikit-learn method
-(most selectors cost seconds while model fitting costs minutes, so this
-gains nothing unless a timing shows it).
+**Rejected selector designs.**
+
+- Keeping the wrapper. The silent typo would stay.
+- A hand-written name-to-class table. Every selector would need a second
+  edit.
+- A short declared name per class. It protects only against renames, and
+  aliases cover those.
+- One file or folder per family. It becomes unmanageable once a method has
+  CPU and GPU versions.
+- Reimplementing every scikit-learn method. Most selectors cost seconds
+  while model fitting costs minutes. So this gains nothing unless a timing
+  shows it.
 
 ## 5.3 Datasets: one loader per dataset
 
@@ -214,10 +221,9 @@ package (decided 2026-10-16).
   and `y`.
 
 A config names the view module. A new dataset needs only a new folder with
-these two files; nothing in the package changes. This design was chosen
-over a generic loader driven by a YAML description, because real datasets
-arrive in shapes no YAML schema foresees (several tables, archives,
-images).
+these two files; nothing in the package changes. We rejected a generic
+loader driven by a YAML description. Real datasets arrive in shapes no
+YAML schema foresees: several tables, archives, images.
 
 **Why.** The course's SCAN-B files came with no recorded source or
 filters. Their origin, their patients and how their genes were chosen
@@ -271,12 +277,13 @@ models:
     params: {max_iter: 1000}
 ```
 
-The runner turns a multiclass target into one task per class, draws the
-splits, and runs every task × split × selector × `k` × classifier. Each
-finished cell becomes a row of the CSV: the scores, the chosen genes, the
-selection time, peak memory, device, and whether repeated fits agreed. A
-JSON file beside the CSV records the machine, the library versions and the
-git commit, at the start and at the end of the run.
+The runner turns a multiclass target into one task per class. It draws
+the splits. Then it runs every combination of task, split, selector, `k`
+and classifier. Each finished cell becomes a row of the CSV: the scores,
+the chosen genes, the selection time, peak memory, device, and whether
+repeated fits agreed. A JSON file beside the CSV records the machine, the
+library versions and the git commit. It is written at the start and again
+at the end of the run.
 
 Analysis is separate from running: `featsel.analysis`, `scripts/` and the
 notebooks read the CSV. A new plot never needs a new run.
@@ -310,9 +317,9 @@ per worker.
 On the 16 GB laptop, six workers ran out of memory and the operating system
 stopped the run; it resumed with fewer workers. With a cap of 3 GB per
 worker, the U-test selectors were skipped, and a second resume at a higher
-cap filled them in. Holding the data as 32-bit floats (section 3.12) then
-cut the U-test selectors' peak memory enough for 4 workers to fit under a
-3 GB cap, where 2 fit before.
+cap filled them in. Then we held the data as 32-bit floats (section 3.12).
+This cut the U-test selectors' peak memory. Now 4 workers fit under a 3 GB
+cap, where 2 fit before.
 
 **The cap counts data memory, not address space.** PyTorch's GPU libraries
 reserve address space they never use. Under an address-space cap below
@@ -330,9 +337,11 @@ scikit-learn method:
 - its `fit` is at most 5% slower;
 - its GPU path selects the same features as its CPU path.
 
-The tests use binary tasks with positive fractions of 50%, 20%, 10% and 5%,
-because our real tasks are imbalanced. The runner has its own tests, for
-example that a parallel run gives the same results as a sequential one.
+These shared checks use one balanced binary dataset. Our real tasks are
+imbalanced. So the GPU paths of Lasso and mutual information are also
+tested at positive fractions of 50%, 20%, 10% and 5%. The runner has its
+own tests, for example that a parallel run gives the same results as a
+sequential one.
 
 ## 5.7 Where to find things
 

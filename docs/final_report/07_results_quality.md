@@ -30,9 +30,9 @@ Results: [`results/comparison_scanb.csv`](../../results/comparison_scanb.csv),
 Full tables, per task, with times and stability:
 [Appendix E](appendix_e_comparison_tables.md).
 
-Each cell below is macro-F1: averaged over the tasks within a split, then
-the median over the splits, with the first and third quartiles in
-brackets.
+Each cell below is macro-F1. It is averaged over the tasks within a split.
+Then we take the median over the splits. The first and third quartiles
+are in brackets.
 
 ## 7.2 SCAN-B
 
@@ -99,8 +99,8 @@ at small `k`.*
    below random selection of 1,000 genes.
 5. **RFE is the weakest selector.** It beats random only up to k = 20, and
    falls below it from k = 500. Per task, it fails at small `k` on LumA,
-   LumB and Normal: at k = 5 its macro-F1 is 0.35 on LumA, below random
-   selection's 0.61, while on Basal and Her2 it is close to the others.
+   LumB and Normal. At k = 5 its macro-F1 is 0.35 on LumA, below random
+   selection's 0.61. On Basal and Her2 it is close to the others.
    A check of its choices showed many near-constant genes: genes at one
    value in 97% to 100% of patients. With a strong penalty (C = 0.01) and
    half the genes removed per round, the SVM's weights are a poor guide on
@@ -111,8 +111,8 @@ at small `k`.*
 
 ## 7.3 Are the differences real? Paired tests
 
-All methods ran on the same 16 splits, so we compare them split by split
-with the Wilcoxon signed-rank test (two-sided), on each split's mean over
+All methods ran on the same 16 splits. So we compare them split by split,
+with the two-sided Wilcoxon signed-rank test on each split's mean over
 tasks. With 16 splits the smallest possible p-value is 3 × 10⁻⁵. We ran 81
 tests on SCAN-B, so we require p < 0.05 / 81 = 0.0006 (Bonferroni) before
 calling a difference real.
@@ -129,17 +129,17 @@ calling a difference real.
 
 On BreastMNIST (66 tests, threshold 0.0008), every method beats random at
 every `k` (p ≤ 2 × 10⁻⁵). Among the methods, only a few differences pass
-the threshold: Lasso beats Mann-Whitney at k = 50 and 100, and at k = 20
-Lasso beats RFE while tree importance beats both Mann-Whitney and RFE. The
+the threshold. Lasso beats Mann-Whitney at k = 50 and 100. At k = 20,
+Lasso beats RFE, and tree importance beats both Mann-Whitney and RFE. The
 rest of the top group cannot be told apart.
 
 Script: [`scripts/paired_tests.py`](../../scripts/paired_tests.py).
 Tables: [`figures/paired_tests_comparison_scanb.csv`](figures/paired_tests_comparison_scanb.csv),
 [`figures/paired_tests_comparison_breastmnist.csv`](figures/paired_tests_comparison_breastmnist.csv).
 
-**What the tests do not cover.** The splits reuse one cohort, so the tests
-say the difference is stable under re-splitting, not that it will hold for
-new patients (chapter 3).
+**What the tests do not cover.** The splits reuse one cohort. So the tests
+say the difference is stable under re-splitting. They do not say it will
+hold for new patients (chapter 3).
 
 ## 7.4 Stability: same score, different genes
 
@@ -158,8 +158,9 @@ HC2008 scores 0.87 at its 2,855 genes, the same as Mann-Whitney at that
 size. HC2004 scores 0.59.
 
 On BreastMNIST (190 pairs), Mann-Whitney and HC2008 are again the most
-stable, about 0.65. Lasso and tree importance are the least, 0.14 to 0.30,
-and RFE lies near 0.26.
+stable. Mann-Whitney scores 0.53 to 0.69 over `k`, and both score 0.65 at
+204 features. Lasso and tree importance are the least stable, 0.14 to
+0.30. RFE lies near 0.26.
 
 Tree importance scores best on SCAN-B and is the least stable. Its top
 genes change from split to split, while its score barely moves. Lasso,
@@ -182,13 +183,15 @@ gave scores within 0.013 at every `k`, and raised its Kuncheva index to
 | Variant | Genes kept on SCAN-B | Macro-F1 |
 |---|---|---|
 | HC2004 | median 1 (2 on Normal); 1 to 6 over all tasks and splits | 0.638 |
-| HC2008 | 2,855 on every task and split | 0.883 |
+| HC2008 | 2,855 on 77 of the 80 task-splits, 2,856 on the other 3 | 0.883 |
 
 **HC2008 always stopped at the edge of its search**, alpha0 · N = 0.1 ×
-28,552 = 2,855 genes. At that size it equals Mann-Whitney at k = 2,855
-exactly, since both rank genes by the same U test. Its high score comes from
-using ten times more genes than any fixed `k`, not from a better choice;
-random selection of 2,855 genes scores only 0.017 [0.014, 0.018] lower.
+28,552 = 2,855 genes. It kept one gene more three times, when the gene
+after the edge tied in p-value with the one at the edge. At that size it
+equals Mann-Whitney at k = 2,855 (median difference 0.000), since both
+rank genes by the same U test. Its high score comes from
+using ten times more genes than any fixed `k`, not from a better choice.
+Random selection of 2,855 genes scores only 0.017 [0.014, 0.018] lower.
 
 On BreastMNIST it again stopped at its edge, 204 of 2,048 features, and
 again equalled Mann-Whitney at k = 204 on every split. There it gains
@@ -199,7 +202,8 @@ not.
 **HC2004 kept one gene.** Its denominator, √(p(1 − p)), is tiny for the
 smallest p-values, so the strongest gene wins alone. Per task its
 macro-F1 on SCAN-B runs from 0.48 (Normal, near chance) to 0.80 (LumA). On
-BreastMNIST it kept 1 or 2 features and scored 0.521.
+BreastMNIST it kept 1 or 2 features on 18 of the 20 splits, and 4 and 6
+on the other two. It scored 0.521.
 
 **Why.** HC is designed for rare, weak, independent signal. Our data has
 the opposite: thousands of genes carry signal, and they are correlated
@@ -273,10 +277,10 @@ Source: [`scripts/pam50_recovery.py`](../../scripts/pam50_recovery.py),
 
 ## 7.7 Does the classifier matter?
 
-A side study ran Mann-Whitney and random selection with five classifiers
-(logistic regression, linear SVM, random forest, k-nearest neighbours,
-shrinkage LDA), on 3 splits, with C fixed. The run took 9 minutes
-on 2 workers. It asks how much external selection is worth to a model,
+A side study ran Mann-Whitney and random selection with five classifiers.
+They were logistic regression, linear SVM, random forest, k-nearest
+neighbours and shrinkage LDA. It used 3 splits, with C fixed. The run took
+9 minutes on 2 workers. It asks how much external selection is worth to a model,
 given the model's own regularization.
 
 ![Gain over random by classifier](../../figures/gain_over_random.png)
@@ -295,9 +299,12 @@ irrelevant features.*
 
 **An earlier run with the F-test.** Before the switch to the U test, the
 same study ran with ANOVA-F selection on 12 splits. It showed the same
-pattern: ANOVA beat random by 0.20 to 0.24 at k = 10 for every classifier;
-LDA fell below random at k = 1000; the gain at k = 10 ran from 0.15 (LumA)
-to 0.33 (Her2); and logistic regression was best, 0.869 at k = 1000.
+pattern:
+
+- ANOVA beat random by 0.20 to 0.24 at k = 10, for every classifier.
+- LDA fell below random at k = 1000.
+- The gain at k = 10 ran from 0.15 (LumA) to 0.33 (Her2).
+- Logistic regression was best, 0.869 at k = 1000.
 
 ![Gain by subtype](../../figures/gain_by_subtype.png)
 
@@ -325,7 +332,7 @@ Notebook: [`notebooks/02_classifier_behaviour.ipynb`](../../notebooks/02_classif
 | Lasso | **0.798** [0.780, 0.816] | | **0.815** [0.796, 0.827] | |
 | Tree importance | 0.773 [0.766, 0.788] | | 0.793 [0.785, 0.807] | |
 | RFE | 0.790 [0.774, 0.802] | | 0.803 [0.797, 0.812] | |
-| HC2004 | | | | 0.521 [0.498, 0.583] (1 or 2 features) |
+| HC2004 | | | | 0.521 [0.498, 0.583] (1 to 6 features, median 1) |
 | HC2008 | | | | 0.790 [0.771, 0.810] (204 features) |
 
 **Gain over random selection**, same split and `k`:
@@ -357,8 +364,8 @@ finds that, on this dataset, using all 2,048 features scores best in AUC.
 ## 7.9 Discussion
 
 **Why selection matters most at small budgets.** The signal is spread over
-many features. On SCAN-B, each PAM50 gene moves with hundreds of others,
-so a random draw of a few hundred genes already holds good stand-ins for
+many features. On SCAN-B, each PAM50 gene moves with hundreds of others.
+So a random draw of a few hundred genes already holds good stand-ins for
 most of them. On BreastMNIST, a quarter of the features pass the U test at
 a 5% false discovery rate. Again, random draws find signal easily. This
 agrees with Neekhra et al. (2025): small random subsets often match
@@ -371,9 +378,9 @@ alone and ignores redundancy. It still sits in the top group, and it is by
 far the most stable. This parallels Dudoit et al. (2002), where simple
 classifiers did as well as complex ones on tumour gene expression.
 
-**Why RFE is weak on SCAN-B.** One likely cause is the step of 0.5: a
-single SVM fit on all 28,552 genes removes half of them at once, with a
-fixed C = 0.01. On BreastMNIST there are far fewer features, so each
+**Why RFE is weak on SCAN-B.** One likely cause is the step of 0.5. A
+single SVM fit on all 28,552 genes removes half of them at once. And its
+C is fixed at 0.01. On BreastMNIST there are far fewer features, so each
 removal matters less, and RFE catches up from k = 100. But the step is not
 the whole cause. An earlier run with step 0.1 gave about the same scores
 on SCAN-B. Step 0.1 took about 35 s per fit. In the frontier, also with
@@ -386,11 +393,11 @@ penalty is fixed here, so Lasso's curve shows that setting's limit, not
 the method's. On BreastMNIST a few hundred non-zero weights are most of
 what `k` asks for, so Lasso does not stall there.
 
-**What carries over between datasets.** The main pattern holds on both:
-every method beats random in the median, the gain is largest at small
-`k`, and HC2008 stops at its edge. The fine ranking does not carry over:
-tree importance leads on gene expression, Lasso and tree importance share
-the lead on image embeddings.
+**What carries over between datasets.** The main pattern holds on both.
+Every method beats random in the median. The gain is largest at small
+`k`. HC2008 stops at its edge. The fine ranking does not carry over. Tree
+importance leads on gene expression. Lasso and tree importance share the
+lead on image embeddings.
 
 **Threats to validity.**
 

@@ -103,8 +103,8 @@ This has two consequences.
    50 genes ([chapter 7](07_results_quality.md), section 7.6).
 
 **The ER label in the course's copy is also computed, not measured.** It
-equals `er prediction mgc` on all 3,069 samples, coded 1 = negative and
-2 = positive. It disagrees with the pathologist on 235 of the 2,870
+equals `er prediction mgc` on all 3,069 samples. It is coded 1 = negative
+and 2 = positive. It disagrees with the pathologist on 235 of the 2,870
 samples that have a pathologist value. The pathologist value is missing
 for 199 samples. An earlier course report on this data (unpublished)
 treated both labels as clinical facts. It found ER "somewhat trivial" to
@@ -142,9 +142,9 @@ cell-cycle genes. The U test scores each gene alone, so a gene that moves
 with ESR1 separates Basal from the rest as strongly as ESR1 does. As a
 result, in every task thousands of genes carry signal: more than 10% of
 all genes. This was first seen in a one-split smoke test on 2026-10-24. It
-explains several results later in the report: Higher Criticism's behaviour
-(7.5), the low recovery of the PAM50 genes (7.6), and how fast random
-genes catch up (7.2).
+explains three later results. Higher Criticism stops at the edge of its
+search (7.5). Few PAM50 genes are recovered (7.6). Random genes catch up
+fast (7.2).
 
 Loader: [`featsel_datasets/scanb_gse96058/`](../../featsel_datasets/scanb_gse96058/).
 Tutorial: [`featsel_datasets/scanb_gse96058/demos/tutorial.ipynb`](../../featsel_datasets/scanb_gse96058/demos/tutorial.ipynb).
@@ -211,10 +211,11 @@ the tissue, and the embeddings include them.
 
 A later check of the source images found worse defects (Pawłowska et al.
 2023). 155 of the 780 images, 19%, are copies of other images in the
-set. Some copies carry a different label: image 42 is benign, and its copy
-488 is malignant. 70 images, more than 8%, show the axilla rather than the
-breast. At least 7 show a biopsy needle. BreastMNIST uses all 780 images (Yang et al. 2023), so these
-defects are in our data.
+set. Some copies carry a different label. For example, image 42 is
+benign, and its copy 488 is malignant. 70 images, more than 8%, show the
+axilla rather than the breast. At least 7 show a biopsy needle.
+BreastMNIST uses all 780 images (Yang et al. 2023), so these defects are
+in our data.
 
 The copies matter most. Like SCAN-B's repeat samples, a copy can fall in
 the training part while its twin is in the test part. The model is then

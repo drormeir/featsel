@@ -310,7 +310,7 @@ copies a GPU tensor to the CPU. MutualInfo runs regression, and a class of
 2 to 7 samples, in scikit-learn on the CPU.
 
 LassoSelector's default, liblinear at its tolerance of 1e-4, stops far from
-the solution on SCAN-B: on Basal against the rest it keeps 350 genes where
+the solution on SCAN-B: on Basal against the rest it keeps 330 genes where
 the solution has 196. `solver='ppdna'` reaches the solution.
 
 ### High-Dimensional Use Case (few samples, many features)

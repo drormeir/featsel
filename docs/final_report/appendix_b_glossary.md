@@ -49,16 +49,17 @@ normalized count of how much of a gene's RNA was read.
 cores, fast at doing the same operation on many numbers at once.
 
 **Higher Criticism (HC).** A method that compares sorted p-values with
-what pure noise would give, and keeps the features up to the point of
-largest difference. It picks its own count.
+what pure noise would give. It keeps the features up to the point of
+largest difference. So it picks its own count.
 
 **k.** The number of features a method is asked to keep.
 
 **Kuncheva index.** A measure of how similar the feature sets chosen on
 different splits are, corrected for chance: 1 = identical, 0 = chance.
 
-**Lasso.** Regression with an L1 penalty, C·Σ|wᵢ|, which sets many weights
-to exactly zero.
+**Lasso.** A linear model with an L1 penalty, λ·Σ|wᵢ|, which sets many
+weights to exactly zero. Here it is logistic regression. scikit-learn's C
+is 1/λ, so a smaller C means a stronger penalty.
 
 **Leakage.** Information from the test samples reaching the training,
 which makes test scores look better than they are.

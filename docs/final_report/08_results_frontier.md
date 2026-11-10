@@ -64,9 +64,9 @@ splits. Bars: one standard deviation over splits. Table:
 
 1. **The cheap end is enough.** HC2008 and Mann-Whitney reach AUC 0.97 in
    0.66 s. Nothing slower is clearly better. Tree importance ties HC2008
-   (0.970) but takes 17 times longer; split by split, each wins on some of
+   (0.970) but takes 17 times longer. Split by split, each wins on some of
    the five splits.
-2. **The GPU moved four methods into the top-left corner.** Mann-Whitney,
+2. **The GPU moved five methods into the top-left corner.** Mann-Whitney,
    HC2008, Lasso (PPDNA), mutual information and correlation all run in
    under 4 s, at AUC 0.96 to 0.97. Before the GPU work, Mann-Whitney took
    about 10 s and mutual information more than a minute per fit (chapter 6).
@@ -107,9 +107,10 @@ frontier it kept only 1 or 2 genes on Her2, LumB and Normal, giving AUC
 0.50 to 0.64. On LumA it kept 8,567 to 25,697 genes and scored 0.96. On
 Basal it kept 2,857 genes on four splits and 2 on one.
 
-Our hypothesis: RFECV's default inner score is accuracy. On an imbalanced
-task with a strong penalty (C = 0.01), the SVM predicts "rest" for almost
-everyone at any gene count, so the accuracy curve is flat. A flat curve
+Our hypothesis: RFECV's default inner score is accuracy. Take an
+imbalanced task with a strong penalty (C = 0.01). There the SVM predicts
+"rest" for almost everyone at any gene count. So the accuracy curve is
+flat. A flat curve
 makes the smallest count win the tie. LumA is the only balanced task, and
 there RFECV works. Section 8.6 tests this hypothesis.
 
@@ -137,20 +138,19 @@ there RFECV works. Section 8.6 tests this hypothesis.
 
 - With 2,048 features and 546 training images, every method takes under
   3 s, so cost hardly matters here.
-- **Lasso is the best choice at a fixed `k`**: 0.90 in 0.11 s. (RFECV
-  scored by AUC, which picks its own larger count, does better; section
-  8.6.) Here the methods that see
-  features together (Lasso, RFE, trees) beat the one-at-a-time filters by
-  about 0.03. Image embedding features are weakly correlated with each
-  other, and a combination of them carries more than the sum of single
-  features.
+- **Lasso is the best choice at a fixed `k`**: 0.90 in 0.11 s. RFECV
+  scored by AUC does better, but it picks its own, larger count (section
+  8.6). Here the methods that see features together (Lasso, RFE, trees)
+  beat the one-at-a-time filters by about 0.03. Image embedding features
+  are weakly correlated with each other. A combination of them carries
+  more than the sum of single features.
 - RFECV works on this task (0.87).
 - **Spearman correlation equals Mann-Whitney exactly** at every `k`. With a
   binary label, ranking features by |Spearman correlation| gives the same
-  order as ranking by the U test's AUC: both depend only on the ranks of the
-  feature within the two classes. On SCAN-B they differ slightly at large
-  `k`, only because the correlation selector also drops one gene of each
-  highly correlated pair.
+  order as ranking by the U test's AUC. Both depend only on the ranks of
+  the feature within the two classes. On SCAN-B they differ slightly at
+  large `k`. The only reason is that the correlation selector also drops
+  one gene of each highly correlated pair.
 
 ## 8.6 RFECV: testing the hypothesis
 
@@ -257,8 +257,8 @@ significance. The larger gain is size: a model on 1,000 genes instead of
 ### BreastMNIST at larger `k`
 
 To test where RFECV's lead came from, we reran BreastMNIST on the same
-five splits at k = 500 and 1,000, and with all 2,048 features (random
-selection of every feature, that is, no selection).
+five splits at k = 500 and 1,000. We also ran it with all 2,048 features:
+random selection of every feature, that is, no selection.
 
 | Method | k = 250 | k = 500 | k = 1000 | Time per fit |
 |---|---|---|---|---|
@@ -279,7 +279,7 @@ What it shows:
 
 - **No selection is best for AUC on BreastMNIST.** All 2,048 features give
   0.921. Random 1,000 features already reach 0.914. RFECV's 0.916 is not a
-  better choice of features; it is close to keeping them all.
+  better choice of features. It is close to keeping them all.
 - **Selection pays only when few features are allowed.** At k = 10 to 250
   the methods beat random clearly (section 8.5); by k = 1000 they do not.
   This is the same pattern as on SCAN-B (chapter 7).

@@ -120,7 +120,8 @@ Every other fixed-`k` method keeps exactly `k`.
 | HC2008 | | | | 2855 [2855, 2855] |
 
 Higher Criticism per task: HC2004 keeps 1 [1, 1] on Basal, Her2, LumA and
-LumB, and 2 [1, 3] on Normal. HC2008 keeps 2,855 on every task.
+LumB, and 2 [1, 3] on Normal. HC2008 keeps 2,855 [2,855, 2,855] on every
+task; it keeps 2,856 on 3 of the 80 task-splits.
 
 ### Selection time per fit, seconds (CPU, before the GPU work)
 

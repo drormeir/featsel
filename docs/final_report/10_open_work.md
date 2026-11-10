@@ -38,9 +38,9 @@ parked ideas.
 
 ### Reproducing the published labels
 
-Decided 2026-10-17 and not done: rebuild Brueffer et al.'s ER classifier
-from their published gene weights, apply it to GSE96058, and compare with
-the stored `er prediction mgc` label. This would show exactly how the ER
+Decided 2026-10-17 and not done. Rebuild Brueffer et al.'s ER classifier
+from their published gene weights. Apply it to GSE96058. Then compare it
+with the stored `er prediction mgc` label. This would show exactly how the ER
 label was made, instead of inferring it. The plan, step by step, is in
 [Appendix D.1](appendix_d_data_details.md#d1-reproducing-the-er-label-planned-not-done).
 
@@ -50,13 +50,13 @@ label was made, instead of inferring it. The plan, step by step, is in
 weak, independent signal. Both our datasets have widespread, correlated
 signal, so HC acted as a top-10% filter. A dataset with rare signal, or a
 simulation with a known number of useful features, would test whether HC
-picks its own count well. Two variants were parked because they are not
-published as selection rules: HC with the exact variance of the sorted
-p-values (scaling by N + 2), and the Berk-Jones statistic.
+picks its own count well. Two variants were parked, because they are not
+published as selection rules. One is HC with the exact variance of the
+sorted p-values (scaling by N + 2). The other is the Berk-Jones statistic.
 
 **An exact test for floor-heavy data.** Each gene could be described by
-four numbers: the two class sizes and the share of each class at the
-floor. That gives an exact null distribution per gene, separating "how
+four numbers. Two are the class sizes. The other two are the share of
+each class at the floor. That gives an exact null distribution per gene, separating "how
 often is the gene detected" from "how high is it when detected". The U
 test merges both.
 
@@ -73,8 +73,9 @@ the best-scoring method.
 for binary tasks. Combining the five subtype-vs-rest classifiers into one
 subtype prediction was parked.
 
-**A forest built for the GPU.** Our analysis suggests a forest grown level
-by level, all nodes of a level at once, would fit a GPU's parallelism. No
+**A forest built for the GPU.** A forest could be grown level by level,
+with all nodes of a level at once. Our analysis suggests this would fit a
+GPU's parallelism. No
 library we tried does this well on a 4 GB card.
 
 **The frontier as a product.** A cost-quality frontier per dataset tells a
@@ -96,8 +97,9 @@ attention. Format: the date, the idea, and why it was parked.
   not a project requirement.
 - 2026-10-05 - Higher Criticism with exact null moments: centre the i-th
   p-value at i/(N+1) and scale by √(N+2), from Beta(i, N−i+1), with a
-  proof. Parked: no publication found, and `SCOPE.md` allows published HC
-  only. (HC2008 here already uses the exact centre, i/(N+1); section 4.4.)
+  proof. Parked: no publication found, and `SCOPE.md` then allowed
+  published HC only. That rule was dropped on 2026-11-10. HC2008 here
+  already uses the exact centre, i/(N+1) (section 4.4).
 - 2026-10-05 - Berk-Jones (Donoho and Jin 2004, eq. 1.9) as a threshold
   rule, another Higher Criticism mode. Parked: published only as a
   detection test, not for feature selection.

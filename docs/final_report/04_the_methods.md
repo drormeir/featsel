@@ -30,8 +30,8 @@ and FWE selectors apply these two.
 ## 4.2 The 15 methods
 
 Every method is a class in `featsel.selectors`. "Ours vs scikit-learn"
-says whether it reproduces a scikit-learn method exactly (same genes),
-which tests check.
+says whether it reproduces a scikit-learn method exactly (same genes).
+Tests check this.
 
 | Method | Family | Idea in one sentence | Main setting | Ours vs scikit-learn |
 |---|---|---|---|---|
@@ -56,7 +56,9 @@ Each method has a tutorial notebook:
 
 ### A few methods in more detail
 
-**Lasso.** The penalty C·Σ|wᵢ| drives most weights to exactly zero. The
+**Lasso.** The penalty λ·Σ|wᵢ| drives most weights to exactly zero.
+scikit-learn sets its strength by C = 1/λ, so a smaller C keeps fewer
+features. The
 features with non-zero weights are selected. One consequence matters later:
 at a fixed C, Lasso keeps only a few hundred genes on SCAN-B, so asking it
 for 1,000 gives fewer.
@@ -97,8 +99,8 @@ saves.
 
 This was one of the main decisions of the project (2026-10-25).
 
-**The data.** Chapter 2 showed two facts: only the order of a gene's values
-is meaningful, and about half the values sit tied at a floor. Within a
+**The data.** Chapter 2 showed two facts. Only the order of a gene's
+values is meaningful. And about half the values sit tied at a floor. Within a
 class, a gene is a pile of identical floor values plus a spread of detected
 values. It is not a normal curve.
 
@@ -113,14 +115,15 @@ the values, and assumes no normal curve. For a binary task, U divided by
 n₁n₂ is exactly the AUC of the gene used alone as a score (Hanley and
 McNeil 1982). So ranking genes by U-test p-value ranks them by how well
 each one alone separates the classes. Its p-value answers the question we
-want to ask: how likely is a separation this good if the labels were
+want to ask. How likely is a separation this good if the labels were
 shuffled, with the class sizes fixed? Ties, such as the floor, get average
-ranks, and the floor is treated as what it is: one large group of tied
+ranks. So the floor is treated as what it is: one large group of tied
 values. With two classes, the U test is the same test as Kruskal-Wallis,
 "ANOVA on ranks". It needs exactly two classes, which matches the
 project's binary tasks.
 
-The p-value is the tie-corrected normal approximation, as in SciPy.
+The p-value is the normal approximation with tie and continuity
+corrections, as in SciPy's `mannwhitneyu`.
 
 So every filter in the experiments uses the U test. One test for all
 filters makes the comparison a comparison of selection rules, not of tests.
@@ -142,7 +145,8 @@ apart. We compute the logarithm of the p-value directly from the normal
 tail, so nothing underflows ([`featsel/selectors/log_pvalue/`](../../featsel/selectors/log_pvalue/)).
 
 **A better model, not built.** Each gene could be described by four
-numbers: the two class sizes, and the share of each class at the floor.
+numbers. Two are the class sizes. The other two are the share of each
+class at the floor.
 That gives an exact null distribution per gene, separating "how often the
 gene is detected" from "how high it is when detected". It needs a separate
 computation per floor count and is left for future work
@@ -181,8 +185,8 @@ features are *rare* (a small share of all features), *weak*, and
 weak" setting. Donoho and Jin (2008, 2009) turned it into a selection
 threshold and proved it optimal there. Both papers derive how the sorted
 p-values behave under the null from independent p-values. Correlated
-genes give correlated p-values. Chapter 2 showed that neither of our datasets meets these
-conditions. Chapter 7 shows what HC does then.
+genes give correlated p-values. Chapter 2 showed that neither of our
+datasets meets these conditions. Chapter 7 shows what HC does then.
 
 **Decision: alpha0 stays 0.1** (2026-10-31). On SCAN-B the HC score is
 still rising at the edge of its search. Raising alpha0 because we know the
@@ -198,5 +202,6 @@ not assume what it is meant to find.
 | The classifier study (chapter 7) | Random and Mann-Whitney, with five classifiers |
 
 Variance threshold, ANOVA, Percentile, FDR and FWE are in the package and
-tested, but not in the experiments: they use the F-test, which the U test
-replaces (section 4.3).
+tested. They are not in the experiments. The last four use the F-test,
+which the U test replaces (section 4.3). Variance threshold uses no label
+at all.

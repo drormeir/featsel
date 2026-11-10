@@ -77,9 +77,9 @@ often it is detected at all. The other is how high it is when detected.
 
 A better model describes each gene by four numbers. Two are the class
 sizes, n₁ and n₂, given by the dataset. The other two, p₁ and p₂, are the
-share of each class whose value sits at the floor. This fits what we see:
-51% of the values in the first 200 genes are at the floor, so the floor
-is not an occasional tie but the main feature of the data.
+share of each class whose value sits at the floor. This fits what we see.
+51% of the values in the first 200 genes are at the floor. So the floor
+is not an occasional tie. It is the main feature of the data.
 
 Under the null hypothesis, given the four numbers, the labels split the
 floor values by a hypergeometric draw. They split the detected values by a

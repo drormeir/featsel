@@ -17,8 +17,8 @@ on all the genes is slow and can learn noise. Feature selection picks a
 small set of genes that still predicts well. We built `featsel`, a Python
 package of 15 feature selection methods that plug into scikit-learn. We
 compared the methods on breast cancer data (SCAN-B, 2,976 patients, 28,552
-genes) and on image data (BreastMNIST, 780 images, 2,048 features), against
-a control that picks features at random. We also made the slow methods
+genes) and on image data (BreastMNIST, 780 images, 2,048 features). Every
+method was measured against a control that picks features at random. We also made the slow methods
 faster, many of them on a GPU, and measured cost against quality on one
 plot. The main finding: a simple one-gene-at-a-time test is as good as the
 complex methods here, and much faster.

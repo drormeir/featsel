@@ -7,7 +7,7 @@ the mean of the tasks within each split.
 
 Usage:
     python scripts/summarize_comparison.py results/comparison_scanb.csv \
-        --n-features 30865 --out <file>
+        --n-features 28552 --out <file>
 """
 
 import argparse

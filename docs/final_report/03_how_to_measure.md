@@ -71,8 +71,8 @@ cross-validation.
 - Leave-one-out was rejected. Each test set is one patient, so no AUC or
   macro-F1 can be computed per split, only one pooled number with no
   spread. Training sets differ by one patient, so stability reads near 1.0
-  for every method. And it
-  costs one model per patient: 2,976 per cell on SCAN-B.
+  for every method. And it costs one model per patient: 2,976 per cell on
+  SCAN-B.
 
 Random splits do not escape dependence entirely. Every split is drawn
 from the same 2,976 patients, so training sets still overlap. But the
@@ -101,8 +101,9 @@ patients, because every split reuses the same cohort.
 
 **Paired comparison.** All methods run on the same splits. So two methods
 can be compared split by split, which removes most of the split-to-split
-noise. The gain of a method over the random control is its score minus the
-random control's score on the same split and at the same `k`.
+noise. A method's gain over the random control is a difference. It is the
+method's score minus the control's score, on the same split and at the
+same `k`.
 
 ## 3.4 The random control
 
@@ -130,8 +131,8 @@ The comparison also records:
 
 - **MCC**, the Matthews correlation coefficient, another imbalance-robust
   check.
-- **G-mean**, the geometric mean of the two class recalls. It is stricter than macro-F1: it is zero if either class is never
-  predicted.
+- **G-mean**, the geometric mean of the two class recalls. It is stricter
+  than macro-F1: it is zero if either class is never predicted.
 - **Accuracy**, for comparison with other work. Alone it misleads: on
   Normal vs rest (200 against 2,776 patients), always predicting "rest"
   scores 0.93.
@@ -182,19 +183,23 @@ two would itself be worth reporting. This was not done.
 ## 3.8 Tuning the classifier without leakage
 
 The classifier, L2-penalized logistic regression, has a strength parameter
-C. In the comparison (chapter 7) C is tuned inside each split: the
-training part is split again three times, each C from {0.01, 0.1, 1, 10,
-100} is scored by AUC on the inner validation parts, and the best C is
-refit on the whole training part. The test part is used once, at the end.
-Each inner split puts half the training part in inner training and half
-in inner validation.
+C. In the comparison (chapter 7) C is tuned inside each split, in three
+steps:
+
+1. The training part is split again three times. Each inner split puts
+   half the training part in inner training and half in inner validation.
+2. Each C from {0.01, 0.1, 1, 10, 100} is scored by AUC on the inner
+   validation parts.
+3. The best C is refit on the whole training part.
+
+The test part is used once, at the end.
 
 The penalty is λ‖w‖², and scikit-learn's C is 1/λ. Features are
 standardized on the training part first; otherwise the penalty would
 treat features on different scales differently. The bias term is not
-penalized by scikit-learn's default solver, `lbfgs`; the `liblinear`
-solver does penalize it. AUC does not depend on the decision threshold, so it
-scores C more smoothly than macro-F1 does on small validation parts.
+penalized by scikit-learn's default solver, `lbfgs`. The `liblinear`
+solver does penalize it. AUC does not depend on the decision threshold.
+So it scores C more smoothly than macro-F1 does on small validation parts.
 Tuning costs about 15 times the classifier's fitting: 5 values of C times
 3 inner splits.
 
@@ -232,10 +237,10 @@ outlier sets the range and squeezes every other sample.
 normal distribution through its ranks (a quantile transform). Shrinkage
 LDA assumes normal classes, and k-NN suffers from heavy tails, so both
 should gain. Random forests should not move, since they ignore any
-increasing transform. It could also hurt: the transform discards the size
-of a fold change, and with half the patients for training its mapping is
+increasing transform. It could also hurt. The transform discards the size
+of a fold change. And with half the patients for training, its mapping is
 noisy. 98.1% of genes reject normality, so there is something to fix. The
-run was started and cancelled; the result is unknown.
+run was started and cancelled, so the result is unknown.
 
 **One rule.** If preprocessing is ever varied, it must be varied for every
 method alike. A method that carries its own preprocessing mixes the method

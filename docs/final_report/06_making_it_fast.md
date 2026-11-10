@@ -8,25 +8,29 @@ method on its own (faster algorithms, and a GPU).
 
 **A rule we kept:** a speed claim comes only from a series of measurements
 on several sizes, never from one timing. Every number in this chapter comes
-from such a series, run on one laptop (Intel i7-9750H, 12 threads, 16 GB
-RAM; NVIDIA GTX 1650, 4 GB).
+from such a series. All ran on one laptop: Intel i7-9750H, 12 threads,
+16 GB RAM, and an NVIDIA GTX 1650 with 4 GB.
 
 ## 6.1 The runner against plain scikit-learn
 
 **Why measure this at all.** Most selectors and all classifiers come from
 scikit-learn. The runner's value over plain scikit-learn has to be shown
 in numbers, not claimed. So the same small grid ran four ways, on the same
-splits: scikit-learn's `cross_validate` once per selector and `k`, and our
-runner, each on one core and on all 12 threads. The scikit-learn side uses
+splits. One side was scikit-learn's `cross_validate`, once per selector and
+`k`. The other was our runner. Each side ran on one core and on all 12
+threads. The scikit-learn side uses
 scikit-learn's own selectors: `SelectFromModel` with L1 logistic regression
 for Lasso, and `RFE` with `LinearSVC`. The script checks that all four give
 the same test scores before it reports a time. All 30 test macro-F1 scores
 were equal on every run.
 
-SCAN-B, Basal vs rest, 3,000 random genes of 28,552, 2,976 patients, 5
-splits at a training fraction of 0.5, Lasso and RFE (step 0.5) at `k` = 10,
-50 and 250, logistic regression with a fixed C, data in 32-bit floats on
-both sides (run 2026-10-31):
+The setting (run 2026-10-31):
+
+- SCAN-B, Basal vs rest: 2,976 patients, 3,000 random genes of 28,552.
+- 5 splits at a training fraction of 0.5.
+- Lasso and RFE (step 0.5) at `k` = 10, 50 and 250.
+- Logistic regression with a fixed C.
+- Data in 32-bit floats on both sides.
 
 | Run | Seconds | Speed-up over scikit-learn on 1 core |
 |---|---|---|
@@ -45,24 +49,24 @@ both sides (run 2026-10-31):
 
 On this small grid, parallel work added little. scikit-learn spreads only
 the 5 splits of one `cross_validate` call, and gains 1.5 times. The runner
-has 10 jobs (2 selectors times 5 splits), and gains 1.7 times over itself
-on one core: starting the worker processes took about 4.5 of its 6.3
+has 10 jobs (2 selectors times 5 splits). It gains 1.7 times over itself
+on one core. Starting the worker processes took about 4.5 of its 6.3
 seconds. On full SCAN-B each fit is about ten times longer, so start-up
 weighs less and parallel work should pay more. That case was not measured.
 
 **Limits of this benchmark.** 3,000 of 28,552 genes, one task and 5
 splits, to see the whole flow in about a minute. Each selector and the
-classifier had a fixed seed, the same on every split, so both sides fit
-the same models; the experiments seed each split differently. C was fixed;
-the experiments tune it, which multiplies the classifier's cost on both
-sides alike.
+classifier had a fixed seed, the same on every split. So both sides fit
+the same models. The experiments seed each split differently. C was fixed
+here. The experiments tune it, which multiplies the classifier's cost on
+both sides alike.
 
 ### Why the speed matters: the full grid
 
 The original design had 100 splits at three training fractions (300 in
-all), 6 selectors and nested tuning. Extrapolated from a 12-split run, it
-needed about 30 to 35 CPU-hours without the linear SVM: a day and a half on
-one core, less in proportion to the cores. RFE removing one feature per
+all), 6 selectors and nested tuning. We extrapolated from a 12-split run.
+Without the linear SVM, it needed about 30 to 35 CPU-hours. That is a day
+and a half on one core, less in proportion to the cores. RFE removing one feature per
 round would take about 2,300 hours. Removing 10% per round and ranking once
 takes about 3. This is the specification's point that some techniques are
 impractical in this setting. A linear SVM classifier with scikit-learn's
@@ -101,9 +105,9 @@ Results at the largest size both sides reached:
 Sizes are 30,000 features unless the row says otherwise. Every fit of
 every variant was reproducible.
 
-On real SCAN-B (2,976 patients, 28,552 genes), the Lasso notebook also
-times the five tasks: PPDNA on the GPU took 0.7 to 1.4 s per fit against
-4.5 to 5.8 s for liblinear, 3.2 to 7.0 times faster.
+The Lasso notebook also times the five tasks on real SCAN-B (2,976
+patients, 28,552 genes). PPDNA on the GPU took 0.7 to 1.4 s per fit. That
+is against 4.5 to 5.8 s for liblinear, 3.2 to 7.0 times faster.
 
 ### Where the speed comes from
 
@@ -136,9 +140,9 @@ scikit-learn, and PPDNA as an option.
 **RFE.** The same cause: liblinear's tolerance changes which genes are
 removed when genes are strongly correlated. On the synthetic data at
 3,000 features, the overlap (Jaccard index) between the two gene sets was
-only 0.28. On synthetic SCAN-B-shaped data with correlated genes,
-liblinear at its default tolerance (10⁻⁴) shared 32 of 50 genes with the
-exact answer; at a tolerance of 10⁻⁸ it shared all 50. So the difference
+only 0.28. We also tried synthetic SCAN-B-shaped data with correlated
+genes. There, liblinear at its default tolerance (10⁻⁴) shared 32 of 50
+genes with the exact answer. At a tolerance of 10⁻⁸ it shared all 50. So the difference
 is liblinear stopping early, not an error in either. Again, liblinear
 stays the default, so the selector stays a drop-in for scikit-learn's RFE.
 
@@ -157,13 +161,15 @@ row records the device used.
 - **Memory.** 4 GB is small. XGBoost's random forest was tried on
   synthetic SCAN-B-shaped data (1,488 × 28,552). On the GPU it ran out of
   memory even with 64 bins, needing 3.4 GB. On the CPU one fit took 339 s,
-  against 4.2 s for scikit-learn on 12 threads, and only 21 of its top 50
-  genes were scikit-learn's: a different method, not a faster one.
-  NVIDIA's cuML forest fit, but was 3 times slower than scikit-learn on
-  3,000 × 3,000. Tree importance therefore stays on the CPU.
+  against 4.2 s for scikit-learn on 12 threads. Only 21 of its top 50
+  genes were scikit-learn's: a different method, not a faster one. On a
+  smaller set, 3,000 × 3,000, XGBoost on the GPU fit with trees of depth
+  6. It only tied scikit-learn: 6.5 s against 6.7 s. NVIDIA's cuML forest
+  fit too, but was 3 times slower than scikit-learn on 3,000 × 3,000. Tree
+  importance therefore stays on the CPU.
 
-**Libraries we did not use.** JAX was rejected for the U test: a new
-dependency, it reserves most GPU memory per process, and it recompiles for
+**Libraries we did not use.** JAX was rejected for the U test. It is a new
+dependency. It reserves most GPU memory per process. And it recompiles for
 every data shape. CuPy and Numba were not needed: library sorts in
 PyTorch were enough, and PyTorch is already needed for the embeddings.
 
