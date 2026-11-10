@@ -69,8 +69,7 @@ from 2,976 patients: 93 patients have two samples each. `scanb_small` keeps
 9,264 genes chosen by an unrecorded rule, and lacks 11 of the 50 PAM50 genes.
 Results computed before 2026-10-17 used `scanb_small`.
 
-The data and their configs are archived, outside git, in
-`references/local/scanb_course/`.
+The data and their configs are archived outside git.
 
 ## Adding a new dataset
 

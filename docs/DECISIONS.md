@@ -46,7 +46,7 @@ added here.
 |---|---|---|---|
 | 2026-10-05, 2026-10-18 | PAM50 has five imbalanced classes. | Binary tasks only: each subtype against the rest. First run this way on 2026-10-05; made the project's rule on 2026-10-18. | A five-class task; the union of per-class gene sets. Recombining the binary classifiers was parked. |
 | 2026-10-16, 2026-10-17 | The course's copies of SCAN-B had an unknown gene selection and repeat samples. | Load GSE96058 directly. Keep HiSeq 2000 samples only, one sample per patient. On 2026-10-17, retire the course copies (archived outside git). | Using the course copies; mixing the two sequencing machines. |
-| 2026-10-16, 2026-10-17 | PAM50 and ER are computed from gene expression. | Say so in the report. On 2026-10-17, decide to test whether selection finds the 50 PAM50 genes. | Treating them as clinical facts, as an earlier course report did. |
+| 2026-10-16, 2026-10-17 | PAM50 and ER are computed from gene expression. | Say so in the report. On 2026-10-17, decide to test whether selection finds the 50 PAM50 genes. | Treating them as clinical facts. |
 | 2026-10-17 | Task 4 needs a second dataset. | BreastMNIST, as ResNet-50 embeddings: public, not gene expression, more features than samples. | Text (TF-IDF); UCI tabular sets; the NIPS 2003 challenge sets (Gisette has fewer features than samples, and its probe features are withheld; Madelon has only 500 features; Arcene has only 200 samples); raw pixels (a CNN beats feature selection there). |
 
 ## Statistics and protocol

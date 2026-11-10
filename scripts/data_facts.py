@@ -5,14 +5,15 @@ Each fact has a name, such as scanb_patients. The final report
 (final_report/02_the_data.md) cites this file as the source of its
 data numbers.
 
-Facts about the course's archived copies of SCAN-B need
-references/local/scanb_course/, which is not in git. Without it, their
+Facts about the course's archived copies of SCAN-B need those copies,
+which are not in git. Pass their folder with --course. Without it, their
 committed values are kept.
 
 Usage:
-    python scripts/data_facts.py
+    python scripts/data_facts.py [--course DIR]
 """
 
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -28,7 +29,6 @@ from featsel_datasets.scanb_gse96058.pam50 import PAM50_GENES
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'results' / 'data_facts.csv'
-COURSE = ROOT / 'references' / 'local' / 'scanb_course'
 SEED = 42
 
 
@@ -99,13 +99,13 @@ def scanb_facts(data):
     }
 
 
-def course_facts(data):
-    """The course's archived copies, where this machine has them."""
-    if not COURSE.exists():
+def course_facts(data, course):
+    """The course's archived copies, from the folder holding scanb_full and scanb_small."""
+    if course is None:
         return {}
-    meta = pd.read_csv(COURSE / 'scanb_full' / 'metadata.csv').set_index('samplename')
+    meta = pd.read_csv(course / 'scanb_full' / 'metadata.csv').set_index('samplename')
     # Samples are the columns of this file, so its genes are the row labels.
-    small_genes = set(pd.read_csv(COURSE / 'scanb_small' / 'features.csv.gz',
+    small_genes = set(pd.read_csv(course / 'scanb_small' / 'features.csv.gz',
                                   index_col=0, usecols=[0]).index)
     mgc = data.samples.loc[meta.index, 'er prediction mgc']
     return {
@@ -177,8 +177,11 @@ def comparison_facts():
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
+    parser.add_argument('--course', type=Path, help="folder holding the course's scanb_full and scanb_small")
+    args = parser.parse_args()
     data = GSE96058()
-    facts = {**scanb_facts(data), **course_facts(data), **breastmnist_facts(),
+    facts = {**scanb_facts(data), **course_facts(data, args.course), **breastmnist_facts(),
              **comparison_facts()}
     if OUT.exists():  # keep committed facts this machine cannot recompute
         facts = {**pd.read_csv(OUT, index_col='name', keep_default_na=False).value.to_dict(),

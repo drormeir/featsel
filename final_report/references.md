@@ -2,8 +2,7 @@
 
 [Back to contents](README.md)
 
-Author-year style. Local copies of several papers are listed in
-[`references/bibliography.md`](../references/bibliography.md).
+Author-year style.
 
 Al-Dhabyani, W., Gomaa, M., Khaled, H. and Fahmy, A. (2020). Dataset of
 breast ultrasound images. *Data in Brief* 28, 104863.

@@ -46,7 +46,6 @@ It lacks 11 of the 50 PAM50 genes: ANLN, BAG1, CDC6, CXXC5, FOXA1, GPR160,
 KRT14, MIA, NUF2, TMEM45B and UBE2T. We therefore load GSE96058 directly,
 and the course copies are retired. They are archived outside git, because
 the course copy has two labels GSE96058 lacks, `Lympho` and `cluster2`.
-The earlier course report used `Lympho` as a regression target.
 
 ### What the numbers are
 
@@ -116,11 +115,8 @@ This has two consequences.
 equals `er prediction mgc` on all 3,069 samples. It is coded 1 = negative
 and 2 = positive. It disagrees with the pathologist on 235 of the 2,870
 samples that have a pathologist value. The pathologist value is missing
-for 199 samples. An earlier course report on this data (unpublished)
-treated both labels as clinical facts. It found ER "somewhat trivial" to
-predict. That is expected for a label computed from the same genes. It
-also reduced PAM50 to two classes without saying how. Measured labels and
-survival do not have this circularity.
+for 199 samples. A label computed from the genes is easy to predict from
+the same genes. Measured labels and survival do not have this circularity.
 
 ### Five binary tasks
 

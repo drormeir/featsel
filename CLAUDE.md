@@ -161,7 +161,7 @@ config. A CSV dataset config specifies:
 - `configs/aircraft70_gpu.yaml` runs every selector on the GPU; `demos/research.ipynb` has the analysis and conclusions
 
 The course copies `scanb_small` and `scanb_full` are retired; they are
-archived outside git in `references/local/scanb_course/`.
+archived outside git.
 
 ### Package Structure
 

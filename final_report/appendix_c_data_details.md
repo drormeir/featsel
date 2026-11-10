@@ -7,10 +7,9 @@ about it, what is still open, and facts too detailed for the chapter.
 
 ## C.1 Reproducing the ER label (planned, not done)
 
-Decided 2026-10-17. ER was planned as a target in this project, as in
-the earlier course report. No experiment in this report uses it. Unlike
-that report, this one states where the ER label comes from. It also plans
-to reproduce it.
+Decided 2026-10-17. ER was planned as a target in this project. No
+experiment in this report uses it. This report states where the ER label
+comes from, and plans to reproduce it.
 
 1. Rebuild Brueffer et al.'s ER multigene classifier. Their Supplementary
    Table 3 gives its shrunken centroids per gene. 459 are non-zero for ER.
@@ -29,7 +28,7 @@ not match. And the 459 genes were chosen automatically from the 5,000
 most variable genes of the 405 training patients. Rebuilding from scratch
 with another shrinkage threshold would give a different list.
 
-The paper and its Data Supplement are in `references/local/`. GSE81538 is
+GSE81538 is
 not downloaded yet.
 
 ## C.2 The source of PAM50, and recovering its genes
