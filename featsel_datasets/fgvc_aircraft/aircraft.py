@@ -45,7 +45,7 @@ class FGVCAircraft:
         data.samples      # one row per image: variant, family, manufacturer, split
         data.embeddings   # 10,000 images x 2,048 ResNet-50 features
         data.hashes       # 64-bit difference hash per image, for near-duplicates
-        data.image(id)    # one image, banner cropped, as a PIL image
+        data.images(ids)  # some images, banner cropped, as PIL images
 
     Images are indexed by the archive's own image id, such as '1025794'.
     """
@@ -116,13 +116,20 @@ class FGVCAircraft:
         series = pd.Series(self._embedded['hashes'], index=self._embedded['ids'])
         return series.loc[self.samples.index]
 
-    def image(self, image: str):
-        """One image with its banner cropped. Scans the archive, so it is slow."""
+    def images(self, ids) -> dict:
+        """Some images, banner cropped, by id. One pass over the archive: about a minute."""
+        wanted = {f'{ROOT}/images/{image}.jpg': image for image in ids}
+        found = {}
         with tarfile.open(self._file(), 'r:gz') as tar:
             for member in tar:
-                if member.name == f'{ROOT}/images/{image}.jpg':
-                    return _open_cropped(_read(tar, member))
-        raise KeyError(image)
+                if member.name in wanted:
+                    found[wanted[member.name]] = _open_cropped(_read(tar, member))
+                    if len(found) == len(wanted):
+                        break
+        missing = set(wanted.values()) - set(found)
+        if missing:
+            raise KeyError(sorted(missing))
+        return {image: found[image] for image in ids}
 
 
 def _read(tar: tarfile.TarFile, member: tarfile.TarInfo) -> bytes:
