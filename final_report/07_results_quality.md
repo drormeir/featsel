@@ -424,6 +424,44 @@ for. RFE is weakest at small `k` but catches up from k = 100.
 The comparison stops at k = 250. Chapter 8 (section 8.7) goes further. It
 finds that on this dataset, using all 2,048 features scores best in AUC.
 
+### Without the copied images
+
+The same comparison ran again on the 585 images left without copies
+(section 2.2), with the same settings and 20 splits. The images differ, so
+the splits do not pair with the first run's.
+
+**Macro-F1 without copies**, and the change from the run with them:
+
+| Method | k = 5 | 10 | 20 | 50 | 100 | 250 |
+|---|---|---|---|---|---|---|
+| Random | 0.444 (+0.015) | 0.483 (+0.015) | 0.471 (−0.050) | 0.581 (+0.005) | 0.670 (−0.005) | 0.750 (+0.003) |
+| Mann-Whitney | **0.716** (+0.076) | 0.718 (+0.037) | **0.758** (+0.044) | 0.773 (+0.025) | 0.791 (+0.018) | **0.801** (+0.006) |
+| Lasso | 0.677 (+0.009) | **0.721** (+0.021) | 0.747 (+0.011) | 0.765 (−0.013) | 0.775 (−0.023) | 0.786 (−0.029) |
+| Tree importance | 0.649 (+0.008) | 0.714 (+0.008) | 0.757 (+0.012) | **0.774** (+0.013) | **0.793** (+0.020) | 0.798 (+0.005) |
+| RFE | 0.608 (+0.001) | 0.650 (−0.003) | 0.683 (−0.019) | 0.739 (−0.013) | 0.767 (−0.023) | 0.795 (−0.008) |
+
+HC2008 kept 204 features on every split and scored 0.799 (+0.009). HC2004
+kept 1 to 3 features and scored 0.560 (+0.039).
+
+- **The scores did not fall.** Most medians moved by less than 0.03, in
+  both directions. The leak from the copies did not inflate these scores
+  by a visible amount. The class balance also changed, from 27% to 31%
+  malignant, which moves macro-F1 by itself.
+- **The fine ranking changed.** With the copies, Lasso had the highest
+  median at four of the six values of `k`. Without them, Mann-Whitney or
+  tree importance has it at five of the six. Split by split, Lasso now
+  trails Mann-Whitney at every `k`, by 0.008 to 0.025 on average. None of
+  the differences between methods is significant in the corrected test
+  (p ≥ 0.14). Lasso's earlier lead was not established either (section
+  7.3).
+- **Every method still beats random in the median at every `k`.** The
+  corrected test establishes one gain: tree importance at k = 5, by 0.21
+  [0.11, 0.31].
+
+Config: [`configs/comparison_breastmnist_nocopies.yaml`](../configs/comparison_breastmnist_nocopies.yaml).
+Results: [`results/comparison_breastmnist_nocopies.csv`](../results/comparison_breastmnist_nocopies.csv).
+Tests: [`figures/paired_tests_comparison_breastmnist_nocopies.csv`](figures/paired_tests_comparison_breastmnist_nocopies.csv).
+
 ## 7.9 Discussion
 
 **Why selection matters most at small budgets.** The signal is spread over
@@ -471,11 +509,11 @@ lead on image embeddings.
   interval.
 - **Shared patients.** The five SCAN-B tasks use the same patients and the
   same splits. They are not independent replicates.
-- **Copied images.** 19% of BreastMNIST's images are copies of others,
-  some with a different label (chapter 2). A copy on each side of a split
-  leaks. It inflates the BreastMNIST scores by an unmeasured amount. Every
-  method sees the same splits. So the leak may matter less for the ranking
-  than for the absolute scores. This is not checked.
+- **Copied images.** 189 of BreastMNIST's 780 images repeat another image,
+  some with a conflicting label (chapter 2). A copy on
+  each side of a split leaks. Without the copies, the scores did not fall
+  by a visible amount, but the fine ranking changed (section 7.8). The
+  BreastMNIST results of chapter 8 keep the copies, except section 8.7.
 - **Computed labels.** PAM50 subtypes are computed from gene expression.
   The SCAN-B tasks reproduce a published classifier. Scores may be higher
   than on a measured clinical outcome.

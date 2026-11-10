@@ -220,18 +220,44 @@ calipers drawn during the scan. A model can learn such marks instead of
 the tissue, and the embeddings include them.
 
 A later check of the source images found worse defects (Pawłowska et al.
-2023). 155 of the 780 images, 19%, are copies of other images in the
-set. Some copies carry a different label. For example, in the letter's
-numbering, image 42 is benign and its copy 488 is malignant. 70 images,
-more than 8%, show the axilla rather than the breast. At least 7 show a
-biopsy needle. BreastMNIST uses all 780 images (Yang et al. 2023). So
-these defects are in our data.
+2023). Many images are copies of other images in the set: the same scan,
+shifted, scaled or cropped. The letter's text gives 155 copies, 19% of the
+set. Its list of copies holds 153 groups of 346 images, so 193 images
+repeat another. Some copies carry a different label. For example, in the
+letter's numbering, image 42 is benign and its copy 488 is malignant. 70
+images, more than 8%, show the axilla rather than the breast. At least 7
+show a biopsy needle. BreastMNIST uses all 780 images (Yang et al. 2023).
+So these defects are in our data.
 
 The copies matter most. Like SCAN-B's repeat samples, a copy can fall in
 the training part while its twin is in the test part. The model is then
-partly tested on an image it has seen. We found this after the
-experiments. So every BreastMNIST result in this report carries the
-leak. Its size is not measured.
+partly tested on an image it has seen.
+
+**Finding the copies in BreastMNIST.** The letter names images by their
+original file names, which BreastMNIST does not keep. So we searched
+BreastMNIST's own images with the letter's method: two images are copies
+when one geometric transform maps one onto the other. For each image, its
+30 nearest images by embedding were checked. Matched keypoints (SIFT) had
+to fit one affine transform, with at least 15 agreeing points, and the
+aligned images had to correlate above 0.9. The separation was clear: 218
+pairs had 50 or more agreeing points and a correlation above 0.98, and
+almost every other pair had fewer than 10. Checking 100 neighbours instead
+of 30 found no more.
+
+| | The letter's list | Our search |
+|---|---|---|
+| Groups of copies | 153 | 150 |
+| Images in them | 346 | 339 |
+| Groups mixing malignant with benign or normal | 6 | 6 |
+
+The two agree closely. A few copies may be mirrored, which the keypoints
+used here do not match. The run without copies keeps one image of each
+group, and drops the 6 groups with conflicting labels whole. 585 images
+remain: 180 malignant and 405 benign or normal. Chapter 7 compares the
+results with and without the copies.
+
+Code: [`copies.py`](../featsel_datasets/medmnist_breastmnist/copies.py);
+the groups are in `copies.csv` beside it.
 
 Loader: [`featsel_datasets/medmnist_breastmnist/`](../featsel_datasets/medmnist_breastmnist/).
 Notebooks: [`demos/tutorial.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/tutorial.ipynb),
