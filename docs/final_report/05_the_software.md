@@ -11,9 +11,9 @@ about running safely. Speed itself is chapter 6.
 
 1. **A practitioner with an existing scikit-learn pipeline.** They swap
    their selection step for one of ours, and change nothing else. This is
-   why every selector behaves exactly like a scikit-learn selector, and why
-   the ones that copy a scikit-learn method are tested to pick the same
-   genes.
+   why every selector behaves exactly like a scikit-learn selector. It is
+   also why the ones that copy a scikit-learn method are tested to pick the
+   same genes.
 2. **A researcher comparing methods.** They write one YAML file and run
    `python -m featsel.run --config <file>`. The runner does the whole
    comparison of chapter 3 and writes one table.
@@ -50,13 +50,13 @@ line.
 | Task 3 has real content | yes | yes | thin | yes |
 | Code to write | least | little | least | most |
 
-Design 2 won. The core is `run(X, y, config, truth=None)`: data always
-arrives as `X, y`. `truth` is the optional list of truly informative
-features, known only for simulated data; when given, the runner also
-records recall and precision against it. `run_config(config)` loads the
-dataset named in the config and calls `run`; the command line calls
-`run_config`. Paths in a config file are relative to that file, so the
-package never assumes this repository's layout.
+Design 2 won. The core is `run(X, y, config)`, so data always arrives as
+`X, y`. An optional argument, `truth`, lists the truly informative
+features. It is known only for simulated data. When it is given, the
+runner also records recall and precision against it. `run_config(config)`
+loads the dataset named in the config and calls `run`. The command line
+calls `run_config`. Paths in a config file are relative to that file. So
+the package never assumes this repository's layout.
 
 ## 5.2 Selectors are scikit-learn estimators
 
@@ -65,12 +65,18 @@ Every selector subclasses `FeatureSelector`, which inherits scikit-learn's
 
 - lists its parameters in `__init__` and only stores them;
 - does its work in `_fit`, and sets `support_`, a boolean mask over the
-  features;
-- inherits `transform`, `get_support`, `get_params`, `set_params` and
-  `clone` from scikit-learn.
+  features. The base class's `fit` seeds where needed and then calls
+  `_fit`. `_fit` is abstract, so a selector without it fails when it is
+  created, not when it is fitted (since 2026-11-09);
+- calls the base class's helpers with what they need as arguments. A
+  helper never reads a setting such as `self.n_features` that the base
+  class does not declare. So a selector can be understood from its own
+  file (since 2026-11-10);
+- inherits `transform`, `get_support`, `get_params` and `set_params` from
+  scikit-learn.
 
-So it works in a `Pipeline`, with `cross_val_score` and with
-`GridSearchCV`, and a misspelled parameter raises an error instead of being
+So it works in a `Pipeline` and with `clone`, `cross_val_score` and
+`GridSearchCV`. A misspelled parameter raises an error instead of being
 silently ignored.
 
 ```python
@@ -90,7 +96,8 @@ scores = cross_val_score(pipe, X, y, cv=5, scoring='roc_auc')
 Selection is refit inside every fold here, as chapter 3 requires.
 
 As in scikit-learn, `transform` returns a NumPy array. Pandas output is
-opt-in with `set_output(transform='pandas')`.
+opt-in with `set_output(transform='pandas')`. Given a PyTorch tensor,
+`transform` returns a tensor on the same device.
 
 **Why.** An earlier version had a wrapper class that picked a selector by
 name and forwarded parameters through a hand-written list. A parameter
@@ -105,10 +112,10 @@ lower case, so lookup ignores case. Two classes claiming the same name
 raise an error. A class may also declare aliases, for use after a rename.
 A YAML config names selectors as text, and
 `FeatureSelector.create(name, **params)` finds the class. No list of
-selectors has to be kept by hand. Results always record the class name,
-whatever alias a config used, so runs stay comparable. In Python, users
-import the class: a misspelled class name then fails at import, not at run
-time.
+selectors has to be kept by hand. Results record the class name, whatever
+alias a config used, so runs stay comparable. A config may set its own
+`label` instead, such as `HC2008`. In Python, users import the class. A
+misspelled class name then fails at import, not at run time.
 
 **Rank once.** Some methods produce a full ranking whose top `k` equals a
 separate fit at that `k`. They are Mann-Whitney, Lasso, tree importance
@@ -124,12 +131,13 @@ almost every selector set `feature_importances_`, and it meant a score in
 some, a position in RFE, and nothing in the random selector.
 
 **Seeds.** Every selector that uses randomness subclasses
-`FeatureSelectorRandom`. It takes `random_state`, 42 by default. At the
-start of `fit` it seeds Python's, NumPy's and PyTorch's random generators
-from it. A repeated fit therefore picks the same genes. Selectors without
-randomness take no seed. A generator kept inside the
-object was rejected: scikit-learn's `clone` does not copy it, and its draws
-would depend on the order of fits.
+`FeatureSelectorRandom`. It takes `random_state`, 42 by default, and it
+must be an integer. Unseeded runs (`random_state=None`) were removed, so
+every fit repeats. At the start of `fit` it seeds Python's and NumPy's random generators from it. It
+also seeds PyTorch's, once PyTorch is imported. A repeated fit therefore
+picks the same genes. Selectors without randomness take no seed. We
+rejected a generator kept inside the object. scikit-learn's `clone` does
+not copy it, and its draws would depend on the order of fits.
 
 **Input.** Every selector accepts a NumPy array, a pandas DataFrame or a
 PyTorch tensor, on the CPU or on a GPU (chapter 6). Input is checked in
@@ -142,7 +150,7 @@ name and the parameters, so configs and results do not change. Each
 selector lives in its own folder, `featsel/selectors/<name>/`, with its
 tests and notebooks beside it. A family (filter, embedded, wrapper) gets no
 folder, since it shares no code. The random selector's folder is
-`random_selection/`: a folder named `random` would hide Python's own
+`random_selection/`. A folder named `random` would hide Python's own
 `random` module.
 
 **Adding a selector.** A new method is one class. It lists its
@@ -216,12 +224,12 @@ package (decided 2026-10-16).
 
 - A class that downloads the published files once, caches them, and
   exposes everything in them unchanged: `GSE96058`, `BreastMNIST`.
-- A small `featsel_view.py` with this project's choices (HiSeq only, one
-  sample per patient, the target), ending in `load_xy()`, which returns `X`
-  and `y`.
+- A small `featsel_view.py` with this project's choices: HiSeq only, one
+  sample per patient, the target. It ends in `load_xy()`, which returns
+  `X` and `y`.
 
 A config names the view module. A new dataset needs only a new folder with
-these two files; nothing in the package changes. We rejected a generic
+these two files. Nothing in the package changes. We rejected a generic
 loader driven by a YAML description. Real datasets arrive in shapes no
 YAML schema foresees: several tables, archives, images.
 
@@ -230,7 +238,7 @@ filters. Their origin, their patients and how their genes were chosen
 could not be checked, and nobody else could reuse our preparation. The
 generic class makes no choice for the caller, so other researchers can use
 it alone. For BreastMNIST it also computes the ResNet-50 embeddings once
-and caches them; it imports PyTorch only in that step, so cached runs never
+and caches them. It imports PyTorch only in that step, so cached runs never
 need it.
 
 - `X` is a pandas DataFrame and `y` a Series. Gene names reach the
@@ -239,19 +247,24 @@ need it.
   orders.
 - `load_xy` is a function, not a class, because it holds no state.
 - The view also defines `NAME` and `TARGET`. The view owns the data
-  choices; the experiment config owns the protocol and the values of `k`.
+  choices. The experiment config owns the protocol and the values of `k`.
 
-**Rejected loader designs.** A loader class inside the `featsel` package
-(the package stays generic; dataset code lives beside its data). Returning
-NumPy arrays and a list of names (alignment by position is what the index
-protects against). A folder named `datasets/` (the Hugging Face `datasets`
-library would hide it on import). A dataset YAML naming the loader, used
-briefly on 2026-10-17 (it repeated the choices `load_xy` already makes, so
-the two could drift apart).
+**Rejected loader designs.**
 
-**Limits.** The runner imports a module named in a config, which is one
-fixed convention (`NAME`, `TARGET`, `load_xy`), with no registry. It tells
-a module from a CSV config by the `.yaml` ending. `featsel_datasets` is not
+- A loader class inside the `featsel` package. The package stays generic,
+  and dataset code lives beside its data.
+- Returning NumPy arrays and a list of names. Alignment by position is
+  what the index protects against.
+- A folder named `datasets/`. The Hugging Face `datasets` library would
+  hide it on import.
+- A dataset YAML naming the loader, used briefly on 2026-10-17. It
+  repeated the choices `load_xy` already makes, so the two could drift
+  apart.
+
+**Limits.** The runner imports the module a config names. The module
+follows one fixed convention (`NAME`, `TARGET`, `load_xy`), with no
+registry. The runner tells a module from a CSV config by the `.yaml` or
+`.yml` ending. `featsel_datasets` is not
 installed with the package, so code outside the repository root must put
 the root on Python's path. The first SCAN-B load downloads 592 MB and takes
 about 85 s.
@@ -293,9 +306,16 @@ notebooks read the CSV. A new plot never needs a new run.
 `GridSearchCV`, with stratified Monte Carlo splits of the training part as
 its inner splits. The chosen values are stored with each row.
 
-**Parallel work.** One job is one selector on one task of one split. Jobs
-run on worker processes through joblib. Parallel work lives in the runner
-only.
+**Parallel work.** One job is one selector on one task of one split. A
+rank-once selector covers all its `k` values in one job. Any other
+selector gets one job per `k`. Jobs run on worker processes through
+joblib. Parallel work lives in the runner only.
+
+This layout dates from 2026-10-24. Before, each worker prepared its own
+copy of the data for each task, 2 to 3 GB. Now one split, stratified on
+the five-class PAM50 label, serves all five tasks. Each split is prepared
+once into shared memory. That saves the memory of every copy and five
+times the preprocessing.
 
 ## 5.5 Running for hours without supervision
 
@@ -304,8 +324,8 @@ operating system killed the run with no message. Four mechanisms fix this.
 
 | Mechanism | What it does |
 |---|---|
-| **Memory cap per worker** | Each worker process gets a limit on its data memory, by default the free RAM shared among the workers. A selector past it gets a Python `MemoryError`; the runner skips that cell, lists it at the end, and goes on. |
-| **Restart with fewer workers** | Compiled code can abort a worker instead of raising. The runner then resumes on its own with half the workers, each with twice the cap. |
+| **Memory cap per worker** | Each worker process gets a limit on its data memory. By default the limit is the free RAM shared among the workers, after room for three prepared splits and 1 GB. A selector or classifier past it gets a Python `MemoryError`. The runner skips that cell, lists it at the end, and goes on. |
+| **Restart with fewer workers** | Compiled code can abort a worker instead of raising. The runner then resumes on its own with half the workers. With the default cap, each worker gets about twice as much memory. A cap set by hand stays the same. |
 | **Resume** | Rows are written as they finish. `--resume` skips the cells already in the CSV, so a stopped run continues where it stopped. |
 | **One GPU at a time** | A lock file makes GPU fits take turns. A GPU out-of-memory error becomes a `MemoryError`, handled as above. |
 
@@ -314,12 +334,15 @@ every worker maps it read-only. So the data exists once in memory, not once
 per worker.
 
 **What happened in practice.** Full SCAN-B needs several GB per worker.
-On the 16 GB laptop, six workers ran out of memory and the operating system
-stopped the run; it resumed with fewer workers. With a cap of 3 GB per
+On the 16 GB laptop, six workers ran out of memory, and the operating
+system stopped the run. It resumed with fewer workers. With a cap of 3 GB per
 worker, the U-test selectors were skipped, and a second resume at a higher
 cap filled them in. Then we held the data as 32-bit floats (section 3.12).
-This cut the U-test selectors' peak memory. Now 4 workers fit under a 3 GB
-cap, where 2 fit before.
+This cut peak selection memory by 30% to 45%. On 2026-10-31, 4 workers
+fit under a 3 GB cap, where 2 fit before. That was measured before two
+later changes. The one-sort U test (2026-11-03) needs about 1.25 times the
+memory. And the cap now counts data memory instead of address space
+(2026-11-07). It was not measured again.
 
 **The cap counts data memory, not address space.** PyTorch's GPU libraries
 reserve address space they never use. Under an address-space cap below
@@ -334,12 +357,16 @@ Each selector has its own tests next to it, in
 scikit-learn method:
 
 - it selects the same features as that method;
-- its `fit` is at most 5% slower;
+- its `fit` plus `get_support` is at most 5% slower. Both are timed,
+  because scikit-learn builds its mask only in `get_support`. Each side's
+  time is the median of 50 fits. The fast filters are timed on larger
+  data (1,000 × 4,000), so that timing noise stays below 5%;
 - its GPU path selects the same features as its CPU path.
 
 These shared checks use one balanced binary dataset. Our real tasks are
-imbalanced. So the GPU paths of Lasso and mutual information are also
-tested at positive fractions of 50%, 20%, 10% and 5%. The runner has its
+imbalanced. So two paths are also tested at positive fractions of 50%,
+20%, 10% and 5%: Lasso's PPDNA solver, and mutual information on the GPU.
+The runner has its
 own tests, for example that a parallel run gives the same results as a
 sequential one.
 
@@ -369,3 +396,5 @@ sequential one.
   every selector on import, so this holds for normal use.
 - Selector tests live inside the package. Packaging excludes them, and
   pytest searches both `tests/` and `featsel/`.
+- CorrelationSelector can drop a gene whose only redundant partner was
+  itself dropped (section 4.2). The frontier used it as it is.
