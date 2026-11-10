@@ -35,10 +35,10 @@ Basal took 31 s per fit with two workers. Alone, on the same 1,488
 training patients, it took 23.1 s. Sequential selection got one fit per
 selection, because ten would have taken about 24 hours.
 
-Configs: [`configs/frontier_scanb70_*.yaml`](../../configs/),
-[`configs/frontier_breastmnist70_*.yaml`](../../configs/). Plot script:
-[`scripts/plot_frontier.py`](../../scripts/plot_frontier.py). Notebook with
-all SCAN-B plots: [`notebooks/04_frontier_scanb70.ipynb`](../../notebooks/04_frontier_scanb70.ipynb).
+Configs: [`configs/frontier_scanb70_*.yaml`](../configs/),
+[`configs/frontier_breastmnist70_*.yaml`](../configs/). Plot script:
+[`scripts/plot_frontier.py`](../scripts/plot_frontier.py). Notebook with
+all SCAN-B plots: [`notebooks/04_frontier_scanb70.ipynb`](../notebooks/04_frontier_scanb70.ipynb).
 The SCAN-B run took about 8 hours. BreastMNIST took about 3 minutes.
 
 ## 8.3 SCAN-B, all five tasks
@@ -198,7 +198,7 @@ inherits the weakness of its inner score. Accuracy on an imbalanced task
 rewards predicting the majority class. Then the smallest gene set wins the
 tie.
 
-Script: [`scripts/rfecv_scoring.py`](../../scripts/rfecv_scoring.py).
+Script: [`scripts/rfecv_scoring.py`](../scripts/rfecv_scoring.py).
 
 ### The full frontier run with AUC as the inner score
 
@@ -239,8 +239,8 @@ What the rerun shows:
 - With 5 splits these differences are not tested for significance
   (section 8.3, point 5).
 
-Configs: [`configs/frontier_scanb70_rfecv_auc.yaml`](../../configs/frontier_scanb70_rfecv_auc.yaml),
-[`configs/frontier_breastmnist70_rfecv_auc.yaml`](../../configs/frontier_breastmnist70_rfecv_auc.yaml).
+Configs: [`configs/frontier_scanb70_rfecv_auc.yaml`](../configs/frontier_scanb70_rfecv_auc.yaml),
+[`configs/frontier_breastmnist70_rfecv_auc.yaml`](../configs/frontier_breastmnist70_rfecv_auc.yaml).
 The SCAN-B run took 85 minutes. BreastMNIST took 41 seconds.
 
 ## 8.7 Is selection needed at all?
@@ -264,7 +264,7 @@ each task (sections 8.3 and 8.4):
 
 Mean test AUC over 5 splits. Table:
 [`figures/frontier_scanb70_all_genes.csv`](figures/frontier_scanb70_all_genes.csv).
-Config: [`configs/frontier_scanb70_all_genes.yaml`](../../configs/frontier_scanb70_all_genes.yaml).
+Config: [`configs/frontier_scanb70_all_genes.yaml`](../configs/frontier_scanb70_all_genes.yaml).
 
 On gene expression, selection helps a little. The two best methods on
 average, HC2008 and tree importance at k = 1000, beat all 28,552 genes by
@@ -293,7 +293,7 @@ This is random selection of every feature, that is, no selection.
 Mean test AUC over 5 splits. The k = 250 column is from section 8.5. Times
 differ slightly between the two runs. Table:
 [`figures/frontier_breastmnist70_large_k.csv`](figures/frontier_breastmnist70_large_k.csv).
-Config: [`configs/frontier_breastmnist70_large_k.yaml`](../../configs/frontier_breastmnist70_large_k.yaml).
+Config: [`configs/frontier_breastmnist70_large_k.yaml`](../configs/frontier_breastmnist70_large_k.yaml).
 
 What it shows:
 

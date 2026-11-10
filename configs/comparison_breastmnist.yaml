@@ -1,4 +1,4 @@
-# The selector comparison on BreastMNIST (task 4, NEXT.md steps 3 and 6): the same design as comparison_scanb.yaml on 780 ultrasound images
+# The selector comparison on BreastMNIST (task 4): the same design as comparison_scanb.yaml on 780 ultrasound images
 # as 2,048 ResNet-50 embedding dimensions, malignant vs benign or normal.
 # One binary task. k = 250 stays below the 390 training images.
 # Run with: python -m featsel.run --config configs/comparison_breastmnist.yaml --n-jobs 6

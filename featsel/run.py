@@ -381,7 +381,7 @@ def _tuned(model, grid, tuning, seed):
     Wrap a model so that fit chooses its parameters from grid on inner splits.
 
     The inner splits are stratified Monte Carlo draws from the training half
-    only (docs/final_report/03_how_to_measure.md, 3.8). fit then refits on the whole
+    only (final_report/03_how_to_measure.md, 3.8). fit then refits on the whole
     training half with the best values, and predict uses that refit model.
     """
     inner = StratifiedShuffleSplit(n_splits=tuning['n_splits'],

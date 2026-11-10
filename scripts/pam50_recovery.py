@@ -1,7 +1,7 @@
 """
 How deep in each method's gene ranking do the 50 PAM50 genes lie?
 
-docs/final_report/appendix_d_data_details.md, D.2. The PAM50 label is computed
+final_report/appendix_d_data_details.md, D.2. The PAM50 label is computed
 from 50 genes, so for each subtype-vs-rest task the genes that make the
 label are known. Each method ranks all genes once per split, on the
 training half, as in the runner. Recall at k is the share of the 50 among

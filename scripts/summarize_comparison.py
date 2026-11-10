@@ -2,7 +2,7 @@
 Summarize a selector-comparison CSV from the runner as Markdown tables.
 
 Each table cell is the median over splits, with the first and third
-quartiles in brackets (docs/final_report/03_how_to_measure.md, 3.3). Scores over tasks are
+quartiles in brackets (final_report/03_how_to_measure.md, 3.3). Scores over tasks are
 the mean of the tasks within each split.
 
 Usage:

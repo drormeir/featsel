@@ -170,7 +170,7 @@ cannot be computed once for all genes.
 **Numerical care.** Many genes have p-values below 10⁻³⁰⁸, where a
 standard 64-bit float rounds to 0. Higher Criticism needs to tell them
 apart. We compute the logarithm of the p-value directly from the normal
-tail, so nothing underflows ([`featsel/selectors/log_pvalue/`](../../featsel/selectors/log_pvalue/)).
+tail, so nothing underflows ([`featsel/selectors/log_pvalue/`](../featsel/selectors/log_pvalue/)).
 The problem was first seen on 2026-10-05: on the course copy, 167 genes
 had an F-test p-value of exactly 0 for the five classes. The module's
 tutorial uses 2,000 synthetic features with 1,500 samples per class, 300

@@ -83,4 +83,4 @@ machine it was taken on.
   removed. Git history keeps them. Decisions are in
   [Appendix A](appendix_a_decisions.md). Parked ideas are in
   [section 10.3](10_open_work.md#103-parked-ideas).
-- The project specification: [`references/MLDS_Feature_Selection.pdf`](../../references/MLDS_Feature_Selection.pdf).
+- The project specification: [`references/MLDS_Feature_Selection.pdf`](../references/MLDS_Feature_Selection.pdf).

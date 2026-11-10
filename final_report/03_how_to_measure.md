@@ -58,7 +58,7 @@ The same happens on BreastMNIST with shuffled labels. The F-test picks
 50 embedding dimensions; the score is the median AUC over 20 splits.
 Selected inside each split, the AUC is 0.465. Selected on all 780 images
 first, it is 0.645
-([`selection.ipynb`](../../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb)). In `featsel` the selector
+([`selection.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb)). In `featsel` the selector
 is always fit inside the split. Imputation and scaling are fit inside the
 split too.
 
@@ -307,7 +307,7 @@ Before the protocol was fixed, we discussed how to give each method one
 number for its strength over random selection (2026-10-12).
 
 **A leave-one-out confusion table.** It was built on 2026-10-13 as
-`loo_confusion` in [`featsel/strength.py`](../../featsel/strength.py). It
+`loo_confusion` in [`featsel/strength.py`](../featsel/strength.py). It
 was not used in the experiments. It takes the chosen genes and a binary
 label. It holds out one patient at a time. It tunes C by an inner
 leave-one-out on the rest. Then it records the held-out decision. The

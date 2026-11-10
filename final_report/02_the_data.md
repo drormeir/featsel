@@ -159,9 +159,9 @@ explains three later results. Higher Criticism stops at the edge of its
 search (7.5). Few PAM50 genes are recovered (7.6). Random genes catch up
 fast (7.2).
 
-Loader: [`featsel_datasets/scanb_gse96058/`](../../featsel_datasets/scanb_gse96058/).
-Tutorial: [`featsel_datasets/scanb_gse96058/demos/tutorial.ipynb`](../../featsel_datasets/scanb_gse96058/demos/tutorial.ipynb).
-Data exploration: [`notebooks/01_data_exploration.ipynb`](../../notebooks/01_data_exploration.ipynb).
+Loader: [`featsel_datasets/scanb_gse96058/`](../featsel_datasets/scanb_gse96058/).
+Tutorial: [`featsel_datasets/scanb_gse96058/demos/tutorial.ipynb`](../featsel_datasets/scanb_gse96058/demos/tutorial.ipynb).
+Data exploration: [`notebooks/01_data_exploration.ipynb`](../notebooks/01_data_exploration.ipynb).
 
 ## 2.2 BreastMNIST image embeddings (task 4)
 
@@ -239,9 +239,9 @@ partly tested on an image it has seen. We found this after the
 experiments. So every BreastMNIST result in this report carries the
 leak. Its size is not measured.
 
-Loader: [`featsel_datasets/medmnist_breastmnist/`](../../featsel_datasets/medmnist_breastmnist/).
-Notebooks: [`demos/tutorial.ipynb`](../../featsel_datasets/medmnist_breastmnist/demos/tutorial.ipynb),
-[`demos/selection.ipynb`](../../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb).
+Loader: [`featsel_datasets/medmnist_breastmnist/`](../featsel_datasets/medmnist_breastmnist/).
+Notebooks: [`demos/tutorial.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/tutorial.ipynb),
+[`demos/selection.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb).
 
 ## 2.3 Summary
 
@@ -257,4 +257,4 @@ Notebooks: [`demos/tutorial.ipynb`](../../featsel_datasets/medmnist_breastmnist/
 Plans and open questions about the data are in
 [Appendix D](appendix_d_data_details.md).
 
-Source: [`results/data_facts.csv`](../../results/data_facts.csv).
+Source: [`results/data_facts.csv`](../results/data_facts.csv).

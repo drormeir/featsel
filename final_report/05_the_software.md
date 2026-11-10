@@ -374,13 +374,13 @@ sequential one.
 
 | Part | Location |
 |---|---|
-| Selectors | [`featsel/selectors/`](../../featsel/selectors/) |
-| Base class and registration | [`featsel/selectors/base.py`](../../featsel/selectors/base.py) |
-| Runner | [`featsel/run.py`](../../featsel/run.py) |
-| GPU policy and lock | [`featsel/selectors/gpu.py`](../../featsel/selectors/gpu.py) |
-| Dataset loaders | [`featsel_datasets/`](../../featsel_datasets/) |
-| Configs and their documentation | [`configs/`](../../configs/), [`configs/README.md`](../../configs/README.md) |
-| Usage demo | [`notebooks/03_usage_demo.ipynb`](../../notebooks/03_usage_demo.ipynb) |
+| Selectors | [`featsel/selectors/`](../featsel/selectors/) |
+| Base class and registration | [`featsel/selectors/base.py`](../featsel/selectors/base.py) |
+| Runner | [`featsel/run.py`](../featsel/run.py) |
+| GPU policy and lock | [`featsel/selectors/gpu.py`](../featsel/selectors/gpu.py) |
+| Dataset loaders | [`featsel_datasets/`](../featsel_datasets/) |
+| Configs and their documentation | [`configs/`](../configs/), [`configs/README.md`](../configs/README.md) |
+| Usage demo | [`notebooks/03_usage_demo.ipynb`](../notebooks/03_usage_demo.ipynb) |
 | Design decisions | [Appendix A](appendix_a_decisions.md) |
 
 ## 5.8 Known limits

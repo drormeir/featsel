@@ -2,7 +2,7 @@
 Does RFECV's inner score decide how many genes it keeps on SCAN-B?
 
 RFECV picks its gene count by inner cross-validation. Its default inner
-score is accuracy. On the frontier (docs/final_report/08_results_frontier.md)
+score is accuracy. On the frontier (final_report/08_results_frontier.md)
 it kept 1 or 2 genes on the imbalanced subtype tasks. This script takes one
 70/30 stratified split, fits RFECV with three inner scores on four tasks,
 and reports the genes kept and the test AUC of logistic regression on them.

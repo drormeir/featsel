@@ -6,7 +6,7 @@ recursive-include featsel *.py
 exclude notebooks/*
 exclude featsel_datasets/*
 exclude figures/*
-exclude docs/*
+exclude final_report/*
 exclude references/*
 prune venv
 prune .git

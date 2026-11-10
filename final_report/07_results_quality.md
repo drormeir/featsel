@@ -28,10 +28,10 @@ The main score is macro-F1, not AUC, because the runner recorded AUC only
 from 2026-11-07 (Appendix A). Macro-F1 depends on the classifier's
 threshold. Chapter 8 scores by AUC.
 
-Configs: [`configs/comparison_scanb.yaml`](../../configs/comparison_scanb.yaml),
-[`configs/comparison_breastmnist.yaml`](../../configs/comparison_breastmnist.yaml).
-Results: [`results/comparison_scanb.csv`](../../results/comparison_scanb.csv),
-[`results/comparison_breastmnist.csv`](../../results/comparison_breastmnist.csv).
+Configs: [`configs/comparison_scanb.yaml`](../configs/comparison_scanb.yaml),
+[`configs/comparison_breastmnist.yaml`](../configs/comparison_breastmnist.yaml).
+Results: [`results/comparison_scanb.csv`](../results/comparison_scanb.csv),
+[`results/comparison_breastmnist.csv`](../results/comparison_breastmnist.csv).
 Full tables, per task, with times and stability:
 [Appendix E](appendix_e_comparison_tables.md).
 
@@ -81,7 +81,7 @@ with quartiles:
 Per-task tables, the number of genes kept, selection times and the chosen
 C are in [Appendix E](appendix_e_comparison_tables.md).
 
-![Macro-F1 against k by classifier](../../figures/macro_f1_vs_k.png)
+![Macro-F1 against k by classifier](../figures/macro_f1_vs_k.png)
 
 *Figure 7.1. Mann-Whitney against random selection, five classifiers,
 SCAN-B, 3 splits (the classifier study, section 7.7). The gap is largest
@@ -146,7 +146,7 @@ the threshold. Lasso beats Mann-Whitney at k = 50 and 100. At k = 20,
 Lasso beats RFE, and tree importance beats both Mann-Whitney and RFE. The
 rest of the top group cannot be told apart.
 
-Script: [`scripts/paired_tests.py`](../../scripts/paired_tests.py).
+Script: [`scripts/paired_tests.py`](../scripts/paired_tests.py).
 Tables: [`figures/paired_tests_comparison_scanb.csv`](figures/paired_tests_comparison_scanb.csv),
 [`figures/paired_tests_comparison_breastmnist.csv`](figures/paired_tests_comparison_breastmnist.csv).
 
@@ -186,7 +186,7 @@ which makes its importances noisier. On BreastMNIST, an earlier run with
 200 trees gave scores within 0.013 at every `k`. It raised the forest's
 Kuncheva index to 0.32 to 0.51.
 
-![Selection stability](../../figures/selection_stability.png)
+![Selection stability](../figures/selection_stability.png)
 
 *Figure 7.2. Mann-Whitney is stable across splits. Random selection is at
 0 by construction. Classifier study, 3 splits.*
@@ -289,7 +289,7 @@ equally good answers.
 **Limit.** Recall counts all 50 genes in every task, though a single
 subtype may depend on only some of them.
 
-Source: [`scripts/pam50_recovery.py`](../../scripts/pam50_recovery.py),
+Source: [`scripts/pam50_recovery.py`](../scripts/pam50_recovery.py),
 10 splits.
 
 ## 7.7 Does the classifier matter?
@@ -300,7 +300,7 @@ neighbours and shrinkage LDA. It used 3 splits, with C fixed. The run took
 9 minutes on 2 workers. It asks how much external selection is worth to a model,
 given the model's own regularization.
 
-![Gain over random by classifier](../../figures/gain_over_random.png)
+![Gain over random by classifier](../figures/gain_over_random.png)
 
 *Figure 7.3. The gain from selecting, by classifier. It shrinks with `k` for
 every classifier. For k-NN it stays large. k-NN suffers most from
@@ -323,12 +323,12 @@ pattern:
 - The gain at k = 10 ran from 0.15 (LumA) to 0.33 (Her2).
 - Logistic regression was best, 0.869 at k = 1000.
 
-![Gain by subtype](../../figures/gain_by_subtype.png)
+![Gain by subtype](../figures/gain_by_subtype.png)
 
 *Figure 7.4. The gain differs by subtype: at k = 10, from 0.14 (LumA) to
 0.31 (Her2).*
 
-Notebook: [`notebooks/02_classifier_behaviour.ipynb`](../../notebooks/02_classifier_behaviour.ipynb).
+Notebook: [`notebooks/02_classifier_behaviour.ipynb`](../notebooks/02_classifier_behaviour.ipynb).
 
 ## 7.8 BreastMNIST
 

@@ -44,7 +44,7 @@ The primary use case is predicting breast cancer molecular subtypes from gene ex
 ├── notebooks/          # Analysis and usage notebooks
 ├── scripts/            # One-off runs and examples
 ├── tests/              # Package-level tests
-├── docs/               # The final report, in docs/final_report/
+├── final_report/       # The final report
 └── references/         # Project proposal and papers
 ```
 
@@ -122,7 +122,7 @@ The pipeline is dataset-agnostic. Each dataset needs a folder in
 - Clinical and pathology fields: ER, PgR, HER2, Ki67, grade, survival
 
 Experiment configs name it as `dataset: "featsel_datasets.scanb_gse96058.featsel_view"`. Notes on the labels and on retired
-course copies are in `docs/final_report/02_the_data.md`.
+course copies are in `final_report/02_the_data.md`.
 
 ### BreastMNIST, ResNet-50 embeddings (second dataset)
 

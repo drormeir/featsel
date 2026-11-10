@@ -1,7 +1,7 @@
 """
 Time the runner against plain scikit-learn on the same grid (task 3).
 
-docs/final_report/06_making_it_fast.md, 6.1. The same splits, selectors, k values and
+final_report/06_making_it_fast.md, 6.1. The same splits, selectors, k values and
 classifier run four ways: scikit-learn's cross_validate on one core and on
 every core, and the runner on one core and on every core. Every test score
 must match between the two, so only the time differs.

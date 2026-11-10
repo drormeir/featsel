@@ -1,7 +1,7 @@
-# The selector comparison on SCAN-B (tasks 1-2, NEXT.md steps 2 and 6):
+# The selector comparison on SCAN-B (tasks 1-2):
 # every selector of smoke_scanb.yaml, k = 5 to 1000, logistic regression with
 # C tuned inside each split, the five PAM50 subtype-vs-rest tasks, 16 splits.
-# Protocol: docs/final_report/03_how_to_measure.md.
+# Protocol: final_report/03_how_to_measure.md.
 # Run with: python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 4 --max-worker-memory-gb 3
 # On 16 GB of RAM, with the data in float32: 4 workers fit under a 3 GB cap.
 # 16 splits and 50 trees, to keep the run under half an hour.

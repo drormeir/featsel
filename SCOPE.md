@@ -90,7 +90,7 @@ tabular UCI high-dimensional set, or ResNet embeddings extracted offline from
 a small image set, or the NIPS 2003 challenge sets on Hugging Face (Arcene,
 Gisette, Madelon; uploaded by one user, `mstz`). Whatever is chosen goes in
 `featsel_datasets/<name>/`, outside the `featsel` package, with a loader that
-downloads and caches it (see `docs/final_report/05_the_software.md`,
+downloads and caches it (see `final_report/05_the_software.md`,
 section 5.3), and gets a section in the Data chapter.
 
 **Higher Criticism as a selector.** This is the one method that sets the
@@ -128,7 +128,7 @@ Finish the minimum passing project before adding anything.
 ## 6. Working rules
 
 - **Park it, don't argue it.** When an idea fails the four-task test, add a
-  dated one-line entry to `docs/final_report/10_open_work.md`, section 10.3
+  dated one-line entry to `final_report/10_open_work.md`, section 10.3
   "Parked ideas", and return to the current step.
 - **Smallest next action.** End every session with one concrete, finishable
   step.

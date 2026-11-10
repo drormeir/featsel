@@ -83,8 +83,8 @@ The classifiers, with their tuning of C, took the rest. Memory, not cores,
 limited the run to 2 workers. This led to 32-bit data and 50 trees
 (section 3.12).
 
-Source: [`scripts/benchmark_speed.py`](../../scripts/benchmark_speed.py),
-[`results/speed_benchmark.csv`](../../results/speed_benchmark.csv).
+Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
+[`results/speed_benchmark.csv`](../results/speed_benchmark.csv).
 
 ## 6.2 Each method, faster
 
@@ -103,17 +103,17 @@ Results at the largest size both sides reached:
 
 | Method | Original | Ours, CPU | Ours, GPU | Same features? | Notebook |
 |---|---|---|---|---|---|
-| ANOVA, FDR, FWE, Percentile (F-test) | 0.36 s | 0.36 s | 0.14 s (2.6×) | yes | [anova_f](../../featsel/selectors/anova_f/demos/speed.ipynb) |
-| Variance threshold | 0.83 s | 0.86 s | 0.13 s (6.4×) | yes | [variance_threshold](../../featsel/selectors/variance_threshold/demos/speed.ipynb) |
-| Correlation (pandas full matrix) | 7.05 s | 6.89 s | 0.25 s (28×) | yes | [correlation](../../featsel/selectors/correlation/demos/speed.ipynb) |
-| Mann-Whitney and Higher Criticism (our NumPy U test) | 3.76 s | — | 0.49 s (7.7×) | yes | [mann_whitney](../../featsel/selectors/mann_whitney/demos/speed.ipynb) |
-| Mutual information, 10,000 features | 78.8 s | 18.4 s (4.3×) | 1.60 s (49×) | yes, bit for bit | [mutual_info](../../featsel/selectors/mutual_info/demos/speed.ipynb) |
-| Lasso (liblinear → PPDNA solver) | 5.66 s | — | 1.08 s (5.2×) | 91% overlap (see below) | [lasso](../../featsel/selectors/lasso/demos/speed.ipynb) |
-| Tree importance, 10,000 features (1 thread → 12) | 103.3 s | 18.9 s (5.5×) | no GPU path | yes | [tree_importance](../../featsel/selectors/tree_importance/demos/speed.ipynb) |
-| RFE (liblinear → exact Newton solver) | 26.1 s | 12.7 s (2.1×) | 15.4 s (1.7×) | not at every size (see below) | [rfe](../../featsel/selectors/rfe/demos/speed.ipynb) |
-| RFECV, 10,000 features | 76.6 s | 51.8 s (1.5×) | 44.4 s (1.7×) | not at every size | [rfecv](../../featsel/selectors/rfecv/demos/speed.ipynb) |
-| Sequential forward, 1,000 features | 191.3 s | 22.5 s (8.5×) | 4.9 s (39×) | yes | [sequential](../../featsel/selectors/sequential/demos/speed.ipynb) |
-| Random | — | 0.02 s | — | — | [random_selection](../../featsel/selectors/random_selection/demos/speed.ipynb) |
+| ANOVA, FDR, FWE, Percentile (F-test) | 0.36 s | 0.36 s | 0.14 s (2.6×) | yes | [anova_f](../featsel/selectors/anova_f/demos/speed.ipynb) |
+| Variance threshold | 0.83 s | 0.86 s | 0.13 s (6.4×) | yes | [variance_threshold](../featsel/selectors/variance_threshold/demos/speed.ipynb) |
+| Correlation (pandas full matrix) | 7.05 s | 6.89 s | 0.25 s (28×) | yes | [correlation](../featsel/selectors/correlation/demos/speed.ipynb) |
+| Mann-Whitney and Higher Criticism (our NumPy U test) | 3.76 s | — | 0.49 s (7.7×) | yes | [mann_whitney](../featsel/selectors/mann_whitney/demos/speed.ipynb) |
+| Mutual information, 10,000 features | 78.8 s | 18.4 s (4.3×) | 1.60 s (49×) | yes, bit for bit | [mutual_info](../featsel/selectors/mutual_info/demos/speed.ipynb) |
+| Lasso (liblinear → PPDNA solver) | 5.66 s | — | 1.08 s (5.2×) | 91% overlap (see below) | [lasso](../featsel/selectors/lasso/demos/speed.ipynb) |
+| Tree importance, 10,000 features (1 thread → 12) | 103.3 s | 18.9 s (5.5×) | no GPU path | yes | [tree_importance](../featsel/selectors/tree_importance/demos/speed.ipynb) |
+| RFE (liblinear → exact Newton solver) | 26.1 s | 12.7 s (2.1×) | 15.4 s (1.7×) | not at every size (see below) | [rfe](../featsel/selectors/rfe/demos/speed.ipynb) |
+| RFECV, 10,000 features | 76.6 s | 51.8 s (1.5×) | 44.4 s (1.7×) | not at every size | [rfecv](../featsel/selectors/rfecv/demos/speed.ipynb) |
+| Sequential forward, 1,000 features | 191.3 s | 22.5 s (8.5×) | 4.9 s (39×) | yes | [sequential](../featsel/selectors/sequential/demos/speed.ipynb) |
+| Random | — | 0.02 s | — | — | [random_selection](../featsel/selectors/random_selection/demos/speed.ipynb) |
 
 Sizes are 30,000 features unless the row says otherwise. Every fit of
 every variant was reproducible.
@@ -124,7 +124,7 @@ liblinear took 4.5 to 5.8 s. So PPDNA was 3.2 to 7.0 times faster.
 
 A second series ran on real SCAN-B on 2026-11-07. It used the training
 half of one split, Basal vs rest (1,488 patients), and the median of 5
-fits. Script: [`scripts/benchmark_selectors.py`](../../scripts/benchmark_selectors.py);
+fits. Script: [`scripts/benchmark_selectors.py`](../scripts/benchmark_selectors.py);
 its output in `results/local/benchmark_selectors/` is not tracked. At all
 28,552 genes:
 

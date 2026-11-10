@@ -1,7 +1,7 @@
 """
 Leave-one-out confusion matrix of L2 logistic regression on chosen features.
 
-The design is in `docs/final_report/03_how_to_measure.md`, section 3.13. An outer loop holds out one row
+The design is in `final_report/03_how_to_measure.md`, section 3.13. An outer loop holds out one row
 at a time. On the rest, an inner leave-one-out loop picks C by balanced
 log-loss, and the model refit with that C predicts the held-out row. To keep
 runs fast, each loop visits only a random fraction `alpha` of its rows.
