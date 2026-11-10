@@ -94,3 +94,53 @@ def kuncheva_index(results, n_total_features):
             })
 
     return pd.DataFrame(rows)
+
+
+def nogueira_stability(results, n_total_features):
+    """
+    Selection stability across splits, for subsets of any size.
+
+    The estimator of Nogueira, Sechidis and Brown (2018):
+
+        phi = 1 - mean_f(s_f^2) / ((k / n) * (1 - k / n))
+
+    where s_f^2 = M / (M - 1) * p_f * (1 - p_f) is the unbiased variance of
+    feature f's selection over the M splits, p_f the share of splits that
+    selected it, k the mean subset size and n the total number of features.
+    It is 1 when every split selects the same features, and 0 for selection
+    at random. Unlike Kuncheva's index it does not assume equal subset sizes;
+    when they are equal, it equals the mean pairwise Kuncheva index.
+
+    Parameters
+    ----------
+    results : pd.DataFrame
+        Runner output, with a space-separated 'selected_indices' column.
+    n_total_features : int
+        Total number of features available to the selector.
+
+    Returns
+    -------
+    stability : pd.DataFrame
+        One row per selection cell with the stability over its splits.
+    """
+    selections = results.drop_duplicates([*SELECTION_COLUMNS, 'split'])
+    rows = []
+
+    for key, group in selections.groupby(SELECTION_COLUMNS, dropna=False):
+        subsets = [set(s.split()) for s in group['selected_indices'].fillna('').astype(str)]
+        m = len(subsets)
+        share = np.mean([len(s) for s in subsets]) / n_total_features
+        if m < 2 or not 0 < share < 1:
+            continue
+
+        counts = pd.Series([f for s in subsets for f in s]).value_counts()
+        p = counts.to_numpy() / m
+        mean_variance = m / (m - 1) * (p * (1 - p)).sum() / n_total_features
+        rows.append({
+            **dict(zip(SELECTION_COLUMNS, key)),
+            'stability': float(1 - mean_variance / (share * (1 - share))),
+            'n_splits': m,
+            'variable_size': len({len(s) for s in subsets}) > 1,
+        })
+
+    return pd.DataFrame(rows)

@@ -107,6 +107,10 @@ Neekhra, B., Gupta, D. and Chakrabarti, P. P. (2025). On the
 (in)significance of feature selection in high-dimensional datasets.
 Preprint. https://arxiv.org/abs/2508.03593
 
+Nogueira, S., Sechidis, K. and Brown, G. (2018). On the stability of
+feature selection algorithms. *Journal of Machine Learning Research*
+18(174), 1-54. https://jmlr.org/papers/v18/17-514.html
+
 Parker, J. S., Mullins, M., Cheang, M. C. U., et al. (2009). Supervised risk
 predictor of breast cancer based on intrinsic subtypes. *Journal of Clinical
 Oncology* 27(8), 1160-1167. https://doi.org/10.1200/JCO.2008.18.1370

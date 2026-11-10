@@ -146,10 +146,10 @@ archived outside git.
 
 ```
 featsel/
-├── __init__.py              # Exports DataLoader, FeatureSelector, summarize, kuncheva_index
+├── __init__.py              # Exports DataLoader, FeatureSelector, summarize, kuncheva_index, nogueira_stability
 ├── data_loader.py           # Core data loading and cleaning logic
 ├── run.py                   # Config-driven experiment runner: run(X, y, config), CLI
-├── analysis.py              # summarize() and kuncheva_index() over the runner's CSV
+├── analysis.py              # summarize(), kuncheva_index(), nogueira_stability() over the runner's CSV
 ├── metrics.py               # Predictive metrics and the CSV's key columns
 ├── strength.py              # loo_confusion(): nested leave-one-out score of chosen genes
 ├── environment.py           # Machine, versions and commit, saved as JSON beside results

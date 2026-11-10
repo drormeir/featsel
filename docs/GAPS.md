@@ -136,6 +136,12 @@ report does not list it yet.
 - **What closes it.** Add their measure next to Kuncheva's. Computed from
   existing results; no new runs.
 - **Source.** New. The aircraft notebook notes the approximation.
+- **Status.** Closed 2026-11-11. `featsel.analysis.nogueira_stability`,
+  tested to equal the mean Kuncheva index at equal sizes.
+  `scripts/summarize_comparison.py` prints both. On the comparison it
+  changes no value by more than 0.014 (HC2004). It matters for RFECV on
+  the aircraft data: 0.15 against Kuncheva's 0.07. Sections 3.6 and 7.4,
+  Appendix D and the aircraft notebook say so.
 
 ### B3. No stated contribution
 

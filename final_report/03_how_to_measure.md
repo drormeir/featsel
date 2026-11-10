@@ -169,6 +169,14 @@ identical sets and 0 for the overlap expected by chance. So the random
 control scores about 0. A pairwise measure needs many splits: 5 splits
 give 10 pairs, 16 give 120, and 20 give 190.
 
+Kuncheva's index assumes that both sets have the same size. Some methods
+choose their own count, so their sets differ in size from split to split.
+For them, our index uses the mean size of each pair, which is an
+approximation. So we also compute the measure of Nogueira, Sechidis and
+Brown (2018). It needs no equal sizes. It is built from how often each
+feature is selected across splits. When the sizes are equal, it equals the
+mean pairwise Kuncheva index.
+
 A random method must get a different seed on each split. With the same
 seed on every split, its measured stability would be a meaningless 1.0.
 

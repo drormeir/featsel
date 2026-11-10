@@ -153,6 +153,9 @@ Rank-once methods fit once per task and split, so one time covers every
 | HC2004 | | | | | | | | | | 0.589 |
 | HC2008 | | | | | | | | | | 0.869 |
 
+Nogueira's measure, which allows unequal set sizes (section 3.6), gives
+the same values to within 0.001, except HC2004: 0.575.
+
 ### Chosen C, count of cells
 
 | k | C = 0.01 | 0.1 | 1 | 10 | 100 |
@@ -204,6 +207,8 @@ Lasso keeps 172 [162, 176]. HC2004 keeps 1 [1, 2]. HC2008 keeps
 | RFE | 0.261 | 0.256 | 0.236 | 0.260 | 0.275 | | 0.266 | |
 | HC2004 | | | | | | | | 0.457 |
 | HC2008 | | | | | | | | 0.654 |
+
+Nogueira's measure gives the same values, except HC2004: 0.447.
 
 ### Chosen C, count of cells
 

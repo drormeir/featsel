@@ -198,6 +198,16 @@ split, 0 = chance), over 120 pairs of splits:
 HC2008 scores 0.87 at its 2,855 genes, the same as Mann-Whitney at that
 size. HC2004 scores 0.59.
 
+**Unequal set sizes.** Kuncheva's index assumes equal set sizes. HC2004,
+HC2008 and Lasso at k ≥ 250 keep a different number of genes on different
+splits. Nogueira's measure (section 3.6) allows for that. It changes these
+values by at most 0.014: HC2004 falls from 0.589 to 0.575, and the rest
+move by 0.001 or less. On BreastMNIST, HC2004 falls from 0.457 to 0.447.
+So the approximation does not change any conclusion here. It matters only
+when the sizes vary widely. RFECV on the aircraft data (section 8.8) keeps
+620 to 1,844 features. There Kuncheva's index gives 0.07, and Nogueira's
+measure 0.15.
+
 On BreastMNIST (190 pairs), Mann-Whitney and HC2008 are again the most
 stable. Mann-Whitney scores 0.53 to 0.69 over `k`, and both score 0.65 at
 204 features. Lasso is the least stable, at 0.14 to 0.21. Tree importance

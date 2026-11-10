@@ -65,6 +65,7 @@ Cited in the report, chapters 2, 4 and 7. Checked on Crossref or jmlr.org,
 | Bolón-Canedo, V., Sánchez-Maroño, N., Alonso-Betanzos, A., et al. (2014). A review of microarray datasets and applied feature selection methods. *Information Sciences* 282, 111-135. https://doi.org/10.1016/j.ins.2014.05.042 |
 | Bengio, Y. and Grandvalet, Y. (2004). No unbiased estimator of the variance of K-fold cross-validation. *Journal of Machine Learning Research* 5, 1089-1105. https://www.jmlr.org/papers/v5/grandvalet04a.html |
 | Kuncheva, L. I. (2007). A stability index for feature selection. *Proceedings of the 25th IASTED International Multi-Conference: Artificial Intelligence and Applications*, Innsbruck, 390-395. The stability index. |
+| Nogueira, S., Sechidis, K. and Brown, G. (2018). On the stability of feature selection algorithms. *Journal of Machine Learning Research* 18(174), 1-54. https://jmlr.org/papers/v18/17-514.html. Stability for sets of unequal size. |
 
 ## Added with the final report
 

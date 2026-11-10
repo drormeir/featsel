@@ -16,7 +16,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from featsel.analysis import kuncheva_index
+from featsel.analysis import kuncheva_index, nogueira_stability
 
 
 def _cell(values, digits=3):
@@ -107,6 +107,7 @@ def own_count_table(df):
 
 def summarize(df, n_features):
     stability = kuncheva_index(df, n_features)
+    nogueira = nogueira_stability(df, n_features)
     own_count = own_count_table(df)
     sections = [f'## Macro-F1, mean over the {df.task.nunique()} tasks\n\n' + macro_f1_table(df),
                 '## Gain in macro-F1 over RandomSelector, same k and split\n\n' + gain_table(df)]
@@ -135,11 +136,13 @@ def summarize(df, n_features):
                     'once per task and split; that time is shown under every `k`.\n\n'
                     + _table(selection, 'selector', 'k', 'selection_time_s', digits=1))
 
-    stability = stability.assign(k=stability.k.map(_k_label))
-    stability = stability.groupby(['selector', 'k']).consistency_index.mean().unstack('k')
-    stability = stability.reindex(index=selectors, columns=labels).round(3).fillna('')
-    sections.append("## Kuncheva's stability index, mean over tasks\n\n"
-                    + _markdown(stability))
+    for title, frame, column in [
+            ("Kuncheva's stability index", stability, 'consistency_index'),
+            ("Nogueira's stability, for any set sizes", nogueira, 'stability')]:
+        frame = frame.assign(k=frame.k.map(_k_label))
+        table = frame.groupby(['selector', 'k'])[column].mean().unstack('k')
+        table = table.reindex(index=selectors, columns=labels).round(3).fillna('')
+        sections.append(f'## {title}, mean over tasks\n\n' + _markdown(table))
 
     chosen = df.tuned_params.map(lambda p: json.loads(p).get('C')).rename('C')
     counts = chosen.groupby(df.k, observed=True).value_counts().unstack(fill_value=0)

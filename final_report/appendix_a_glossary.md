@@ -94,6 +94,11 @@ to take large, accurate steps. Converges in few iterations.
 **PAM50.** A published classifier that assigns a breast tumour to one of
 five subtypes from 50 genes.
 
+**Nogueira's stability.** A stability measure built from how often each
+feature is selected across splits (Nogueira et al. 2018). Unlike the
+Kuncheva index, it allows sets of different sizes. 1 = identical sets,
+0 = chance.
+
 **Paired test.** A test on the differences between two methods measured on
 the same splits. It removes the noise shared by both.
 

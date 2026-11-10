@@ -24,7 +24,7 @@ from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
 from sklearn.preprocessing import StandardScaler
 
 import featsel.run as run_module
-from featsel.analysis import kuncheva_index, summarize
+from featsel.analysis import kuncheva_index, nogueira_stability, summarize
 from featsel.metrics import KEY_COLUMNS, g_mean
 from featsel.run import build_tasks, load_config, load_dataset, run, run_config
 from featsel.selectors import (
@@ -355,6 +355,34 @@ def test_kuncheva_separates_random_from_anova(experiment):
     anova = stability.loc[('ANOVAFSelector', 5), 'consistency_index']
     random = stability.loc[('RandomSelector', 5), 'consistency_index']
     assert (anova > random + 0.2).all()
+
+
+def _selections(subsets):
+    """A runner-shaped table: one selector, one selection per split."""
+    return pd.DataFrame({'task': 't', 'split': range(len(subsets)), 'train_size': 0.5,
+                         'preprocess': 'standard', 'selector': 's', 'k': 3, 'model': 'm',
+                         'selected_indices': [' '.join(map(str, s)) for s in subsets]})
+
+
+def test_nogueira_equals_kuncheva_at_equal_sizes():
+    """Test that with equal subset sizes the two measures agree."""
+    df = _selections([[0, 1, 2], [0, 1, 3], [0, 4, 5], [1, 2, 6]])
+
+    nogueira = nogueira_stability(df, n_total_features=20).stability.item()
+    kuncheva = kuncheva_index(df, n_total_features=20).consistency_index.item()
+    assert nogueira == pytest.approx(kuncheva)
+
+
+def test_nogueira_bounds():
+    """Test 1 for identical subsets, and about 0 for random subsets of any size."""
+    identical = _selections([[0, 1, 2]] * 4)
+    assert nogueira_stability(identical, n_total_features=20).stability.item() == 1
+
+    rng = np.random.default_rng(0)
+    subsets = [rng.choice(1000, size=rng.integers(20, 80), replace=False) for _ in range(200)]
+    stability = nogueira_stability(_selections(subsets), n_total_features=1000)
+    assert stability.variable_size.item()
+    assert abs(stability.stability.item()) < 0.01
 
 
 def test_unknown_model_is_rejected(experiment):
