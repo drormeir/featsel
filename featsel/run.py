@@ -229,13 +229,14 @@ def load_dataset(config):
     'dataset' is either a module, such as
     'featsel_datasets.scanb_gse96058.featsel_view', or a CSV dataset config.
     A module defines NAME, TARGET and load_xy(target=...); its choices about
-    samples and genes live in load_xy. A CSV config is read by the DataLoader,
-    and unlabelled samples are dropped.
+    samples and genes live in load_xy, and the config's 'dataset_params' are
+    passed to it. A CSV config is read by the DataLoader, and unlabelled
+    samples are dropped.
     """
     if not _is_dataset_file(config['dataset']):
         view = importlib.import_module(config['dataset'])
         target = config.get('target') or view.TARGET
-        X, y = view.load_xy(target=target)
+        X, y = view.load_xy(target=target, **config.get('dataset_params', {}))
         return X, y, target, view.NAME
 
     loader = DataLoader(config['dataset'])

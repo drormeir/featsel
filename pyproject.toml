@@ -59,10 +59,12 @@ dev = [
 optuna = [
     "optuna>=3.0.0",
 ]
-# Only to compute the BreastMNIST ResNet-50 embeddings; cached ones need neither.
+# Only to compute the BreastMNIST ResNet-50 embeddings, and to search its
+# copied images (copies.py); the cached embeddings and copies.csv need none.
 embeddings = [
     "torch>=2.0",
     "torchvision>=0.15",
+    "opencv-python-headless>=4.8",
 ]
 # Only for the U test on a GPU (device='cuda' on MannWhitneySelector and
 # HigherCriticismSelector).

@@ -54,6 +54,7 @@ supports classification only.
 | `dataset` | required | A dataset module name, or a CSV dataset config (`.yaml`) relative to this file |
 | `output` | required | Output CSV, relative to this file |
 | `target` | dataset default | Target column to predict |
+| `dataset_params` | `{}` | Further arguments to a dataset module's `load_xy`, such as `{drop_copies: true}` for BreastMNIST |
 | `selectors` | required | List of `{name, k, params, label}`. `name` is a selector class name, case-insensitive, such as `ANOVAFSelector` |
 | `models` | required | List of `{name, params, label, grid}`. `name` is one of `logistic_regression`, `linear_svm`, `random_forest`, `knn`, `lda` (and `xgboost` if installed). `grid`, such as `{C: [0.01, 0.1, 1, 10, 100]}`, tunes those parameters inside each split (see below) |
 | `tuning` | `{n_splits: 3, train_size: 0.5, scoring: roc_auc}` | Inner splits for models with a `grid`. `scoring` is a scikit-learn scorer name |
