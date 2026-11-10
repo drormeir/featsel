@@ -4,9 +4,10 @@
 
 ## 1.1 What feature selection is
 
-A dataset describes samples, here patients or images, by features, here
-genes or numbers that describe an image. A classifier learns to predict a
-label, such as a cancer subtype, from the features.
+A dataset describes samples by features. Here the samples are patients or
+images. The features are genes, or numbers that describe an image. A
+classifier learns to predict a label, such as a cancer subtype, from the
+features.
 
 Feature selection chooses a subset of the features and gives the
 classifier only those. It answers the question: which few features carry
@@ -16,8 +17,8 @@ There are three reasons to do it.
 
 1. **Better models.** Irrelevant features add noise. A model can fit that
    noise and then predict worse on new samples.
-2. **Cheaper models.** Fewer features mean faster training and prediction,
-   and, in medicine, fewer genes to measure for each new patient.
+2. **Cheaper models.** Fewer features mean faster training and prediction.
+   In medicine, they also mean fewer genes to measure for each new patient.
 3. **Understanding.** A short list of genes is something a biologist can
    read and test in the lab.
 
@@ -29,7 +30,8 @@ has a few thousand patients. In our data there are 2,976 patients and 28,552
 usable genes: almost ten times more features than samples.
 
 This setting is often written p ≫ n: many more features (p) than samples
-(n). The same setting appears in text analysis and in image embeddings. It causes five problems.
+(n). The same setting appears in text analysis and in image embeddings.
+It causes five problems.
 
 **Overfitting.** With more features than samples, a linear classifier can
 separate any labeling of the training samples perfectly, even random
@@ -41,7 +43,7 @@ genes by chance alone.
 
 **Correlated features.** Genes work in groups. When one gene of a group
 rises, hundreds of others rise with it. So many different gene sets can
-predict equally well, and "the best genes" is not a single answer. The
+predict equally well. "The best genes" is not a single answer. The
 project specification names this problem directly: removing all
 correlated features may be impractical.
 
@@ -62,51 +64,51 @@ The project specification (`references/MLDS_Feature_Selection.pdf`, Nov
    running in parallel.
 4. Run the pipeline on a second dataset, not necessarily gene expression.
 
-The deliverables are software driven by a configuration file, and this
-report.
+The deliverables are software that runs on an input dataset, and a final
+report. This project drives the software by a configuration file.
 
 ## 1.4 What we built and asked
 
 **The software.** `featsel` is a Python package of 15 selection methods.
 Each one behaves exactly like a scikit-learn selector. A user with an
 existing scikit-learn pipeline can swap their selector for ours and change
-nothing else. A runner, driven by one YAML file, runs the whole comparison
-and writes one row per experiment to a CSV table. See
+nothing else. A runner runs the whole comparison. One YAML file drives it.
+It writes one row per experiment to a CSV table. See
 [chapter 5](05_the_software.md).
 
 **The main question.** For a given number of features `k`, which method
 gives the best classifier? And by how much does it beat choosing `k`
-features at random? The random control matters: if random genes do almost
+features at random? The random control matters. If random genes do almost
 as well, a method has not found much.
 
-**The second question.** What does each method cost in time, and which
+**The second question.** What does each method cost in time? Which
 methods give the best quality for their cost? We answer it with a
-cost-quality frontier ([chapter 8](08_results_frontier.md)): selection time
-against AUC, every method on one plot.
+cost-quality frontier ([chapter 8](08_results_frontier.md)). It plots
+selection time against AUC, every method on one plot.
 
 **The targets.** The breast cancer data offers several labels: the PAM50
 molecular subtype, estrogen receptor (ER) status, and survival. PAM50 is
-the main target. Chapter 2 explains why, and why it becomes five binary
-tasks.
+the main target. Chapter 2 explains why. It also explains why PAM50
+becomes five binary tasks.
 
 ## 1.5 Scope
 
 This is a comparative study, not a new method. The project uses published
 methods. The one change is in HC2008: it centres each sorted p-value at
 its exact mean (section 4.4). The aim is a fair comparison under one
-protocol, and a fast, reliable tool to run it. `SCOPE.md` in the repository records what is in
-and out of scope.
+protocol, and a fast, reliable tool to run it. `SCOPE.md` in the
+repository records what is in and out of scope.
 
 ## 1.6 What earlier work found
 
 **Comparative studies on gene expression.** Dudoit et al. (2002) compared
-classifiers on several tumour gene expression datasets. Simple methods,
-such as diagonal linear discriminant analysis and nearest neighbours, did
-as well as complex ones. Statnikov et al. (2005) compared classifiers and
-gene selection methods on many multiclass cancer datasets. They found
-multiclass SVMs the most accurate classifiers. Bolón-Canedo et al. (2014)
-review the microarray datasets in common use and the selection methods
-applied to them. Saeys et al. (2007) review selection methods for
+classifiers on three tumour gene expression datasets. Simple methods did
+as well as complex ones. Examples are diagonal linear discriminant
+analysis and nearest neighbours. Statnikov et al. (2005) compared
+classifiers and gene selection methods on many multiclass cancer
+datasets. They found multiclass SVMs the most accurate classifiers.
+Bolón-Canedo et al. (2014) review the microarray datasets in common use.
+They also review the selection methods applied to them. Saeys et al. (2007) review selection methods for
 bioinformatics as a whole.
 
 **How our data differs.** Most of those datasets have tens to a few

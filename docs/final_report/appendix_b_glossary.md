@@ -45,8 +45,9 @@ without a classifier.
 **FPKM.** Fragments per kilobase of transcript per million mapped reads: a
 normalized count of how much of a gene's RNA was read.
 
-**GPU.** Graphics processing unit: a processor with thousands of small
-cores, fast at doing the same operation on many numbers at once.
+**GPU.** Graphics processing unit: a processor with hundreds or thousands
+of small cores. It is fast at doing the same operation on many numbers at
+once.
 
 **Higher Criticism (HC).** A method that compares sorted p-values with
 what pure noise would give. It keeps the features up to the point of
@@ -57,12 +58,12 @@ largest difference. So it picks its own count.
 **Kuncheva index.** A measure of how similar the feature sets chosen on
 different splits are, corrected for chance: 1 = identical, 0 = chance.
 
-**Lasso.** A linear model with an L1 penalty, λ·Σ|wᵢ|, which sets many
-weights to exactly zero. Here it is logistic regression. scikit-learn's C
+**Lasso.** A linear model with an L1 penalty, λ·Σ|wᵢ|. The penalty sets
+many weights to exactly zero. Here it is logistic regression. scikit-learn's C
 is 1/λ, so a smaller C means a stronger penalty.
 
-**Leakage.** Information from the test samples reaching the training,
-which makes test scores look better than they are.
+**Leakage.** Information from the test samples reaching the training. It
+makes test scores look better than they are.
 
 **Macro-F1.** The F1 score of each class, averaged with equal weight. F1
 is the harmonic mean of precision and recall.
@@ -94,8 +95,9 @@ the same splits. It removes the noise shared by both.
 **p-value.** The chance, if there were no real effect, of a result at
 least this extreme.
 
-**Random forest.** Many decision trees, each on a bootstrap sample and a
-random subset of features at each split, voting together.
+**Random forest.** Many decision trees that vote together. Each tree grows
+on a bootstrap sample. At each split it tries a random subset of the
+features.
 
 **Rank once.** Fitting a method once per split and taking every `k` from
 its single ranking.
@@ -127,8 +129,8 @@ in each part.
 with the widest margin between classes. A linear SVM's weights rank
 features in RFE.
 
-**Task.** One binary prediction problem. SCAN-B gives five (each subtype
-against the rest); BreastMNIST gives one.
+**Task.** One binary prediction problem. SCAN-B gives five, each subtype
+against the rest. BreastMNIST gives one.
 
 **Wilcoxon signed-rank test.** A paired test that ranks the absolute
 differences and checks whether positive and negative ones balance.
