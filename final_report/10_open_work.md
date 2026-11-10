@@ -12,7 +12,7 @@ research beyond the project's scope.
 
 | Item | Why it matters | Effort |
 |---|---|---|
-| **More splits for the frontier.** It has 5 splits. The comparison has 16. | With 5 splits no paired test can reach p < 0.06. So the order among the top methods on the frontier is not established. | About 8 h per 5 extra splits on SCAN-B. |
+| **More splits for the frontier.** It has 5 splits. The comparison has 16. | With 5 splits the corrected paired test has 4 degrees of freedom. So the order among the top methods on the frontier is not established. | About 8 h per 5 extra splits on SCAN-B. |
 | **Tuned classifier in the frontier.** C is fixed at 1 there. | Absolute AUCs may be a little low. A method needing a different C is disadvantaged. | Multiplies the classifier's cost by about 15. |
 | **A paired test of selection against all features.** Section 8.7 found gains of 0.006 AUC on SCAN-B and a loss on BreastMNIST, over 5 splits. | Whether selection improves the classifier at all is a central question. 5 splits cannot settle a gain of this size. | Add the all-features baseline to the 16-split comparison. Hours. |
 | **RFECV scored by AUC in the 16-split comparison.** On the frontier (5 splits, section 8.6) it no longer collapsed on SCAN-B. | Would give it the paired tests of chapter 7. | About 6 hours on SCAN-B. |

@@ -100,6 +100,9 @@ Meinshausen, N. and Bühlmann, P. (2010). Stability selection. *Journal of
 the Royal Statistical Society, Series B* 72(4), 417-473.
 https://doi.org/10.1111/j.1467-9868.2010.00740.x
 
+Nadeau, C. and Bengio, Y. (2003). Inference for the generalization error.
+*Machine Learning* 52(3), 239-281. https://doi.org/10.1023/A:1024068626366
+
 Neekhra, B., Gupta, D. and Chakrabarti, P. P. (2025). On the
 (in)significance of feature selection in high-dimensional datasets.
 Preprint. https://arxiv.org/abs/2508.03593

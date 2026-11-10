@@ -24,6 +24,11 @@ One row of the runner's CSV.
 **Control (random selection).** A method that picks `k` features at
 random. Every real method must beat it.
 
+**Corrected resampled t-test.** A paired t-test over random splits that
+allows for their shared training samples (Nadeau and Bengio 2003). It
+multiplies the variance of the mean difference by a factor that grows
+with the test-to-training ratio.
+
 **Cost-quality frontier.** The methods that no other method beats on both
 time and quality at once.
 
@@ -133,7 +138,8 @@ features in RFE.
 against the rest. BreastMNIST gives one.
 
 **Wilcoxon signed-rank test.** A paired test that ranks the absolute
-differences and checks whether positive and negative ones balance.
+differences and checks whether positive and negative ones balance. It
+assumes independent pairs, which random splits are not.
 
 **Wrapper.** A selection method that searches over feature subsets by
 training a classifier on each.

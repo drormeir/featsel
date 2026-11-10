@@ -94,8 +94,10 @@ C are in [Appendix D](appendix_d_comparison_tables.md).
    gain is a few hundredths. 250 random genes of 28,552 already carry most
    of the signal. The reason is that the signal is spread over thousands
    of correlated genes (chapter 2).
-2. **Tree importance is best up to k = 500**, by 0.004 to 0.027 over
-   Mann-Whitney (median paired difference). At k = 1000 the two are equal.
+2. **Tree importance has the highest median up to k = 500**, by 0.004 to
+   0.027 over Mann-Whitney (median paired difference). It wins on 14 to 16
+   of the 16 splits. But the corrected test of section 7.3 does not
+   establish the gap. At k = 1000 the two are equal.
 3. **Mann-Whitney, the simplest method, is close behind**, and it is by far
    the most stable (section 7.4).
 4. **Lasso stops improving at k = 20.** At C = 1 it gives a non-zero weight
@@ -105,8 +107,10 @@ C are in [Appendix D](appendix_d_comparison_tables.md).
    come from liblinear at its default tolerance, which stops before the
    solution (chapter 6). On all patients, the exact solution keeps 196 to
    907 genes per task, against liblinear's 330 to 1,600.
-5. **RFE is the weakest selector.** It beats random only up to k = 20, and
-   falls below it from k = 500. Per task, it fails at small `k` on LumA,
+5. **RFE is the weakest selector.** Its median beats random only up to
+   k = 20, and falls below it from k = 500. The corrected test establishes
+   neither. It does establish that RFE is worse than tree importance at
+   every `k`. Per task, it fails at small `k` on LumA,
    LumB and Normal. At k = 5 its macro-F1 is 0.35 on LumA, below random
    selection's 0.61. On Basal and Her2 it is close to the others. A check
    of its choices showed many near-constant genes: genes at one value in
@@ -124,35 +128,59 @@ C are in [Appendix D](appendix_d_comparison_tables.md).
 
 ## 7.3 Are the differences real? Paired tests
 
-All methods ran on the same 16 splits. So we compare them split by split.
-The test is the two-sided Wilcoxon signed-rank test (Wilcoxon 1945), on
-each split's mean over tasks. With 16 splits the smallest possible p-value
-is 3 × 10⁻⁵. We ran 81 tests on SCAN-B, so we require p < 0.05 / 81 =
-0.0006 (Bonferroni) before calling a difference real.
+All methods ran on the same 16 splits. So we compare them split by split,
+on each split's mean over tasks.
 
-| Comparison on SCAN-B | Result |
-|---|---|
-| Mann-Whitney, Lasso, tree importance vs random, k ≤ 250 | Better on all 16 splits at every `k`, p = 3 × 10⁻⁵. |
-| Tree importance vs Mann-Whitney, k = 5 to 500 | Tree importance better on 14 to 16 of 16 splits, p ≤ 0.0003. Real. |
-| Tree importance vs Mann-Whitney, k = 1000 | No difference (8 of 16, p = 0.86). |
-| Lasso vs Mann-Whitney, k = 20 | Lasso better on 15 of 16, p = 6 × 10⁻⁵. Real. From k = 100 Lasso is worse on all 16. |
-| RFE vs random, k = 5 to 20 | RFE better, p ≤ 0.0002. |
-| RFE vs random, k = 50 to 250 | No difference. |
-| RFE vs random, k = 500 and 1000 | RFE worse on 12 to 14 of 16 splits (p = 0.005 and 0.001): suggestive, not past the corrected threshold. |
+**The test.** Random splits share most of their training patients. So the
+per-split scores are not independent. A test that treats them as
+independent, such as the paired t-test or the Wilcoxon signed-rank test,
+gives p-values that are too small. We use the corrected resampled t-test
+of Nadeau and Bengio (2003). For J splits, it replaces the variance of the
+mean difference, var / J, with (1 / J + n_test / n_train) · var. Here half
+the patients train, so n_test / n_train = 1. The variance of the mean
+grows from var / 16 to about 1.06 · var. The t statistic has J − 1
+degrees of freedom. The correction is approximate, and it is cautious.
 
-On BreastMNIST (66 tests, threshold 0.0008), every method beats random at
-every `k` (p ≤ 2 × 10⁻⁵). Among the methods, only a few differences pass
-the threshold. Lasso beats Mann-Whitney at k = 50 and 100. At k = 20,
-Lasso beats RFE, and tree importance beats both Mann-Whitney and RFE. The
-rest of the top group cannot be told apart.
+We report the mean difference with its corrected 95% interval. We ran 81
+tests on SCAN-B, so we require p < 0.05 / 81 = 0.0006 (Bonferroni) before
+calling a difference real.
+
+| Comparison on SCAN-B | Mean difference [95% interval] | Result |
+|---|---|---|
+| Mann-Whitney, Lasso, tree importance vs random, k = 5 | +0.26 to +0.28; lowest bound +0.18 | Real for all three, up to k = 100 (p ≤ 0.0006). |
+| The same, k = 250 | Tree importance +0.053 [0.032, 0.075] | Real for tree importance only. Mann-Whitney p = 0.001, Lasso p = 0.05. |
+| The same, k = 500 and 1000 | Mann-Whitney +0.028 and +0.024; tree importance +0.034 and +0.023 | Better on all 16 splits, but not past the threshold (p = 0.00065 to 0.003). |
+| Mann-Whitney vs random, k = 2,855 | +0.016 [0.009, 0.023] | Real (p = 0.0003). |
+| Tree importance vs Mann-Whitney, k = 5 to 500 | +0.005 to +0.024; only k = 20's interval excludes 0 | Not established. Tree importance wins 14 to 16 of 16 splits, but p ≥ 0.04. |
+| Lasso vs Mann-Whitney, k = 20 | +0.017 [−0.012, 0.046] | Not established (p = 0.23). |
+| Lasso vs tree importance, k = 500 | −0.031 [−0.045, −0.016] | Real: Lasso is worse (p = 0.0004). |
+| RFE vs random, any `k` | +0.08 at k = 5, about 0 from k = 50 | Not established at any `k` (p ≥ 0.04). |
+| RFE vs tree importance, any `k` | −0.20 at k = 5 to −0.03 at k = 1000 | Real at every `k`: RFE is worse. |
+| RFE vs Mann-Whitney and Lasso, k = 10 to 100 | −0.07 to −0.16 | Real: RFE is worse. |
+
+On BreastMNIST (61 tests, threshold 0.0008), the corrected test
+establishes one difference: Mann-Whitney beats random at k = 10, by 0.21
+[0.11, 0.31]. At k = 5 to 20 every method's interval against random lies
+above zero, and every method beats random on 19 or 20 of the 20 splits.
+But no p-value except that one passes the threshold. No difference among
+the four methods comes close (p ≥ 0.28). The per-split scores on
+BreastMNIST vary much more than on SCAN-B: one task, 390 test images.
+
+**What the correction changes.** The uncorrected Wilcoxon test passed 67
+of the 81 SCAN-B comparisons and 30 of the 61 on BreastMNIST. The
+corrected test passes 35 and 1. Two earlier conclusions do not survive:
+that tree importance beats Mann-Whitney on SCAN-B, and that RFE beats
+random at small `k`. Both differences are consistent across splits, but
+the splits are too dependent to establish them. The table keeps the
+Wilcoxon p-value in a column, for comparison.
 
 Script: [`scripts/paired_tests.py`](../scripts/paired_tests.py).
 Tables: [`figures/paired_tests_comparison_scanb.csv`](figures/paired_tests_comparison_scanb.csv),
 [`figures/paired_tests_comparison_breastmnist.csv`](figures/paired_tests_comparison_breastmnist.csv).
 
-**What the tests do not cover.** The splits reuse one cohort. So the tests
-say the difference is stable under re-splitting. They do not say it will
-hold for new patients (chapter 3).
+**What the tests do not cover.** The splits reuse one cohort. The
+correction accounts for the overlap between training sets. It does not
+turn the cohort into new patients (chapter 3).
 
 ## 7.4 Stability: same score, different genes
 
@@ -462,10 +490,12 @@ lead on image embeddings.
 
 ## 7.10 Summary
 
-- Every method beats random selection at small `k`, RFE by the least. The
-  gain fades as `k` grows.
+- Every method beats random selection at small `k` in the median, RFE by
+  the least. The gain fades as `k` grows. On SCAN-B the corrected paired
+  test establishes the gain of the top three methods up to k = 100.
 - Tree importance, Mann-Whitney and Lasso form the top group. Their order
-  depends on the dataset and on `k`.
+  depends on the dataset and on `k`, and the corrected test does not
+  establish it.
 - Mann-Whitney is the most stable by far.
 - Higher Criticism reduced to a top-k filter on both datasets. Their
   signal is neither rare nor independent.

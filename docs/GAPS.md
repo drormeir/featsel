@@ -46,8 +46,9 @@ report does not list it yet.
 
 ### A4. The frontier rests on 5 splits (task 2)
 
-- **Problem.** No paired test on 5 splits can reach p < 0.06. So the order
-  of the top methods on the frontier is not established.
+- **Problem.** On 5 splits the corrected paired test (B1) has 4 degrees
+  of freedom. So the order of the top methods on the frontier is not
+  established.
 - **What closes it.** More splits: about 8 hours per 5 on SCAN-B.
 - **Source.** `final_report/10_open_work.md`, 10.1.
 
@@ -120,6 +121,11 @@ report does not list it yet.
   `scripts/paired_tests.py` with the corrected test; no new experiment is
   needed.
 - **Source.** New.
+- **Status.** Closed 2026-11-11. `scripts/paired_tests.py` runs the
+  corrected test, with the mean difference and its 95% interval. Section
+  7.3 is rewritten. Tests passed on SCAN-B fell from 67 to 35 of 81, and on
+  BreastMNIST from 30 to 1 of 61. Tree importance's lead over Mann-Whitney
+  is no longer established; chapters 7 and 9 and the summary say so.
 
 ### B2. The stability index assumes equal set sizes
 

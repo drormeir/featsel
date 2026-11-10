@@ -53,19 +53,25 @@
 6. **A gene list is therefore not a unique answer.** In their top 50,
    the methods found on average at most 12% of the 50 genes that define
    PAM50 (26% on the best task). Yet they predicted it well. Tree
-   importance scored best and was the least stable. Report stability next
-   to accuracy.
+   importance had the highest median score and was the least stable.
+   Report stability next to accuracy.
 7. **Simple is enough.** A one-gene-at-a-time rank test is within 0.03
    macro-F1 of the best method on SCAN-B at every `k`. It is by far the
    most stable. On a GPU it takes under a second.
-8. **The best method depends on the data.** Tree importance led on gene
-   expression. Lasso and tree importance shared the lead on image
-   embeddings. The broad pattern held on both: selection beats random most
-   at small `k`, and RFE is weakest at small `k`.
-9. **Higher Criticism needs rare signal.** On all three datasets it stopped at
-   the edge of its search range. It acted as a fixed top-10% filter. Its
-   assumptions, rare and independent signal, do not hold here.
-10. **Wrappers did not pay.** RFE, RFECV and Sequential selection were
+8. **The top methods cannot be told apart.** Tree importance had the
+   highest median on gene expression. Lasso and tree importance shared it
+   on image embeddings. A paired test corrected for overlapping splits
+   establishes neither lead. The broad pattern held on both datasets:
+   selection beats random most at small `k`, and RFE is weakest at small
+   `k`.
+9. **Test with the splits' overlap in mind.** Random splits share most of
+   their training patients. An uncorrected test passed 67 of 81
+   comparisons on SCAN-B. The corrected resampled t-test passed 35.
+10. **Higher Criticism needs rare signal.** On all three datasets it
+    stopped at the edge of its search range. It acted as a fixed top-10%
+    filter. Its assumptions, rare and independent signal, do not hold
+    here.
+11. **Wrappers did not pay.** RFE, RFECV and Sequential selection were
     among the slowest methods. They scored below the simple filters on
     SCAN-B. RFECV's default inner score is accuracy. It made RFECV keep
     one or two genes on imbalanced tasks. With AUC as its inner score it
@@ -74,19 +80,19 @@
 
 **About cost.**
 
-11. **The cheap corner wins.** On SCAN-B, sub-second GPU filters reach AUC
+12. **The cheap corner wins.** On SCAN-B, sub-second GPU filters reach AUC
     0.97. Nothing slower is clearly better. On BreastMNIST everything is
     cheap. Lasso is best at k = 250.
-12. **A GPU helps sorting and matrix products, not everything.** A cheap
+13. **A GPU helps sorting and matrix products, not everything.** A cheap
     GPU computes in 64 bits slowly and has little memory. It also needs
     the data copied to it. RFE stayed faster on the CPU. The random forest
     could not move to it.
-13. **Exactness has a price in agreement.** Faster exact solvers can pick
+14. **Exactness has a price in agreement.** Faster exact solvers can pick
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
     does on some synthetic data, and in 14 of 100 cells of a preliminary
     SCAN-B frontier run (section 8.2). The reason is that the default stops
     before reaching the solution.
-14. **Selection buys a smaller model more than a better one.** On
+15. **Selection buys a smaller model more than a better one.** On
     BreastMNIST, all 2,048 features gave AUC 0.921, more than any selected
     subset. On FGVC-Aircraft, all features gave 0.864, also the best. On
     SCAN-B, the best selected sets beat all 28,552 genes by only 0.006 on
@@ -98,10 +104,13 @@
 For a given number of features `k`, which method gives the best
 classifier, and by how much over random?
 
-On SCAN-B: tree importance, by 0.29 macro-F1 at k = 5 down to 0.03 at
-k = 1000. Mann-Whitney is close behind and far more stable. On
-BreastMNIST: Lasso or tree importance, whose order is not settled. Lasso
-beats random by 0.22 at k = 5 down to 0.07 at k = 250.
+On SCAN-B: tree importance, Mann-Whitney and Lasso form a top group whose
+order is not established. Tree importance has the highest median, 0.29
+macro-F1 over random at k = 5 down to 0.03 at k = 1000. Mann-Whitney is
+within 0.03 of it and far more stable. The gain over random is
+established up to k = 100. On BreastMNIST: Lasso or tree importance,
+whose order is not settled either. Lasso beats random by 0.22 at k = 5
+down to 0.07 at k = 250, in the median.
 
 If time also counts, a Mann-Whitney U filter on a GPU is the practical
 choice on gene expression. It comes within a hundredth of the best AUC,

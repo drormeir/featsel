@@ -84,7 +84,8 @@ Bellman (1957) is not checked.
 | Liu, Y.-J. and Zhou, W. (2023). Dual Newton proximal point algorithm for solution paths of the ℓ1-regularized logistic regression. https://arxiv.org/abs/2310.19353. Lasso's GPU solver (PPDNA). |
 | Meinshausen, N. and Bühlmann, P. (2010). Stability selection. *Journal of the Royal Statistical Society, Series B* 72(4), 417-473. https://doi.org/10.1111/j.1467-9868.2010.00740.x |
 | Ross, B. C. (2014). Mutual information between discrete and continuous data sets. *PLoS ONE* 9(2), e87357. https://doi.org/10.1371/journal.pone.0087357. scikit-learn's mutual information estimate. |
-| Wilcoxon, F. (1945). Individual comparisons by ranking methods. *Biometrics Bulletin* 1(6), 80-83. https://doi.org/10.2307/3001968. The paired tests of chapter 7. |
+| Wilcoxon, F. (1945). Individual comparisons by ranking methods. *Biometrics Bulletin* 1(6), 80-83. https://doi.org/10.2307/3001968. The uncorrected paired test, kept for comparison in chapter 7. |
+| Nadeau, C. and Bengio, Y. (2003). Inference for the generalization error. *Machine Learning* 52(3), 239-281. https://doi.org/10.1023/A:1024068626366. The corrected resampled t-test, the paired test of chapter 7. |
 
 ## Notes on Higher Criticism
 

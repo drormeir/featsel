@@ -111,6 +111,11 @@ noise. A method's gain over the random control is a difference. It is the
 method's score minus the control's score, on the same split and at the
 same `k`.
 
+**Testing a paired difference.** The splits overlap, so their differences
+are not independent. A standard paired test would overstate certainty.
+Chapter 7 uses the corrected resampled t-test of Nadeau and Bengio
+(2003), which widens the variance to allow for the overlap (section 7.3).
+
 ## 3.4 The random control
 
 The control picks `k` features at random, with a new draw on every split.

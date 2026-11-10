@@ -90,10 +90,10 @@ splits. Bars: one standard deviation over splits. Table:
    large, almost any genes work, as chapter 7 found.
 5. **The top methods are close.** Their best AUCs differ by at most
    0.008. Over splits, the standard deviation is 0.002 to 0.004 for the
-   mean over tasks, and 0.002 to 0.017 for a single task. With 5 splits a
-   paired test cannot reach p < 0.06. So the order among the top methods
-   is not established here. Chapter 7, with 16 splits, is the place for
-   that.
+   mean over tasks, and 0.002 to 0.017 for a single task. These
+   differences are not tested here. With 5 splits, the corrected paired
+   test of section 7.3 has only 4 degrees of freedom. With 16 splits, in
+   chapter 7, it could not order the top methods either.
 
 **Caution on HC2008.** It kept 2,855 genes, the edge of its search, on
 every task and split, as in chapter 7. It is on the frontier because it is
