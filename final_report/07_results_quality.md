@@ -7,7 +7,7 @@
 | Setting | SCAN-B | BreastMNIST |
 |---|---|---|
 | Tasks | 5 (each PAM50 subtype vs rest) | 1 (malignant vs rest) |
-| Methods | Random, Mann-Whitney, Lasso (C = 1), tree importance (50 trees), RFE (C = 0.01, half the genes per round), HC2004, HC2008 | the same |
+| Methods | Random, Mann-Whitney, Lasso (C = 1), tree importance (50 trees), RFE (C = 0.01, half the genes per round), HC2004, HC2008; Berk-Jones added later on the same splits (section 7.5) | the same |
 | `k` | 5, 10, 20, 50, 100, 250, 500, 1000 | 5, 10, 20, 50, 100, 250 |
 | Splits | 16 random splits, half for training | 20 random splits, half for training |
 | Classifier | logistic regression, C tuned inside each split | the same |
@@ -257,6 +257,37 @@ the opposite. Thousands of genes carry signal, and they are correlated
 (chapter 2). Then the HC score keeps rising up to the search limit. So the
 limit sets the count, not the data. This is itself a finding. On these
 two datasets, HC thresholding reduces to a top-k filter at k = alpha0 · N.
+
+### Berk-Jones behaves like HC2008
+
+Berk-Jones (section 4.5) ran later, on the same splits, with the same
+protocol and search limit. A check run first reproduced the comparison's
+genes and scores exactly, for Mann-Whitney and Lasso at k = 5 on the
+first two splits.
+
+| | SCAN-B | BreastMNIST |
+|---|---|---|
+| Features kept | 2,837 to 2,856, median 2,855 | 173 to 204, median 203 |
+| Cells at the search edge or past it | 54 of 80 | 9 of 20 |
+| Macro-F1 | 0.883 [0.880, 0.886] | 0.791 [0.772, 0.810] |
+| HC2008, the same splits | 0.883 [0.880, 0.886] | 0.790 [0.771, 0.810] |
+| Gain over random selection at the edge (corrected test) | +0.016 [0.009, 0.024], p = 0.0004 | +0.056 [−0.017, 0.128], p = 0.13 |
+| Kuncheva index | 0.87 | 0.65 |
+
+Berk-Jones reads the whole null distribution of each sorted p-value, where
+HC reads its mean and spread. On these data it made no difference. Its
+score was smallest at or just before the edge of its search, as HC's
+maximum was at the edge. On every split and task, its features were a
+subset of HC2008's, short by at most 18 genes on SCAN-B and 31 features on
+BreastMNIST. So it scored the same and was as stable. Unlike HC2004, it did not stop at one gene: no single p-value was
+far enough below the rest. The reason is the one given for HC. The signal
+is widespread and correlated, while both thresholds assume rare,
+independent signal.
+
+Configs: [`configs/comparison_scanb_berkjones.yaml`](../configs/comparison_scanb_berkjones.yaml),
+[`configs/comparison_breastmnist_berkjones.yaml`](../configs/comparison_breastmnist_berkjones.yaml).
+Results: [`results/comparison_scanb_berkjones.csv`](../results/comparison_scanb_berkjones.csv),
+[`results/comparison_breastmnist_berkjones.csv`](../results/comparison_breastmnist_berkjones.csv).
 
 ## 7.6 Does selection find the PAM50 genes?
 
@@ -545,6 +576,8 @@ lead on image embeddings.
   depends on the dataset and on `k`, and the corrected test does not
   establish it.
 - Mann-Whitney is the most stable by far.
-- Higher Criticism reduced to a top-k filter on both datasets. Their
-  signal is neither rare nor independent.
+- Higher Criticism reduced to a top-k filter on both datasets, and
+  Berk-Jones with it. Their signal is neither rare nor independent.
+- Without BreastMNIST's copied images, scores did not fall, but the fine
+  ranking there changed.
 - Good prediction does not require the defining genes.

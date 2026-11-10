@@ -1,0 +1,39 @@
+# Berk-Jones added to the BreastMNIST comparison (comparison_breastmnist.yaml):
+# the same protocol and the same 20 splits, so its rows pair with the
+# comparison's split by split. A separate CSV, because the runner now writes
+# more columns than the comparison's CSV holds.
+# Run with: python -m featsel.run --config configs/comparison_breastmnist_berkjones.yaml --n-jobs 4
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/comparison_breastmnist_berkjones.csv"
+
+seed: 42
+n_splits: 20
+train_sizes: [0.5]
+preprocess: ["standard"]
+selection_repeats: 1
+
+metrics:
+  - accuracy
+  - macro_f1
+  - balanced_accuracy
+  - mcc
+  - g_mean
+
+tuning:
+  n_splits: 3
+  train_size: 0.5
+  scoring: roc_auc
+
+selectors:
+  - name: BerkJonesSelector
+    label: BerkJones
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
+    grid:
+      C: [0.01, 0.1, 1, 10, 100]

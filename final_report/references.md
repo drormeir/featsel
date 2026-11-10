@@ -22,6 +22,11 @@ a practical and powerful approach to multiple testing. *Journal of the Royal
 Statistical Society, Series B* 57(1), 289-300.
 https://doi.org/10.1111/j.2517-6161.1995.tb02031.x
 
+Berk, R. H. and Jones, D. H. (1979). Goodness-of-fit test statistics that
+dominate the Kolmogorov statistics. *Zeitschrift für
+Wahrscheinlichkeitstheorie und verwandte Gebiete* 47, 47-59.
+https://doi.org/10.1007/BF00533250
+
 Bolón-Canedo, V., Sánchez-Maroño, N., Alonso-Betanzos, A., et al. (2014). A
 review of microarray datasets and applied feature selection methods.
 *Information Sciences* 282, 111-135.
@@ -99,6 +104,10 @@ https://doi.org/10.1214/aoms/1177730491
 Meinshausen, N. and Bühlmann, P. (2010). Stability selection. *Journal of
 the Royal Statistical Society, Series B* 72(4), 417-473.
 https://doi.org/10.1111/j.1467-9868.2010.00740.x
+
+Moscovich, A., Nadler, B. and Spiegelman, C. (2016). On the exact
+Berk-Jones statistics and their p-value calculation. *Electronic Journal of
+Statistics* 10(2), 2329-2354. https://doi.org/10.1214/16-EJS1172
 
 Nadeau, C. and Bengio, Y. (2003). Inference for the generalization error.
 *Machine Learning* 52(3), 239-281. https://doi.org/10.1023/A:1024068626366

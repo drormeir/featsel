@@ -12,6 +12,11 @@ each class. Always 0.5 for a model that predicts one class for everyone.
 **Benjamini-Hochberg.** A procedure that keeps the expected share of false
 discoveries among the selected features below a chosen level (FDR).
 
+**Berk-Jones threshold.** A relative of Higher Criticism. It scores the
+i-th smallest p-value by the chance, under the null, of an i-th smallest
+p-value that small, and keeps the features up to the rank where that
+chance is smallest (section 4.5).
+
 **Bonferroni correction.** Testing m hypotheses at level α / m each, so
 the chance of even one false positive stays below α.
 

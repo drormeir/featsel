@@ -235,7 +235,7 @@ were enough, and PyTorch is already needed for the embeddings.
 
 ## 6.3 The device policy
 
-Nine selectors share one rule for choosing where to run:
+Ten selectors share one rule for choosing where to run:
 
 | `device` | Behaviour |
 |---|---|

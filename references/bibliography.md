@@ -29,6 +29,8 @@ Works this project relies on.
 | Donoho, D. and Jin, J. (2004). Higher criticism for detecting sparse heterogeneous mixtures. *Annals of Statistics* 32(3), 962-994. https://arxiv.org/abs/math/0410072 |
 | Donoho, D. and Jin, J. (2008). Higher criticism thresholding: Optimal feature selection when useful features are rare and weak. *PNAS* 105(39), 14790-14795. https://pmc.ncbi.nlm.nih.gov/articles/PMC2553037/ |
 | Donoho, D. and Jin, J. (2009). Feature selection by higher criticism thresholding achieves the optimal phase diagram. *Philosophical Transactions of the Royal Society A* 367(1906), 4449-4470. https://doi.org/10.1098/rsta.2009.0129. Preprint 2008: https://arxiv.org/abs/0812.2263 |
+| Berk, R. H. and Jones, D. H. (1979). Goodness-of-fit test statistics that dominate the Kolmogorov statistics. *Zeitschrift für Wahrscheinlichkeitstheorie und verwandte Gebiete* 47, 47-59. https://doi.org/10.1007/BF00533250. The Berk-Jones statistics. |
+| Moscovich, A., Nadler, B. and Spiegelman, C. (2016). On the exact Berk-Jones statistics and their p-value calculation. *Electronic Journal of Statistics* 10(2), 2329-2354. https://doi.org/10.1214/16-EJS1172. The exact one-sided statistic M_n^+ that BerkJonesSelector thresholds. |
 
 ## Evaluating selection methods
 

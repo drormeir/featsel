@@ -18,10 +18,12 @@ This project implements a feature selection pipeline that:
 
 - Applies multiple feature selection methods: filter (variance, ANOVA F with a
   fixed count, a percentile, or a false discovery or family-wise error rate,
-  mutual information, correlation), embedded (Lasso, random forest
-  importance) and wrapper (recursive feature elimination, with or without
-  cross-validation, and sequential selection), plus a random-selection
-  control. Higher Criticism is planned.
+  the Mann-Whitney U test, mutual information, correlation), Higher
+  Criticism and Berk-Jones thresholds that choose their own count, embedded
+  (Lasso, random forest importance) and wrapper (recursive feature
+  elimination, with or without cross-validation, and sequential selection),
+  plus a random-selection control. Two methods can be chained: a fast
+  filter first, a slower method on what it keeps.
 - Compares them under one protocol: stratified Monte Carlo splits, with every
   selector fit on the training part only
 - Runs the splits in parallel

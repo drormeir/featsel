@@ -1,0 +1,82 @@
+{
+  "written": 80,
+  "started": "2026-11-11T01:32:03+02:00",
+  "resumed": false,
+  "dataset": "SCAN-B GSE96058",
+  "target": "pam50 subtype",
+  "n_samples": 2976,
+  "n_features": 28552,
+  "config": {
+    "seed": 42,
+    "n_splits": 16,
+    "selection_repeats": 1,
+    "train_sizes": [
+      0.5
+    ],
+    "preprocess": [
+      "standard"
+    ],
+    "metrics": [
+      "accuracy",
+      "macro_f1",
+      "balanced_accuracy",
+      "mcc",
+      "g_mean"
+    ],
+    "n_jobs": 4,
+    "max_worker_memory_gb": 3.0,
+    "tuning": {
+      "n_splits": 3,
+      "train_size": 0.5,
+      "scoring": "roc_auc"
+    },
+    "dataset": "featsel_datasets.scanb_gse96058.featsel_view",
+    "target": "pam50 subtype",
+    "output": "configs/../results/comparison_scanb_berkjones.csv",
+    "selectors": [
+      {
+        "name": "BerkJonesSelector",
+        "label": "BerkJones"
+      }
+    ],
+    "models": [
+      {
+        "name": "logistic_regression",
+        "params": {
+          "max_iter": 1000
+        },
+        "grid": {
+          "C": [
+            0.01,
+            0.1,
+            1,
+            10,
+            100
+          ]
+        }
+      }
+    ]
+  },
+  "finished": "2026-11-11T01:35:40+02:00",
+  "out_of_memory": [],
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "cpu_count": 12,
+    "ram_gb": 15.5,
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "torch": "2.14.1",
+      "xgboost": "3.4.1"
+    },
+    "git_commit": "a5d39484b060607f22f9dad358fa6deb62189d6a",
+    "git_dirty": true,
+    "gpu": "NVIDIA GeForce GTX 1650",
+    "gpu_memory_gb": 4.0
+  }
+}

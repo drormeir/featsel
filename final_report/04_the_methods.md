@@ -18,8 +18,9 @@ The lasso (Tibshirani 1996) and random forests (Breiman 2001) are the two
 embedded methods used here. The family is a label, not shared code. In
 `featsel` each method is its own class.
 
-We add two more groups: **Higher Criticism**, a filter that picks its own
-number of features, and the **random control**.
+We add two more groups: **Higher Criticism** and its relative
+**Berk-Jones**, filters that pick their own number of features, and the
+**random control**.
 
 **Multiple testing.** A filter that tests every gene runs thousands of
 tests. The Benjamini and Hochberg (1995) procedure keeps the expected
@@ -27,7 +28,7 @@ share of false discoveries below a chosen level. Bonferroni correction
 controls the chance of even one false discovery, and is stricter. The FDR
 and FWE selectors apply these two.
 
-## 4.2 The 15 methods
+## 4.2 The 16 methods
 
 Every method is a class in `featsel.selectors`. "Ours vs scikit-learn"
 says whether it reproduces a scikit-learn method exactly (same genes).
@@ -45,6 +46,7 @@ Tests check this.
 | CorrelationSelector | filter | Rank by correlation with the label, then drop one of each highly correlated pair. | `k`, thresholds | own method |
 | MutualInfoSelector | filter | Rank by mutual information, which catches any dependence, not only linear. | `k` | same scores as `mutual_info_classif`, bit for bit |
 | HigherCriticismSelector | filter, own count | Keep the features below the Higher Criticism threshold (section 4.4). | variant, alpha0 | none in scikit-learn |
+| BerkJonesSelector | filter, own count | Keep the features below the exact Berk-Jones threshold (section 4.5). | alpha0 | none in scikit-learn |
 | LassoSelector | embedded | L1-penalized logistic regression; keep the largest weights; the penalty sets most weights to exactly zero. | C | same as `SelectFromModel` with liblinear |
 | TreeImportanceSelector | embedded | Random forest; rank by how much each feature reduces impurity in the trees. | number of trees | same as `SelectFromModel(RandomForest)` |
 | RFESelector | wrapper | SVM-RFE: train a linear SVM, remove the features with the smallest weights, repeat (Guyon et al. 2002). | `k`, step, C | same as `RFE(LinearSVC)` with the default solver |
@@ -239,12 +241,48 @@ still rising at the edge of its search. Raising alpha0 because we know the
 signal is widespread would tune the method to the answer. A selector must
 not assume what it is meant to find.
 
-## 4.5 What the experiments used
+## 4.5 Berk-Jones
+
+Berk-Jones is a close relative of HC. It reads the same sorted p-values.
+It differs in how it judges each one.
+
+**The idea.** Under the null, the i-th smallest of N uniform p-values
+follows a Beta(i, N − i + 1) distribution. HC summarizes that
+distribution by a mean and a standard deviation. Berk-Jones uses all of
+it. It scores rank i by the chance, under the null, of an i-th smallest
+p-value at least this small:
+
+BJ(i) = P(Beta(i, N − i + 1) ≤ p₍ᵢ₎)
+
+A small BJ(i) means that p₍ᵢ₎ is surprisingly small for its rank. The
+selector keeps every feature up to the rank where BJ(i) is smallest. This
+minimum is the one-sided exact Berk-Jones statistic, M⁺ₙ, of Moscovich,
+Nadler and Spiegelman (2016), after Berk and Jones (1979). The minimum is
+searched over the same smallest alpha0 · N = 10% of p-values as HC, so
+the two compare on equal terms.
+
+**Published as a test, used here as a selector.** The papers use the
+statistic to test whether any signal is present. Using the rank of its
+minimum as a threshold follows Donoho and Jin's step from HC as a test to
+HC as a threshold. That step is ours for Berk-Jones. Its guarantees are
+not proved.
+
+**Computing it.** The strongest p-values are far below 10⁻³⁰⁸, and BJ(i)
+is smaller still. So BJ is computed as a logarithm. Where the CDF is at
+least 10⁻³⁰⁰, SciPy computes it directly. Below that, a series for the
+incomplete beta function (DLMF 8.17.8) gives its logarithm. Tests check
+it against 50-digit arithmetic.
+
+**What to expect.** BJ judges each rank on its own null distribution. A
+single p-value far below the rest can then win at rank 1, as in HC2004.
+Its assumptions are those of HC: rare, weak and independent signal.
+
+## 4.6 What the experiments used
 
 | Experiment | Methods |
 |---|---|
-| The comparison (chapter 7) | Random, Mann-Whitney, Lasso, tree importance, RFE, HC2004, HC2008 |
-| The frontier (chapter 8) | Random, Mann-Whitney, HC2008, correlation (Spearman), mutual information, Lasso (two solvers), tree importance, RFE (two solvers), RFECV, Sequential |
+| The comparison (chapter 7) | Random, Mann-Whitney, Lasso, tree importance, RFE, HC2004, HC2008, Berk-Jones |
+| The frontier (chapter 8) | Random, Mann-Whitney, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso (two solvers), tree importance, RFE (two solvers), RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE |
 | The classifier study (chapter 7) | Random and Mann-Whitney, with five classifiers |
 | The unseen dataset (section 8.8) | Random, Mann-Whitney, HC2008, correlation (Spearman), mutual information, Lasso (PPDNA), RFE (Newton), RFECV (Newton, scored by AUC), Sequential (Newton) |
 

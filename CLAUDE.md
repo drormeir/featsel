@@ -131,6 +131,7 @@ config. A CSV dataset config specifies:
 - Features: 2,048 ResNet-50 embedding dimensions per image (ImageNet weights, last layer removed)
 - Target `label`; all 780 images are used, MedMNIST's own split is ignored
 - Computing embeddings needs `torch`/`torchvision` (the `embeddings` extra); they are cached as `embeddings_resnet50.npz`
+- 339 images fall in 150 groups of copies (`copies.py`, tracked as `copies.csv`); `load_xy(drop_copies=True)`, or `dataset_params: {drop_copies: true}` in a config, keeps 585 images
 
 **Third dataset, unseen during the design: FGVC-Aircraft (`featsel_datasets/fgvc_aircraft/`)**
 - 1,200 aircraft photos (FGVC-Aircraft 2013b): Boeing 737 800 vs Airbus A320 family 400
@@ -163,6 +164,7 @@ featsel/
     ├── f_test.py            # f_classif and f_regression on the CPU or a GPU
     ├── log_pvalue/          # U-test and F-test log p-values that stay finite below 1e-308
     ├── anova_f/             # ANOVAFSelector
+    ├── berk_jones/          # BerkJonesSelector; log_beta_cdf: the Beta CDF below 1e-308
     ├── correlation/         # CorrelationSelector
     ├── fdr/                 # FDRSelector
     ├── fwe/                 # FWESelector
@@ -195,7 +197,7 @@ Built: VarianceThreshold, ANOVAFSelector, MutualInfoSelector,
 CorrelationSelector, FDRSelector, FWESelector, PercentileSelector,
 LassoSelector, TreeImportanceSelector, RFESelector, RFECVSelector,
 SequentialSelector, RandomSelector, HigherCriticismSelector,
-MannWhitneySelector. The experiment configs use MannWhitneySelector, not
+BerkJonesSelector, MannWhitneySelector. The experiment configs use MannWhitneySelector, not
 ANOVAFSelector (`final_report/04_the_methods.md`, section 4.3).
 
 Every selector that wraps a scikit-learn method has two tests next to it:
@@ -237,7 +239,7 @@ Each has a tutorial in `featsel/selectors/<name>/demos/tutorial.ipynb`.
 
 ```python
 from featsel.selectors import (
-    ANOVAFSelector, CorrelationSelector, FDRSelector, FWESelector,
+    ANOVAFSelector, BerkJonesSelector, CorrelationSelector, FDRSelector, FWESelector,
     HigherCriticismSelector, LassoSelector, MannWhitneySelector, MutualInfoSelector, PercentileSelector, RandomSelector,
     RFECVSelector, RFESelector, SequentialSelector, TreeImportanceSelector,
     VarianceThreshold,
@@ -252,6 +254,7 @@ FDRSelector(alpha=0.05)                                  # F-test, Benjamini-Hoc
 FWESelector(alpha=0.05)                                  # F-test, Bonferroni; own count
 PercentileSelector(percentile=1)                         # F-test, top 1%
 HigherCriticismSelector(variant='2008')                  # U test, HC threshold; own count; or '2004'; binary only
+BerkJonesSelector()                                      # U test, exact Berk-Jones threshold; own count; binary only
 MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slower; scikit-learn's
                                                          # scores exactly, on a GPU when it can
 CorrelationSelector(n_features=100, target_threshold=0.1,
@@ -276,10 +279,10 @@ RandomSelector(n_features=100, random_state=42)          # the control
 Every selector takes `check_input=True`. `False` skips input validation in
 `fit`; use it only for a clean NumPy array.
 
-Every selector accepts a NumPy array or a PyTorch tensor. Nine selectors
+Every selector accepts a NumPy array or a PyTorch tensor. Ten selectors
 follow one device policy, `featsel.selectors.gpu.run`: VarianceThreshold,
-ANOVA-F, FDR, FWE, Percentile, Correlation, MannWhitney, HigherCriticism
-and MutualInfo.
+ANOVA-F, FDR, FWE, Percentile, Correlation, MannWhitney, HigherCriticism,
+BerkJones and MutualInfo.
 
 - A tensor on a GPU runs there, whatever `device` says.
 - `'auto'`, the default, uses the GPU when it is free, else the CPU.

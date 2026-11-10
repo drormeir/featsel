@@ -4,9 +4,9 @@
 
 ## 9.1 What we built
 
-- **`featsel`**, a Python package of 15 feature selection methods covering
-  filters, embedded methods, wrappers, Higher Criticism and a random
-  control. Each is a scikit-learn estimator and drops into an existing
+- **`featsel`**, a Python package of 16 feature selection methods covering
+  filters, embedded methods, wrappers, Higher Criticism, Berk-Jones and a
+  random control. Each is a scikit-learn estimator and drops into an existing
   pipeline. The ones that copy a scikit-learn method are tested to pick the
   same features. (Task 1.)
 - **A config-driven runner** that compares methods under one protocol. It
@@ -15,7 +15,7 @@
   results table. It survives memory exhaustion and can resume. (Tasks 1
   and 2.)
 - **Speed** at two levels. The runner is 3.2 to 5.3 times faster than
-  plain scikit-learn, with identical scores. Nine selectors run on a GPU
+  plain scikit-learn, with identical scores. Ten selectors run on a GPU
   with the same features as on the CPU. The filters run 2.6 to 49 times
   faster there. Exact solvers make Lasso, RFE, RFECV and Sequential
   selection faster. (Task 3.)
@@ -70,7 +70,8 @@
 10. **Higher Criticism needs rare signal.** On all three datasets it
     stopped at the edge of its search range. It acted as a fixed top-10%
     filter. Its assumptions, rare and independent signal, do not hold
-    here.
+    here. Berk-Jones, which judges each sorted p-value by its exact null
+    distribution, kept a subset of the same genes and scored the same.
 11. **Wrappers did not pay.** RFE, RFECV and Sequential selection were
     among the slowest methods. They scored below the simple filters on
     SCAN-B. RFECV's default inner score is accuracy. It made RFECV keep
