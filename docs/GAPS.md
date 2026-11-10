@@ -96,6 +96,21 @@ report does not list it yet.
   not for feature selection". Reversed on 2026-11-10: `DECISIONS.md`
   records the decision and no longer lists it as parked.
 
+### A8. No two-stage pipeline is tested (task 2)
+
+- **Problem.** Every experiment runs one selector alone. A common practice
+  chains them: a fast filter cuts the features first, and a slower method
+  picks the final set. The report never tests such a chain.
+- **Why it matters.** Reviewers treat such hybrids as standard (Saeys et
+  al. 2007).
+- **What closes it.** Add chains to the frontier, such as Mann-Whitney to
+  1,000 features, then RFE or Lasso. Compare each chain's time and AUC
+  with the same method alone. The runner's configs cannot express a chain
+  today: each entry is one selector. Either the runner gains a list of
+  steps, or a selector class wraps a scikit-learn `Pipeline` of two
+  selectors.
+- **Source.** New.
+
 ## B. Gaps in the report's academic quality
 
 ### B1. The significance test overstates certainty
