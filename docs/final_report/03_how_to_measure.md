@@ -21,15 +21,15 @@ Repeat over many random splits, and summarize the scores.
 The score judges the whole procedure (select, tune, then train), not one
 gene list or one model. Each split may choose a different list.
 
-"Not seeing the test patients" means rows, not columns. The selector sees
-every gene, but none of the test patients' values.
+"Not seeing the test patients" means patients, not genes. The selector
+sees every gene, but none of the test patients' values.
 
 **Inside each split, on the training part only**, the runner:
 
 1. fills missing values with the training median, and standardizes every
    feature with the training mean and standard deviation;
 2. fits the selector, which returns the features;
-3. tunes the classifier's C (section 3.8);
+3. in the comparison, tunes the classifier's C (section 3.8);
 4. refits the classifier on the whole training part with the chosen C.
 
 The test part is then scored once. Nothing about it reaches the choice of
@@ -51,8 +51,14 @@ is 0.5, since there is nothing to find.
 | The truth | 0.50 |
 
 Selecting on all patients picks genes that happen to fit the test patients
-by chance, and the test then rewards that chance. Ambroise and McLachlan
-(2002) showed the same on real microarray data. In `featsel` the selector
+by chance. The test then rewards that chance. Ambroise and McLachlan
+(2002) showed the same on real microarray data.
+
+The same happens on BreastMNIST with shuffled labels. The F-test picks
+50 embedding dimensions; the score is the median AUC over 20 splits.
+Selected inside each split, the AUC is 0.465. Selected on all 780 images
+first, it is 0.645
+([`selection.ipynb`](../../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb)). In `featsel` the selector
 is always fit inside the split. Imputation and scaling are fit inside the
 split too.
 
@@ -63,19 +69,20 @@ training set, with the class proportions kept. We do not use k-fold
 cross-validation.
 
 - In 5-fold, any two training sets share three quarters of their samples.
-  The fold scores are strongly correlated, so their spread understates the
+  The fold scores are strongly correlated. So their spread understates the
   real variation. Bengio and Grandvalet (2004) proved that no unbiased
-  estimator of the variance of k-fold cross-validation exists.
+  estimator of the variance of k-fold cross-validation is valid for every
+  data distribution.
 - Five numbers are too few to describe a distribution. Random splits can be
   drawn as many times as time allows.
-- Leave-one-out was rejected. Each test set is one patient, so no AUC or
-  macro-F1 can be computed per split, only one pooled number with no
-  spread. Training sets differ by one patient, so stability reads near 1.0
-  for every method. And it costs one model per patient: 2,976 per cell on
-  SCAN-B.
+- Leave-one-out was rejected. Each test set is one patient. So no AUC or
+  macro-F1 can be computed per split. Only one pooled number remains, with
+  no spread. Training sets differ by one patient. So stability reads near
+  1.0 for every method. And it costs one model per patient: 2,976 per cell
+  on SCAN-B.
 
 Random splits do not escape dependence entirely. Every split is drawn
-from the same 2,976 patients, so training sets still overlap. But the
+from the same 2,976 patients. So training sets still overlap. But the
 dependence is no longer forced by a rule that the test sets be disjoint.
 
 **On SCAN-B, one split serves all five tasks.** Each split is stratified on
@@ -86,7 +93,7 @@ same patients.
 fractions (0.5, 0.7 and 0.9), a learning curve. The full grid would have
 taken about four days. The first runs used 5 splits at a training fraction
 of 0.5. On 2026-10-31 the comparison grew to 16 splits on SCAN-B and 20 on
-BreastMNIST, which keeps the SCAN-B run under half an hour. The first 5
+BreastMNIST. Sixteen splits keep the SCAN-B run under half an hour. The first 5
 are the same splits as before. Sixteen or more values support quartiles;
 five do not.
 
@@ -100,7 +107,7 @@ the same patients are split again. It is not a confidence interval for new
 patients, because every split reuses the same cohort.
 
 **Paired comparison.** All methods run on the same splits. So two methods
-can be compared split by split, which removes most of the split-to-split
+can be compared split by split. This removes most of the split-to-split
 noise. A method's gain over the random control is a difference. It is the
 method's score minus the control's score, on the same split and at the
 same `k`.
@@ -123,8 +130,8 @@ The tasks are imbalanced (chapter 2), so plain accuracy is misleading.
 
 | Score | What it measures | Why we use it |
 |---|---|---|
-| **ROC AUC** | The chance that the model scores a random positive patient above a random negative one. | It needs no decision threshold, so it does not mix the method's quality with a choice of costs. Main score of the frontier (chapter 8). |
-| **Macro-F1** | The average of the F1 score of each class. | It weights the small class as much as the large one. Main score of the comparison (chapter 7). |
+| **ROC AUC** | The chance that the model scores a random positive patient above a random negative one. | It needs no decision threshold. So it does not mix the method's quality with a choice of costs. Main score of the frontier (chapter 8). |
+| **Macro-F1** | The average of the F1 score of each class. | It weights the small class as much as the large one. Main score of the comparison (chapter 7), because the runner recorded test AUC only from 2026-11-07, after the comparison ran. |
 | **Balanced accuracy** | The average of the recall of each class. | A simple imbalance-robust check. |
 
 The comparison also records:
@@ -132,15 +139,15 @@ The comparison also records:
 - **MCC**, the Matthews correlation coefficient, another imbalance-robust
   check.
 - **G-mean**, the geometric mean of the two class recalls. It is stricter
-  than macro-F1: it is zero if either class is never predicted.
-- **Accuracy**, for comparison with other work. Alone it misleads: on
+  than macro-F1: it is zero if either class is never predicted correctly.
+- **Accuracy**, for comparison with other work. Alone it misleads. On
   Normal vs rest (200 against 2,776 patients), always predicting "rest"
   scores 0.93.
 
 **Why not F1 alone.** F1 fixes a trade-off between false positives and
 false negatives. That is a decision about costs, which a comparison of
 selection methods should not make. Accuracy, balanced accuracy, MCC and
-G-mean also depend on a decision threshold, so each implies some costs
+G-mean also depend on a decision threshold. So each implies some costs
 too. AUC needs neither a threshold nor costs.
 
 AUC is computed per split, from one model on that split's test patients.
@@ -152,8 +159,8 @@ that are not on the same scale.
 A method can score well and still pick different genes on every split.
 Its gene list is then an accident of the split, not a finding.
 
-We measure stability by Kuncheva's (2007) consistency index between the
-gene sets of two splits, averaged over all pairs of splits. It is 1 for
+We measure stability by Kuncheva's (2007) consistency index. It compares
+the gene sets of two splits. We average it over all pairs of splits. It is 1 for
 identical sets and 0 for the overlap expected by chance. So the random
 control scores about 0. A pairwise measure needs many splits: 5 splits
 give 10 pairs, 16 give 120, and 20 give 190.
@@ -166,9 +173,9 @@ seed on every split, its measured stability would be a meaningless 1.0.
 For every fit we record:
 
 - **Selection time**: the time of the selector's `fit` alone, not of the
-  classifier. In the frontier each selection is fit 10 times by a fresh
-  selector, and the median is recorded (once for Sequential selection,
-  which takes minutes).
+  classifier. In the frontier a fresh selector fits each selection 10
+  times, and the median time is recorded. Sequential selection takes
+  minutes, so it is fit once.
 - **Peak memory** of the selection.
 - **The device**: CPU or GPU.
 - **Reproducibility**: whether every repeated fit chose the same genes.
@@ -194,8 +201,8 @@ steps:
 
 The test part is used once, at the end.
 
-The penalty is λ‖w‖², and scikit-learn's C is 1/λ. Features are
-standardized on the training part first; otherwise the penalty would
+The penalty is (λ/2)‖w‖². scikit-learn's C is 1/λ. Features are
+standardized on the training part first. Otherwise the penalty would
 treat features on different scales differently. The bias term is not
 penalized by scikit-learn's default solver, `lbfgs`. The `liblinear`
 solver does penalize it. AUC does not depend on the decision threshold.
@@ -204,21 +211,22 @@ Tuning costs about 15 times the classifier's fitting: 5 values of C times
 3 inner splits.
 
 The selector is fit once on the whole training part, not inside each inner
-split. The inner validation patients therefore helped choose the genes,
-which can bias the choice of C slightly. The test part stays untouched, so
+split. The inner validation patients therefore helped choose the genes.
+This can bias the choice of C slightly. The test part stays untouched, so
 the reported scores stay honest.
 
 In the frontier (chapter 8) C is fixed at 1, to keep the run short. Every
-method gets the same classifier, so the ranking stays fair, but the
+method gets the same classifier, so the ranking stays fair. But the
 absolute scores may be a little lower than with tuning.
 
 ## 3.9 Reproducibility
 
 One global seed, 42. Split `s` uses seed 42 + `s` for every random step in
 it: the random selector, the forest, the solvers and the inner splits.
-Every selector seeds its own random generators in its `fit`. Re-running
-a configuration gives the same genes and the same scores; only the times
-change. The number of workers changes only the time.
+Every selector that uses randomness seeds its own random generators in its
+`fit`. Re-running a configuration gives the same genes and the same
+scores. Only the times change. The number of workers changes only the
+time.
 
 ## 3.10 Preprocessing is fixed
 
@@ -230,26 +238,40 @@ project's four tasks.
 **Min-max scaling was rejected without a test.** Like standardization, it
 shifts and scales each feature. So it changes nothing for methods that
 ignore a feature's scale, such as the F-test, correlation and trees. It
-differs only for k-NN and L2-penalized models, and there it is worse: one
-outlier sets the range and squeezes every other sample.
+differs only for methods that depend on scale, such as k-NN and penalized
+models (L1 or L2). There it is worse: one outlier sets the range and
+squeezes every other sample.
 
-**A side experiment, not finished.** Each feature could be mapped to a
-normal distribution through its ranks (a quantile transform). Shrinkage
-LDA assumes normal classes, and k-NN suffers from heavy tails, so both
-should gain. Random forests should not move, since they ignore any
-increasing transform. It could also hurt. The transform discards the size
-of a fold change. And with half the patients for training, its mapping is
-noisy. 98.1% of genes reject normality, so there is something to fix. The
-run was started and cancelled, so the result is unknown.
+**A side experiment.** Each feature could be mapped to a normal
+distribution through its ranks (a quantile transform). 98.1% of genes
+reject normality, so there is something to fix. But the transform
+discards the size of a fold change.
+
+We tested it on 2026-10-05 and 06, on the course copy (`scanb_small`):
+F-test selection, logistic regression, 10 splits. Standardization was
+compared with a rank-to-normal transform and with scikit-learn's quantile
+transform. The two transforms tied with each other.
+
+- On five classes, standardization won at every `k`. Macro-F1 was 0.734
+  against 0.597 at `k` = 10, and 0.870 against 0.855 at `k` = 500.
+- On the five binary tasks, most differences were within 0.01. Her2 and
+  Normal gained up to 0.011. LumA lost up to 0.021; at `k` = 100 it lost
+  on all 10 splits.
+- With C tuned inside the split and scored by AUC, differences stayed
+  within 0.004, except LumA at `k` = 100 (−0.017).
+
+So standardization was kept. Shrinkage LDA, which assumes normal classes,
+and k-NN, which suffers from heavy tails, might still gain. A later run
+over every classifier was started and cancelled, so that is unknown.
 
 **One rule.** If preprocessing is ever varied, it must be varied for every
 method alike. A method that carries its own preprocessing mixes the method
-with its transform, and the comparison stops being controlled.
+with its transform. Then the comparison stops being controlled.
 
 ## 3.11 The feature budget `k`
 
-On SCAN-B `k` is 5, 10, 20, 50, 100, 250, 500 and 1000. On BreastMNIST it
-stops at 250.
+In the comparison, `k` on SCAN-B is 5, 10, 20, 50, 100, 250, 500 and 1000.
+On BreastMNIST it stops at 250.
 
 - **Why a sweep.** A single `k` cannot tell a method that is good at small
   budgets from one that works only when given many features. The same `k`
@@ -262,17 +284,21 @@ stops at 250.
   reference. It shows whether selection helps the model or only makes it
   smaller ([section 8.7](08_results_frontier.md#87-is-selection-needed-at-all)).
 
-The first design gave `k` as a percent of the total sample count, so that
-budgets compare across datasets and stay fixed across training fractions.
+The first design gave `k` as a percent of the total sample count. Budgets
+would then compare across datasets and stay fixed across training fractions.
 With one training fraction, the experiments give `k` directly.
 
 ## 3.12 Data precision
 
-The data are held as 32-bit floats. That halves the memory, so more
-workers fit on one machine. SCAN-B's values are not measured to more than 7
-digits. The U test sums its ranks in 64 bits: in 32 bits, the tie
-correction of near-constant genes went wrong. A one-split check against 64
-bits moved single scores slightly for Lasso, RFE and the forest, whose
+The data are held as 32-bit floats. That halves the data's memory. Peak
+selection memory on SCAN-B fell by 30% to 45%, so more workers fit on one
+machine. SCAN-B's values are not measured to more than 7 digits.
+
+The U test sums its ranks in 64 bits. In 32 bits, the tie correction of
+near-constant genes went wrong. Mann-Whitney then chose different genes in
+every SCAN-B cell, and macro-F1 moved by up to 0.55. A one-split check
+against 64 bits, after the fix, moved Mann-Whitney's macro-F1 by at most
+0.007. Lasso, RFE and the forest moved by about 0.01 on average. Their
 solvers are sensitive to rounding.
 
 ## 3.13 Scores we considered and did not use
@@ -280,30 +306,33 @@ solvers are sensitive to rounding.
 Before the protocol was fixed, we discussed how to give each method one
 number for its strength over random selection (2026-10-12).
 
-**A leave-one-out confusion table.** Built on 2026-10-13 as
-`loo_confusion` in [`featsel/strength.py`](../../featsel/strength.py), and not
-used in the experiments. It takes the chosen genes and a binary label. It
-holds out one patient at a time, tunes C by an inner leave-one-out on the
-rest, and records the held-out decision. The output is one 2×2 confusion
-table.
+**A leave-one-out confusion table.** It was built on 2026-10-13 as
+`loo_confusion` in [`featsel/strength.py`](../../featsel/strength.py). It
+was not used in the experiments. It takes the chosen genes and a binary
+label. It holds out one patient at a time. It tunes C by an inner
+leave-one-out on the rest. Then it records the held-out decision. The
+output is one 2×2 confusion table.
 
-- Each patient's inner loss is weighted by N / (2·N_c), where N_c counts
-  its class, so both classes count equally. The classifier uses
-  `class_weight='balanced'`, so the 0.5 threshold is not pulled toward the
-  majority class.
+- The inner loop picks C from 9 values, 10⁻⁴ to 10⁴, by balanced
+  log-loss. Log-loss needs no threshold. Accuracy was rejected: it needs
+  the 0.5 threshold, and it often ties when few patients are visited.
+- Each patient's inner loss is weighted by N / (2·N_c). N counts the
+  training patients and N_c those in the patient's class. So both classes
+  count equally. The classifier uses `class_weight='balanced'`. So the 0.5
+  threshold is not pulled toward the majority class.
 - It visits only a share α of the patients, 1% by default, so it runs fast.
-  On SCAN-B that is 30 outer and 30 inner patients.
+  On SCAN-B that is 29 outer and 29 inner patients.
 - Counting decisions from different models is legitimate, unlike pooling
   their scores into one AUC. But it brings back the threshold, and with it
-  the cost trade-off, and it gives one table with no spread.
+  the cost trade-off. And it gives one table with no spread.
 - The held-out patient is out of sample only if the genes were chosen
   without it. Avoiding that bias means refitting the selector in every
   round.
 
-Leave-one-out trains on n − 1 patients, so its estimate is closest to the
+Leave-one-out trains on n − 1 patients. So its estimate is closest to the
 full-data procedure. Monte Carlo splits train on fewer patients and score
-somewhat pessimistically. We chose Monte Carlo splits, because each split
-gives a valid AUC and the splits give a spread.
+somewhat pessimistically. We chose Monte Carlo splits. Each split gives a
+valid AUC, and the splits give a spread.
 
 **The area under a score-against-`k` curve.** Score each top-`k` subset,
 for a grid of `k`, and take the area under the curve. Subtracting the
@@ -311,8 +340,8 @@ random control's curve gives one number for the gain over random, over all
 budgets. Four choices would make it well-defined:
 
 1. a score per `k`, such as AUC;
-2. the `k` axis: on a plain axis most of the area comes from large `k`,
-   where every method scores alike, so a log scale or a cap weights the
+2. the `k` axis. On a plain axis most of the area comes from large `k`,
+   where every method scores alike. A log scale or a cap weights the
    budgets where methods differ;
 3. the ranking computed inside each training split, never on all patients;
 4. a ranking at all: methods that pick their own count give one point, not
@@ -327,7 +356,7 @@ method wins.
 - The five SCAN-B tasks share patients, so they are not independent
   replicates.
 - The decision threshold is not tuned: 0.5 on the predicted probability.
-  Macro-F1 and balanced accuracy depend on it; AUC does not.
+  Macro-F1 and balanced accuracy depend on it. AUC does not.
 - The selectors' own settings, such as Lasso's penalty, are fixed.
 - Choosing a "best `k`" from test scores would leak. We report whole curves
   over `k` instead. Naming a winning `k` would need inner validation.
