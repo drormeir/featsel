@@ -1,4 +1,4 @@
-# Appendix C. How to reproduce
+# Appendix B. How to reproduce
 
 [Back to contents](README.md)
 
@@ -28,7 +28,7 @@ CSV. It records the exact versions, the machine and the git commit.
 |---|---|---|
 | Comparison, SCAN-B (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 4 --max-worker-memory-gb 3` | `results/comparison_scanb.csv` |
 | Comparison, BreastMNIST (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist.yaml --n-jobs -1` | `results/comparison_breastmnist.csv` |
-| Its tables | `.venv/bin/python scripts/summarize_comparison.py results/comparison_scanb.csv --n-features 28552 --out <file>` | the tables of chapter 7 and Appendix E, in Markdown |
+| Its tables | `.venv/bin/python scripts/summarize_comparison.py results/comparison_scanb.csv --n-features 28552 --out <file>` | the tables of chapter 7 and Appendix D, in Markdown |
 | Paired tests (chapter 7) | `.venv/bin/python scripts/paired_tests.py results/comparison_scanb.csv --metric macro_f1 --out final_report/figures/paired_tests_comparison_scanb.csv`, and the same for BreastMNIST | the tables of tests in [`figures/`](figures/) |
 | Classifier study (chapter 7) | `.venv/bin/python -m featsel.run --config configs/experiment_classifiers.yaml --n-splits 3` | `results/experiment_classifiers.csv`; figures from `notebooks/02_classifier_behaviour.ipynb` |
 | PAM50 gene recovery (chapter 7) | `.venv/bin/python scripts/pam50_recovery.py --n-splits 10 --out <file>` | the tables of section 7.6, in Markdown (the script overwrites its output file) |

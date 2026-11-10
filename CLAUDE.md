@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Read `SCOPE.md` first.** It defines what is allowed to be built and how to work with Dror. It overrides anything here that looks like an invitation to expand the project (PyPI publishing, future phases, PyTorch integration).
+**Read `docs/SCOPE.md` first.** It defines what is allowed to be built and how to work with Dror. It overrides anything here that looks like an invitation to expand the project (PyPI publishing, future phases, PyTorch integration).
 
 ## Project Overview
 
@@ -107,7 +107,7 @@ embeddings computed once with PyTorch and cached) and `featsel_view.py`.
 installed: `pyproject.toml` excludes it from the `featsel` package. Run from
 the repo root.
 Design: `final_report/05_the_software.md`, section 5.3. Data findings:
-`final_report/02_the_data.md` and its Appendix D.
+`final_report/02_the_data.md` and its Appendix C.
 
 **CSV datasets: `featsel/data_loader.py`**
 
@@ -143,7 +143,7 @@ config. A CSV dataset config specifies:
 **Current dataset: SCAN-B, GSE96058 (`featsel_datasets/scanb_gse96058/`)**
 - 3,273 patients, 3,409 samples, 30,865 genes; `load_xy()` gives 2,976 patients
 - Default target `pam50 subtype` (Basal, LumA, LumB, Her2, Normal)
-- Every task is binary (`SCOPE.md` 3a): PAM50 becomes five tasks, each subtype vs the rest. No five-class results
+- Every task is binary (`docs/SCOPE.md` 3a): PAM50 becomes five tasks, each subtype vs the rest. No five-class results
 - Other targets are GSE96058's own field names, e.g. `er status` (pathologist), `er prediction mgc` (computed from genes), `overall survival event`
 - PAM50 and the `prediction` fields are computed from gene expression, not measured. See `final_report/02_the_data.md`.
 

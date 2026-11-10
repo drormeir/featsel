@@ -1,11 +1,10 @@
 # 10. Open work and next steps
 
-[Back to contents](README.md) · Previous: [9. Conclusions](09_conclusions.md) · Next: [Appendix A: decisions](appendix_a_decisions.md)
+[Back to contents](README.md) · Previous: [9. Conclusions](09_conclusions.md) · Next: [Appendix A: glossary](appendix_a_glossary.md)
 
 This chapter lists what is missing, honestly. Section 10.1 is work that
 belongs to this project's four tasks but is not finished. Section 10.2 is
-research beyond the project's scope. Section 10.3 is the dated list of
-parked ideas.
+research beyond the project's scope.
 
 ## 10.1 Missing work within the project
 
@@ -24,7 +23,7 @@ parked ideas.
 | **Remove BreastMNIST's copied images and rerun.** 155 of 780 source images are copies (Pawłowska et al. 2023), some labelled differently. | Every BreastMNIST result carries this leak. The letter's supplement lists the pairs. So the copies can be dropped, or kept on one side of each split. | A loader option and two reruns: minutes. |
 | **The quantile transform with every classifier** (section 3.10). With logistic regression it did not help (2026-10-05). | Would show whether shrinkage LDA and k-NN gain from normal-shaped features. | Started and cancelled. One `k`, all classifiers. |
 | **Time and memory complexity per method**, from the algorithm. | Planned to sit next to the measured times. A disagreement would be a finding. | Writing, no runs. |
-| **How SCAN-B computed `pam50 subtype`.** | The GEO notes say only that it implements Parker's method, after centring to a reference set, with unpublished R scripts (section 2.1, Appendix D.2). The exact implementation is unknown. | Reading other SCAN-B papers. |
+| **How SCAN-B computed `pam50 subtype`.** | The GEO notes say only that it implements Parker's method, after centring to a reference set, with unpublished R scripts (section 2.1, Appendix C.2). The exact implementation is unknown. | Reading other SCAN-B papers. |
 
 ### Software
 
@@ -42,7 +41,7 @@ Decided 2026-10-17 and not done. Rebuild Brueffer et al.'s ER classifier
 from their published gene weights. Apply it to GSE96058. Then compare it
 with the stored `er prediction mgc` label. This would show exactly how the ER
 label was made, instead of inferring it. The plan, step by step, is in
-[Appendix D.1](appendix_d_data_details.md#d1-reproducing-the-er-label-planned-not-done).
+[Appendix C.1](appendix_c_data_details.md#c1-reproducing-the-er-label-planned-not-done).
 
 ## 10.2 Beyond this project
 
@@ -50,8 +49,7 @@ label was made, instead of inferring it. The plan, step by step, is in
 weak, independent signal. Both our datasets have widespread, correlated
 signal, so HC acted as a top-10% filter. A dataset with rare signal, or a
 simulation with a known number of useful features, would test whether HC
-picks its own count well. The Berk-Jones statistic was parked, because it
-is not published as a selection rule. HC with the exact variance of the
+picks its own count well. HC with the exact variance of the
 sorted p-values needs no test of its own: it selects the same genes as
 HC2008 (section 4.4).
 
@@ -82,29 +80,3 @@ GPU's parallelism. No library we tried does this well on a 4 GB card.
 practitioner which selector to use for their time budget. It could be
 automated for any dataset given as `X, y`. That would make the package's
 research harness useful beyond this study.
-
-## 10.3 Parked ideas
-
-Ideas that are interesting but serve none of the four tasks in
-`SCOPE.md`. Writing an idea down here is how it stops competing for
-attention. Format: the date, the idea, and why it was parked.
-
-- 2026-07-30 - A PyTorch layer and trainer for transfer learning on tiny
-  image sets (ResNet embeddings, 2 classes × 10 samples). Parked: it is a
-  second project with its own failure modes. Logistic regression on
-  selected embeddings is the stronger baseline at this sample size.
-- 2026-07-30 - A PyPI release of `featsel`. Parked: packaging polish is
-  not a project requirement.
-- 2026-10-05 - Higher Criticism with exact null moments: centre the i-th
-  p-value at i/(N+1) and scale by √(N+2), from Beta(i, N−i+1), with a
-  proof. Parked: no publication was found. `SCOPE.md` then allowed
-  published HC only. That rule was dropped on 2026-11-10. HC2008 here
-  already uses the exact centre, i/(N+1) (section 4.4). The √(N+2) scale
-  multiplies every score by the same constant, so it would select the same
-  genes as HC2008.
-- 2026-10-05 - Berk-Jones (Donoho and Jin 2004, eq. 1.9) as a threshold
-  rule, another Higher Criticism mode. Parked: published only as a
-  detection test, not for feature selection.
-- 2026-10-18 - Recombine the five PAM50 class-vs-rest classifiers into a
-  decision tree that predicts the subtype. Parked: the project selects
-  features for binary targets only.

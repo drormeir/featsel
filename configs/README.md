@@ -66,7 +66,7 @@ supports classification only.
 | `n_jobs` | `1` | Worker processes; splits run in parallel. `-1` uses every core |
 | `max_worker_memory_gb` | `auto` | Cap on each worker's data memory: what it writes, not the shared split it maps. A cell past it is skipped and listed at the end, instead of the kernel killing a process; `--resume` fills it in later. `auto` shares the RAM free at the start among the workers, after room for the prepared splits. `null` sets no cap |
 
-Every task is binary (`SCOPE.md` 3a). A two-class target runs as one task,
+Every task is binary (`docs/SCOPE.md` 3a). A two-class target runs as one task,
 `binary`. A target with more classes runs as one task per class, that class
 vs the rest, named `ovr_<class>`.
 

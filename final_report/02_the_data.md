@@ -255,6 +255,6 @@ Notebooks: [`demos/tutorial.ipynb`](../featsel_datasets/medmnist_breastmnist/dem
 | Signal | widespread, strongly correlated genes | widespread, weakly correlated features |
 
 Plans and open questions about the data are in
-[Appendix D](appendix_d_data_details.md).
+[Appendix C](appendix_c_data_details.md).
 
 Source: [`results/data_facts.csv`](../results/data_facts.csv).

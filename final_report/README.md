@@ -52,11 +52,10 @@ methods here, and much faster.
 | 8 | [Results: cost against quality](08_results_frontier.md) | Every method on one plot of time against AUC, on all five tasks and on each task. |
 | 9 | [Conclusions](09_conclusions.md) | What we learned, in plain sentences. |
 | 10 | [Open work and next steps](10_open_work.md) | What is missing in this project, and what is worth investigating beyond it. |
-| A | [Decision log](appendix_a_decisions.md) | Every important decision, its date, its reason and the alternatives we rejected. |
-| B | [Glossary](appendix_b_glossary.md) | Short definitions of the terms used in the report. |
-| C | [How to reproduce](appendix_c_reproduce.md) | The commands, configs and notebooks behind every number. |
-| D | [Data: plans and open questions](appendix_d_data_details.md) | Reproducing the ER label, the PAM50 recovery design, Higher Criticism's share of signal, a better model for floor-heavy genes. |
-| E | [Full comparison tables](appendix_e_comparison_tables.md) | Per-task scores at every `k`, genes kept, times, stability and chosen C. |
+| A | [Glossary](appendix_a_glossary.md) | Short definitions of the terms used in the report. |
+| B | [How to reproduce](appendix_b_reproduce.md) | The commands, configs and notebooks behind every number. |
+| C | [Data: plans and open questions](appendix_c_data_details.md) | Reproducing the ER label, the PAM50 recovery design, Higher Criticism's share of signal, a better model for floor-heavy genes. |
+| D | [Full comparison tables](appendix_d_comparison_tables.md) | Per-task scores at every `k`, genes kept, times, stability and chosen C. |
 | | [References](references.md) | The papers cited. |
 
 ## How to read the numbers
@@ -78,9 +77,4 @@ machine it was taken on.
 
 ## Related material
 
-- This report is the project's only design record. The earlier drafts
-  (`docs/report/`) and working notes (`docs/*.md`) were merged into it and
-  removed. Git history keeps them. Decisions are in
-  [Appendix A](appendix_a_decisions.md). Parked ideas are in
-  [section 10.3](10_open_work.md#103-parked-ideas).
 - The project specification: [`references/MLDS_Feature_Selection.pdf`](../references/MLDS_Feature_Selection.pdf).

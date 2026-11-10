@@ -96,7 +96,7 @@ becomes five binary tasks.
 This is a comparative study, not a new method. The project uses published
 methods. The one change is in HC2008: it centres each sorted p-value at
 its exact mean (section 4.4). The aim is a fair comparison under one
-protocol, and a fast, reliable tool to run it. `SCOPE.md` in the
+protocol, and a fast, reliable tool to run it. `docs/SCOPE.md` in the
 repository records what is in and out of scope.
 
 ## 1.6 What earlier work found

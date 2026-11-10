@@ -25,7 +25,7 @@ order between methods matters more than the absolute scores. So does the
 gap over the random control.
 
 The main score is macro-F1, not AUC, because the runner recorded AUC only
-from 2026-11-07 (Appendix A). Macro-F1 depends on the classifier's
+from 2026-11-07. Macro-F1 depends on the classifier's
 threshold. Chapter 8 scores by AUC.
 
 Configs: [`configs/comparison_scanb.yaml`](../configs/comparison_scanb.yaml),
@@ -33,7 +33,7 @@ Configs: [`configs/comparison_scanb.yaml`](../configs/comparison_scanb.yaml),
 Results: [`results/comparison_scanb.csv`](../results/comparison_scanb.csv),
 [`results/comparison_breastmnist.csv`](../results/comparison_breastmnist.csv).
 Full tables, per task, with times and stability:
-[Appendix E](appendix_e_comparison_tables.md).
+[Appendix D](appendix_d_comparison_tables.md).
 
 Each cell below is macro-F1. It is averaged over the tasks within a split.
 Then we take the median over the splits. The first and third quartiles
@@ -79,7 +79,7 @@ with quartiles:
 | RFE | −0.003 [−0.015, 0.005] | −0.012 [−0.016, −0.002] | −0.008 [−0.013, −0.005] | |
 
 Per-task tables, the number of genes kept, selection times and the chosen
-C are in [Appendix E](appendix_e_comparison_tables.md).
+C are in [Appendix D](appendix_d_comparison_tables.md).
 
 ![Macro-F1 against k by classifier](../figures/macro_f1_vs_k.png)
 
@@ -120,7 +120,7 @@ at small `k`.*
    poor guide on this data.
 6. **The tasks differ in difficulty.** Basal is the easiest: at k = 5 the
    top methods reach 0.94 to 0.95. Normal is the hardest: at k = 1000 the
-   best reaches 0.77 (Appendix E).
+   best reaches 0.77 (Appendix D).
 
 ## 7.3 Are the differences real? Paired tests
 

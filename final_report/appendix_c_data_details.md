@@ -1,11 +1,11 @@
-# Appendix D. Data: plans, open questions and extra facts
+# Appendix C. Data: plans, open questions and extra facts
 
 [Back to contents](README.md)
 
 Chapter 2 describes the data. This appendix keeps the plans that were made
 about it, what is still open, and facts too detailed for the chapter.
 
-## D.1 Reproducing the ER label (planned, not done)
+## C.1 Reproducing the ER label (planned, not done)
 
 Decided 2026-10-17. ER was planned as a target in this project, as in
 the earlier course report. No experiment in this report uses it. Unlike
@@ -32,7 +32,7 @@ with another shrinkage threshold would give a different list.
 The paper and its Data Supplement are in `references/local/`. GSE81538 is
 not downloaded yet.
 
-## D.2 The source of PAM50, and recovering its genes
+## C.2 The source of PAM50, and recovering its genes
 
 Decided 2026-10-17. The report discusses where the PAM50 label comes from,
 and tests whether feature selection recovers the genes that define it.
@@ -64,7 +64,7 @@ Three difficulties were known in advance:
 The experiment needs a gene set that holds all 50 genes. GSE96058 does.
 The retired `scanb_small` did not.
 
-## D.3 Higher Criticism and the share of signal
+## C.3 Higher Criticism and the share of signal
 
 HC searches only the smallest 10% of p-values (alpha0 = 0.1). On SCAN-B the
 HC score is still rising at that edge. HC2008 kept 2,855 to 2,856 genes on
@@ -83,7 +83,7 @@ checked on 2026-10-31. Its signal is not rare either (chapter 2). HC2008
 again kept the edge, 204 features, on every split. So on both datasets the
 search limit, not the data, sets HC2008's count.
 
-## D.4 A better model for floor-heavy genes (not built)
+## C.4 A better model for floor-heavy genes (not built)
 
 The U test merges two ways a gene can differ between classes. One is how
 often it is detected at all. The other is how high it is when detected.
@@ -102,7 +102,7 @@ null distribution for each gene. So they give exact tail p-values, where
 the normal approximation is weakest. It needs a separate computation per
 floor count. It is beyond the project's scope and not built.
 
-## D.5 Gene counts
+## C.5 Gene counts
 
 - GSE96058 has 30,865 genes, and all 50 PAM50 genes are among them.
 - Across all 3,409 GSE96058 samples, 2,236 genes have a single value.
@@ -111,7 +111,7 @@ floor count. It is beyond the project's scope and not built.
 - `scanb_small`, the course's smaller copy, has 9,264 genes and lacks 11
   PAM50 genes (section 2.1).
 
-## D.6 Open questions
+## C.6 Open questions
 
 - How the course chose the 9,264 genes of `scanb_small`.
 - How much the repeat samples inflate results computed on the course's

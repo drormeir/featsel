@@ -1,4 +1,4 @@
-# Appendix E. Full tables of the comparison
+# Appendix D. Full tables of the comparison
 
 [Back to contents](README.md)
 
@@ -15,7 +15,7 @@ The selection times here were taken before the GPU work of chapter 6. They
 ran on the CPU, with 4 workers sharing the machine. Chapter 8 has the
 current times.
 
-## E.1 SCAN-B: macro-F1 per task
+## D.1 SCAN-B: macro-F1 per task
 
 ### k = 5
 
@@ -106,7 +106,7 @@ current times.
 | HC2004 | 0.732 [0.719, 0.737] | 0.502 [0.494, 0.517] | 0.804 [0.798, 0.807] | 0.655 [0.638, 0.668] | 0.483 [0.483, 0.488] |
 | HC2008 | 0.963 [0.960, 0.966] | 0.896 [0.888, 0.902] | 0.890 [0.888, 0.896] | 0.885 [0.880, 0.891] | 0.784 [0.774, 0.793] |
 
-## E.2 SCAN-B: features kept, time, stability, chosen C
+## D.2 SCAN-B: features kept, time, stability, chosen C
 
 ### Features kept, over tasks and splits
 
@@ -170,7 +170,7 @@ Rank-once methods fit once per task and split, so one time covers every
 
 The strongest penalties, C = 0.01 and 0.1, win most cells at every `k`.
 
-## E.3 BreastMNIST: features kept, time, stability, chosen C
+## D.3 BreastMNIST: features kept, time, stability, chosen C
 
 The macro-F1 and gain tables are in section 7.8. With one task, the
 per-task tables repeat them.

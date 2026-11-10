@@ -81,7 +81,7 @@ def build_tasks(y):
     """
     Expand the target into the binary classification tasks to run.
 
-    Every task is binary (SCOPE.md 3a). A binary target is one task, 'binary'.
+    Every task is binary (docs/SCOPE.md 3a). A binary target is one task, 'binary'.
     A target with more classes gives one task per class, that class against
     everything else, named 'ovr_<class>'. Every task uses every sample.
 

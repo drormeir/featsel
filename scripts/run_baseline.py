@@ -2,11 +2,11 @@
 
 Random selection (the control) and ANOVA F, both at top 100 genes, each
 followed by logistic regression under stratified 5-fold CV. Every task is
-binary (SCOPE.md 3a): each PAM50 subtype against the rest. Prints accuracy and
+binary (docs/SCOPE.md 3a): each PAM50 subtype against the rest. Prints accuracy and
 macro-F1 per subtype and method.
 
 Feature selection sits inside the pipeline, so it is fit on the training
-split of each fold only (SCOPE.md 3a: selection inside the fold).
+split of each fold only (docs/SCOPE.md 3a: selection inside the fold).
 
 Data: GSE96058 through `load_xy`, one HiSeq 2000 sample per patient.
 

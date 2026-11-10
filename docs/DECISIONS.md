@@ -1,15 +1,16 @@
-# Appendix A. Decision log
-
-[Back to contents](README.md)
+# Decision log
 
 The decisions that shaped the project, in date order. Each gives the
 problem, the decision, and the alternatives rejected. A row with two dates
 is placed by its first. The first date is when the problem was raised or
 decided; the second is when it was built or settled. Sources: `SCOPE.md`,
 git history, the project's working sessions, the working notes once in
-`docs/` and the drafts once in `docs/report/`. The notes and drafts were
-merged into this report and removed. Git history keeps them. New decisions
-are added here.
+`docs/` and the drafts once in `docs/report/`. Git history keeps them.
+
+Until 2026-11-10 this log was Appendix A of the final report. In older
+rows, "this report" means the final report (`final_report/`), and appendix
+letters and section numbers are those of that time. New decisions are
+added here.
 
 ## Software design
 
@@ -92,4 +93,30 @@ are added here.
 | 2026-11-09 | Are differences between methods real? | Paired Wilcoxon signed-rank tests over splits, with a Bonferroni threshold. | Comparing medians by eye. |
 | 2026-11-10 | Content in `docs/report/` and `docs/*.md` was missing from this report. | Merge it in: related work into chapter 1, data plans into Appendix D, full comparison tables into Appendix E, design and protocol details into chapters 3 to 7. Then remove `docs/report/`. Its numbers came from finished runs, so the generated tables were not carried over. Then remove the working notes in `docs/` too. This report becomes the only design record, Appendix A the decision log, section 10.3 the parked ideas. | Linking to the working notes only (a reader would need both); keeping `docs/report/` for its generated tables; keeping the notes as a second record (two records drift apart). |
 | 2026-11-10 | The reference list held works cited only in passing. | Keep only works the report relies on. Twelve were removed, with their citations. | Keeping every work ever consulted. |
+| 2026-11-10 | Berk-Jones was parked on 2026-10-05 as published only as a detection test. | Add it as a selector beside Higher Criticism: the exact form, where the i-th sorted p-value is scored by its Beta(i, N − i + 1) CDF, from the author's earlier code. This reverses the 2026-10-05 decision. | Keeping it parked. |
 | 2026-11-10 | `docs/` held only this report, so the extra folder level hid it. | Move it to the repository root as `final_report/`. | Keeping `docs/final_report/`; renaming it `report/` (loses "final"). |
+| 2026-11-10 | The final report goes to print, and a dated log of choices, including reversed ones, is a working record, not a finding. | Move the decision log out of the report to `DECISIONS.md`, with the parked ideas (once section 10.3). The appendices become A to D. | Keeping the log as Appendix A; dropping it from the repository. |
+
+## Parked ideas
+
+Ideas that are interesting but serve none of the four tasks in
+`SCOPE.md`. Until 2026-11-10 this list was section 10.3 of the final
+report. Writing an idea down here is how it stops competing for attention.
+Format: the date, the idea, and why it was parked.
+
+- 2026-07-30 - A PyTorch layer and trainer for transfer learning on tiny
+  image sets (ResNet embeddings, 2 classes × 10 samples). Parked: it is a
+  second project with its own failure modes. Logistic regression on
+  selected embeddings is the stronger baseline at this sample size.
+- 2026-07-30 - A PyPI release of `featsel`. Parked: packaging polish is
+  not a project requirement.
+- 2026-10-05 - Higher Criticism with exact null moments: centre the i-th
+  p-value at i/(N+1) and scale by √(N+2), from Beta(i, N−i+1), with a
+  proof. Parked: no publication was found. `SCOPE.md` then allowed
+  published HC only. That rule was dropped on 2026-11-10. HC2008 here
+  already uses the exact centre, i/(N+1) (final report, section 4.4). The
+  √(N+2) scale multiplies every score by the same constant, so it would
+  select the same genes as HC2008.
+- 2026-10-18 - Recombine the five PAM50 class-vs-rest classifiers into a
+  decision tree that predicts the subtype. Parked: the project selects
+  features for binary targets only.

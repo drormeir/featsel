@@ -381,7 +381,6 @@ sequential one.
 | Dataset loaders | [`featsel_datasets/`](../featsel_datasets/) |
 | Configs and their documentation | [`configs/`](../configs/), [`configs/README.md`](../configs/README.md) |
 | Usage demo | [`notebooks/03_usage_demo.ipynb`](../notebooks/03_usage_demo.ipynb) |
-| Design decisions | [Appendix A](appendix_a_decisions.md) |
 
 ## 5.8 Known limits
 

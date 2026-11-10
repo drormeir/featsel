@@ -128,8 +128,8 @@ Finish the minimum passing project before adding anything.
 ## 6. Working rules
 
 - **Park it, don't argue it.** When an idea fails the four-task test, add a
-  dated one-line entry to `final_report/10_open_work.md`, section 10.3
-  "Parked ideas", and return to the current step.
+  dated one-line entry to `DECISIONS.md`, section "Parked ideas", and
+  return to the current step.
 - **Smallest next action.** End every session with one concrete, finishable
   step.
 - **Commit partial work.** Rough plots and ugly tables get committed, not
