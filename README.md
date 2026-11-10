@@ -45,7 +45,7 @@ The primary use case is predicting breast cancer molecular subtypes from gene ex
 ├── scripts/            # One-off runs and examples
 ├── tests/              # Package-level tests
 ├── final_report/       # The final report
-├── docs/               # Scope, decision log, open gaps, methods guide, PyPI notes
+├── docs/               # Scope, decision log, open gaps, methods guide
 └── references/         # Project proposal and papers
 ```
 

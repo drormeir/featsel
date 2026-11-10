@@ -51,34 +51,13 @@ python -m pytest featsel/selectors/anova_f -v
 python -m pytest -v
 ```
 
-### Package Building and Publishing
+### Code Quality
 ```bash
-# Clean previous builds
-rm -rf build/ dist/ *.egg-info/
-
-# Build package
-python -m build
-
-# Verify build
-twine check dist/*
-
-# Upload to TestPyPI (for testing)
-twine upload --repository testpypi dist/*
-
-# Upload to PyPI (production)
-twine upload dist/*
-```
-
-### Code Quality (Optional Dependencies)
-```bash
-# Format code
-black featsel/
-
-# Lint code
-flake8 featsel/
+# Lint
+.venv/bin/ruff check featsel/
 
 # Type checking
-mypy featsel/
+.venv/bin/mypy featsel/
 ```
 
 ## Architecture
@@ -175,32 +154,29 @@ featsel/
 ├── strength.py              # loo_confusion(): nested leave-one-out score of chosen genes
 ├── environment.py           # Machine, versions and commit, saved as JSON beside results
 ├── benchmark.py             # Each selector against its original: speed, reproducibility
-├── selectors/               # Feature selection methods, one subpackage each:
-│   │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb,
-│   │                        #   demos/speed.ipynb (featsel.benchmark on synthetic data)
-│   ├── __init__.py          # Imports every selector, which registers it
-│   ├── base.py              # FeatureSelector: scikit-learn base, registration, create()
-│   ├── gpu.py               # The device policy (run), the GPU lock, batch sizes
-│   ├── f_test.py            # f_classif and f_regression on the CPU or a GPU
-│   ├── log_pvalue/          # U-test and F-test log p-values that stay finite below 1e-308
-│   ├── anova_f/             # ANOVAFSelector
-│   ├── correlation/         # CorrelationSelector
-│   ├── fdr/                 # FDRSelector
-│   ├── fwe/                 # FWESelector
-│   ├── higher_criticism/    # HigherCriticismSelector
-│   ├── lasso/               # LassoSelector; ppdna.py: its GPU solver
-│   ├── mann_whitney/        # MannWhitneySelector
-│   ├── mutual_info/         # MutualInfoSelector; knn_1d.py: the estimate by sorting, CPU or GPU
-│   ├── percentile/          # PercentileSelector
-│   ├── random_selection/    # RandomSelector (not `random`: shadows the stdlib)
-│   ├── rfe/                 # RFESelector
-│   ├── rfecv/               # RFECVSelector
-│   ├── sequential/          # SequentialSelector
-│   ├── tree_importance/     # TreeImportanceSelector
-│   └── variance_threshold/  # VarianceThreshold
-└── utils/
-    ├── __init__.py
-    └── validation.py        # Input validation helpers (currently unused)
+└── selectors/               # Feature selection methods, one subpackage each:
+    │                        #   __init__.py (the class), tests/, demos/tutorial.ipynb,
+    │                        #   demos/speed.ipynb (featsel.benchmark on synthetic data)
+    ├── __init__.py          # Imports every selector, which registers it
+    ├── base.py              # FeatureSelector: scikit-learn base, registration, create()
+    ├── gpu.py               # The device policy (run), the GPU lock, batch sizes
+    ├── f_test.py            # f_classif and f_regression on the CPU or a GPU
+    ├── log_pvalue/          # U-test and F-test log p-values that stay finite below 1e-308
+    ├── anova_f/             # ANOVAFSelector
+    ├── correlation/         # CorrelationSelector
+    ├── fdr/                 # FDRSelector
+    ├── fwe/                 # FWESelector
+    ├── higher_criticism/    # HigherCriticismSelector
+    ├── lasso/               # LassoSelector; ppdna.py: its GPU solver
+    ├── mann_whitney/        # MannWhitneySelector
+    ├── mutual_info/         # MutualInfoSelector; knn_1d.py: the estimate by sorting, CPU or GPU
+    ├── percentile/          # PercentileSelector
+    ├── random_selection/    # RandomSelector (not `random`: shadows the stdlib)
+    ├── rfe/                 # RFESelector
+    ├── rfecv/               # RFECVSelector
+    ├── sequential/          # SequentialSelector
+    ├── tree_importance/     # TreeImportanceSelector
+    └── variance_threshold/  # VarianceThreshold
 ```
 
 Every selector subclasses `FeatureSelector`, which inherits scikit-learn's
@@ -383,7 +359,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 
 ### Package Installation
 - The package uses modern Python packaging with `pyproject.toml`
-- Designed for PyPI distribution but currently in development (version 0.1.0)
+- Version 0.1.0; not published on PyPI (`docs/SCOPE.md` §4)
 - Support for Python 3.9-3.13
 - Core dependencies: numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, pyyaml, tqdm
 - Optional dependencies: jupyter (dev), optuna (hyperparameter optimization), torch and torchvision (embeddings: only to compute the BreastMNIST embeddings), torch (gpu: every selector's GPU path, `device='cuda'` or `'auto'`)
