@@ -69,7 +69,7 @@ report. This project drives the software by a configuration file.
 
 ## 1.4 What we built and asked
 
-**The software.** `featsel` is a Python package of 15 selection methods.
+**The software.** `featsel` is a Python package of 16 selection methods.
 Each one behaves exactly like a scikit-learn selector. A user with an
 existing scikit-learn pipeline can swap their selector for ours and change
 nothing else. A runner runs the whole comparison. One YAML file drives it.
@@ -129,3 +129,33 @@ and Higher Criticism, under one protocol. It runs on one large gene
 expression cohort and one image dataset. This tests whether the ranking of
 methods carries over between domains. A second image dataset, unseen
 during the design, then tests the finished pipeline (section 8.8).
+
+## 1.7 What this project adds
+
+This is a comparative study, so its contributions are evidence and tools,
+not a new method.
+
+1. **A comparison at a cohort size earlier studies lacked.** Most earlier
+   comparisons had tens to hundreds of samples. Here 2,976 patients give
+   test sets of about 1,500. Every method meets a random control at every
+   `k`, and differences are tested with a paired test corrected for
+   overlapping splits (chapter 7).
+2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
+   thresholds were built for rare, independent signal. Our data has
+   widespread, correlated signal. Higher Criticism stopped at the edge of
+   its search on all three datasets, and Berk-Jones at or just before it
+   on the two it ran on. Both acted as top-10% filters (sections 7.5 and
+   8.8).
+3. **A cost-quality frontier.** Selection time against AUC, for every
+   method and setting on one plot. It shows which method to use for a time
+   budget (chapter 8).
+4. **Drop-in selectors that are tested, fast and exact.** 16 selectors are
+   scikit-learn estimators. Those that copy a scikit-learn method pick the
+   same features, on the CPU and on a GPU. Exact solvers make Lasso, RFE
+   and Sequential selection faster. For Lasso and RFE they reach the
+   solution that scikit-learn's default stops short of (chapters 5 and 6).
+5. **Checks of the data that change its use.** Repeated patients in
+   SCAN-B, labels computed from the features, and copied images in
+   BreastMNIST, found in BreastMNIST's own images (chapter 2).
+
+Section 9.3 repeats them in short.

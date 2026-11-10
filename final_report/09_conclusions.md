@@ -100,7 +100,22 @@
     average (0.025 on LumB), with a tenth of the genes or fewer. Know which
     of the two you want.
 
-## 9.3 Answer to the main question
+## 9.3 What this project adds
+
+Section 1.7 lists the contributions. In short:
+
+- A method comparison on a cohort of 2,976 patients, against a random
+  control, with paired tests corrected for overlapping splits. The
+  correction removed two conclusions an uncorrected test supported.
+- Evidence that Higher Criticism and Berk-Jones, used as selectors on
+  data with widespread signal, reduce to a fixed top-10% filter.
+- A cost-quality frontier over every method and setting.
+- A package of 16 drop-in selectors, tested against scikit-learn, with
+  GPU paths and exact solvers.
+- Data checks that changed how the data was used: repeated patients,
+  computed labels, and copied images found in BreastMNIST itself.
+
+## 9.4 Answer to the main question
 
 For a given number of features `k`, which method gives the best
 classifier, and by how much over random?
