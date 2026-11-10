@@ -87,6 +87,10 @@ Liu, Y.-J. and Zhou, W. (2023). Dual Newton proximal point algorithm for
 solution paths of the ℓ1-regularized logistic regression. Preprint.
 https://arxiv.org/abs/2310.19353
 
+Maji, S., Rahtu, E., Kannala, J., Blaschko, M. and Vedaldi, A. (2013).
+Fine-grained visual classification of aircraft. Preprint.
+https://arxiv.org/abs/1306.5151
+
 Mann, H. B. and Whitney, D. R. (1947). On a test of whether one of two
 random variables is stochastically larger than the other. *Annals of
 Mathematical Statistics* 18(1), 50-60.

@@ -20,6 +20,7 @@ Works this project relies on.
 | Pawłowska, A., Karwat, P. and Żołek, N. (2023). Letter to the Editor. Re: "Dataset of breast ultrasound images by W. Al-Dhabyani et al., Data in Brief, 2020, 28, 104863". *Data in Brief* 48, 109247. https://doi.org/10.1016/j.dib.2023.109247. 155 of the 780 BUSI images (19%) are copies, some labelled differently; 70 show the axilla; at least 7 a biopsy needle. Its supplement (Mendeley Data, doi 10.17632/k8t3gnx9h6.1) lists the pairs. |
 | Pawłowska, A., Ćwierz-Pieńkowska, A., Domalik, A., et al. (2024). Curated benchmark dataset for ultrasound based breast lesion analysis. *Scientific Data* 11, 148. https://doi.org/10.1038/s41597-024-02984-z. States that more than 40% of BUSI's images have significant defects. |
 | He, K., Zhang, X., Ren, S. and Sun, J. (2016). Deep residual learning for image recognition. *CVPR 2016*. The ResNet-50 that embeds the BreastMNIST images. |
+| Maji, S., Rahtu, E., Kannala, J., Blaschko, M. and Vedaldi, A. (2013). Fine-grained visual classification of aircraft. https://arxiv.org/abs/1306.5151. FGVC-Aircraft, the unseen third dataset (final report, section 8.8). |
 
 ## Higher Criticism
 

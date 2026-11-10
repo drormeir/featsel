@@ -61,14 +61,7 @@ report does not list it yet.
   reruns. Minutes.
 - **Source.** `final_report/10_open_work.md`, 10.1.
 
-### A6. FGVC-Aircraft is not in the report (task 4)
-
-- **Problem.** The unseen-dataset result exists only in its notebook.
-- **What closes it.** A short section in chapter 8 or 9, and a line in
-  chapter 2.
-- **Source.** New.
-
-### A7. Berk-Jones is not among the methods (task 2)
+### A6. Berk-Jones is not among the methods (task 2)
 
 - **Problem.** Berk-Jones is a close relative of Higher Criticism. It
   compares each sorted p-value with its exact null distribution: under
@@ -96,7 +89,7 @@ report does not list it yet.
   not for feature selection". Reversed on 2026-11-10: `DECISIONS.md`
   records the decision and no longer lists it as parked.
 
-### A8. No two-stage pipeline is tested (task 2)
+### A7. No two-stage pipeline is tested (task 2)
 
 - **Problem.** Every experiment runs one selector alone. A common practice
   chains them: a fast filter cuts the features first, and a slower method

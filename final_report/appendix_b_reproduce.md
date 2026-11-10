@@ -39,14 +39,16 @@ CSV. It records the exact versions, the machine and the git commit.
 | RFECV scored by AUC (section 8.6) | `.venv/bin/python -m featsel.run --config configs/frontier_scanb70_rfecv_auc.yaml --n-jobs 2`, and the same with `frontier_breastmnist70_rfecv_auc.yaml`. One split, three inner scores: `.venv/bin/python scripts/rfecv_scoring.py` | `results/local/frontier_*70_rfecv_auc.csv`. The script prints its table and writes no file. |
 | BreastMNIST at larger `k` (section 8.7) | `.venv/bin/python -m featsel.run --config configs/frontier_breastmnist70_large_k.yaml --n-jobs 1` | `results/local/frontier_breastmnist70_large_k.csv` |
 | SCAN-B on all genes (section 8.7) | `.venv/bin/python -m featsel.run --config configs/frontier_scanb70_all_genes.yaml --n-jobs 2` | `results/local/frontier_scanb70_all_genes.csv` |
+| FGVC-Aircraft (section 8.8) | `.venv/bin/python -m featsel.run --config configs/aircraft70_gpu.yaml --n-jobs 1`; the first call downloads the 2.75 GB archive and computes the embeddings | `results/aircraft70_gpu.csv`; analysis in `featsel_datasets/fgvc_aircraft/demos/research.ipynb` |
 | Frontier plots | `.venv/bin/python scripts/plot_frontier.py <the three CSVs> --out results/local/frontier_scanb70_roc_auc.png` | one PNG and CSV for all tasks, and one per task |
 
 Add `--resume` to any runner command to continue a stopped run. Files in
 `results/local/` are not tracked by git. The frontier plots and tables used
 in this report are copied to [`figures/`](figures/).
 
-The table of section 6.1 was measured on 2026-10-31. Since 2026-11-07 the
-runner fits each selection 10 times by default (`selection_repeats`).
+The table of section 6.1 was measured when the runner fitted each
+selection once. It now fits each selection 10 times by default
+(`selection_repeats`).
 `benchmark_speed.py` does not set it to 1. So a rerun today times 10 fits
 per selection on the runner's side. Its runner times would not match the
 table.

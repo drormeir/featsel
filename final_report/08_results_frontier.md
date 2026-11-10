@@ -27,11 +27,16 @@ faster.
 | Score | ROC AUC; macro-F1 and balanced accuracy also recorded |
 | Timing | median of 10 fits by fresh selectors (1 fit for Sequential); one fit at a time on the GPU |
 
+A preliminary run of the frontier trained on 50% of the patients. It
+let the GPU methods fall back to the CPU when the GPU was busy, so most of
+their fits ran on the CPU. Its times are not reported; chapter 7 cites it
+once, for RFE's choice of genes.
+
 The GPU methods ran with one worker, so no two fits shared the GPU. The
 CPU methods ran with two workers. Every GPU method's fits were recorded as
 running on the GPU. Two workers slow each other, so the CPU times are
-somewhat inflated. In the first frontier run (2026-11-07), liblinear RFE on
-Basal took 31 s per fit with two workers. Alone, on the same 1,488
+somewhat inflated. In the preliminary run, liblinear RFE on Basal took
+31 s per fit with two workers. Alone, on the same 1,488
 training patients, it took 23.1 s. Sequential selection got one fit per
 selection, because ten would have taken about 24 hours.
 
@@ -49,7 +54,7 @@ The SCAN-B run took about 8 hours. BreastMNIST took about 3 minutes.
 splits. Bars: one standard deviation over splits. Table:
 [`figures/frontier_scanb70_roc_auc.csv`](figures/frontier_scanb70_roc_auc.csv).*
 
-| Method | Best AUC (its `k`) | Time per fit | Device | On frontier |
+| Method | Best AUC (its `k`) | Time per fit at that `k` | Device | On frontier |
 |---|---|---|---|---|
 | Random | 0.950 (1000) | 0.02 s | CPU | yes, every `k` |
 | HC2008 | **0.970** (2,855 genes) | 0.66 s | GPU | **yes** |
@@ -74,11 +79,12 @@ splits. Bars: one standard deviation over splits. Table:
    HC2008, Lasso (PPDNA), mutual information and correlation all run in
    under 4 s, at AUC 0.96 to 0.97. In the comparison of chapter 7,
    Mann-Whitney took about 10 s per fit. A NumPy version with one sort per
-   gene (2026-11-03) brought that to about 3 s on the CPU. The GPU then
+   gene brought that to about 3 s on the CPU. The GPU then
    took it below a second. Mutual information took more than a minute
    (chapter 6).
 3. **The wrappers lose on both axes.** RFE, RFECV and Sequential take 6 to
-   170 s and score below the simple filters. Sequential's 5 or 10 genes
+   84 s per fit at their best `k`, and Sequential 170 s at k = 10. They
+   score below the simple filters. Sequential's 5 or 10 genes
    cannot match 1,000 well-chosen ones.
 4. **Random genes come close.** Random k = 1000 reaches 0.950. Once `k` is
    large, almost any genes work, as chapter 7 found.
@@ -309,7 +315,72 @@ What it shows:
 - These differences are within one or two standard deviations over 5
   splits (0.01 to 0.03). They are not tested for significance.
 
-## 8.8 Summary
+## 8.8 An unseen dataset: FGVC-Aircraft
+
+The pipeline was designed on SCAN-B and BreastMNIST. To test it on data
+it was not built for, we added a third dataset after the design was fixed.
+Nothing in the `featsel` package changed. The dataset needed a loader
+folder and one config.
+
+**The data.** FGVC-Aircraft (Maji et al. 2013) holds 10,000 aircraft
+photos, 100 per model variant. The task is binary: Boeing 737 (800 photos)
+against the Airbus A320 family (400 photos). Both are narrow-body airliners
+that look alike. Each photo becomes 2,048 features from an ImageNet
+ResNet-50 without its last layer, as for BreastMNIST. No two photos are
+copies: no two photos' difference hashes differ by 4 bits or fewer, the
+closest pairs show different aircraft, and the most similar pair of
+embeddings has cosine similarity 0.86. The photos are licensed for
+non-commercial research only.
+
+**The weights mattered.** BreastMNIST used torchvision's `IMAGENET1K_V2`
+weights. Here they made 80% of the features exactly zero, and all features
+reached AUC 0.749. The `IMAGENET1K_V1` weights gave 0.1% zeros and 0.863
+(one check: five splits, C = 0.01). So this dataset uses V1.
+
+**The experiment.** 10 random splits, 70% of the photos for training,
+logistic regression with C = 1, ROC AUC. `k` = 10, 50, 250 and 500, and
+all 2,048 features. Every selector ran with `device='cuda'`; only the
+random control, which reads no data, ran on the CPU. The 290 executions
+took 5 minutes.
+
+| Method | k = 10 | k = 500 | Own count | Time per fit |
+|---|---|---|---|---|
+| Random | 0.608 | 0.819 | | 0.001 s |
+| Mann-Whitney | 0.726 | 0.836 | | 0.017 s |
+| Spearman correlation | 0.726 | 0.829 (keeps 385 to 452) | | 0.025 s |
+| Mutual information | 0.712 | 0.829 | | 0.10 s |
+| Lasso, PPDNA | 0.721 | 0.848 (keeps 295 to 329) | | 0.21 s |
+| RFE, Newton | 0.712 | **0.857** | | 0.34 s |
+| HC2008 | | | 0.815 (204) | 0.014 s |
+| RFECV, scored by AUC | | | **0.859** (620 to 1,844) | 2.0 s |
+| Sequential, Newton | 0.698 (also 0.698 at k = 5) | | | 3.5 s (1.7 s at k = 5) |
+| **All 2,048 features** | | | **0.864** | none |
+
+Mean test AUC over 10 splits; time is the median per fit, on the GPU. Config:
+[`configs/aircraft70_gpu.yaml`](../configs/aircraft70_gpu.yaml). Results:
+[`results/aircraft70_gpu.csv`](../results/aircraft70_gpu.csv). Notebook:
+[`featsel_datasets/fgvc_aircraft/demos/research.ipynb`](../featsel_datasets/fgvc_aircraft/demos/research.ipynb).
+
+What it shows:
+
+- **The pattern of the other two datasets holds.** At k = 10 every method
+  beats random on all 10 splits, by 0.09 to 0.12 AUC. The gain shrinks as
+  `k` grows.
+- **Methods that see features together lead at larger `k`.** At k = 500,
+  RFE and Lasso beat random on every split; the one-at-a-time filters on 7
+  or 8 of 10. As on BreastMNIST, the signal is many weak features: the best
+  single feature reaches only AUC 0.690.
+- **No selection is best for AUC**, as on BreastMNIST. RFE at k = 500 comes
+  within 0.007 of all features with a quarter of them.
+- **HC2008 stops at the edge of its search again**: 204 features, 0.1 ×
+  2,048, on every split.
+- **The filters are the most stable.** Mann-Whitney and correlation reach
+  Kuncheva indices of 0.66 to 0.76; Lasso, mutual information and RFE 0.15
+  to 0.33; Sequential 0.07.
+- **The embedding mattered more than the selector.** Changing the weights
+  moved AUC by 0.11. No selector moved it by a tenth of that at k = 500.
+
+## 8.9 Summary
 
 - On SCAN-B, sub-second GPU filters (Mann-Whitney, HC2008) give the best
   AUC for their cost. A 200-tree forest ties them at 17 times the cost.
@@ -320,6 +391,9 @@ What it shows:
   average (0.025 on LumB), with a model a tenth the size or less.
 - Wrappers cost the most. On SCAN-B they also scored below the filters. On
   BreastMNIST, RFE scored close to Lasso at k = 250 (0.900 against 0.902).
+- On FGVC-Aircraft, an unseen dataset, the pipeline ran unchanged and
+  entirely on the GPU, and the same pattern held: a clear gain over random
+  at small `k`, and all features best for AUC.
 - RFECV with its default inner score fails on imbalanced tasks. Scored by
   AUC, it recovers on SCAN-B (0.961) but stays slow. On BreastMNIST it
   keeps 416 to 1,436 of the 2,048 features and scores close to using them
