@@ -309,6 +309,46 @@ def test_ranking_once_selects_the_same_genes_as_one_fit_per_k(experiment, monkey
     assert (once.loc[sparse & (once.k == 100), 'n_selected'] < 100).all()
 
 
+class TestChains:
+    """Tests for selector entries with steps: each step selects from the last one's choice."""
+
+    def test_indices_refer_to_the_original_features(self, experiment):
+        """Test that the F-test's top k of its top 50 is its top k, by original index."""
+        experiment['selectors'] = [
+            {'steps': [{'name': 'ANOVAFSelector', 'params': {'n_features': 50}},
+                       {'name': 'ANOVAFSelector'}], 'k': [5, 10]},
+            {'name': 'ANOVAFSelector', 'k': [5, 10]},
+        ]
+        df = pd.read_csv(run_config(experiment))
+
+        chain = df[df.selector == 'ANOVAFSelector+ANOVAFSelector'].reset_index(drop=True)
+        alone = df[df.selector == 'ANOVAFSelector'].reset_index(drop=True)
+        assert len(chain) == len(alone) > 0
+        pd.testing.assert_series_equal(chain.selected_indices, alone.selected_indices)
+        assert json.loads(chain.selector_params[0])[0]['params'] == {'n_features': 50}
+
+    def test_rank_once_last_step_stays_in_the_first_steps_choice(self, experiment, monkeypatch):
+        """Test that a ranked last step is cut from the first step's features, as one fit per k."""
+        experiment['selectors'] = [
+            {'label': 'chain', 'k': [5, 10],
+             'steps': [{'name': 'ANOVAFSelector', 'params': {'n_features': 30}},
+                       {'name': 'TreeImportanceSelector', 'params': {'n_estimators': 20}}]},
+            {'name': 'ANOVAFSelector', 'k': [30]},
+        ]
+        once = pd.read_csv(run_config(experiment))
+        monkeypatch.setattr(TreeImportanceSelector, 'rank_once', False)
+        per_k = pd.read_csv(run_config(experiment))
+
+        pd.testing.assert_series_equal(once.selected_indices, per_k.selected_indices)
+        first = once[once.selector == 'ANOVAFSelector'].drop_duplicates(['task', 'split'])
+        allowed = {(r.task, r.split): set(r.selected_indices.split())
+                   for r in first.itertuples()}
+        chain = once[once.selector == 'chain']
+        assert (chain.n_selected == chain.k).all()
+        assert all(set(r.selected_indices.split()) <= allowed[(r.task, r.split)]
+                   for r in chain.itertuples())
+
+
 def test_dataset_can_be_a_module(tmp_path, monkeypatch):
     """Test that a dataset module supplies X, y, its default target and its name."""
     (tmp_path / 'toy_view.py').write_text(

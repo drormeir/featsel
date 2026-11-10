@@ -76,6 +76,26 @@ selectors have no `n_features` and choose their own count: `FDRSelector`,
 them. A `k` fails at the first split. A `k` is a feature count for one
 dataset, so it lives in the experiment config, not in the dataset module.
 
+**Chains.** A selector entry may give `steps` instead of `name` and
+`params`. Each step selects from the features the step before it kept, as
+in a scikit-learn `Pipeline`. `k` goes to the last step; earlier steps set
+their own count in `params`. The selection time covers every step. The
+label defaults to the steps' class names joined by `+`.
+
+```yaml
+selectors:
+  - label: MW1000+RFE
+    k: [10, 50, 250]
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 1000}
+      - name: RFESelector
+        params: {C: 0.01, solver: "newton"}
+```
+
+`selected_indices` are always indices of the original features, and
+`selector_params` holds the list of steps.
+
 A model with a `grid` is tuned inside each split
 (`final_report/03_how_to_measure.md`, 3.8). Inner stratified Monte Carlo splits of the
 training half score every value in the grid. The model is refit on the whole

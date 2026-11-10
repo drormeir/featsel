@@ -42,6 +42,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import QuantileTransformer, StandardScaler
 from sklearn.svm import LinearSVC
 from tqdm.auto import tqdm
@@ -119,18 +120,42 @@ def _label(spec):
     return spec.get('label', spec['name'])
 
 
+def _steps(spec):
+    """
+    A selector entry's steps. An entry is one selector, {name, params}, or a
+    chain, {steps: [{name, params}, ...]}: each step selects from the features
+    the step before it kept. `k` goes to the last step.
+    """
+    return spec.get('steps', [spec])
+
+
+def _rank_once(spec):
+    """Whether the entry's last step ranks once for every k."""
+    return FeatureSelector.lookup(_steps(spec)[-1]['name']).rank_once
+
+
 def _selector_label(spec):
     """
-    Config label for a selector: an explicit label, or its class name.
+    Config label for a selector: an explicit label, or its class name; for a
+    chain, its steps' class names joined by '+'.
 
     The class name, not the config's spelling or alias, so that results stay
     comparable whatever name a config used.
     """
-    return spec.get('label') or FeatureSelector.lookup(spec['name']).__name__
+    return spec.get('label') or '+'.join(FeatureSelector.lookup(step['name']).__name__
+                                         for step in _steps(spec))
 
 
 def _make_selector(spec, k, seed):
-    """Build a selector from its config entry, seeding it if it takes a seed."""
+    """
+    Build a selector from its config entry, seeding it if it takes a seed.
+    A chain becomes a scikit-learn Pipeline of its steps, k set on the last.
+    """
+    if 'steps' in spec:
+        *first, last = spec['steps']
+        return Pipeline([*((f'step{i}', _make_selector(step, None, seed))
+                           for i, step in enumerate(first)),
+                         (f'step{len(first)}', _make_selector(last, k, seed))])
     cls = FeatureSelector.lookup(spec['name'])
     params = dict(spec.get('params') or {})
     if k is not None:
@@ -138,6 +163,27 @@ def _make_selector(spec, k, seed):
     if 'random_state' in cls().get_params():
         params.setdefault('random_state', seed)
     return cls(**params)
+
+
+def _selected(selector, ranked=False):
+    """
+    The selected features as column indices of the data the selector was fit
+    on: its support, or its ranking when ranked. A chain's last step indexes
+    the features its earlier steps kept, so its choice is mapped back through
+    each of them.
+    """
+    steps = [step for _, step in selector.steps] if isinstance(selector, Pipeline) else [selector]
+    *first, last = steps
+    chosen = last.ranking() if ranked else last.get_support(indices=True)
+    for step in reversed(first):
+        chosen = step.get_support(indices=True)[chosen]
+    return chosen
+
+
+def _devices(selector):
+    """The devices a selector's steps ran on."""
+    steps = [step for _, step in selector.steps] if isinstance(selector, Pipeline) else [selector]
+    return {getattr(step, 'device_', 'cpu') for step in steps}
 
 
 DEFAULTS = {
@@ -239,8 +285,7 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
     score_metrics = {name: SCORE_METRICS[name] for name in config['metrics']
                      if name in SCORE_METRICS}
     sel_name = _selector_label(sel_spec)
-    rank_once = (FeatureSelector.lookup(sel_spec['name']).rank_once
-                 and None not in k_values)
+    rank_once = _rank_once(sel_spec) and None not in k_values
     ranking = None
 
     for k in k_values:
@@ -262,12 +307,12 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 # A selector with rank_once set: each cut of its ranking
                 # equals a fit with n_features=k. The selection_ columns
                 # are these fits', on every k.
-                ranking = selector.ranking()
+                ranking = _selected(selector, ranked=True)
 
         if rank_once:
             support = np.sort(ranking[:k])
         else:
-            support = selector.get_support(indices=True)
+            support = _selected(selector)
         X_train_sel, X_test_sel = X_train[:, support], X_test[:, support]
 
         recovery = {}
@@ -315,7 +360,8 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 **selection,
                 'fit_time_s': fit_time,
                 'predict_time_s': predict_time,
-                'selector_params': json.dumps(sel_spec.get('params') or {}),
+                'selector_params': json.dumps(sel_spec['steps'] if 'steps' in sel_spec
+                                              else sel_spec.get('params') or {}),
                 'model_params': json.dumps(model_spec.get('params') or {}),
                 'tuned_params': json.dumps(getattr(model, 'best_params_', {})),
                 'selected_indices': ' '.join(str(i) for i in support),
@@ -351,9 +397,8 @@ def _repeated_selection(sel_spec, k, seed, X_train, y_train, repeats, rank_once)
                 _, peak_bytes = tracemalloc.get_traced_memory()
                 tracemalloc.stop()
         times.append(time.perf_counter() - start)
-        choices.append(selector.ranking() if rank_once
-                       else selector.get_support(indices=True))
-        devices.add(getattr(selector, 'device_', 'cpu'))
+        choices.append(_selected(selector, ranked=rank_once))
+        devices |= _devices(selector)
     return selector, {
         'selection_time_s': float(np.median(times)),
         'selection_repeats': repeats,
@@ -433,7 +478,7 @@ def _k_groups(sel_spec):
     job and a slow selector spreads over the workers.
     """
     k_values = sel_spec.get('k', [None])
-    if FeatureSelector.lookup(sel_spec['name']).rank_once:
+    if _rank_once(sel_spec):
         return [k_values]
     return [[k] for k in k_values]
 
@@ -577,10 +622,12 @@ def print_plan(config, X, y, tasks, target, name, total):
             shown = "method chooses its own count"
         else:
             shown = ', '.join(f"{k} ({100 * k / n_features:.2f}%)" for k in k_values)
-        params = spec.get('params') or {}
         print(f"  {_selector_label(spec):<16} k = {shown}")
-        if params:
-            print(f"  {'':<16} params {params}")
+        if 'steps' in spec:
+            for step in spec['steps']:
+                print(f"  {'':<16} step {step['name']} {step.get('params') or {}}")
+        elif spec.get('params'):
+            print(f"  {'':<16} params {spec['params']}")
 
     print("Models       :")
     for spec in config['models']:
