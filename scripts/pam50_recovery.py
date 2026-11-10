@@ -10,6 +10,8 @@ the top k. The random control's expected recall is k / number of genes.
 Lasso ranks only the genes with a non-zero weight; the rest are never
 selected, so its recall stops growing there.
 
+The forest has 200 trees, not the comparison's 50.
+
 Usage:
     python scripts/pam50_recovery.py --n-splits 10 --out <file>
 """

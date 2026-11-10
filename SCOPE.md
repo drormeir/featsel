@@ -94,7 +94,8 @@ downloads and caches it (see `docs/final_report/05_the_software.md`,
 section 5.3), and gets a section in the Data chapter.
 
 **Higher Criticism as a selector.** This is the one method that sets the
-project apart from a standard method comparison. Built 2026-10-31: a
+project apart from a standard method comparison. Built 2026-10-24 (commit
+a0bf65f): a
 `HigherCriticismSelector` in `selectors/`, following
 the published Donoho and Jin thresholding formulation, taking per-feature
 p-values from a univariate test, sorting them, computing the HC statistic and
@@ -109,7 +110,8 @@ worth calling out in the report.
 - A plugin architecture, registries, or generalized extension points.
 - Optuna or any hyperparameter search beyond a fixed small grid.
 - PyTorch integration, deep models, embeddings inside the package. The one
-  exception is the optional GPU ranking of the U test (section 3). Image
+  exception is the optional GPU path of each selector through PyTorch
+  (section 3, decided 2026-11-07; at first, 2026-11-03, only the U test). Image
   embeddings for the second dataset are extracted once, outside the package
   (`featsel_datasets/medmnist_breastmnist/`), cached, and fed to the pipeline as `X, y`.
 - Novel research contributions. This is a comparative study, not a paper.
