@@ -10,7 +10,8 @@ BUILT_IN = ['VarianceThreshold', 'ANOVAFSelector', 'MutualInfoSelector',
             'CorrelationSelector', 'RandomSelector', 'LassoSelector',
             'TreeImportanceSelector', 'FDRSelector', 'FWESelector',
             'PercentileSelector', 'RFESelector', 'RFECVSelector',
-            'SequentialSelector', 'HigherCriticismSelector', 'MannWhitneySelector']
+            'SequentialSelector', 'HigherCriticismSelector', 'MannWhitneySelector',
+            'BerkJonesSelector']
 
 
 @pytest.fixture(autouse=True)

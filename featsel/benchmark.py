@@ -62,6 +62,7 @@ PARAMS = {
     'PercentileSelector': {'percentile': 1},
     'MannWhitneySelector': {'n_features': 50},
     'HigherCriticismSelector': {'variant': '2008'},
+    'BerkJonesSelector': {},
     'CorrelationSelector': {'n_features': 50},
     'MutualInfoSelector': {'n_features': 50},
     'LassoSelector': {'C': 1.0},
@@ -90,7 +91,7 @@ def _pandas_correlation(**params):
 
 
 # selector -> the original: a function of the selector's PARAMS that builds it
-# unfitted. Mann-Whitney and HC have no scikit-learn version: their original
+# unfitted. Mann-Whitney, HC and Berk-Jones have no scikit-learn version: their original
 # is this package's NumPy path, on the CPU.
 ORIGINALS = {
     'VarianceThreshold': lambda threshold: SKLearnVarianceThreshold(threshold),
@@ -119,6 +120,7 @@ ORIGINALS = {
         'MannWhitneySelector', n_features=n_features, device='cpu'),
     'HigherCriticismSelector': lambda variant: FeatureSelector.create(
         'HigherCriticismSelector', variant=variant, device='cpu'),
+    'BerkJonesSelector': lambda: FeatureSelector.create('BerkJonesSelector', device='cpu'),
 }
 
 # selector -> this package's variants: label -> parameters added to PARAMS.
@@ -136,6 +138,7 @@ VARIANTS = {
     'MutualInfoSelector': {'featsel': {'device': 'cpu'}, 'featsel, GPU': {'device': 'cuda'}},
     'MannWhitneySelector': {'GPU': {'device': 'cuda'}},
     'HigherCriticismSelector': {'GPU': {'device': 'cuda'}},
+    'BerkJonesSelector': {'GPU': {'device': 'cuda'}},
     # PPDNA on the CPU is about five times slower than liblinear; it pays
     # only on a GPU.
     'LassoSelector': {'featsel PPDNA, GPU': {'solver': 'ppdna', 'device': 'cuda'}},
@@ -151,6 +154,7 @@ VARIANTS = {
 ORIGINAL_LABEL = {
     'MannWhitneySelector': 'NumPy, CPU',
     'HigherCriticismSelector': 'NumPy, CPU',
+    'BerkJonesSelector': 'NumPy, CPU',
     'CorrelationSelector': 'pandas full matrix',
 }
 

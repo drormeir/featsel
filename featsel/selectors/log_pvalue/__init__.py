@@ -5,7 +5,7 @@ A float64 p-value below 1e-308 is stored as 0. Here the log is taken before
 anything is multiplied together, so no intermediate value underflows.
 
 - log_mannwhitneyu: the Mann-Whitney U test, per feature. Used by
-  MannWhitneySelector and HigherCriticismSelector. Its ranking runs in
+  MannWhitneySelector, HigherCriticismSelector and BerkJonesSelector. Its ranking runs in
   PyTorch on a GPU when one can be used, else in NumPy, with identical results.
 - log_f_sf: the F-test, kept to compare its p-values with the U test's.
   scipy's f.sf returns 0 below 1e-308, and f.logsf returns -inf, because it

@@ -16,6 +16,7 @@ from sklearn.pipeline import Pipeline
 
 from featsel.selectors import (
     ANOVAFSelector,
+    BerkJonesSelector,
     CorrelationSelector,
     FDRSelector,
     FWESelector,
@@ -35,6 +36,7 @@ from featsel.selectors import (
 # One configured instance of every selector.
 SELECTORS = [
     ANOVAFSelector(n_features=10),
+    BerkJonesSelector(),
     CorrelationSelector(n_features=10, target_threshold=0.0),
     FDRSelector(alpha=0.05),
     FWESelector(alpha=0.05),

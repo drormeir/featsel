@@ -7,6 +7,7 @@ FeatureSelector.
 
 from .anova_f import ANOVAFSelector
 from .base import FeatureSelector, FeatureSelectorRandom
+from .berk_jones import BerkJonesSelector
 from .correlation import CorrelationSelector
 from .fdr import FDRSelector
 from .fwe import FWESelector
@@ -24,6 +25,7 @@ from .variance_threshold import VarianceThreshold
 
 __all__ = [
     'ANOVAFSelector',
+    'BerkJonesSelector',
     'CorrelationSelector',
     'FDRSelector',
     'FWESelector',
