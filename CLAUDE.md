@@ -87,7 +87,7 @@ mypy featsel/
 
 A dataset is loaded one of two ways. Both give `X, y` to the runner.
 
-**Dataset loaders: `featsel_datasets/<name>/`** (used for SCAN-B and BreastMNIST)
+**Dataset loaders: `featsel_datasets/<name>/`** (used for SCAN-B, BreastMNIST and FGVC-Aircraft)
 
 A folder per dataset with code that downloads the published files once and
 caches them beside it. For SCAN-B (`featsel_datasets/scanb_gse96058/`):
@@ -152,6 +152,13 @@ config. A CSV dataset config specifies:
 - Features: 2,048 ResNet-50 embedding dimensions per image (ImageNet weights, last layer removed)
 - Target `label`; all 780 images are used, MedMNIST's own split is ignored
 - Computing embeddings needs `torch`/`torchvision` (the `embeddings` extra); they are cached as `embeddings_resnet50.npz`
+
+**Third dataset, unseen during the design: FGVC-Aircraft (`featsel_datasets/fgvc_aircraft/`)**
+- 1,200 aircraft photos (FGVC-Aircraft 2013b): Boeing 737 800 vs Airbus A320 family 400
+- Features: 2,048 ResNet-50 embedding dimensions (ImageNet V1 weights: V2 gave 80% zeros and a worse AUC here)
+- Target `family`; the 2.75 GB archive is read in one pass, never unpacked; cached as `embeddings_resnet50_v1.npz`
+- Licence: non-commercial research only; photos are not stored in the repo or in notebook outputs
+- `configs/aircraft70_gpu.yaml` runs every selector on the GPU; `demos/research.ipynb` has the analysis and conclusions
 
 The course copies `scanb_small` and `scanb_full` are retired; they are
 archived outside git in `references/local/scanb_course/`.

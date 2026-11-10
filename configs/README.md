@@ -17,6 +17,7 @@ to the file itself.
 | `experiment_baseline.yaml` | experiment | The random-selection control on every PAM50 subtype-vs-rest task |
 | `experiment_breastmnist.yaml` | experiment | The same design on BreastMNIST ResNet-50 embeddings (task 4), k scaled to 2,048 features |
 | `experiment_scanb.yaml` | experiment | The full SCAN-B design: four selectors, three train fractions |
+| `aircraft70_gpu.yaml` | experiment | FGVC-Aircraft, Boeing 737 vs A320 family: every selector on the GPU, k = 10 to 500 and all features, 10 splits at 70% training |
 
 ## Dataset
 

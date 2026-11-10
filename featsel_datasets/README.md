@@ -41,6 +41,26 @@ dimensions, so there are more features than images, as in SCAN-B.
 
 Experiment config: `configs/experiment_breastmnist.yaml`.
 
+### FGVC-Aircraft, ResNet-50 embeddings (`fgvc_aircraft/`)
+
+A third dataset, unseen during the design: not medical, not genes. 1,200
+aircraft photos from FGVC-Aircraft 2013b (Maji et al., 2013), Boeing 737
+(800) against the Airbus A320 family (400). Each photo becomes 2,048
+ResNet-50 features. The images are for non-commercial research only and
+are not redistributed.
+
+- `aircraft.py` downloads the 2.75 GB archive once and reads it in one
+  pass without unpacking it. It crops each photo's copyright banner and
+  embeds all 10,000 photos once (ImageNet ResNet-50, V1 weights, on the GPU
+  if there is one; about 4 minutes on a GTX 1650). It also stores a 64-bit
+  difference hash per photo, for finding near-duplicates.
+- `featsel_view.py` defines `NAME`, `TARGET` (`family`) and `load_xy`: the
+  two families from all three official splits.
+- `demos/research.ipynb` studies the data, runs one selection step by step
+  on the GPU, analyses the full run and states the conclusions.
+
+Experiment config: `configs/aircraft70_gpu.yaml`, every selector on the GPU.
+
 ## Retired datasets
 
 `scanb_small` and `scanb_full`, the course's copies of SCAN-B, were retired
