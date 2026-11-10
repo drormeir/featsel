@@ -61,6 +61,14 @@ report does not list it yet.
 - **What closes it.** A loader option that drops the copies, and two
   reruns. Minutes.
 - **Source.** `final_report/10_open_work.md`, 10.1.
+- **Status.** Closed 2026-11-11. The letter's list names BUSI files, which
+  BreastMNIST does not keep. So `copies.py` finds the copies in
+  BreastMNIST's own images by the letter's method, geometric registration:
+  150 groups of 339 images, against the letter's 153 and 346, and the same
+  6 groups with conflicting labels. `load_xy(drop_copies=True)` keeps 585
+  images. The comparison and the frontier ran again without copies.
+  Scores did not fall by a visible amount; the fine ranking changed
+  (sections 2.2 and 7.8).
 
 ### A6. Berk-Jones is not among the methods (task 2)
 
@@ -89,6 +97,11 @@ report does not list it yet.
 - **Source.** Parked on 2026-10-05 as "published only as a detection test,
   not for feature selection". Reversed on 2026-11-10: `DECISIONS.md`
   records the decision and no longer lists it as parked.
+- **Status.** Closed 2026-11-11. `BerkJonesSelector`, with the CDF in log
+  form, tested against SciPy and 50-digit arithmetic. Run on the
+  comparison's splits and on the frontier. It stopped at or just before
+  HC's search edge, kept a subset of HC2008's features on every split, and
+  scored the same (sections 4.5 and 7.5).
 
 ### A7. No two-stage pipeline is tested (task 2)
 
@@ -150,3 +163,5 @@ report does not list it yet.
   project adds.
 - **What closes it.** A short list in chapter 1, mirrored in chapter 9.
 - **Source.** New.
+- **Status.** Closed 2026-11-11. Section 1.7 lists five contributions;
+  section 9.3 repeats them in short.

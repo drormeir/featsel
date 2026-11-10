@@ -542,9 +542,10 @@ lead on image embeddings.
   same splits. They are not independent replicates.
 - **Copied images.** 189 of BreastMNIST's 780 images repeat another image,
   some with a conflicting label (chapter 2). A copy on
-  each side of a split leaks. Without the copies, the scores did not fall
-  by a visible amount, but the fine ranking changed (section 7.8). The
-  BreastMNIST results of chapter 8 keep the copies, except section 8.7.
+  each side of a split leaks. Without the copies, macro-F1 did not fall
+  by a visible amount, but the fine ranking changed (section 7.8). AUC on
+  the frontier fell by about 0.01 to 0.03 (section 8.7). The other
+  BreastMNIST results of chapter 8 keep the copies.
 - **Computed labels.** PAM50 subtypes are computed from gene expression.
   The SCAN-B tasks reproduce a published classifier. Scores may be higher
   than on a measured clinical outcome.

@@ -20,7 +20,7 @@ faster.
 | Setting | Value |
 |---|---|
 | Datasets | SCAN-B (five tasks) and BreastMNIST (one task) |
-| Methods | Random; Mann-Whitney, HC2008, Spearman correlation, mutual information and Lasso (PPDNA) on the GPU; Lasso (liblinear), tree importance (200 trees, 4 threads), RFE (liblinear and Newton), RFECV (Newton) on the CPU; Sequential (Newton) on the GPU. RFECV scored by AUC was added later (section 8.6). |
+| Methods | Random; Mann-Whitney, HC2008, Spearman correlation, mutual information and Lasso (PPDNA) on the GPU; Lasso (liblinear), tree importance (200 trees, 4 threads), RFE (liblinear and Newton), RFECV (Newton) on the CPU; Sequential (Newton) on the GPU. Added later on the same splits: RFECV scored by AUC (section 8.6), Berk-Jones on the GPU, and two-stage chains (section 8.9). |
 | `k` | 10, 50, 250, 1000 on SCAN-B; 10, 50, 250 on BreastMNIST; 5 and 10 for Sequential |
 | Splits | 5 random splits, 70% of the samples for training |
 | Classifier | logistic regression, C = 1 (not tuned, to keep the run short) |
@@ -57,24 +57,27 @@ splits. Bars: one standard deviation over splits. Table:
 | Method | Best AUC (its `k`) | Time per fit at that `k` | Device | On frontier |
 |---|---|---|---|---|
 | Random | 0.950 (1000) | 0.02 s | CPU | yes, every `k` |
-| HC2008 | **0.970** (2,855 genes) | 0.66 s | GPU | **yes** |
+| Berk-Jones | **0.970** (2,841 to 2,855 genes) | 0.65 s | GPU | **yes** |
+| HC2008 | **0.970** (2,855 genes) | 0.66 s | GPU | no, by 0.0002 |
 | Mann-Whitney | 0.966 (1000) | 0.66 s | GPU | no |
 | Lasso, PPDNA | 0.962 (1000) | 0.73 s | GPU | no |
 | Mutual information | 0.968 (1000) | 3.6 s | GPU | no |
 | Spearman correlation | 0.966 (1000) | 3.6 s | GPU | no |
 | Lasso, liblinear | 0.964 (1000) | 4.1 s | CPU | no |
 | RFE, Newton | 0.959 (1000) | 6.0 s | CPU | no |
-| Tree importance | **0.970** (1000) | 11.4 s | CPU | yes, by 0.00002 |
+| Tree importance | **0.970** (1000) | 11.4 s | CPU | no, by 0.0002 |
 | RFECV, Newton | 0.739 (own count) | 31 s | CPU | no |
 | RFE, liblinear | 0.959 (1000) | 57 s | CPU | no |
 | Sequential, Newton | 0.939 (5) | 84 s | GPU | no |
 
 **What it shows.**
 
-1. **The cheap end is enough.** HC2008 and Mann-Whitney reach AUC 0.97 in
-   0.66 s. Nothing slower is clearly better. Tree importance ties HC2008
-   (0.970) but takes 17 times longer. Split by split, each wins on some of
-   the five splits.
+1. **The cheap end is enough.** Berk-Jones, HC2008 and Mann-Whitney reach
+   AUC 0.97 in 0.65 to 0.66 s. Nothing slower is clearly better. Tree
+   importance ties HC2008 (0.970) but takes 17 times longer. Split by
+   split, each wins on some of the five splits. Berk-Jones, added later,
+   leads HC2008 by 0.0002 AUC and 0.01 s. That puts it alone on the
+   frontier, but the gap is far below the spread over splits (0.004).
 2. **The GPU moved five methods into the top-left corner.** Mann-Whitney,
    HC2008, Lasso (PPDNA), mutual information and correlation all run in
    under 4 s, at AUC 0.96 to 0.97. In the comparison of chapter 7,
@@ -95,20 +98,21 @@ splits. Bars: one standard deviation over splits. Table:
    test of section 7.3 has only 4 degrees of freedom. With 16 splits, in
    chapter 7, it could not order the top methods either.
 
-**Caution on HC2008.** It kept 2,855 genes, the edge of its search, on
-every task and split, as in chapter 7. It is on the frontier because it is
-as fast as Mann-Whitney and uses more genes. It is not a sign that HC
-chose a better count.
+**Caution on HC2008 and Berk-Jones.** HC2008 kept 2,855 genes, the edge of
+its search, on every task and split, as in chapter 7. Berk-Jones kept
+2,841 to 2,855. They lead because they are as fast as Mann-Whitney and use
+nearly three times the genes of its largest `k`. It is not a sign that
+they chose a better count.
 
 ## 8.4 SCAN-B, each task
 
 | Task | Frontier beyond random selection (AUC, time) | Note |
 |---|---|---|
 | [Basal vs rest](figures/frontier_scanb70_roc_auc_ovr_Basal.png) | Lasso PPDNA k = 250 (0.992, 0.55 s), Mann-Whitney k = 10 (0.993, 0.67 s), mutual information k = 1000 (0.993, 3.7 s), Lasso liblinear k = 250 (0.993, 3.9 s) | The easiest task: almost every method scores 0.99, and random 1,000 genes 0.988. |
-| [Her2 vs rest](figures/frontier_scanb70_roc_auc_ovr_Her2.png) | HC2008 (0.985, 0.66 s) | RFECV collapses to 0.63. |
-| [LumA vs rest](figures/frontier_scanb70_roc_auc_ovr_LumA.png) | HC2008 (0.960, 0.65 s), tree importance k = 1000 (0.961, 11.4 s) | The only balanced task; RFECV works here (0.960). |
-| [LumB vs rest](figures/frontier_scanb70_roc_auc_ovr_LumB.png) | HC2008 (0.970, 0.65 s), Mann-Whitney k = 1000 (0.974, 0.67 s) | RFECV collapses to 0.64. |
-| [Normal vs rest](figures/frontier_scanb70_roc_auc_ovr_Normal.png) | Mann-Whitney k = 1000 (0.929, 0.65 s), HC2008 (0.947, 0.66 s) | The hardest task; RFECV at chance (0.50). |
+| [Her2 vs rest](figures/frontier_scanb70_roc_auc_ovr_Her2.png) | Berk-Jones (0.985, 0.64 s), HC2008 (0.985, 0.66 s) | RFECV collapses to 0.63. |
+| [LumA vs rest](figures/frontier_scanb70_roc_auc_ovr_LumA.png) | Berk-Jones (0.960, 0.64 s), tree importance k = 1000 (0.961, 11.4 s) | The only balanced task; RFECV works here (0.960). |
+| [LumB vs rest](figures/frontier_scanb70_roc_auc_ovr_LumB.png) | HC2008 (0.970, 0.65 s), Berk-Jones (0.970, 0.65 s), Mann-Whitney k = 1000 (0.974, 0.67 s) | RFECV collapses to 0.64. |
+| [Normal vs rest](figures/frontier_scanb70_roc_auc_ovr_Normal.png) | Mann-Whitney k = 1000 (0.929, 0.65 s), Berk-Jones (0.947, 0.66 s) | The hardest task; RFECV at chance (0.50). |
 
 Click a task to see its plot. Each has a table beside it in
 [`figures/`](figures/). On every task the frontier above random selection
@@ -138,6 +142,7 @@ balanced task, and there RFECV works. Section 8.6 tests this hypothesis.
 | Method | Best AUC (its `k`) | Time per fit | On frontier |
 |---|---|---|---|
 | Random | 0.835 (250) | < 0.001 s | yes |
+| Berk-Jones | 0.863 (199 to 204) | 0.008 s | yes |
 | Mann-Whitney | 0.867 (250) | 0.009 s | yes |
 | HC2008 | 0.864 (204) | 0.009 s | no |
 | Spearman correlation | 0.867 (250) | 0.02 s | no |
@@ -314,6 +319,33 @@ What it shows:
   239 non-zero coefficients. So a larger `k` changes nothing.
 - These differences are within one or two standard deviations over 5
   splits (0.01 to 0.03). They are not tested for significance.
+
+### BreastMNIST without the copied images
+
+The main methods and all features ran again on the 585 images left
+without copies (section 2.2): 5 splits, 70% training, as above. The
+images differ, so the splits do not pair with the runs above.
+
+| Method | k = 10 | k = 250 | Own count | All 2,048 features |
+|---|---|---|---|---|
+| Random | 0.616 (−0.021) | 0.809 (−0.026) | | **0.893** (−0.028) |
+| Mann-Whitney | 0.827 (−0.013) | 0.854 (−0.013) | | |
+| Lasso, liblinear | 0.801 (+0.041) | 0.883 (−0.018) | | |
+| Tree importance | 0.824 (+0.007) | 0.850 (−0.039) | | |
+| RFE, Newton | 0.758 (−0.013) | 0.882 (−0.019) | | |
+| HC2008 | | | 0.849 (−0.016) | |
+| Berk-Jones | | | 0.850 (−0.014) | |
+
+Mean test AUC over 5 splits; in brackets, the change from the run with
+the copies. Config:
+[`configs/frontier_breastmnist70_nocopies.yaml`](../configs/frontier_breastmnist70_nocopies.yaml).
+
+- **AUC fell by about 0.01 to 0.03 for most cells.** All features fell by
+  0.028. The change mixes the leak from the copies with a change in the
+  task: fewer images, differently balanced. Each change is within one or
+  two standard deviations over the splits.
+- **The conclusions hold.** All features still score best. Selection still
+  beats random clearly at k = 10 and by less at k = 250.
 
 ## 8.8 An unseen dataset: FGVC-Aircraft
 

@@ -1,0 +1,30 @@
+# Berk-Jones on the SCAN-B frontier, on the GPU: the same splits and design as
+# frontier_scanb70_gpu.yaml, which runs Higher Criticism the same way.
+# Run with: python -m featsel.run --config configs/frontier_scanb70_berkjones.yaml --n-jobs 1
+#
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.scanb_gse96058.featsel_view"
+target: "pam50 subtype"
+
+output: "../results/local/frontier_scanb70_berkjones.csv"
+
+seed: 42
+n_splits: 5
+train_sizes: [0.7]
+preprocess: ["standard"]
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  - name: BerkJonesSelector
+    label: BerkJones
+    params: {device: "cuda"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
