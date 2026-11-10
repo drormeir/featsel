@@ -30,7 +30,7 @@ flowchart LR
 
 ### How we chose this design
 
-On 2026-09-26 we compared four designs for running experiments. Each was
+We compared four designs for running experiments. Each was
 sketched on the same uses: data in memory, data in files, and the command
 line.
 
@@ -67,11 +67,11 @@ Every selector subclasses `FeatureSelector`, which inherits scikit-learn's
 - does its work in `_fit`, and sets `support_`, a boolean mask over the
   features. The base class's `fit` seeds where needed and then calls
   `_fit`. `_fit` is abstract, so a selector without it fails when it is
-  created, not when it is fitted (since 2026-11-09);
+  created, not when it is fitted;
 - calls the base class's helpers with what they need as arguments. A
   helper never reads a setting such as `self.n_features` that the base
   class does not declare. So a selector can be understood from its own
-  file (since 2026-11-10);
+  file;
 - inherits `transform`, `get_support`, `get_params` and `set_params` from
   scikit-learn.
 
@@ -104,7 +104,7 @@ name and forwarded parameters through a hand-written list. A parameter
 missing from the list was silently dropped: a typo in a config ran with
 the default, and nobody noticed. Adding a selector meant editing three
 places. The wrapper, its list, and its modes for combining methods (union,
-intersection, voting) were removed on 2026-09-29.
+intersection, voting) were removed.
 
 **Registration.** A selector registers itself under its class name when it
 is defined, through Python's `__init_subclass__`. Names are stored in
@@ -126,14 +126,13 @@ ranking at every `k`. Tests check that each cut equals a separate fit.
 **Scores keep their own names.** A selector keeps its per-feature
 measurement under the name of what it measures: `scores_`,
 `log_pvalues_`, `coef_` or `variances_`. Only tree importance has
-`feature_importances_`, the forest's own attribute. Before 2026-11-09
-almost every selector set `feature_importances_`, and it meant a score in
-some, a position in RFE, and nothing in the random selector.
+`feature_importances_`, the forest's own attribute. So a name never means
+a score in one selector and a position in another.
 
 **Seeds.** Every selector that uses randomness subclasses
 `FeatureSelectorRandom`. It takes `random_state`, 42 by default, and it
-must be an integer. Unseeded runs (`random_state=None`) were removed, so
-every fit repeats. At the start of `fit` it seeds Python's and NumPy's random generators from it. It
+must be an integer: `random_state=None` is not allowed, so every fit
+repeats. At the start of `fit` it seeds Python's and NumPy's random generators from it. It
 also seeds PyTorch's, once PyTorch is imported. A repeated fit therefore
 picks the same genes. Selectors without randomness take no seed. We
 rejected a generator kept inside the object. scikit-learn's `clone` does
@@ -220,7 +219,7 @@ A small model can then be trained on those 64 dimensions only.
 ## 5.3 Datasets: one loader per dataset
 
 Each dataset has its own folder in `featsel_datasets/`, outside the
-package (decided 2026-10-16).
+package.
 
 - A class that downloads the published files once, caches them, and
   exposes everything in them unchanged: `GSE96058`, `BreastMNIST`.
@@ -257,8 +256,7 @@ need it.
   what the index protects against.
 - A folder named `datasets/`. The Hugging Face `datasets` library would
   hide it on import.
-- A dataset YAML naming the loader, used briefly on 2026-10-17. It
-  repeated the choices `load_xy` already makes, so the two could drift
+- A dataset YAML naming the loader. It repeated the choices `load_xy` already makes, so the two could drift
   apart.
 
 **Limits.** The runner imports the module a config names. The module
@@ -311,9 +309,9 @@ rank-once selector covers all its `k` values in one job. Any other
 selector gets one job per `k`. Jobs run on worker processes through
 joblib. Parallel work lives in the runner only.
 
-This layout dates from 2026-10-24. Before, each worker prepared its own
-copy of the data for each task, 2 to 3 GB. Now one split, stratified on
-the five-class PAM50 label, serves all five tasks. Each split is prepared
+One split, stratified on the five-class PAM50 label, serves all five
+tasks. Without this, each worker would prepare its own copy of the data
+for each task, 2 to 3 GB. Each split is prepared
 once into shared memory. That saves the memory of every copy and five
 times the preprocessing.
 
@@ -338,11 +336,10 @@ On the 16 GB laptop, six workers ran out of memory, and the operating
 system stopped the run. It resumed with fewer workers. With a cap of 3 GB per
 worker, the U-test selectors were skipped, and a second resume at a higher
 cap filled them in. Then we held the data as 32-bit floats (section 3.12).
-This cut peak selection memory by 30% to 45%. On 2026-10-31, 4 workers
-fit under a 3 GB cap, where 2 fit before. That was measured before two
-later changes. The one-sort U test (2026-11-03) needs about 1.25 times the
-memory. And the cap now counts data memory instead of address space
-(2026-11-07). It was not measured again.
+This cut peak selection memory by 30% to 45%, and 4 workers fit under a
+3 GB cap, where 2 fit before. Two later changes were not measured again:
+the one-sort U test needs about 1.25 times the memory, and the cap now
+counts data memory instead of address space.
 
 **The cap counts data memory, not address space.** PyTorch's GPU libraries
 reserve address space they never use. Under an address-space cap below
@@ -388,9 +385,6 @@ sequential one.
   the first cell that uses it runs.
 - A class name is a public identifier: it appears in configs and results.
   Renaming a class needs an alias for old configs.
-- Results files written before the switch to class names use old method
-  names, such as `random` and `anova_f`. They do not match new runs by
-  name, and `--resume` on them recomputes everything.
 - A class registers only when its module is imported. `featsel` imports
   every selector on import, so this holds for normal use.
 - Selector tests live inside the package. Packaging excludes them, and

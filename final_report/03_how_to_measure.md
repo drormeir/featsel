@@ -91,11 +91,10 @@ same patients.
 
 **How many splits.** The first plan was 100 splits at three training
 fractions (0.5, 0.7 and 0.9), a learning curve. The full grid would have
-taken about four days. The first runs used 5 splits at a training fraction
-of 0.5. On 2026-10-31 the comparison grew to 16 splits on SCAN-B and 20 on
-BreastMNIST. Sixteen splits keep the SCAN-B run under half an hour. The first 5
-are the same splits as before. Sixteen or more values support quartiles;
-five do not.
+taken about four days. The comparison uses 16 splits on SCAN-B and 20 on
+BreastMNIST, at a training fraction of 0.5. Sixteen splits keep the SCAN-B
+run under half an hour. Sixteen or more values support quartiles; five do
+not.
 
 We report the **median over splits with the first and third quartiles**,
 or the mean with the standard deviation where noted. The median ignores
@@ -131,7 +130,7 @@ The tasks are imbalanced (chapter 2), so plain accuracy is misleading.
 | Score | What it measures | Why we use it |
 |---|---|---|
 | **ROC AUC** | The chance that the model scores a random positive patient above a random negative one. | It needs no decision threshold. So it does not mix the method's quality with a choice of costs. Main score of the frontier (chapter 8). |
-| **Macro-F1** | The average of the F1 score of each class. | It weights the small class as much as the large one. Main score of the comparison (chapter 7), because the runner recorded test AUC only from 2026-11-07, after the comparison ran. |
+| **Macro-F1** | The average of the F1 score of each class. | It weights the small class as much as the large one. Main score of the comparison (chapter 7), because the runner began recording test AUC only after the comparison ran. |
 | **Balanced accuracy** | The average of the recall of each class. | A simple imbalance-robust check. |
 
 The comparison also records:
@@ -247,8 +246,8 @@ distribution through its ranks (a quantile transform). 98.1% of genes
 reject normality, so there is something to fix. But the transform
 discards the size of a fold change.
 
-We tested it on 2026-10-05 and 06, on the course copy (`scanb_small`):
-F-test selection, logistic regression, 10 splits. Standardization was
+We tested it on `scanb_small`, with F-test selection, logistic regression
+and 10 splits. Standardization was
 compared with a rank-to-normal transform and with scikit-learn's quantile
 transform. The two transforms tied with each other.
 
@@ -303,49 +302,15 @@ solvers are sensitive to rounding.
 
 ## 3.13 Scores we considered and did not use
 
-Before the protocol was fixed, we discussed how to give each method one
-number for its strength over random selection (2026-10-12).
+We considered two ways to give each method a single number, and chose
+neither.
 
-**A leave-one-out confusion table.** It was built on 2026-10-13 as
-`loo_confusion` in [`featsel/strength.py`](../featsel/strength.py). It
-was not used in the experiments. It takes the chosen genes and a binary
-label. It holds out one patient at a time. It tunes C by an inner
-leave-one-out on the rest. Then it records the held-out decision. The
-output is one 2×2 confusion table.
-
-- The inner loop picks C from 9 values, 10⁻⁴ to 10⁴, by balanced
-  log-loss. Log-loss needs no threshold. Accuracy was rejected: it needs
-  the 0.5 threshold, and it often ties when few patients are visited.
-- Each patient's inner loss is weighted by N / (2·N_c). N counts the
-  training patients and N_c those in the patient's class. So both classes
-  count equally. The classifier uses `class_weight='balanced'`. So the 0.5
-  threshold is not pulled toward the majority class.
-- It visits only a share α of the patients, 1% by default, so it runs fast.
-  On SCAN-B that is 29 outer and 29 inner patients.
-- Counting decisions from different models is legitimate, unlike pooling
-  their scores into one AUC. But it brings back the threshold, and with it
-  the cost trade-off. And it gives one table with no spread.
-- The held-out patient is out of sample only if the genes were chosen
-  without it. Avoiding that bias means refitting the selector in every
-  round.
-
-Leave-one-out trains on n − 1 patients. So its estimate is closest to the
-full-data procedure. Monte Carlo splits train on fewer patients and score
-somewhat pessimistically. We chose Monte Carlo splits. Each split gives a
-valid AUC, and the splits give a spread.
-
-**The area under a score-against-`k` curve.** Score each top-`k` subset,
-for a grid of `k`, and take the area under the curve. Subtracting the
-random control's curve gives one number for the gain over random, over all
-budgets. Four choices would make it well-defined:
-
-1. a score per `k`, such as AUC;
-2. the `k` axis. On a plain axis most of the area comes from large `k`,
-   where every method scores alike. A log scale or a cap weights the
-   budgets where methods differ;
-3. the ranking computed inside each training split, never on all patients;
-4. a ranking at all: methods that pick their own count give one point, not
-   a curve.
+- **A leave-one-out confusion table.** It holds out one patient at a time
+  and counts the decisions. It trains on almost all patients, but it
+  brings back the decision threshold and gives one table with no spread.
+- **The area under a score-against-`k` curve,** minus the random
+  control's area. It depends on how the `k` axis is scaled, and methods
+  that pick their own count give a point, not a curve.
 
 We report the whole curves instead. One number hides where along `k` a
 method wins.

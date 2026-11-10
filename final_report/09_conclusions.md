@@ -21,17 +21,20 @@
   selection faster. (Task 3.)
 - **A second dataset**, BreastMNIST image embeddings, run through the same
   pipeline unchanged. (Task 4.)
+- **A third dataset, unseen during the design**: FGVC-Aircraft photo
+  embeddings. It needed a loader and a config, no change to the package,
+  and ran entirely on the GPU in 5 minutes. (Task 4.)
 
 ## 9.2 What we learned
 
 **About the data.**
 
-1. Read where the labels come from. PAM50 and the course's ER label are
-   computed from the same gene expression we select from. A study that
+1. Read where the labels come from. PAM50 and the computed ER label are
+   derived from the same gene expression we select from. A study that
    treats them as clinical facts overstates what it shows.
-2. Check for repeated samples. 93 patients appear twice in the course's
-   copy of SCAN-B. Random splits put them on both sides and leak. We
-   removed them. In BreastMNIST, 19% of the images are copies, as a 2023
+2. Check for repeated samples. 93 patients appear twice in SCAN-B's HiSeq
+   data. Random splits put them on both sides and leak. We kept one
+   sample per patient. In BreastMNIST, 19% of the images are copies, as a 2023
    letter reports. We learned of it after our runs. So that leak remains
    in our image results.
 3. The gene values are on an arbitrary scale, with half the values tied at
@@ -80,12 +83,12 @@
     could not move to it.
 13. **Exactness has a price in agreement.** Faster exact solvers can pick
     different genes than scikit-learn's default. Lasso does on SCAN-B.
-    RFE does on some synthetic data, and in 14 of 100 cells of the first
-    SCAN-B frontier run. The reason is that the default stops before
+    RFE does on some synthetic data, and in 14 of 100 cells of a
+    preliminary SCAN-B frontier run (section 8.2). The reason is that the default stops before
     reaching the solution.
 14. **Selection buys a smaller model more than a better one.** On
     BreastMNIST, all 2,048 features gave AUC 0.921, more than any selected
-    subset. On SCAN-B, the best selected sets beat all 28,552 genes by only
+    subset. On FGVC-Aircraft, all features gave 0.864, also the best. On SCAN-B, the best selected sets beat all 28,552 genes by only
     0.006 on average (0.025 on LumB), with a tenth of the genes or fewer.
     Know which of the two you want.
 

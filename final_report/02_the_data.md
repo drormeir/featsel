@@ -4,7 +4,9 @@
 
 The project uses two datasets. The first is the one the specification
 provides: breast cancer gene expression. The second, required by task 4,
-comes from a different domain: ultrasound images.
+comes from a different domain: ultrasound images. A third, aircraft
+photos, was added after the design was fixed, to test the pipeline on
+data it was not built for. Section 8.8 describes it with its results.
 
 ## 2.1 SCAN-B breast cancer gene expression
 
@@ -43,9 +45,8 @@ with the same PAM50 labels as GSE96058. Values were compared on 7 genes of
 samples. So every result computed on them carries the leak above. Its
 size was not measured. `scanb_small` also keeps only 9,264 genes, by an unrecorded rule.
 It lacks 11 of the 50 PAM50 genes: ANLN, BAG1, CDC6, CXXC5, FOXA1, GPR160,
-KRT14, MIA, NUF2, TMEM45B and UBE2T. We therefore load GSE96058 directly,
-and the course copies are retired. They are archived outside git, because
-the course copy has two labels GSE96058 lacks, `Lympho` and `cluster2`.
+KRT14, MIA, NUF2, TMEM45B and UBE2T. We therefore load GSE96058 directly
+and do not use the course copies.
 
 ### What the numbers are
 
@@ -120,9 +121,8 @@ the same genes. Measured labels and survival do not have this circularity.
 
 ### Five binary tasks
 
-The project selects features for binary classifiers only. Binary tasks
-were first run on 2026-10-05 and made the rule on 2026-10-18. PAM50 has five classes. So it becomes five tasks, each
-subtype against the other four:
+The project selects features for binary classifiers only. PAM50 has five
+classes. So it becomes five tasks, each subtype against the other four:
 
 | Task | Positive patients | Rest |
 |---|---|---|
@@ -147,11 +147,9 @@ estrogen-response genes, and the proliferation genes move with the
 cell-cycle genes. The U test scores each gene alone. So a gene that moves
 with ESR1 separates Basal from the rest about as strongly as ESR1 does.
 As a result, in every task thousands of genes carry signal: more than 10%
-of all genes. This was first seen on 2026-10-05, on the course copy with
-the F-test. In each task, 4,792 to 6,964 of its 9,259 usable genes had a
-p-value below 1/9,259.
-A one-split smoke test on GSE96058 confirmed it on 2026-10-24. It
-explains three later results. Higher Criticism stops at the edge of its
+of all genes. On `scanb_small`, with the F-test, 4,792 to 6,964 of the
+9,259 usable genes per task had a p-value below 1/9,259. A one-split test
+on GSE96058 showed the same. This explains three later results. Higher Criticism stops at the edge of its
 search (7.5). Few PAM50 genes are recovered (7.6). Random genes catch up
 fast (7.2).
 
@@ -164,7 +162,7 @@ Data exploration: [`notebooks/01_data_exploration.ipynb`](../notebooks/01_data_e
 **Why this dataset.** Task 4 asks for a second dataset, not necessarily
 gene expression. We chose one with more features than samples, as in
 SCAN-B. It comes from a different domain. It is public and published as a
-benchmark (decided 2026-10-17). The NIPS 2003 challenge sets were
+benchmark. The NIPS 2003 challenge sets were
 rejected. Gisette has fewer features than samples, Madelon only 500
 features, and Arcene only 200 samples.
 

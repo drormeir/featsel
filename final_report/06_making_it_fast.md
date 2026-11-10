@@ -7,10 +7,11 @@ attacked it at two levels. One is the experiment as a whole (the runner).
 The other is each method on its own (faster algorithms, and a GPU).
 
 **A rule we kept:** a speed claim comes only from a series of measurements
-on several sizes, never from one timing. Every speed-up in this chapter
-comes from such a series. The exceptions are the forest trials in section
-6.2, which were single prototype timings, and they claim no speed-up. All
-ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM, and an NVIDIA
+on several sizes, never from one timing. The speed-ups in this chapter's
+tables come from such series. The text also quotes a few single timings,
+called so where they appear. They explain a design choice, such as RFE's
+step, the Lasso solver's stopping rule or the GPU forest trials, and claim
+no speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM, and an NVIDIA
 GTX 1650 with 4 GB.
 
 ## 6.1 The runner against plain scikit-learn
@@ -26,7 +27,7 @@ uses `RFE` with `LinearSVC`. The script checks that all four give the same
 test scores before it reports a time. All 30 test macro-F1 scores were
 equal on every run.
 
-The setting (run 2026-10-31):
+The setting:
 
 - SCAN-B, Basal vs rest: 2,976 patients, 3,000 random genes of 28,552.
 - 5 splits at a training fraction of 0.5.
@@ -46,9 +47,9 @@ The setting (run 2026-10-31):
 - It prepares each split (imputation, scaling) once and shares it with
   every task, selector and classifier.
 - It fits each rank-once selector once per split and cuts the ranking at
-  every `k` (chapter 5). scikit-learn refits it for every `k`. When this
-  was added for Lasso and tree importance (2026-10-17), their selection on
-  GSE96058 fell from about 245 s to 39 s per split, with identical genes.
+  every `k` (chapter 5). scikit-learn refits it for every `k`. For Lasso
+  and tree importance on GSE96058, this cut selection from about 245 s to
+  39 s per split (single timings), with identical genes.
 - It runs jobs in parallel, with the data in shared memory.
 
 On this small grid, parallel work added little. scikit-learn spreads only
@@ -68,7 +69,8 @@ both sides alike.
 ### Why the speed matters: the full grid
 
 The original design had 100 splits at three training fractions (300 in
-all), 6 selectors and nested tuning. We extrapolated from a 12-split run.
+all), 6 selectors and nested tuning. We extrapolated its cost from the
+classifier study's 12-split run with the F-test (section 7.7).
 Without the linear SVM, it needed about 30 to 35 CPU-hours. That is a day
 and a half on one core. More cores shorten it in proportion. RFE removing
 one feature per round would take about 2,300 hours. Removing 10% per round and ranking once
@@ -77,11 +79,11 @@ impractical in this setting. A linear SVM classifier with scikit-learn's
 default solver would have cost hundreds of hours more. We cut the grid
 instead (section 3.3).
 
-Where the time went in the comparison's first 20-split run on SCAN-B
-(2026-10-31): selection took 82% of it, and tree importance alone half.
-The classifiers, with their tuning of C, took the rest. Memory, not cores,
-limited the run to 2 workers. This led to 32-bit data and 50 trees
-(section 3.12).
+A first attempt at the SCAN-B comparison, before its final settings,
+showed where the time goes. Selection took 82% of it, and tree importance
+alone half. The classifiers, with their tuning of C, took the rest.
+Memory, not cores, limited it to 2 workers. So the final comparison holds
+the data in 32-bit floats and uses 50 trees (section 3.12).
 
 Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
 [`results/speed_benchmark.csv`](../results/speed_benchmark.csv).
@@ -122,7 +124,7 @@ The Lasso notebook also times the five tasks on real SCAN-B (2,976
 patients, 28,552 genes). PPDNA on the GPU took 0.7 to 1.4 s per fit.
 liblinear took 4.5 to 5.8 s. So PPDNA was 3.2 to 7.0 times faster.
 
-A second series ran on real SCAN-B on 2026-11-07. It used the training
+A second series ran on real SCAN-B. It used the training
 half of one split, Basal vs rest (1,488 patients), and the median of 5
 fits. Script: [`scripts/benchmark_selectors.py`](../scripts/benchmark_selectors.py);
 its output in `results/local/benchmark_selectors/` is not tracked. At all
@@ -138,7 +140,7 @@ its output in `results/local/benchmark_selectors/` is not tracked. At all
 
 | Method | What changed |
 |---|---|
-| U test | One sort per gene gives the ranks and the tie groups at once. On the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed on the GPU, exactly, in 64-bit floats. The p-value is finished on the CPU, so every device gives identical results. Before this work a U-test fit took about 10 s on SCAN-B. The NumPy version (2026-11-03) replaced two ranking passes by one sort: at 3,000 × 10,000 it took 2.15 s, against 6.59 s before and 3.76 s for SciPy. Its peak memory is about 1.25 times higher. |
+| U test | One sort per gene gives the ranks and the tie groups at once. On the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed on the GPU, exactly, in 64-bit floats. The p-value is finished on the CPU, so every device gives identical results. Before this work a U-test fit took about 10 s on SCAN-B. The NumPy version replaced two ranking passes by one sort: at 3,000 × 10,000 it took 2.15 s, against 6.59 s before and 3.76 s for SciPy. Its peak memory is about 1.25 times higher. |
 | F-test, variance | Class sums as one vector product per class, on the GPU. |
 | Correlation | The gene-gene correlations are computed in blocks, so the full 28,552 × 28,552 matrix is never held in memory. |
 | Mutual information | scikit-learn's estimate (Ross 2014) searches nearest neighbours with a KD-tree. A single feature is one-dimensional. So that search becomes a sort per class to find the k-th neighbour, and a binary search to count the points within its radius. The random noise, the distances and the order of every mean are scikit-learn's. So the scores are identical, bit for bit. A class of 2 to 7 samples, and regression, go to scikit-learn. scikit-learn switches to brute-force distances there. The GPU path draws scikit-learn's noise on the CPU and sends it over. |
@@ -147,16 +149,10 @@ its output in `results/local/benchmark_selectors/` is not tracked. At all
 | Sequential | All candidate features of one step are solved at once. They form one batched Newton problem on the logistic regressions, in PyTorch, in 64 bits. The candidates share the features already chosen. So every Hessian block is one product over all candidates, and no design matrix is built. Each fit starts from that candidate's solution at the previous step. It selects what scikit-learn does with a converged logistic regression. It covers what the project uses: two classes, forward search, accuracy. Anything else raises an error. Here the GPU wins, because the work is wide elementwise passes and large products. |
 | Tree importance | scikit-learn's own forest, on all threads with `n_jobs=-1`. The default is one thread. One fit took 21.5 s on one thread and 4.2 s on 12, on synthetic SCAN-B-shaped data (1,488 × 28,552). In the runner, threads per worker times workers should not exceed the cores. |
 
-**History of RFE.** RFE was first planned as our own code, because it
-dominates the cost. On 2026-09-30 we decided to wrap scikit-learn's `RFE`
-instead, to get the whole pipeline running first. The wrapper was added on
-2026-10-05. On its own, a
-hand-written loop does the same work as scikit-learn's. The first saving
-came from the runner ranking once per split. On 2026-10-31 the step went
-from 0.1 to 0.5. At step 0.1 one RFE fit took about 35 s on SCAN-B. On a
-1,488 × 28,552 training half, one task over `k` = 10, 50 and 250 took
-29.1 s: three fits at step 0.1. One fit at step 0.5 took 2.4 s. The exact
-solver came later, on 2026-11-07.
+**RFE's step.** RFE removes a share of the remaining genes each round.
+The comparison removes half per round (step 0.5), for speed. On SCAN-B,
+one fit took about 35 s at step 0.1 and 2.4 s at step 0.5 (single
+timings). The frontier uses step 0.1.
 
 ### Why some methods do not pick the same features
 
@@ -176,11 +172,10 @@ Both are reproducible. We keep liblinear as the default, since it matches
 scikit-learn, and PPDNA as an option. Source:
 `results/local/speed/LassoSelector_scanb.csv` (not tracked in git).
 
-**History of the Lasso solver** (2026-11-07). Plain FISTA on all genes
-took 21 s, about 3,000 steps. FISTA on a working set of genes took 2.2 to
-3.1 s, only a tie with liblinear. Parallel coordinate descent overshot on
-correlated genes. SSNAL handles only the squared loss. So PPDNA was
-chosen. It departs from the paper in three ways, all needed on
+**Why PPDNA.** Simpler solvers were tried first. FISTA, even on a
+working set of genes, only tied liblinear. Parallel coordinate descent
+overshot on correlated genes. SSNAL handles only the squared loss. So
+PPDNA was chosen. It departs from the paper in three ways, all needed on
 SCAN-B-shaped data:
 
 - Its proximal step size starts at 40 C and grows five-fold per outer
@@ -190,9 +185,9 @@ SCAN-B-shaped data:
   and the solution refined in 64 bits.
 - It also stops when three outer steps fail to halve the best residual.
   On 28,552 genes, rounding sets a floor near 10⁻⁹, which the target of
-  10⁻¹⁰ cannot pass. Before this rule, Basal ran all 1,000 outer steps
-  in 43 s. After it, 0.73 s, and every task stopped within 7 to 10 outer
-  steps.
+  10⁻¹⁰ cannot pass. Without this rule, Basal ran all 1,000 outer steps
+  in 43 s. With it, 0.73 s (single timings), and every task stopped
+  within 7 to 10 outer steps.
 
 **RFE.** The same cause: liblinear's tolerance changes which genes are
 removed when genes are strongly correlated. On the synthetic data at

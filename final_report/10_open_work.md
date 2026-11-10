@@ -15,13 +15,12 @@ research beyond the project's scope.
 | **More splits for the frontier.** It has 5 splits. The comparison has 16. | With 5 splits no paired test can reach p < 0.06. So the order among the top methods on the frontier is not established. | About 8 h per 5 extra splits on SCAN-B. |
 | **Tuned classifier in the frontier.** C is fixed at 1 there. | Absolute AUCs may be a little low. A method needing a different C is disadvantaged. | Multiplies the classifier's cost by about 15. |
 | **A paired test of selection against all features.** Section 8.7 found gains of 0.006 AUC on SCAN-B and a loss on BreastMNIST, over 5 splits. | Whether selection improves the classifier at all is a central question. 5 splits cannot settle a gain of this size. | Add the all-features baseline to the 16-split comparison. Hours. |
-| **RFECV scored by AUC in the 16-split comparison.** The frontier rerun (5 splits) fixed its collapse on SCAN-B. | Would give it the paired tests of chapter 7. | About 6 hours on SCAN-B. |
+| **RFECV scored by AUC in the 16-split comparison.** On the frontier (5 splits, section 8.6) it no longer collapsed on SCAN-B. | Would give it the paired tests of chapter 7. | About 6 hours on SCAN-B. |
 | **RFE with a finer step and a forest with more trees in the comparison.** The comparison used RFE removing half the genes per round and 50 trees. | Both were chosen for speed. The frontier used step 0.1 and 200 trees, and RFE stayed weakest. So the conclusion is unlikely to change. | Hours. |
 | **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The comparison uses one classifier and one train fraction. | About four days on this laptop. Skipped by decision. |
 | **A measured target on SCAN-B**, such as the pathologist's ER status. | Every SCAN-B task here predicts a computed label. A measured label would show whether the conclusions hold for clinical truth. | One config. The loader already supports it. |
-| **The size of the repeat-sample leak.** 93 patients appear twice in the course's copy. | Says how much the course's earlier results are inflated. | A paired run with and without the repeats. |
 | **Remove BreastMNIST's copied images and rerun.** 155 of 780 source images are copies (Pawłowska et al. 2023), some labelled differently. | Every BreastMNIST result carries this leak. The letter's supplement lists the pairs. So the copies can be dropped, or kept on one side of each split. | A loader option and two reruns: minutes. |
-| **The quantile transform with every classifier** (section 3.10). With logistic regression it did not help (2026-10-05). | Would show whether shrinkage LDA and k-NN gain from normal-shaped features. | Started and cancelled. One `k`, all classifiers. |
+| **The quantile transform with every classifier** (section 3.10). With logistic regression it did not help. | Would show whether shrinkage LDA and k-NN gain from normal-shaped features. | Started and cancelled. One `k`, all classifiers. |
 | **Time and memory complexity per method**, from the algorithm. | Planned to sit next to the measured times. A disagreement would be a finding. | Writing, no runs. |
 | **How SCAN-B computed `pam50 subtype`.** | The GEO notes say only that it implements Parker's method, after centring to a reference set, with unpublished R scripts (section 2.1, Appendix C.2). The exact implementation is unknown. | Reading other SCAN-B papers. |
 
@@ -37,7 +36,7 @@ research beyond the project's scope.
 
 ### Reproducing the published labels
 
-Decided 2026-10-17 and not done. Rebuild Brueffer et al.'s ER classifier
+Planned, not done. Rebuild Brueffer et al.'s ER classifier
 from their published gene weights. Apply it to GSE96058. Then compare it
 with the stored `er prediction mgc` label. This would show exactly how the ER
 label was made, instead of inferring it. The plan, step by step, is in

@@ -116,7 +116,7 @@ saves.
 
 ## 4.3 Why we score genes with the U test, not the F-test
 
-This was one of the main decisions of the project (2026-10-25).
+This was one of the main decisions of the project.
 
 **The data.** Chapter 2 showed two facts. Only the order of a gene's
 values is meaningful. And about half the values sit tied at a floor. Within a
@@ -171,8 +171,8 @@ cannot be computed once for all genes.
 standard 64-bit float rounds to 0. Higher Criticism needs to tell them
 apart. We compute the logarithm of the p-value directly from the normal
 tail, so nothing underflows ([`featsel/selectors/log_pvalue/`](../featsel/selectors/log_pvalue/)).
-The problem was first seen on 2026-10-05: on the course copy, 167 genes
-had an F-test p-value of exactly 0 for the five classes. The module's
+On `scanb_small`, 167 genes had an F-test p-value of exactly 0 for the
+five classes. The module's
 tutorial uses 2,000 synthetic features with 1,500 samples per class, 300
 of them with signal. There SciPy gives p = 0 to 170 features with the U
 test, and to 189 with the F-test. The logs keep all of them distinct. Against 50-digit
@@ -218,8 +218,8 @@ multiply every HC(i) by the same constant, √((N + 2)/N). So it selects
 the same genes as HC2008, and is not a separate variant.
 
 Donoho and Jin (2004) also give HC⁺, which skips p-values below 1/N. It
-was not used. On the course copy, every p-value inside the search lay
-below 1/N, so HC⁺ would have had nothing to search.
+was not used. On `scanb_small`, every p-value inside the search lay below
+1/N, so HC⁺ would have had nothing to search.
 
 The maximum is searched over the smallest alpha0 · N p-values. The 2008
 and 2009 papers use alpha0 = 0.1. The 2004 paper leaves alpha0 open. We
@@ -234,7 +234,7 @@ p-values behave under the null from independent p-values. Correlated
 genes give correlated p-values. Chapter 2 showed that neither of our
 datasets meets these conditions. Chapter 7 shows what HC does then.
 
-**Decision: alpha0 stays 0.1** (2026-10-31). On SCAN-B the HC score is
+**Decision: alpha0 stays 0.1.** On SCAN-B the HC score is
 still rising at the edge of its search. Raising alpha0 because we know the
 signal is widespread would tune the method to the answer. A selector must
 not assume what it is meant to find.

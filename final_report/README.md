@@ -1,5 +1,3 @@
-Status: first draft complete
-
 # Choosing Few Genes from Many: Feature Selection for High-Dimensional Data
 
 M.Sc. final project, Machine Learning and Data Science, Reichman University.
@@ -19,7 +17,8 @@ picks a small set of genes that still predicts well. We built `featsel`, a
 Python package of 15 feature selection methods that plug into
 scikit-learn. We compared the methods on breast cancer data (SCAN-B, 2,976
 patients, 28,552 genes) and on image data (BreastMNIST, 780 images, 2,048
-features). Every method was measured against a control that picks
+features). A third dataset, aircraft photos, tested the finished pipeline
+on data it was not designed for. Every method was measured against a control that picks
 features at random. We also made the slow methods faster, many of them on
 a GPU. Then we measured cost against quality on one plot. The main
 finding: a simple one-gene-at-a-time test is almost as good as the complex
@@ -37,6 +36,7 @@ methods here, and much faster.
 | How much faster did we make it? | The runner 3.2 to 5.3 times over plain scikit-learn; GPU filters 2.6 to 49 times; Sequential selection 39 times; same features. | [6](06_making_it_fast.md) |
 | Why did RFECV fail, and can it be fixed? | Its default inner score, accuracy, made it keep 1 or 2 genes on imbalanced tasks. Scored by AUC it recovers to 0.961 on SCAN-B, still below a sub-second filter. | [8.6](08_results_frontier.md#86-rfecv-testing-the-hypothesis) |
 | Does selection beat using every feature? | Barely. On SCAN-B the best selected genes beat all 28,552 by 0.006 AUC (0.025 on LumB). On BreastMNIST all 2,048 features score best (0.921). The main gain is a much smaller model. | [8.7](08_results_frontier.md#87-is-selection-needed-at-all) |
+| Does the pipeline work on unseen data? | Yes, unchanged and entirely on the GPU: aircraft photos, 10 splits in 5 minutes. Every method beat random by 0.09 to 0.12 AUC at 10 features. | [8.8](08_results_frontier.md#88-an-unseen-dataset-fgvc-aircraft) |
 
 ## Table of contents
 
@@ -49,7 +49,7 @@ methods here, and much faster.
 | 5 | [The software](05_the_software.md) | How `featsel` is built: drop-in selectors, the config-driven runner, datasets, memory safety, reproducibility. |
 | 6 | [Making it fast](06_making_it_fast.md) | Task 3: the runner against plain scikit-learn, and faster versions of each method, on the CPU and on a GPU. |
 | 7 | [Results: which method selects best](07_results_quality.md) | The comparison on both datasets: gain over random, stability, Higher Criticism, the PAM50 genes, and what it means. |
-| 8 | [Results: cost against quality](08_results_frontier.md) | Every method on one plot of time against AUC, on all five tasks and on each task. |
+| 8 | [Results: cost against quality](08_results_frontier.md) | Every method on one plot of time against AUC, on all five tasks and on each task. The pipeline on an unseen dataset. |
 | 9 | [Conclusions](09_conclusions.md) | What we learned, in plain sentences. |
 | 10 | [Open work and next steps](10_open_work.md) | What is missing in this project, and what is worth investigating beyond it. |
 | A | [Glossary](appendix_a_glossary.md) | Short definitions of the terms used in the report. |
@@ -65,11 +65,12 @@ names its source. The two main experiments differ, and the report keeps
 them apart:
 
 - **The comparison** (chapter 7): 7 methods and 16 random splits (20 on
-  BreastMNIST). Half the samples train. Scored by macro-F1. Run
-  2026-10-31.
+  BreastMNIST). Half the samples train. Scored by macro-F1.
 - **The frontier** (chapter 8): 13 method settings and 5 random splits.
-  70% of the samples train. Scored by ROC AUC, with timing. Run
-  2026-11-09.
+  70% of the samples train. Scored by ROC AUC, with timing.
+
+Section 8.8 adds one more run, on the unseen aircraft dataset: 10 splits,
+70% training, ROC AUC.
 
 Times are from one laptop: Intel i7-9750H (6 cores, 12 threads), 16 GB RAM,
 NVIDIA GeForce GTX 1650 with 4 GB. A time means something only on the

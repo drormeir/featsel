@@ -15,7 +15,7 @@
 | Executions | 3,520 | 680 |
 | Run time | 29 minutes on 4 workers | about a minute on 4 workers |
 
-Both runs are from 2026-10-31, with the data in 32-bit floats. RFE's first
+Both runs hold the data in 32-bit floats. RFE's first
 round removes half of all genes. Its second round removes the rest down
 to `k`. Random selection and Mann-Whitney also run at the count that
 Higher Criticism 2008 chose: 2,855 on SCAN-B and 204 on BreastMNIST. This
@@ -24,8 +24,13 @@ under one protocol. It does not aim at the best possible classifier. The
 order between methods matters more than the absolute scores. So does the
 gap over the random control.
 
-The main score is macro-F1, not AUC, because the runner recorded AUC only
-from 2026-11-07. Macro-F1 depends on the classifier's
+**Earlier runs.** Before these final runs, smaller versions of the
+comparison ran while the protocol was being fixed, with other numbers of
+splits, 64-bit data on SCAN-B, and 200 trees in the forest. Their results are not reported. The
+text cites one only where it checks a setting of the final run.
+
+The main score is macro-F1, not AUC, because the runner began recording
+AUC only after the comparison ran. Macro-F1 depends on the classifier's
 threshold. Chapter 8 scores by AUC.
 
 Configs: [`configs/comparison_scanb.yaml`](../configs/comparison_scanb.yaml),
@@ -81,12 +86,6 @@ with quartiles:
 Per-task tables, the number of genes kept, selection times and the chosen
 C are in [Appendix D](appendix_d_comparison_tables.md).
 
-![Macro-F1 against k by classifier](../figures/macro_f1_vs_k.png)
-
-*Figure 7.1. Mann-Whitney against random selection, five classifiers,
-SCAN-B, 3 splits (the classifier study, section 7.7). The gap is largest
-at small `k`.*
-
 ### What it shows
 
 1. **Selection pays most when few features are allowed.** At k = 5 the top
@@ -112,9 +111,9 @@ at small `k`.*
    A check of its choices showed many near-constant genes: genes at one
    value in 97% to 100% of patients. Such genes are 12% of all genes. At
    k = 10 they are 20% to 80% of RFE's picks, per task. Removing half the
-   genes per round is not the cause. The first frontier run (2026-11-07)
-   used a step of 0.1 and picked them too: 22% to 62% at k = 10. It scored
-   near random there, AUC 0.78 to 0.79 against 0.76. liblinear and the
+   genes per round is not the cause. A preliminary run of the frontier
+   (section 8.2) used a step of 0.1 and picked them too: 22% to 62% at
+   k = 10. It scored near random there, AUC 0.78 to 0.79 against 0.76. liblinear and the
    exact Newton solver chose the same genes in 86 of 100 cells. So the
    solver is not the cause either. At C = 0.01, the SVM's weights are a
    poor guide on this data.
@@ -125,7 +124,7 @@ at small `k`.*
 ## 7.3 Are the differences real? Paired tests
 
 All methods ran on the same 16 splits. So we compare them split by split.
-The test is the two-sided Wilcoxon signed-rank test, on each split's mean
+The test is the two-sided Wilcoxon signed-rank test (Wilcoxon 1945), on each split's mean
 over tasks. With 16 splits the smallest possible p-value is 3 × 10⁻⁵. We ran 81
 tests on SCAN-B, so we require p < 0.05 / 81 = 0.0006 (Bonferroni) before
 calling a difference real.
@@ -182,13 +181,13 @@ close to Mann-Whitney. Many gene sets predict equally well. So a selected
 gene list should not be read as *the* genes of a subtype, unless the
 method is also stable. Stability has to be reported next to accuracy.
 Mann-Whitney is both good and stable. The forest had only 50 trees here,
-which makes its importances noisier. On BreastMNIST, an earlier run with
-200 trees gave scores within 0.013 at every `k`. It raised the forest's
-Kuncheva index to 0.32 to 0.51.
+which makes its importances noisier. An earlier run of the BreastMNIST
+comparison used 200 trees. Its scores were within 0.013 of the 50-tree
+scores at every `k`, and the forest's Kuncheva index was 0.32 to 0.51.
 
 ![Selection stability](../figures/selection_stability.png)
 
-*Figure 7.2. Mann-Whitney is stable across splits. Random selection is at
+*Figure 7.1. Mann-Whitney is stable across splits. Random selection is at
 0 by construction. Classifier study, 3 splits.*
 
 ## 7.5 Higher Criticism did not choose its own count
@@ -300,6 +299,11 @@ neighbours and shrinkage LDA. It used 3 splits, with C fixed. The run took
 9 minutes on 2 workers. It asks how much external selection is worth to a model,
 given the model's own regularization.
 
+![Macro-F1 against k by classifier](../figures/macro_f1_vs_k.png)
+
+*Figure 7.2. Mann-Whitney against random selection, five classifiers,
+SCAN-B, 3 splits. The gap is largest at small `k`.*
+
 ![Gain over random by classifier](../figures/gain_over_random.png)
 
 *Figure 7.3. The gain from selecting, by classifier. It shrinks with `k` for
@@ -314,6 +318,11 @@ irrelevant features.*
 - Logistic regression is the best classifier overall, 0.877 at k = 1000.
   It was still rising at the largest `k` tested, so its peak is not known.
 
+![Gain by subtype](../figures/gain_by_subtype.png)
+
+*Figure 7.4. The gain differs by subtype: at k = 10, from 0.14 (LumA) to
+0.31 (Her2).*
+
 **An earlier run with the F-test.** Before the switch to the U test, the
 same study ran with ANOVA-F selection on 12 splits. It showed the same
 pattern:
@@ -323,11 +332,10 @@ pattern:
 - The gain at k = 10 ran from 0.15 (LumA) to 0.33 (Her2).
 - Logistic regression was best, 0.869 at k = 1000.
 
-![Gain by subtype](../figures/gain_by_subtype.png)
-
-*Figure 7.4. The gain differs by subtype: at k = 10, from 0.14 (LumA) to
-0.31 (Her2).*
-
+Results: [`results/experiment_classifiers.csv`](../results/experiment_classifiers.csv)
+(Mann-Whitney, 3 splits) and
+[`results/experiment_classifiers_anova_12splits.csv`](../results/experiment_classifiers_anova_12splits.csv)
+(F-test, 12 splits).
 Notebook: [`notebooks/02_classifier_behaviour.ipynb`](../notebooks/02_classifier_behaviour.ipynb).
 
 ## 7.8 BreastMNIST
@@ -394,11 +402,10 @@ alone and ignores redundancy. It still sits in the top group, and it is by
 far the most stable. This parallels Dudoit et al. (2002), where simple
 classifiers did as well as complex ones on tumour gene expression.
 
-**Why RFE is weak on SCAN-B.** The step of 0.5 is not the cause. An
-earlier run with step 0.1 gave about the same scores on SCAN-B. Step 0.1
-took about 35 s per fit. The first frontier run, also at step 0.1, picked
-near-constant genes too (section 7.2, point 5). In the final frontier,
-again at step 0.1, RFE scored below the simple filters (chapter 8). The
+**Why RFE is weak on SCAN-B.** The step of 0.5 is not the cause. The
+frontier uses step 0.1, and RFE still scored below the simple filters
+there (chapter 8). Its preliminary run at step 0.1 picked near-constant
+genes too (section 7.2, point 5). The
 exact solver chose mostly the same genes as liblinear. What remains is the
 SVM's weights at C = 0.01, which favour near-constant genes on this data.
 On BreastMNIST, RFE catches up from k = 100.
