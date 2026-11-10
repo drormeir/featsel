@@ -216,7 +216,7 @@ selector.fit(gene_expression_data, cancer_subtypes)
 
 # Get most significant genes (feature_names_in_ exists for DataFrame input)
 report = pd.DataFrame({'feature_name': selector.feature_names_in_,
-                       'importance_score': selector.feature_importances_})
+                       'importance_score': selector.scores_})
 report['rank'] = report.importance_score.rank(ascending=False).astype(int)
 report = report.sort_values('rank')
 top_genes = report.head(20)
@@ -294,7 +294,7 @@ selector = MutualInfoSelector(
 selector.fit(gene_expression_data, survival_time)  # Continuous target
 
 # Mutual information scores
-mi_scores = selector.feature_importances_
+mi_scores = selector.scores_
 ```
 
 **Real scenario**: In cancer prognosis, some genes have non-monotonic relationships with survival (e.g., moderate expression is protective, but very high or very low is harmful). MI captures this U-shaped relationship, while correlation would miss it.

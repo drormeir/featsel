@@ -29,7 +29,7 @@ has a few thousand patients. In our data there are 2,976 patients and 28,552
 usable genes: almost ten times more features than samples.
 
 This setting is often written p ≫ n: many more features (p) than samples
-(n). It causes four problems.
+(n). The same setting appears in text analysis and in image embeddings. It causes five problems.
 
 **Overfitting.** With more features than samples, a linear classifier can
 separate any labeling of the training samples perfectly, even random
@@ -44,6 +44,9 @@ rises, hundreds of others rise with it. So many different gene sets can
 predict equally well, and "the best genes" is not a single answer. The
 project specification names this problem directly: removing all
 correlated features may be impractical.
+
+**Noise.** Both the biology and the measurement vary. Two samples of the
+same tumour, sequenced twice, do not give identical values (chapter 2).
 
 **Cost.** Some methods train a classifier for every candidate feature or
 every step. With 28,552 genes, such methods can take hours or days.
@@ -81,9 +84,45 @@ methods give the best quality for their cost? We answer it with a
 cost-quality frontier ([chapter 8](08_results_frontier.md)): selection time
 against AUC, every method on one plot.
 
+**The targets.** The breast cancer data offers several labels: the PAM50
+molecular subtype, estrogen receptor (ER) status, and survival. PAM50 is
+the main target. Chapter 2 explains why, and why it becomes five binary
+tasks.
+
 ## 1.5 Scope
 
 This is a comparative study, not a new method. The project uses published
 methods only. The aim is a fair comparison under one protocol, and a fast,
 reliable tool to run it. `SCOPE.md` in the repository records what is in
 and out of scope.
+
+## 1.6 What earlier work found
+
+**Comparative studies on gene expression.** Dudoit et al. (2002) compared
+classifiers on several tumour gene expression datasets. Simple methods,
+such as diagonal linear discriminant analysis and nearest neighbours, did
+as well as complex ones. Statnikov et al. (2005) compared classifiers and
+gene selection methods on many multiclass cancer datasets. They found
+multiclass SVMs the most accurate classifiers. Bolón-Canedo et al. (2014)
+review the microarray datasets in common use and the selection methods
+applied to them. Saeys et al. (2007) review selection methods for
+bioinformatics as a whole.
+
+**How our data differs.** Most of those datasets have tens to a few
+hundred samples. SCAN-B has thousands of patients. So its test sets are
+large enough to separate methods that score close together.
+
+**Four known pitfalls.** The literature names four ways a comparison can
+mislead. Chapter 3 shows how this project handles each.
+
+| Pitfall | Source | Our answer |
+|---|---|---|
+| Selecting genes on all the data, then cross-validating | Ambroise and McLachlan (2002) | Selection inside every split (3.2) |
+| No random control | Neekhra et al. (2025) | A random selector at every `k` (3.4) |
+| Trusting the spread of k-fold scores | Bengio and Grandvalet (2004) | Repeated random splits (3.3) |
+| Reporting scores without stability | Kuncheva (2007) | Kuncheva's index for every method (3.6) |
+
+**Where this project stands.** It compares methods from all three families,
+and Higher Criticism, under one protocol. It runs on one large gene
+expression cohort and one image dataset. This tests whether the ranking of
+methods carries over between domains.

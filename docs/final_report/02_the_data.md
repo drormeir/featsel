@@ -19,27 +19,48 @@ genes. After the choices below, the project uses **2,976 patients and
 
 | Choice | Why |
 |---|---|
-| Keep only samples sequenced on the HiSeq 2000 machine (3,069 of 3,409). | Two machines can give different values for technical reasons alone. Mixing them would add a difference that has nothing to do with the tumour. |
-| Keep one sample per patient (2,976 patients). | 93 patients were sequenced twice, to test reproducibility. If a patient's two samples fall on both sides of a train/test split, the model is tested on a patient it has already seen. |
+| Keep only samples sequenced on the HiSeq 2000 machine (3,069 of 3,409). The other 340 were sequenced on a NextSeq 500. | Two machines can give different values for technical reasons alone. Mixing them would add a difference that has nothing to do with the tumour. The NextSeq samples add 297 patients not in the HiSeq set; they are left out. |
+| Keep one sample per patient (2,976 patients), the first in file order. | 93 patients were sequenced twice, to test reproducibility. If a patient's two samples fall on both sides of a train/test split, the model is tested on a patient it has already seen. |
 | Drop genes with a single value across the kept patients (2,313 genes). | They carry no information. |
 
-The course's own copy of the data kept the repeat samples. Every result
-computed on it carries that leak. We measured that the two samples of one
-patient are very similar (median correlation 0.970), more similar than
-any two different patients (median 0.927).
+**The repeat samples.** Brueffer et al. sequenced 136 tumours a second
+time, to test how reproducible their classifiers are. GSE96058 publishes
+each repeat as its own sample, with the suffix `repl` (for example `F2621`
+and `F2621repl`). 93 of the repeats are HiSeq samples.
+
+The two samples of one patient are not exact copies. Their correlation
+over all genes has a median of 0.970 and a minimum of 0.901. Two
+different patients correlate at a median of 0.927, and at most 0.968. So a
+repeat pair is usually, but not always, more alike than two different
+patients. In 87 of the 93 patients both samples carry the same PAM50
+subtype.
+
+**The course's copies.** The course provided two copies of this data,
+`scanb_small` and `scanb_full`. Both hold exactly the 3,069 HiSeq samples,
+with the same values and labels as GSE96058. Both kept the repeat samples,
+so every result computed on them carries the leak above. Its size was not
+measured. `scanb_small` also keeps only 9,264 genes, by an unrecorded rule.
+It lacks 11 of the 50 PAM50 genes: ANLN, BAG1, CDC6, CXXC5, FOXA1, GPR160,
+KRT14, MIA, NUF2, TMEM45B and UBE2T. We therefore load GSE96058 directly,
+and the course copies are retired.
 
 ### What the numbers are
 
-Each gene's value is log2(FPKM + 0.1). FPKM is a normalized count of how
-much of the gene's RNA was read. The +0.1 and the log are a convenience
-chosen by the authors; any other increasing transform would be equally
-valid. Two facts follow:
+Each gene's value is log2(FPKM + 0.1). The GEO processing notes say the
+authors summed FPKM per gene symbol, added 0.1 and took log2. The data
+agrees: its smallest value is exactly log2(0.1). FPKM is a normalized
+count of how much of the gene's RNA was read. The +0.1 and the log are a
+convenience chosen by the authors; any other increasing transform would be
+equally valid. Two facts follow:
 
 - **Only the order of the values is meaningful.** Their size depends on an
   arbitrary choice of transform.
 - **Many values sit at a floor.** A gene that was not detected gets
-  log2(0.1). In the first 200 genes, 51% of all values are at this floor.
-  98.1% of genes fail a test of normality.
+  log2(0.1). In the first 200 genes, checked on all 3,069 HiSeq samples,
+  51% of all values are at this floor. 98.1% of genes fail a test of
+  normality (D'Agostino-Pearson at p < 0.05), with a median excess
+  kurtosis of 1.44. Within a class, a gene is a heap of identical floor
+  values plus a spread of detected ones, not a normal curve.
 
 These facts decided which statistical test we use to score genes
 ([chapter 4](04_the_methods.md), section 4.3).
@@ -50,23 +71,46 @@ GSE96058 gives two kinds of label for each patient.
 
 - **Measured by pathologists:** estrogen receptor (ER) status, PgR, HER2,
   Ki67 and grade.
-- **Computed from the same gene expression:** classifier outputs, such as
-  `er prediction mgc` and the PAM50 subtype.
+- **Computed from the same gene expression:** the classifiers of Brueffer
+  et al. Single-gene classifiers (`sgc`) use one gene each. Multigene
+  classifiers (`mgc`) are nearest shrunken centroid models; the ER one
+  uses 459 genes. Their outputs are stored as fields such as
+  `er prediction mgc`. The PAM50 subtype is also computed.
 
 **PAM50**, our target, is computed (Parker et al. 2009). It assigns each
-tumour to one of five subtypes, Basal, Her2, LumA, LumB or Normal, by
-comparing 50 fixed genes with five reference profiles. So the label is a
-function of 50 genes that are in our data. This has two consequences.
+tumour to one of five subtypes, Basal, Her2, LumA, LumB or Normal. Each
+subtype has a fixed reference profile, a centroid, over 50 genes. A tumour
+gets the subtype of the nearest centroid, measured by Spearman rank
+correlation. So the label is a function of 50 genes that are in our data.
+
+**How the 50 genes were chosen.** Parker et al. started from 161
+candidate genes. They ranked each gene alone, with a t-test per subtype,
+and kept the best. A univariate filter such as Mann-Whitney works the same
+way, so it has a built-in advantage in finding them. Genes outside the 161
+were never candidates. The list is in Parker et al.'s Supplemental Table 2.
+Three symbols have changed since: CDCA1 is now NUF2, KNTC2 is NDC80, and
+ORC6L is ORC6.
+
+**What is not known.** Brueffer et al. cite Parker et al. But neither their
+paper nor its supplement says how GSE96058's `pam50 subtype` field was
+computed: which implementation, on which data.
+
+This has two consequences.
 
 1. **Predicting PAM50 partly re-learns a published classifier.** Scores on
    it may be higher than on a measured clinical outcome.
 2. **We know the right answer.** We can check whether a method finds the
-   50 genes ([chapter 7](07_results_quality.md), section 7.5).
+   50 genes ([chapter 7](07_results_quality.md), section 7.6).
 
-The ER label in the course's copy is also computed, not measured. It
-equals `er prediction mgc` on all 3,069 samples, and it disagrees with the
-pathologist on 235 of the 2,870 samples that have a pathologist value. An
-earlier course report on this data treated both labels as clinical facts.
+**The ER label in the course's copy is also computed, not measured.** It
+equals `er prediction mgc` on all 3,069 samples, coded 1 = negative and
+2 = positive. It disagrees with the pathologist on 235 of the 2,870
+samples that have a pathologist value. The pathologist value is missing
+for 199 samples. An earlier course report on this data (unpublished)
+treated both labels as clinical facts. It found ER "somewhat trivial" to
+predict, which is expected for a label computed from the same genes. It
+also reduced PAM50 to two classes without saying how. Measured labels and
+survival do not have this circularity.
 
 ### Five binary tasks
 
@@ -94,9 +138,13 @@ as one number.
 PAM50 uses 50 genes. But each of them rises and falls together with
 hundreds of others across patients. For example, ESR1 moves with the
 estrogen-response genes, and the proliferation genes move with the
-cell-cycle genes. As a result, in every task thousands of genes carry
-signal: more than 10% of all genes. This fact explains several results
-later in the report.
+cell-cycle genes. The U test scores each gene alone, so a gene that moves
+with ESR1 separates Basal from the rest as strongly as ESR1 does. As a
+result, in every task thousands of genes carry signal: more than 10% of
+all genes. This was first seen in a one-split smoke test on 2026-10-24. It
+explains several results later in the report: Higher Criticism's behaviour
+(7.5), the low recovery of the PAM50 genes (7.6), and how fast random
+genes catch up (7.2).
 
 Loader: [`featsel_datasets/scanb_gse96058/`](../../featsel_datasets/scanb_gse96058/).
 Tutorial: [`featsel_datasets/scanb_gse96058/demos/tutorial.ipynb`](../../featsel_datasets/scanb_gse96058/demos/tutorial.ipynb).
@@ -109,35 +157,70 @@ gene expression. We chose one with more features than samples, as in
 SCAN-B, from a different domain, public and published as a benchmark
 (decided 2026-10-17).
 
-**Source.** BreastMNIST is part of MedMNIST v2 (Yang et al. 2023). It
-holds 780 breast ultrasound images (Al-Dhabyani et al. 2020): 210
-malignant against 570 benign or normal. We use the 224 × 224 version.
+**Source.** BreastMNIST is part of MedMNIST v2 (Yang et al. 2023), a
+published benchmark collection. It holds 780 breast ultrasound images
+from Al-Dhabyani et al. (2020). We use the 224 × 224 version (MedMNIST+,
+Zenodo record 10519652, licence CC BY 4.0). The loader checks the
+downloaded file against its published MD5 checksum.
 
-**Features.** Each image goes through ResNet-50, a convolutional network
-trained on the ImageNet photo collection, with its last layer removed. The
-result is 2,048 numbers per image, called an embedding. This is a common
-form of transfer learning: a network trained on one task describes images
-for another. The embeddings are computed once on the GPU and cached.
+- The source has three classes: normal (133 images), benign (437) and
+  malignant (210). MedMNIST merged normal and benign into one class. So the
+  task is malignant (210) against benign or normal (570).
+- MedMNIST fixes a split of 546 training, 78 validation and 156 test
+  images.
+
+**Features.** Each image goes through ResNet-50 (He et al. 2016), a
+convolutional network trained on the ImageNet photo collection, with its
+last layer removed. We use torchvision's `IMAGENET1K_V2` weights. The
+grayscale image is repeated over three colour channels and normalized as
+ImageNet images are. The result is 2,048 numbers per image, called an
+embedding. This is a common form of transfer learning: a network trained
+on one task describes images for another. The embeddings are computed
+once on the GPU and cached. Two runs on the GPU gave identical values.
 
 | Fact | Value |
 |---|---|
 | Images (samples) | 780 |
 | Features | 2,048 |
 | Task | malignant (210) vs benign or normal (570) |
-| Values exactly zero | 42.8% |
+| Values exactly zero | 42.8% (ReLU, then average pooling) |
+| Negative values | none |
 | Features passing the U test at 5% false discovery rate | 24% to 28% |
+| Features with U-test p < 0.05 | 36% to 39% |
+| Features passing the F-test at p < 0.05 / 2,048 (Bonferroni) | 223 |
+| Median absolute correlation between two features | 0.056 |
+| Pairs of features with correlation above 0.5 | 0.17% |
+| Principal components for 50% / 90% / 99% of the variance | 12 / 150 / 462 |
+
+The two share ranges are over the 5 training halves of an early run.
 
 As in SCAN-B, the signal is widespread: about a quarter of the features
 separate the classes. Unlike SCAN-B, pairs of features are only weakly
-correlated (median |r| 0.056), but 150 principal components are needed to
-hold 90% of the variance.
+correlated. Yet 150 principal components are needed to hold 90% of the
+variance. The dependence is spread thinly across many features, not
+concentrated in strongly correlated pairs.
 
 We use all 780 images and draw our own random splits, as for SCAN-B.
-MedMNIST's fixed split is ignored, so our scores are not directly
-comparable with its published results.
+MedMNIST's fixed split is ignored. So our scores are not directly
+comparable with its published test-set results: ResNet-18 trained end to
+end reached AUC 0.891 to 0.901.
 
-**A trap we did not measure.** Some images carry measurement marks drawn
-during the scan. A model can learn such marks instead of the tissue.
+**Traps we did not measure.** Some images carry measurement marks, "+"
+calipers drawn during the scan. A model can learn such marks instead of
+the tissue, and the embeddings include them.
+
+A later check of the source images found worse defects (Pawłowska et al.
+2023). 155 of the 780 images, 19%, are copies of other images in the
+set. Some copies carry a different label: image 42 is benign, and its copy
+488 is malignant. 70 images, more than 8%, show the axilla rather than the
+breast. At least 7 show a biopsy needle. BreastMNIST uses all 780 images (Yang et al. 2023), so these
+defects are in our data.
+
+The copies matter most. Like SCAN-B's repeat samples, a copy can fall in
+the training part while its twin is in the test part. The model is then
+partly tested on an image it has seen. We found this after the
+experiments, so every BreastMNIST result in this report carries the leak.
+Its size is not measured.
 
 Loader: [`featsel_datasets/medmnist_breastmnist/`](../../featsel_datasets/medmnist_breastmnist/).
 Notebooks: [`demos/tutorial.ipynb`](../../featsel_datasets/medmnist_breastmnist/demos/tutorial.ipynb),
@@ -154,5 +237,7 @@ Notebooks: [`demos/tutorial.ipynb`](../../featsel_datasets/medmnist_breastmnist/
 | Label | computed from 50 known genes | assigned by the image source |
 | Signal | widespread, strongly correlated genes | widespread, weakly correlated features |
 
-Sources: [`docs/report/03_data.md`](../report/03_data.md),
-[`results/data_facts.csv`](../../results/data_facts.csv).
+Plans and open questions about the data are in
+[Appendix D](appendix_d_data_details.md).
+
+Source: [`results/data_facts.csv`](../../results/data_facts.csv).

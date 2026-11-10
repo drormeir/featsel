@@ -1,7 +1,7 @@
 """
 Time the runner against plain scikit-learn on the same grid (task 3).
 
-docs/experiment_design.md 2e. The same splits, selectors, k values and
+docs/final_report/06_making_it_fast.md, 6.1. The same splits, selectors, k values and
 classifier run four ways: scikit-learn's cross_validate on one core and on
 every core, and the runner on one core and on every core. Every test score
 must match between the two, so only the time differs.
@@ -12,7 +12,7 @@ time of the two one-core runs therefore separates that saving from the
 saving of parallel work.
 
 Usage:
-    python scripts/benchmark_speed.py --n-genes 3000 --out docs/speed_benchmark.md
+    python scripts/benchmark_speed.py --n-genes 3000 --out <file>
 """
 
 import argparse
@@ -102,7 +102,7 @@ def main():
                         help='Random genes to keep, so the grid runs in minutes')
     parser.add_argument('--out', required=True, help='Markdown file to write')
     parser.add_argument('--csv', default=str(ROOT / 'results' / 'speed_benchmark.csv'),
-                        help='CSV of the timings, read by scripts/report_tables.py')
+                        help='CSV of the timings')
     args = parser.parse_args()
 
     X, y = load_xy(target='pam50 subtype')

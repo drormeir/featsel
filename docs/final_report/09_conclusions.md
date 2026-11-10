@@ -29,7 +29,10 @@
    computed from the same gene expression we select from. A study that
    treats them as clinical facts overstates what it shows.
 2. Check for repeated samples. 93 patients appear twice in the course's
-   copy of SCAN-B; random splits put them on both sides and leak.
+   copy of SCAN-B; random splits put them on both sides and leak. We
+   removed them. In BreastMNIST, 19% of the images are copies, as a 2023
+   letter reports. We learned of it after our runs, so that leak remains
+   in our image results.
 3. The gene values are on an arbitrary scale, with half the values tied at
    a floor. A rank test (Mann-Whitney U) fits this data; the F-test's
    assumptions do not hold.

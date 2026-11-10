@@ -40,19 +40,21 @@ complex methods here, and much faster.
 
 | # | Chapter | What you will learn |
 |---|---|---|
-| 1 | [The problem](01_the_problem.md) | What feature selection is, and why many features and few samples make it hard. The four tasks of the project. |
+| 1 | [The problem](01_the_problem.md) | What feature selection is, and why many features and few samples make it hard. The four tasks of the project. What earlier studies found. |
 | 2 | [The data](02_the_data.md) | SCAN-B gene expression and BreastMNIST images. Where the labels come from, and the traps we found in the data. |
 | 3 | [How to measure a selection method](03_how_to_measure.md) | How to test a method without fooling yourself: leakage, splits, the random control, metrics, stability. |
 | 4 | [The methods](04_the_methods.md) | The 15 methods, grouped into filters, embedded methods and wrappers, with Higher Criticism. Why we score genes with the U test. |
 | 5 | [The software](05_the_software.md) | How `featsel` is built: drop-in selectors, the config-driven runner, datasets, memory safety, reproducibility. |
 | 6 | [Making it fast](06_making_it_fast.md) | Task 3: the runner against plain scikit-learn, and faster versions of each method, on the CPU and on a GPU. |
-| 7 | [Results: which method selects best](07_results_quality.md) | The comparison on both datasets: gain over random, stability, Higher Criticism, the PAM50 genes. |
+| 7 | [Results: which method selects best](07_results_quality.md) | The comparison on both datasets: gain over random, stability, Higher Criticism, the PAM50 genes, and what it means. |
 | 8 | [Results: cost against quality](08_results_frontier.md) | Every method on one plot of time against AUC, on all five tasks and on each task. |
 | 9 | [Conclusions](09_conclusions.md) | What we learned, in plain sentences. |
 | 10 | [Open work and next steps](10_open_work.md) | What is missing in this project, and what is worth investigating beyond it. |
 | A | [Decision log](appendix_a_decisions.md) | Every important decision, its date, its reason and the alternatives we rejected. |
 | B | [Glossary](appendix_b_glossary.md) | Short definitions of the terms used in the report. |
 | C | [How to reproduce](appendix_c_reproduce.md) | The commands, configs and notebooks behind every number. |
+| D | [Data: plans and open questions](appendix_d_data_details.md) | Reproducing the ER label, the PAM50 recovery design, Higher Criticism's share of signal, a better model for floor-heavy genes. |
+| E | [Full comparison tables](appendix_e_comparison_tables.md) | Per-task scores at every `k`, genes kept, times, stability and chosen C. |
 | | [References](references.md) | The papers cited. |
 
 ## How to read the numbers
@@ -72,7 +74,9 @@ machine it was taken on.
 
 ## Related material
 
-- The earlier working drafts, with generated tables: [`docs/report/`](../report/).
-- Design notes: [`docs/experiment_design.md`](../experiment_design.md),
-  [`docs/architecture_options.md`](../architecture_options.md).
+- This report is the project's only design record. The earlier drafts
+  (`docs/report/`) and working notes (`docs/*.md`) were merged into it and
+  removed; git history keeps them. Decisions are in
+  [Appendix A](appendix_a_decisions.md), parked ideas in
+  [section 10.3](10_open_work.md#103-parked-ideas).
 - The project specification: [`references/MLDS_Feature_Selection.pdf`](../../references/MLDS_Feature_Selection.pdf).

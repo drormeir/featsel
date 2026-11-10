@@ -19,7 +19,7 @@ GSE96058 (Brueffer et al., 2018).
 
 Experiment configs name it as
 `dataset: "featsel_datasets.scanb_gse96058.featsel_view"`. Findings and
-decisions are in `docs/report/03_data.md`.
+decisions are in `docs/final_report/02_the_data.md` and its Appendix D.
 
 ### BreastMNIST, ResNet-50 embeddings (`medmnist_breastmnist/`)
 

@@ -1,11 +1,9 @@
 """
 Compute the data facts the report states, into results/data_facts.csv.
 
-docs/report/00_report_outline.md: every number in the report comes from a
-results file, never retyped by hand. Each fact here has a name; a chapter
-shows it with a marker that scripts/report_tables.py fills:
-
-    <!-- fact: scanb_patients -->3,273<!-- /fact -->
+Each fact has a name, such as scanb_patients. The final report
+(docs/final_report/02_the_data.md) cites this file as the source of its
+data numbers.
 
 Facts about the course's archived copies of SCAN-B need
 references/local/scanb_course/, which is not in git. Without it, their

@@ -23,6 +23,11 @@ a practical and powerful approach to multiple testing. *Journal of the Royal
 Statistical Society, Series B* 57(1), 289-300.
 https://doi.org/10.1111/j.2517-6161.1995.tb02031.x
 
+Bolón-Canedo, V., Sánchez-Maroño, N., Alonso-Betanzos, A., et al. (2014). A
+review of microarray datasets and applied feature selection methods.
+*Information Sciences* 282, 111-135.
+https://doi.org/10.1016/j.ins.2014.05.042
+
 Breiman, L. (2001). Random forests. *Machine Learning* 45(1), 5-32.
 https://doi.org/10.1023/A:1010933404324
 
@@ -79,6 +84,10 @@ Kuncheva, L. I. (2007). A stability index for feature selection.
 *Proceedings of the 25th IASTED International Multi-Conference: Artificial
 Intelligence and Applications*, 390-395.
 
+Liu, Y.-J. and Zhou, W. (2023). Dual Newton proximal point algorithm for
+solution paths of the ℓ1-regularized logistic regression. Preprint.
+https://arxiv.org/abs/2310.19353
+
 Mann, H. B. and Whitney, D. R. (1947). On a test of whether one of two
 random variables is stochastically larger than the other. *Annals of
 Mathematical Statistics* 18(1), 50-60.
@@ -96,6 +105,11 @@ Parker, J. S., Mullins, M., Cheang, M. C. U., et al. (2009). Supervised risk
 predictor of breast cancer based on intrinsic subtypes. *Journal of Clinical
 Oncology* 27(8), 1160-1167. https://doi.org/10.1200/JCO.2008.18.1370
 
+Pawłowska, A., Karwat, P. and Żołek, N. (2023). Letter to the Editor. Re:
+"Dataset of breast ultrasound images by W. Al-Dhabyani, M. Gomaa, H.
+Khaled & A. Fahmy, Data in Brief, 2020, 28, 104863". *Data in Brief* 48,
+109247. https://doi.org/10.1016/j.dib.2023.109247
+
 Ross, B. C. (2014). Mutual information between discrete and continuous
 data sets. *PLoS ONE* 9(2), e87357.
 https://doi.org/10.1371/journal.pone.0087357
@@ -103,6 +117,11 @@ https://doi.org/10.1371/journal.pone.0087357
 Saeys, Y., Inza, I. and Larrañaga, P. (2007). A review of feature selection
 techniques in bioinformatics. *Bioinformatics* 23(19), 2507-2517.
 https://doi.org/10.1093/bioinformatics/btm344
+
+Statnikov, A., Aliferis, C. F., Tsamardinos, I., et al. (2005). A
+comprehensive evaluation of multicategory classification methods for
+microarray gene expression cancer diagnosis. *Bioinformatics* 21(5),
+631-643. https://doi.org/10.1093/bioinformatics/bti033
 
 Tibshirani, R. (1996). Regression shrinkage and selection via the lasso.
 *Journal of the Royal Statistical Society, Series B* 58(1), 267-288.
@@ -114,8 +133,3 @@ Wilcoxon, F. (1945). Individual comparisons by ranking methods.
 Yang, J., Shi, R., Wei, D., et al. (2023). MedMNIST v2 - a large-scale
 lightweight benchmark for 2D and 3D biomedical image classification.
 *Scientific Data* 10. https://doi.org/10.1038/s41597-022-01721-8
-
-Liu and Zhou (2023). The dual Newton proximal point algorithm (PPDNA) for
-L1-penalized logistic regression. Preprint, arXiv:2310.19353.
-https://arxiv.org/abs/2310.19353 (authors' initials and full title to be
-checked against the preprint).

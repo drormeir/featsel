@@ -74,8 +74,7 @@ Non-negotiable, they decide whether the numbers mean anything.
 
 ## 3b. Two decisions
 
-Both are required by the four tasks. The second dataset is decided; Higher
-Criticism is still open.
+Both are required by the four tasks. Both are decided and built.
 
 **The second dataset (task 4). Decided 2026-10-17: BreastMNIST.** 780 breast
 ultrasound images from MedMNIST v2, each turned into 2,048 ResNet-50
@@ -91,17 +90,17 @@ tabular UCI high-dimensional set, or ResNet embeddings extracted offline from
 a small image set, or the NIPS 2003 challenge sets on Hugging Face (Arcene,
 Gisette, Madelon; uploaded by one user, `mstz`). Whatever is chosen goes in
 `featsel_datasets/<name>/`, outside the `featsel` package, with a loader that
-downloads and caches it (see `docs/architecture_options.md`, "Dataset
-loaders"), and gets a section in the Data chapter.
+downloads and caches it (see `docs/final_report/05_the_software.md`,
+section 5.3), and gets a section in the Data chapter.
 
 **Higher Criticism as a selector.** This is the one method that sets the
-project apart from a standard method comparison, and it currently has no
-implementation. Plan: a `HigherCriticismSelector` in `selectors/`, following
+project apart from a standard method comparison. Built 2026-10-31: a
+`HigherCriticismSelector` in `selectors/`, following
 the published Donoho and Jin thresholding formulation, taking per-feature
 p-values from a univariate test, sorting them, computing the HC statistic and
 selecting the features above the HC threshold. It selects its own feature
 count, which makes it interesting to compare against fixed-k methods and
-worth calling out in the report. Standard published HC only.
+worth calling out in the report.
 
 ## 4. Explicitly out of scope
 
@@ -114,8 +113,6 @@ worth calling out in the report. Standard published HC only.
   embeddings for the second dataset are extracted once, outside the package
   (`featsel_datasets/medmnist_breastmnist/`), cached, and fed to the pipeline as `X, y`.
 - Novel research contributions. This is a comparative study, not a paper.
-- Use standard, published Higher Criticism only. No unpublished variants.
-
 ## 5. Order of work
 
 Finish the minimum passing project before adding anything.
@@ -129,7 +126,8 @@ Finish the minimum passing project before adding anything.
 ## 6. Working rules
 
 - **Park it, don't argue it.** When an idea fails the four-task test, add a
-  dated one-line entry to `docs/ideas.md` and return to the current step.
+  dated one-line entry to `docs/final_report/10_open_work.md`, section 10.3
+  "Parked ideas", and return to the current step.
 - **Smallest next action.** End every session with one concrete, finishable
   step.
 - **Commit partial work.** Rough plots and ugly tables get committed, not

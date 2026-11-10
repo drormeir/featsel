@@ -76,7 +76,7 @@ them. A `k` fails at the first split. A `k` is a feature count for one
 dataset, so it lives in the experiment config, not in the dataset module.
 
 A model with a `grid` is tuned inside each split
-(`docs/experiment_design.md` 2b). Inner stratified Monte Carlo splits of the
+(`docs/final_report/03_how_to_measure.md`, 3.8). Inner stratified Monte Carlo splits of the
 training half score every value in the grid. The model is refit on the whole
 training half with the best values and scored once on the test half. The CSV
 column `tuned_params` holds the chosen values, `{}` for an untuned model.

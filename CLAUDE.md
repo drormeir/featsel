@@ -106,8 +106,8 @@ embeddings computed once with PyTorch and cached) and `featsel_view.py`.
 `featsel_datasets` is a regular package (with `__init__.py` files) but is not
 installed: `pyproject.toml` excludes it from the `featsel` package. Run from
 the repo root.
-Design: `docs/architecture_options.md`, "Dataset loaders". Data findings:
-`docs/report/03_data.md`.
+Design: `docs/final_report/05_the_software.md`, section 5.3. Data findings:
+`docs/final_report/02_the_data.md` and its Appendix D.
 
 **CSV datasets: `featsel/data_loader.py`**
 
@@ -145,7 +145,7 @@ config. A CSV dataset config specifies:
 - Default target `pam50 subtype` (Basal, LumA, LumB, Her2, Normal)
 - Every task is binary (`SCOPE.md` 3a): PAM50 becomes five tasks, each subtype vs the rest. No five-class results
 - Other targets are GSE96058's own field names, e.g. `er status` (pathologist), `er prediction mgc` (computed from genes), `overall survival event`
-- PAM50 and the `prediction` fields are computed from gene expression, not measured. See `docs/report/03_data.md`.
+- PAM50 and the `prediction` fields are computed from gene expression, not measured. See `docs/final_report/02_the_data.md`.
 
 **Second dataset (task 4): BreastMNIST (`featsel_datasets/medmnist_breastmnist/`)**
 - 780 breast ultrasound images (MedMNIST v2, 224 x 224), malignant 210 vs benign or normal 570
@@ -206,14 +206,14 @@ array unless `set_output(transform='pandas')` is set.
 Selectors register themselves by class name. In Python, import the class.
 `FeatureSelector.create(name, **params)` is for names read as text, such as the
 runner's YAML configs, which name selectors by class name (case-insensitive).
-See `docs/architecture_options.md`, section "Selector design".
+See `docs/final_report/05_the_software.md`, section 5.2.
 
 Built: VarianceThreshold, ANOVAFSelector, MutualInfoSelector,
 CorrelationSelector, FDRSelector, FWESelector, PercentileSelector,
 LassoSelector, TreeImportanceSelector, RFESelector, RFECVSelector,
 SequentialSelector, RandomSelector, HigherCriticismSelector,
 MannWhitneySelector. The experiment configs use MannWhitneySelector, not
-ANOVAFSelector (`docs/experiment_design.md`, 2f).
+ANOVAFSelector (`docs/final_report/04_the_methods.md`, section 4.3).
 
 Every selector that wraps a scikit-learn method has two tests next to it:
 it selects the same features as that method, and `fit` plus `get_support` is
@@ -245,7 +245,7 @@ scores = cross_val_score(pipe, X, y, cv=5)
 pipe.fit(X, y)
 select = pipe.named_steps['select']
 selected = select.get_feature_names_out()
-scores_per_feature = select.feature_importances_
+scores_per_feature = select.scores_
 ```
 
 ### Available Selectors
@@ -363,7 +363,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 
 ### Data Files
 - Downloaded data is not tracked in git: `.gitignore` ignores `*.gz`, `*.npz`, `*.part` and `*.txt` anywhere, and a file that must be tracked is named as an exception (e.g. `!requirements.txt`); the loader code is tracked
-- Results in `results/` are tracked, so the report's generated tables (`scripts/report_tables.py`) can be rebuilt from git. The one exception is the 36 MB `results/experiment_breastmnist.csv`
+- Results in `results/` are tracked, so every number in the final report can be checked against git. The one exception is the 36 MB `results/experiment_breastmnist.csv`
 - `results/local/` is gitignored: benchmark series and exploratory runs, each a CSV plus a JSON of its settings and environment, for plotting
 - GSE96058's gene expression file is 592 MB; loading it takes about a minute
 - BreastMNIST's images are 31 MB; its cached embeddings 4 MB

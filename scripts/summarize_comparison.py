@@ -2,12 +2,12 @@
 Summarize a selector-comparison CSV from the runner as Markdown tables.
 
 Each table cell is the median over splits, with the first and third
-quartiles in brackets (docs/experiment_design.md 2a). Scores over tasks are
+quartiles in brackets (docs/final_report/03_how_to_measure.md, 3.3). Scores over tasks are
 the mean of the tasks within each split.
 
 Usage:
     python scripts/summarize_comparison.py results/comparison_scanb.csv \
-        --n-features 30865 --out docs/comparison_scanb.md
+        --n-features 30865 --out <file>
 """
 
 import argparse

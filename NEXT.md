@@ -11,9 +11,14 @@ tasks, breadth first (`SCOPE.md` 5), then depth.**
 Decided 2026-10-31. One step at a time; commit and push after each small
 step; tick the step here when done.
 
-Protocol decisions (recorded in `docs/experiment_design.md`): 5 stratified
-Monte Carlo splits at train fraction 0.5, every filter scores genes by the
-Mann-Whitney U test, C is tuned inside each split.
+Protocol decisions (recorded in `docs/final_report/03_how_to_measure.md`):
+5 stratified Monte Carlo splits at train fraction 0.5, every filter scores
+genes by the Mann-Whitney U test, C is tuned inside each split.
+
+The working notes named in the steps below (`docs/experiment_design.md`,
+`docs/comparison_*.md`, `docs/speed_benchmark.md`,
+`docs/pam50_recovery.md`) were merged into `docs/final_report/` on
+2026-11-10 and removed; git history keeps them.
 
 1. Fix the protocol on paper and in code.
    - [x] 1a. Rewrite `docs/experiment_design.md` to the decided protocol.
@@ -39,8 +44,7 @@ Mann-Whitney U test, C is tuned inside each split.
    `scripts/benchmark_speed.py`, result in `docs/speed_benchmark.md`.
 5. [x] Write each report chapter right after its step: Methodology after
    1, Results after 2-3, Implementation after 4. Drafted in
-   `docs/report/04_methodology.md`, `05_implementation.md` and
-   `06_results.md`.
+   `docs/report/`, since merged into `docs/final_report/` and removed.
 6. [x] Only then, depth.
    - [x] More splits in the selector comparisons: 16 on SCAN-B, 20 on
      BreastMNIST. Tables now give quartiles, not the range.
@@ -48,10 +52,10 @@ Mann-Whitney U test, C is tuned inside each split.
      on BreastMNIST.
    - For speed: data in float32 (the U test now sums ranks in float64), 50
      trees, 4 workers. SCAN-B ran in 29 minutes.
-7. [x] The report chapters not yet written (`docs/report/00_report_outline.md`):
-   02 Related Work, 07 Discussion, 08 Conclusion, 09 References. Numbers
-   only through generated blocks and fact markers
-   (`scripts/report_tables.py`). Decided 2026-10-31: step 7 before step 6.
+7. [x] The report chapters not yet written, in the drafts of `docs/report/`
+   (since merged into `docs/final_report/` and removed, with their table
+   generator): 02 Related Work, 07 Discussion, 08 Conclusion, 09
+   References. Decided 2026-10-31: step 7 before step 6.
    - [x] 7a. `02_related_work.md`. References checked on Crossref and
      jmlr.org.
    - [x] 7b. `09_references.md`: every work cited in chapters 1-8. The
@@ -62,7 +66,7 @@ Mann-Whitney U test, C is tuned inside each split.
    - [x] 7d. `08_conclusion.md`.
    - [x] PAM50 gene recovery, 2 splits: `docs/pam50_recovery.md`.
    - [x] HC behaviour: HC2008 stops at its search edge on both datasets,
-     because neither has rare signal (`docs/report/03_data.md`).
+     because neither has rare signal (`docs/final_report/07_results_quality.md`, 7.5).
    - [x] Classifier notebook rerun with MannWhitneySelector, 3 splits:
      same pattern as the F-test run (`docs/experiment_design.md` 5).
 
@@ -70,7 +74,7 @@ Done 2026-10-31: MannWhitneySelector has its `demos/tutorial.ipynb`, like
 every other selector.
 
 Not part of this program: the full SCAN-B grid (about four days). Park
-anything else in `docs/ideas.md`.
+anything else in `docs/final_report/10_open_work.md`, section 10.3.
 
 ## Done
 
@@ -88,7 +92,7 @@ anything else in `docs/ideas.md`.
   smoke test (`configs/smoke_scanb.yaml`) runs every selector and classifier
   end to end in about 3 minutes. The full grid was skipped by decision
   (about 4 days). alpha0 stays 0.1; HC2008 reaches its edge on SCAN-B, see
-  `docs/report/03_data.md`. Along the way: binary tasks only, shared-memory
+  `docs/final_report/07_results_quality.md`, 7.5. Along the way: binary tasks only, shared-memory
   splits, a per-worker memory cap and a clean exit when a worker dies.
 - 2026-08-02 - One end-to-end run on SCAN-B (ANOVA F top-100, logistic
   regression, stratified 5-fold, PAM50 five-class): accuracy 0.8850, macro-F1

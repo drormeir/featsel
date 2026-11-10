@@ -7,7 +7,7 @@ target: "pam50 subtype"          # omit to use the dataset's default target
 output: "../results/experiment_scanb.csv"
 
 # Resampling: independent Monte Carlo splits, not k-fold. See
-# docs/experiment_design.md section 2a for why.
+# docs/final_report/03_how_to_measure.md, section 3.3, for why.
 seed: 42
 n_splits: 100
 train_sizes: [0.5, 0.7, 0.9]

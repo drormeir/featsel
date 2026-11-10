@@ -13,14 +13,22 @@
 | Classifier | logistic regression, C tuned inside each split | the same |
 | Main score | macro-F1 | macro-F1 |
 | Executions | 3,520 | 680 |
+| Run time | 29 minutes on 4 workers | about a minute on 4 workers |
+
+Both runs are from 2026-10-31, with the data in 32-bit floats. RFE removes
+half the remaining genes per round, so two rounds reach `k`. Random
+selection and Mann-Whitney also run at the count Higher Criticism 2008
+chose (2,855 on SCAN-B, 204 on BreastMNIST), to compare it at equal size.
+The comparison ranks methods under one protocol; it does not aim at the
+best possible classifier. The order between methods, and the gap over the
+random control, matter more than the absolute scores.
 
 Configs: [`configs/comparison_scanb.yaml`](../../configs/comparison_scanb.yaml),
 [`configs/comparison_breastmnist.yaml`](../../configs/comparison_breastmnist.yaml).
 Results: [`results/comparison_scanb.csv`](../../results/comparison_scanb.csv),
 [`results/comparison_breastmnist.csv`](../../results/comparison_breastmnist.csv).
 Full tables, per task, with times and stability:
-[`docs/comparison_scanb.md`](../comparison_scanb.md),
-[`docs/comparison_breastmnist.md`](../comparison_breastmnist.md).
+[Appendix E](appendix_e_comparison_tables.md).
 
 Each cell below is macro-F1: averaged over the tasks within a split, then
 the median over the splits, with the first and third quartiles in
@@ -28,24 +36,45 @@ brackets.
 
 ## 7.2 SCAN-B
 
-| Method | k = 5 | 10 | 50 | 250 | 1000 | own count |
-|---|---|---|---|---|---|---|
-| Random | 0.518 [0.500, 0.534] | 0.575 [0.554, 0.599] | 0.730 [0.717, 0.742] | 0.819 [0.813, 0.828] | 0.855 [0.851, 0.861] | |
-| Mann-Whitney | 0.780 [0.771, 0.790] | 0.806 [0.802, 0.814] | 0.847 [0.842, 0.853] | 0.868 [0.864, 0.870] | 0.879 [0.875, 0.883] | |
-| Lasso | 0.778 [0.769, 0.788] | 0.820 [0.809, 0.833] | 0.845 [0.840, 0.852] | 0.846 [0.840, 0.851] | 0.848 [0.842, 0.854] | |
-| Tree importance | **0.805** [0.794, 0.812] | **0.826** [0.824, 0.830] | **0.858** [0.854, 0.863] | **0.876** [0.872, 0.880] | **0.879** [0.874, 0.882] | |
-| RFE | 0.604 [0.580, 0.636] | 0.662 [0.645, 0.682] | 0.744 [0.738, 0.749] | 0.818 [0.812, 0.822] | 0.846 [0.843, 0.850] | |
-| HC2004 | | | | | | 0.638 [0.633, 0.645] (1 gene) |
-| HC2008 | | | | | | 0.883 [0.880, 0.886] (2,855 genes) |
+**Macro-F1**, mean over the five tasks:
 
-**Gain over random selection**, same split and `k`, median over splits:
+| Method | k = 5 | 10 | 20 | 50 | 100 |
+|---|---|---|---|---|---|
+| Random | 0.518 [0.500, 0.534] | 0.575 [0.554, 0.599] | 0.647 [0.637, 0.669] | 0.730 [0.717, 0.742] | 0.775 [0.765, 0.784] |
+| Mann-Whitney | 0.780 [0.771, 0.790] | 0.806 [0.802, 0.814] | 0.826 [0.817, 0.830] | 0.847 [0.842, 0.853] | 0.856 [0.851, 0.860] |
+| Lasso | 0.778 [0.769, 0.788] | 0.820 [0.809, 0.833] | **0.844** [0.834, 0.849] | 0.845 [0.840, 0.852] | 0.846 [0.842, 0.853] |
+| Tree importance | **0.805** [0.794, 0.812] | **0.826** [0.824, 0.830] | **0.844** [0.839, 0.846] | **0.858** [0.854, 0.863] | **0.868** [0.865, 0.872] |
+| RFE | 0.604 [0.580, 0.636] | 0.662 [0.645, 0.682] | 0.704 [0.695, 0.708] | 0.744 [0.738, 0.749] | 0.775 [0.770, 0.779] |
 
-| Method | k = 5 | 10 | 20 | 50 | 100 | 250 | 500 | 1000 |
-|---|---|---|---|---|---|---|---|---|
-| Mann-Whitney | +0.260 | +0.233 | +0.175 | +0.114 | +0.078 | +0.044 | +0.028 | +0.024 |
-| Lasso | +0.263 | +0.239 | +0.189 | +0.114 | +0.074 | +0.024 | +0.001 | −0.007 |
-| Tree importance | +0.290 | +0.252 | +0.196 | +0.128 | +0.093 | +0.052 | +0.032 | +0.025 |
-| RFE | +0.085 | +0.082 | +0.056 | +0.014 | +0.010 | −0.003 | −0.012 | −0.008 |
+| Method | k = 250 | 500 | 1000 | 2855 | own count |
+|---|---|---|---|---|---|
+| Random | 0.819 [0.813, 0.828] | 0.845 [0.841, 0.850] | 0.855 [0.851, 0.861] | 0.868 [0.865, 0.870] | |
+| Mann-Whitney | 0.868 [0.864, 0.870] | 0.873 [0.870, 0.877] | **0.879** [0.875, 0.883] | 0.883 [0.880, 0.886] | |
+| Lasso | 0.846 [0.840, 0.851] | 0.847 [0.843, 0.852] | 0.848 [0.842, 0.854] | | |
+| Tree importance | **0.876** [0.872, 0.880] | **0.878** [0.876, 0.880] | **0.879** [0.874, 0.882] | | |
+| RFE | 0.818 [0.812, 0.822] | 0.835 [0.832, 0.837] | 0.846 [0.843, 0.850] | | |
+| HC2004 | | | | | 0.638 [0.633, 0.645] (1 gene) |
+| HC2008 | | | | | 0.883 [0.880, 0.886] (2,855 genes) |
+
+**Gain over random selection**, same split and `k`, median over splits
+with quartiles:
+
+| Method | k = 5 | 10 | 20 | 50 | 100 |
+|---|---|---|---|---|---|
+| Mann-Whitney | +0.260 [0.240, 0.276] | +0.233 [0.204, 0.255] | +0.175 [0.149, 0.192] | +0.114 [0.101, 0.126] | +0.078 [0.074, 0.094] |
+| Lasso | +0.263 [0.242, 0.281] | +0.239 [0.221, 0.266] | +0.189 [0.177, 0.203] | +0.114 [0.102, 0.125] | +0.074 [0.065, 0.088] |
+| Tree importance | +0.290 [0.265, 0.300] | +0.252 [0.227, 0.275] | +0.196 [0.175, 0.208] | +0.128 [0.113, 0.139] | +0.093 [0.087, 0.106] |
+| RFE | +0.085 [0.065, 0.105] | +0.082 [0.061, 0.116] | +0.056 [0.036, 0.077] | +0.014 [−0.003, 0.033] | +0.010 [−0.013, 0.015] |
+
+| Method | k = 250 | 500 | 1000 | 2855 |
+|---|---|---|---|---|
+| Mann-Whitney | +0.044 [0.035, 0.052] | +0.028 [0.023, 0.034] | +0.024 [0.021, 0.027] | +0.017 [0.014, 0.018] |
+| Lasso | +0.024 [0.018, 0.030] | +0.001 [−0.003, 0.011] | −0.007 [−0.012, −0.001] | |
+| Tree importance | +0.052 [0.049, 0.057] | +0.032 [0.027, 0.038] | +0.025 [0.017, 0.028] | |
+| RFE | −0.003 [−0.015, 0.005] | −0.012 [−0.016, −0.002] | −0.008 [−0.013, −0.005] | |
+
+Per-task tables, the number of genes kept, selection times and the chosen
+C are in [Appendix E](appendix_e_comparison_tables.md).
 
 ![Macro-F1 against k by classifier](../../figures/macro_f1_vs_k.png)
 
@@ -65,13 +94,20 @@ at small `k`.*
 3. **Mann-Whitney, the simplest method, is close behind**, and it is by far
    the most stable (section 7.4).
 4. **Lasso stops improving at k = 20.** At C = 1 it gives a non-zero weight
-   to only about 330 genes, so at larger `k` it cannot add more. At
-   k = 1000 it falls below random selection of 1,000 genes.
+   to only about 330 genes (median 327, quartiles 286 to 619 at
+   k = 1000), so at larger `k` it cannot add more. At k = 1000 it falls
+   below random selection of 1,000 genes.
 5. **RFE is the weakest selector.** It beats random only up to k = 20, and
-   falls below it from k = 500. A check of its choices showed many
-   near-constant genes: genes at one value in 97% to 100% of patients.
-   With a strong penalty (C = 0.01) and half the genes removed per round,
-   the SVM's weights are a poor guide on this data.
+   falls below it from k = 500. Per task, it fails at small `k` on LumA,
+   LumB and Normal: at k = 5 its macro-F1 is 0.35 on LumA, below random
+   selection's 0.61, while on Basal and Her2 it is close to the others.
+   A check of its choices showed many near-constant genes: genes at one
+   value in 97% to 100% of patients. With a strong penalty (C = 0.01) and
+   half the genes removed per round, the SVM's weights are a poor guide on
+   this data.
+6. **The tasks differ in difficulty.** Basal is the easiest: at k = 5 the
+   top methods reach 0.94 to 0.95. Normal is the hardest: at k = 1000 the
+   best reaches 0.77 (Appendix E).
 
 ## 7.3 Are the differences real? Paired tests
 
@@ -108,23 +144,33 @@ new patients (chapter 3).
 ## 7.4 Stability: same score, different genes
 
 Kuncheva's index on SCAN-B, mean over tasks (1 = the same genes on every
-split, 0 = chance):
+split, 0 = chance), over 120 pairs of splits:
 
-| Method | k = 5 | 50 | 250 | 1000 |
-|---|---|---|---|---|
-| Random | 0.00 | 0.00 | 0.00 | 0.00 |
-| Mann-Whitney | **0.67** | **0.77** | **0.84** | **0.86** |
-| Lasso | 0.23 | 0.20 | 0.21 | 0.22 |
-| Tree importance | 0.08 | 0.16 | 0.17 | 0.10 |
-| RFE | 0.25 | 0.28 | 0.29 | 0.30 |
+| Method | k = 5 | 10 | 20 | 50 | 100 | 250 | 500 | 1000 |
+|---|---|---|---|---|---|---|---|---|
+| Random | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
+| Mann-Whitney | **0.67** | **0.67** | **0.72** | **0.77** | **0.82** | **0.84** | **0.85** | **0.86** |
+| Lasso | 0.23 | 0.22 | 0.21 | 0.20 | 0.20 | 0.21 | 0.21 | 0.22 |
+| Tree importance | 0.08 | 0.11 | 0.14 | 0.16 | 0.19 | 0.17 | 0.13 | 0.10 |
+| RFE | 0.25 | 0.28 | 0.29 | 0.28 | 0.30 | 0.29 | 0.29 | 0.30 |
 
-Tree importance scores best and is the least stable. Its top genes change
-from split to split, while its score barely moves. Many gene sets predict
-equally well. So a selected gene list should not be read as *the* genes of
-a subtype, unless the method is also stable. Mann-Whitney is both good and
-stable. The forest had only 50 trees here, which makes its importances
-noisier; on BreastMNIST, 200 trees gave about the same scores with more
-stable choices.
+HC2008 scores 0.87 at its 2,855 genes, the same as Mann-Whitney at that
+size. HC2004 scores 0.59.
+
+On BreastMNIST (190 pairs), Mann-Whitney and HC2008 are again the most
+stable, about 0.65. Lasso and tree importance are the least, 0.14 to 0.30,
+and RFE lies near 0.26.
+
+Tree importance scores best on SCAN-B and is the least stable. Its top
+genes change from split to split, while its score barely moves. Lasso,
+tree importance and RFE all choose quite different genes on each split,
+yet score close to Mann-Whitney. Many gene sets predict equally well. So
+a selected gene list should not be read as *the* genes of a subtype,
+unless the method is also stable. Stability has to be reported next to
+accuracy. Mann-Whitney is both good and stable. The forest had only 50
+trees here, which makes its importances noisier. On BreastMNIST, 200 trees
+gave scores within 0.013 at every `k`, and raised its Kuncheva index to
+0.32 to 0.51.
 
 ![Selection stability](../../figures/selection_stability.png)
 
@@ -135,18 +181,25 @@ stable choices.
 
 | Variant | Genes kept on SCAN-B | Macro-F1 |
 |---|---|---|
-| HC2004 | 1 (2 on Normal) | 0.638 |
+| HC2004 | median 1 (2 on Normal); 1 to 6 over all tasks and splits | 0.638 |
 | HC2008 | 2,855 on every task and split | 0.883 |
 
 **HC2008 always stopped at the edge of its search**, alpha0 · N = 0.1 ×
 28,552 = 2,855 genes. At that size it equals Mann-Whitney at k = 2,855
 exactly, since both rank genes by the same U test. Its high score comes from
 using ten times more genes than any fixed `k`, not from a better choice;
-random selection of 2,855 genes scores only 0.017 lower. On BreastMNIST it
-again stopped at its edge, 204 of 2,048 features.
+random selection of 2,855 genes scores only 0.017 [0.014, 0.018] lower.
+
+On BreastMNIST it again stopped at its edge, 204 of 2,048 features, and
+again equalled Mann-Whitney at k = 204 on every split. There it gains
+0.060 [0.037, 0.084] over random selection of 204 features. With the first
+5 splits that gain's range included zero; with 20 splits its quartiles do
+not.
 
 **HC2004 kept one gene.** Its denominator, √(p(1 − p)), is tiny for the
-smallest p-values, so the strongest gene wins alone.
+smallest p-values, so the strongest gene wins alone. Per task its
+macro-F1 on SCAN-B runs from 0.48 (Normal, near chance) to 0.80 (LumA). On
+BreastMNIST it kept 1 or 2 features and scored 0.521.
 
 **Why.** HC is designed for rare, weak, independent signal. Our data has
 the opposite: thousands of genes carry signal, and they are correlated
@@ -163,19 +216,48 @@ high. Ten splits, half the patients for training, all five tasks.
 **Share of the 50 PAM50 genes found in the top `k`**, mean over tasks and
 splits:
 
-| Method | k = 50 | 250 | 1000 | 5000 | 10000 |
+| Method | k = 10 | 50 | 100 | 250 | 500 | 1000 | 2500 | 5000 | 10000 |
+|---|---|---|---|---|---|---|---|---|---|
+| Random (expected) | 0.00 | 0.00 | 0.00 | 0.01 | 0.02 | 0.04 | 0.09 | 0.18 | 0.35 |
+| Mann-Whitney | **0.05** | **0.12** | **0.17** | **0.25** | 0.31 | **0.42** | **0.57** | **0.73** | **0.85** |
+| Tree importance | 0.03 | 0.10 | 0.16 | **0.25** | **0.34** | **0.42** | 0.50 | 0.56 | 0.64 |
+| RFE | 0.01 | 0.03 | 0.04 | 0.07 | 0.09 | 0.14 | 0.24 | 0.33 | 0.46 |
+| Lasso | 0.03 | 0.07 | 0.09 | 0.12 | 0.14 | 0.16 | 0.16 | 0.16 | 0.16 |
+
+**Recall at k = 50, per task**, mean over splits:
+
+| Method | Basal | Her2 | LumA | LumB | Normal |
 |---|---|---|---|---|---|
-| Random (expected) | 0.00 | 0.01 | 0.04 | 0.18 | 0.35 |
-| Mann-Whitney | **0.12** | **0.25** | **0.42** | **0.73** | **0.85** |
-| Tree importance | 0.10 | **0.25** | **0.42** | 0.56 | 0.64 |
-| RFE | 0.03 | 0.07 | 0.14 | 0.33 | 0.46 |
-| Lasso | 0.07 | 0.12 | 0.16 | 0.16 | 0.16 |
+| Mann-Whitney | 0.08 | 0.07 | **0.26** | 0.14 | 0.06 |
+| Tree importance | 0.08 | 0.07 | 0.19 | 0.16 | 0.02 |
+| Lasso | 0.07 | 0.09 | 0.08 | 0.10 | 0.00 |
+| RFE | 0.04 | 0.06 | 0.02 | 0.02 | 0.00 |
+
+**Rank at which half and 90% of the 50 are found**, median over tasks and
+splits:
+
+| Method | 50% found by rank | 90% found by rank |
+|---|---|---|
+| Mann-Whitney | 1,041 | 12,419 |
+| Tree importance | 3,811 | 22,848 |
+| RFE | 11,503 | 24,234 |
+| Lasso | never | never |
+
+Lasso ranks only genes with a non-zero weight, so it never reaches half.
 
 - Every method finds PAM50 genes much faster than chance. Mann-Whitney is
   best: half of the 50 lie in its top 1,041 genes, where random selection
   would need about 14,300.
+- Tree importance equals Mann-Whitney up to k = 1000, but its last genes
+  lie deep: 90% only by rank 22,848.
+- RFE recovers few, 3% at k = 50. Its scores were also the weakest.
+- Lasso stops at 16%: it gives a non-zero weight to too few genes to reach
+  the rest.
 - **But recall at k = 50 is low for every method**: at most 26% (Mann-Whitney
   on LumA). Yet the same methods predict the label well at k = 50.
+- Mann-Whitney's lead is partly built in. Parker et al. chose the 50 genes
+  by testing each gene alone (chapter 2), which is how Mann-Whitney ranks.
+- The 10-split numbers differ from an earlier 2-split run by at most 0.03.
 
 **Good prediction does not need the genes that define the label.** Each
 PAM50 gene moves with hundreds of others, which predict just as well. Each
@@ -183,14 +265,19 @@ task also needs only part of the 50. Low recall here does not mean poor
 selection. It does mean that "the genes a method selected" is one of many
 equally good answers.
 
-Source: [`docs/pam50_recovery.md`](../pam50_recovery.md),
-[`scripts/pam50_recovery.py`](../../scripts/pam50_recovery.py).
+**Limit.** Recall counts all 50 genes in every task, though a single
+subtype may depend on only some of them.
+
+Source: [`scripts/pam50_recovery.py`](../../scripts/pam50_recovery.py),
+10 splits.
 
 ## 7.7 Does the classifier matter?
 
 A side study ran Mann-Whitney and random selection with five classifiers
 (logistic regression, linear SVM, random forest, k-nearest neighbours,
-shrinkage LDA), on 3 splits.
+shrinkage LDA), on 3 splits, with C fixed. The run took 9 minutes
+on 2 workers. It asks how much external selection is worth to a model,
+given the model's own regularization.
 
 ![Gain over random by classifier](../../figures/gain_over_random.png)
 
@@ -204,6 +291,13 @@ irrelevant features.*
 - k-NN gains the most at large `k`: distances computed over many irrelevant
   genes are dominated by noise.
 - Logistic regression is the best classifier overall, 0.877 at k = 1000.
+  It was still rising at the largest `k` tested, so its peak is not known.
+
+**An earlier run with the F-test.** Before the switch to the U test, the
+same study ran with ANOVA-F selection on 12 splits. It showed the same
+pattern: ANOVA beat random by 0.20 to 0.24 at k = 10 for every classifier;
+LDA fell below random at k = 1000; the gain at k = 10 ran from 0.15 (LumA)
+to 0.33 (Her2); and logistic regression was best, 0.869 at k = 1000.
 
 ![Gain by subtype](../../figures/gain_by_subtype.png)
 
@@ -214,16 +308,41 @@ Notebook: [`notebooks/02_classifier_behaviour.ipynb`](../../notebooks/02_classif
 
 ## 7.8 BreastMNIST
 
-| Method | k = 5 | 10 | 50 | 100 | 250 |
-|---|---|---|---|---|---|
-| Random | 0.429 [0.422, 0.456] | 0.468 [0.432, 0.495] | 0.576 [0.534, 0.653] | 0.675 [0.619, 0.699] | 0.747 [0.732, 0.765] |
-| Mann-Whitney | 0.640 [0.613, 0.674] | 0.681 [0.666, 0.698] | 0.748 [0.734, 0.761] | 0.773 [0.756, 0.789] | 0.795 [0.782, 0.817] |
-| Lasso | **0.668** [0.642, 0.689] | 0.700 [0.675, 0.716] | **0.778** [0.757, 0.789] | **0.798** [0.780, 0.816] | **0.815** [0.796, 0.827] |
-| Tree importance | 0.641 [0.621, 0.686] | **0.706** [0.687, 0.730] | 0.761 [0.740, 0.779] | 0.773 [0.766, 0.788] | 0.793 [0.785, 0.807] |
-| RFE | 0.607 [0.575, 0.656] | 0.653 [0.620, 0.694] | 0.752 [0.739, 0.773] | 0.790 [0.774, 0.802] | 0.803 [0.797, 0.812] |
+**Macro-F1**, malignant against benign or normal:
 
-HC2004: 0.521. HC2008: 0.790, at 204 features, equal to Mann-Whitney at
-k = 204.
+| Method | k = 5 | 10 | 20 | 50 |
+|---|---|---|---|---|
+| Random | 0.429 [0.422, 0.456] | 0.468 [0.432, 0.495] | 0.521 [0.463, 0.567] | 0.576 [0.534, 0.653] |
+| Mann-Whitney | 0.640 [0.613, 0.674] | 0.681 [0.666, 0.698] | 0.714 [0.692, 0.731] | 0.748 [0.734, 0.761] |
+| Lasso | **0.668** [0.642, 0.689] | 0.700 [0.675, 0.716] | 0.736 [0.727, 0.748] | **0.778** [0.757, 0.789] |
+| Tree importance | 0.641 [0.621, 0.686] | **0.706** [0.687, 0.730] | **0.745** [0.732, 0.757] | 0.761 [0.740, 0.779] |
+| RFE | 0.607 [0.575, 0.656] | 0.653 [0.620, 0.694] | 0.702 [0.680, 0.715] | 0.752 [0.739, 0.773] |
+
+| Method | k = 100 | 204 | 250 | own count |
+|---|---|---|---|---|
+| Random | 0.675 [0.619, 0.699] | 0.739 [0.717, 0.760] | 0.747 [0.732, 0.765] | |
+| Mann-Whitney | 0.773 [0.756, 0.789] | 0.790 [0.771, 0.810] | 0.795 [0.782, 0.817] | |
+| Lasso | **0.798** [0.780, 0.816] | | **0.815** [0.796, 0.827] | |
+| Tree importance | 0.773 [0.766, 0.788] | | 0.793 [0.785, 0.807] | |
+| RFE | 0.790 [0.774, 0.802] | | 0.803 [0.797, 0.812] | |
+| HC2004 | | | | 0.521 [0.498, 0.583] (1 or 2 features) |
+| HC2008 | | | | 0.790 [0.771, 0.810] (204 features) |
+
+**Gain over random selection**, same split and `k`:
+
+| Method | k = 5 | 10 | 20 | 50 | 100 | 250 |
+|---|---|---|---|---|---|---|
+| Mann-Whitney | +0.192 [0.173, 0.239] | +0.201 [0.173, 0.250] | +0.199 [0.134, 0.242] | +0.167 [0.100, 0.208] | +0.110 [0.063, 0.146] | +0.059 [0.026, 0.063] |
+| Lasso | +0.223 [0.188, 0.244] | +0.236 [0.188, 0.254] | +0.210 [0.181, 0.279] | +0.192 [0.127, 0.241] | +0.129 [0.115, 0.164] | +0.066 [0.045, 0.079] |
+| Tree importance | +0.209 [0.183, 0.238] | +0.231 [0.202, 0.259] | +0.232 [0.156, 0.264] | +0.181 [0.110, 0.237] | +0.106 [0.083, 0.150] | +0.056 [0.038, 0.060] |
+| RFE | +0.156 [0.125, 0.207] | +0.177 [0.131, 0.234] | +0.164 [0.114, 0.242] | +0.161 [0.130, 0.202] | +0.118 [0.099, 0.155] | +0.048 [0.042, 0.070] |
+
+At k = 250 Lasso keeps only 172 [162, 176] features: fewer than asked.
+
+Lasso or tree importance has the highest median at every `k`. Their
+quartiles overlap at every `k`, so their order is not settled (the paired
+tests of section 7.3 agree). One task means every number rests on the same
+780 images.
 
 **The main pattern holds on image embeddings.** Every method beats random
 at every `k`, most at small `k`. HC2008 again stops at its edge. The fine
@@ -235,7 +354,74 @@ half per round costs less.
 The comparison stops at k = 250. Chapter 8 (section 8.7) goes further and
 finds that, on this dataset, using all 2,048 features scores best in AUC.
 
-## 7.9 Summary
+## 7.9 Discussion
+
+**Why selection matters most at small budgets.** The signal is spread over
+many features. On SCAN-B, each PAM50 gene moves with hundreds of others,
+so a random draw of a few hundred genes already holds good stand-ins for
+most of them. On BreastMNIST, a quarter of the features pass the U test at
+a 5% false discovery rate. Again, random draws find signal easily. This
+agrees with Neekhra et al. (2025): small random subsets often match
+selected ones on high-dimensional data. Without the random control, every
+method at k = 250 would look good. Against it, the methods differ mainly
+at small `k`.
+
+**The simplest method holds its own.** Mann-Whitney scores each feature
+alone and ignores redundancy. It still sits in the top group, and it is by
+far the most stable. This parallels Dudoit et al. (2002), where simple
+classifiers did as well as complex ones on tumour gene expression.
+
+**Why RFE is weak on SCAN-B.** One likely cause is the step of 0.5: a
+single SVM fit on all 28,552 genes removes half of them at once, with a
+fixed C = 0.01. On BreastMNIST there are far fewer features, so each
+removal matters less, and RFE catches up from k = 100. But the step is not
+the whole cause. An earlier run with step 0.1 gave about the same scores
+on SCAN-B. Step 0.1 took about 35 s per fit. In the frontier, also with
+step 0.1, RFE again scored below the simple filters (chapter 8).
+
+**Why Lasso stalls on SCAN-B but not on BreastMNIST.** At C = 1 the
+penalty leaves only a few hundred genes with a non-zero weight. So larger
+`k` adds nothing on SCAN-B. A weaker penalty would rank more genes. The
+penalty is fixed here, so Lasso's curve shows that setting's limit, not
+the method's. On BreastMNIST a few hundred non-zero weights are most of
+what `k` asks for, so Lasso does not stall there.
+
+**What carries over between datasets.** The main pattern holds on both:
+every method beats random in the median, the gain is largest at small
+`k`, and HC2008 stops at its edge. The fine ranking does not carry over:
+tree importance leads on gene expression, Lasso and tree importance share
+the lead on image embeddings.
+
+**Threats to validity.**
+
+- **Re-splits, not new patients.** The quartiles over 16 or 20 splits
+  measure re-splitting the same patients. They are not a confidence
+  interval.
+- **Shared patients.** The five SCAN-B tasks use the same patients and the
+  same splits. They are not independent replicates.
+- **Copied images.** 19% of BreastMNIST's images are copies of others,
+  some with a different label (chapter 2). A copy on each side of a split
+  leaks, and inflates the BreastMNIST scores by an unmeasured amount. Since
+  every method sees the same splits, the leak may matter less for the
+  ranking than for the absolute scores, but this is not checked.
+- **Computed labels.** PAM50 subtypes are computed from gene expression.
+  The SCAN-B tasks reproduce a published classifier, and scores may be
+  higher than on a measured clinical outcome.
+- **One classifier.** All comparison scores use L2-penalized logistic
+  regression. Section 7.7 checks four others for Mann-Whitney only.
+- **Fixed selector settings.** Lasso, RFE and the forest use fixed
+  settings; only the classifier's C is tuned. RFE's coarse step and the
+  forest's 50 trees were chosen for speed.
+- **Mild tuning bias.** The selector is fit on the whole training part, so
+  the inner validation parts that choose C helped choose the features. The
+  outer test part is untouched.
+- **Timings.** Selection times in the comparison are per fit on one of 4
+  workers sharing the machine, before the GPU work. Chapter 8 times every
+  method properly.
+- **32-bit data.** In a one-split check against 64 bits, single scores
+  moved slightly for Lasso, RFE and the forest.
+
+## 7.10 Summary
 
 - Every method except RFE beats random selection clearly at small `k`; the
   gain fades as `k` grows.

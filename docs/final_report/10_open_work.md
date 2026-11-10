@@ -4,7 +4,8 @@
 
 This chapter lists what is missing, honestly. Section 10.1 is work that
 belongs to this project's four tasks and is not finished. Section 10.2 is
-research beyond the project's scope.
+research beyond the project's scope. Section 10.3 is the dated list of
+parked ideas.
 
 ## 10.1 Missing work within the project
 
@@ -20,12 +21,16 @@ research beyond the project's scope.
 | **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The comparison uses one classifier and one train fraction. | About four days on this laptop; skipped by decision. |
 | **A measured target on SCAN-B**, such as the pathologist's ER status. | Every SCAN-B task here predicts a computed label. A measured label would show whether the conclusions hold for clinical truth. | One config; the loader already supports it. |
 | **The size of the repeat-sample leak.** 93 patients appear twice in the course's copy. | Says how much the course's earlier results are inflated. | A paired run with and without the repeats. |
+| **Remove BreastMNIST's copied images and rerun.** 155 of 780 source images are copies (Pawłowska et al. 2023), some labelled differently. | Every BreastMNIST result carries this leak. The letter's supplement lists the pairs, so the copies can be dropped or kept on one side of each split. | A loader option and two reruns: minutes. |
+| **The quantile-transform side experiment** (section 3.10). | Would show whether shrinkage LDA and k-NN gain from normal-shaped features. | Started and cancelled; one `k`, all classifiers. |
+| **Time and memory complexity per method**, from the algorithm. | Planned to sit next to the measured times; a disagreement would be a finding. | Writing, no runs. |
+| **How SCAN-B computed `pam50 subtype`.** | Neither Brueffer et al. nor its supplement says (Appendix D.2). | Reading other SCAN-B papers. |
 
 ### Software
 
 | Item | State |
 |---|---|
-| **Store each test patient's score** (`docs/experiment_design.md` 2c), so new metrics need no new run. | Designed, not built. |
+| **Store each test patient's score**: the true label, the model's score and the decision threshold, so every metric can be derived later and a new metric needs no new run. | Designed, not built. Scores are not comparable across classifiers: a linear SVM gives raw decision values, a forest and k-NN coarse probabilities. At 100 splits they would run to tens of millions of numbers, so they need a compact format such as Parquet, not CSV. |
 | **Tune the decision threshold** inside the split. | Not built; macro-F1 and balanced accuracy use 0.5. AUC does not depend on it. |
 | **Random forest on the GPU.** | XGBoost ran out of memory on the 4 GB GPU; NVIDIA's cuML was 3 times slower than scikit-learn. Unresolved; a larger GPU is the next test. |
 | **The RFECV speed notebook's overlap column** at 30,000 genes. | A bug in the benchmark's reference handling makes that one overlap value meaningless. |
@@ -36,7 +41,8 @@ research beyond the project's scope.
 Decided 2026-10-17 and not done: rebuild Brueffer et al.'s ER classifier
 from their published gene weights, apply it to GSE96058, and compare with
 the stored `er prediction mgc` label. This would show exactly how the ER
-label was made, instead of inferring it.
+label was made, instead of inferring it. The plan, step by step, is in
+[Appendix D.1](appendix_d_data_details.md#d1-reproducing-the-er-label-planned-not-done).
 
 ## 10.2 Beyond this project
 
@@ -75,3 +81,26 @@ library we tried does this well on a 4 GB card.
 practitioner which selector to use for their time budget. Automating it,
 for any dataset given as `X, y`, would make the package's research harness
 useful beyond this study.
+
+## 10.3 Parked ideas
+
+Ideas that are interesting but serve none of the four tasks in
+`SCOPE.md`. Writing an idea down here is how it stops competing for
+attention. Format: the date, the idea, and why it was parked.
+
+- 2026-07-30 - A PyTorch layer and trainer for transfer learning on tiny
+  image sets (ResNet embeddings, 2 classes × 10 samples). Parked: a second
+  project with its own failure modes, and logistic regression on selected
+  embeddings is the stronger baseline at this sample size.
+- 2026-07-30 - A PyPI release of `featsel`. Parked: packaging polish is
+  not a project requirement.
+- 2026-10-05 - Higher Criticism with exact null moments: centre the i-th
+  p-value at i/(N+1) and scale by √(N+2), from Beta(i, N−i+1), with a
+  proof. Parked: no publication found, and `SCOPE.md` allows published HC
+  only. (HC2008 here already uses the exact centre, i/(N+1); section 4.4.)
+- 2026-10-05 - Berk-Jones (Donoho and Jin 2004, eq. 1.9) as a threshold
+  rule, another Higher Criticism mode. Parked: published only as a
+  detection test, not for feature selection.
+- 2026-10-18 - Recombine the five PAM50 class-vs-rest classifiers into a
+  decision tree that predicts the subtype. Parked: the project selects
+  features for binary targets only.

@@ -13,12 +13,20 @@ RAM; NVIDIA GTX 1650, 4 GB).
 
 ## 6.1 The runner against plain scikit-learn
 
-The same small grid ran four ways: scikit-learn's `cross_validate`, and
-our runner, each on one core and on all 12 threads. The script checks that
-all four give the same test scores before it reports a time.
+**Why measure this at all.** Most selectors and all classifiers come from
+scikit-learn. The runner's value over plain scikit-learn has to be shown
+in numbers, not claimed. So the same small grid ran four ways, on the same
+splits: scikit-learn's `cross_validate` once per selector and `k`, and our
+runner, each on one core and on all 12 threads. The scikit-learn side uses
+scikit-learn's own selectors: `SelectFromModel` with L1 logistic regression
+for Lasso, and `RFE` with `LinearSVC`. The script checks that all four give
+the same test scores before it reports a time. All 30 test macro-F1 scores
+were equal on every run.
 
-SCAN-B, Basal vs rest, 3,000 random genes, 2,976 patients, 5 splits, Lasso
-and RFE at `k` = 10, 50 and 250:
+SCAN-B, Basal vs rest, 3,000 random genes of 28,552, 2,976 patients, 5
+splits at a training fraction of 0.5, Lasso and RFE (step 0.5) at `k` = 10,
+50 and 250, logistic regression with a fixed C, data in 32-bit floats on
+both sides (run 2026-10-31):
 
 | Run | Seconds | Speed-up over scikit-learn on 1 core |
 |---|---|---|
@@ -35,11 +43,33 @@ and RFE at `k` = 10, 50 and 250:
   every `k` (chapter 5). scikit-learn refits it for every `k`.
 - It runs jobs in parallel, with the data in shared memory.
 
-On this small grid, starting the worker processes took about 4.5 of the
-6.3 seconds, so parallel work added little. On the full data each fit is
-longer and start-up weighs less; that case was not measured separately.
+On this small grid, parallel work added little. scikit-learn spreads only
+the 5 splits of one `cross_validate` call, and gains 1.5 times. The runner
+has 10 jobs (2 selectors times 5 splits), and gains 1.7 times over itself
+on one core: starting the worker processes took about 4.5 of its 6.3
+seconds. On full SCAN-B each fit is about ten times longer, so start-up
+weighs less and parallel work should pay more. That case was not measured.
 
-Source: [`docs/speed_benchmark.md`](../speed_benchmark.md),
+**Limits of this benchmark.** 3,000 of 28,552 genes, one task and 5
+splits, to see the whole flow in about a minute. Each selector and the
+classifier had a fixed seed, the same on every split, so both sides fit
+the same models; the experiments seed each split differently. C was fixed;
+the experiments tune it, which multiplies the classifier's cost on both
+sides alike.
+
+### Why the speed matters: the full grid
+
+The original design had 100 splits at three training fractions (300 in
+all), 6 selectors and nested tuning. Extrapolated from a 12-split run, it
+needed about 30 to 35 CPU-hours without the linear SVM: a day and a half on
+one core, less in proportion to the cores. RFE removing one feature per
+round would take about 2,300 hours. Removing 10% per round and ranking once
+takes about 3. This is the specification's point that some techniques are
+impractical in this setting. A linear SVM classifier with scikit-learn's
+default solver would have cost hundreds of hours more. We cut the grid
+instead (section 3.3).
+
+Source: [`scripts/benchmark_speed.py`](../../scripts/benchmark_speed.py),
 [`results/speed_benchmark.csv`](../../results/speed_benchmark.csv).
 
 ## 6.2 Each method, faster
@@ -79,14 +109,21 @@ times the five tasks: PPDNA on the GPU took 0.7 to 1.4 s per fit against
 
 | Method | What changed |
 |---|---|
-| U test | One sort per gene gives the ranks and the tie groups at once; on the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed on the GPU, exactly, in 64-bit floats; the p-value is finished on the CPU, so every device gives identical results. |
+| U test | One sort per gene gives the ranks and the tie groups at once; on the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed on the GPU, exactly, in 64-bit floats; the p-value is finished on the CPU, so every device gives identical results. Before this work a U-test fit took about 10 s on SCAN-B. |
 | F-test, variance | Class sums as one vector product per class, on the GPU. |
 | Correlation | The gene-gene correlations are computed in blocks, so the full 28,552 × 28,552 matrix is never held in memory. |
-| Mutual information | scikit-learn's estimate (Ross 2014) searches nearest neighbours. For one feature at a time, that search is a sort. Our version sorts, and reproduces scikit-learn's scores bit for bit, including its random noise and its order of summation. |
+| Mutual information | scikit-learn's estimate (Ross 2014) searches nearest neighbours with a KD-tree. A single feature is one-dimensional, so that search becomes a sort per class to find the k-th neighbour, and a binary search to count the points within its radius. The random noise, the distances and the order of every mean are scikit-learn's, so the scores are identical, bit for bit. A class of 2 to 7 samples, and regression, go to scikit-learn, which switches to brute-force distances there. The GPU path draws scikit-learn's noise on the CPU and sends it over. |
 | Lasso | PPDNA (Liu and Zhou 2023), a semismooth Newton method, solves the same L1 problem to a tight tolerance on the GPU. |
-| RFE, RFECV | An exact Newton solver for the linear SVM (Chapelle 2007), working in the space of the samples (3,000) rather than the genes (30,000), and reusing work between rounds. |
-| Sequential | All candidate features of one step are solved at once, as one batched Newton problem on the GPU, starting from the previous step's solution. |
-| Tree importance | scikit-learn's own forest, on all threads. |
+| RFE, RFECV | An exact Newton solver for the linear SVM (Chapelle 2007). With fewer samples than genes, the SVM is solved through the samples' kernel matrix, n × n (3,000 × 3,000 rather than 30,000 genes wide), which is kept between rounds. |
+| Sequential | All candidate features of one step are solved at once, as one batched Newton problem on the logistic regressions, in PyTorch, in 64 bits. The candidates share the features already chosen, so every Hessian block is one product over all candidates, and no design matrix is built. Each fit starts from that candidate's solution at the previous step. It selects what scikit-learn does with a converged logistic regression. It covers what the project uses: two classes, forward search, accuracy; anything else raises an error. Here the GPU wins: the work is wide elementwise passes and large products. |
+| Tree importance | scikit-learn's own forest, on all threads: 21.5 s on one thread, 4.2 s on 12, on SCAN-B-shaped data. In the runner, threads per worker times workers should not exceed the cores. |
+
+**History of RFE.** RFE was first planned as our own code, because it
+dominates the cost. On 2026-09-30 it was wrapped around scikit-learn's
+`RFE` instead, to get the whole pipeline running first. On its own, a
+hand-written loop does the same work as scikit-learn's. The first saving
+came from the runner ranking once per split. The exact solver came later,
+on 2026-11-07.
 
 ### Why some methods do not pick the same features
 
@@ -99,7 +136,15 @@ scikit-learn, and PPDNA as an option.
 **RFE.** The same cause: liblinear's tolerance changes which genes are
 removed when genes are strongly correlated. On the synthetic data at
 3,000 features, the overlap (Jaccard index) between the two gene sets was
-only 0.28. Again, liblinear stays the default.
+only 0.28. On synthetic SCAN-B-shaped data with correlated genes,
+liblinear at its default tolerance (10⁻⁴) shared 32 of 50 genes with the
+exact answer; at a tolerance of 10⁻⁸ it shared all 50. So the difference
+is liblinear stopping early, not an error in either. Again, liblinear
+stays the default, so the selector stays a drop-in for scikit-learn's RFE.
+
+**The rule.** A selector whose GPU result can differ from its CPU result
+defaults to the CPU, and never switches device on its own. Each result
+row records the device used.
 
 ### Why the GPU does not always win
 
@@ -109,10 +154,18 @@ only 0.28. Again, liblinear stays the default.
   GPU than on the CPU.
 - **Copying.** Data must be copied to the GPU. For the fast filters the
   copy takes about half the time.
-- **Memory.** 4 GB is small. A random forest on the GPU (XGBoost) ran out
-  of memory at full size; NVIDIA's cuML forest fit, but was 3 times slower
-  than scikit-learn on 3,000 × 3,000. Tree importance therefore stays on
-  the CPU.
+- **Memory.** 4 GB is small. XGBoost's random forest was tried on
+  synthetic SCAN-B-shaped data (1,488 × 28,552). On the GPU it ran out of
+  memory even with 64 bins, needing 3.4 GB. On the CPU one fit took 339 s,
+  against 4.2 s for scikit-learn on 12 threads, and only 21 of its top 50
+  genes were scikit-learn's: a different method, not a faster one.
+  NVIDIA's cuML forest fit, but was 3 times slower than scikit-learn on
+  3,000 × 3,000. Tree importance therefore stays on the CPU.
+
+**Libraries we did not use.** JAX was rejected for the U test: a new
+dependency, it reserves most GPU memory per process, and it recompiles for
+every data shape. CuPy and Numba were not needed: library sorts in
+PyTorch were enough, and PyTorch is already needed for the embeddings.
 
 ## 6.3 The device policy
 
@@ -128,6 +181,11 @@ Nine selectors share one rule for choosing where to run:
 `'auto'` never waits, so a parallel run never stalls on the GPU. The
 frontier runs (chapter 8) set `'cuda'`, so every timing of a GPU method is
 really on the GPU. The device used is recorded with every result.
+
+`'auto'` uses the GPU only when PyTorch loads, a GPU is present, and no
+other fit holds it. A file lock lets one fit at a time hold the GPU.
+Batch sizes come from the GPU's free memory. `'cuda'` raises an error if
+the GPU cannot run. Outputs are NumPy arrays on every device.
 
 ## 6.4 Summary
 
