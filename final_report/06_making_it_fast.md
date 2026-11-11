@@ -56,8 +56,48 @@ On this small grid, parallel work added little. scikit-learn spreads only
 the 5 splits of one `cross_validate` call, and gains 1.5 times. The runner
 has 10 jobs (2 selectors times 5 splits). It gains 1.7 times over itself
 on one core. Starting the worker processes took about 4.5 of its 6.3
-seconds. On full SCAN-B each fit is about ten times longer, so start-up
-weighs less and parallel work should pay more. That case was not measured.
+seconds.
+
+### Parallel work at full size
+
+The same grid ran on all 28,552 genes and all five tasks: 50 jobs. Each
+worker count ran 3 times, each run in a fresh process. The runs varied by
+less than 2%.
+
+| Workers | Seconds (median) | Speed-up | Efficiency (speed-up per worker) |
+|---|---|---|---|
+| 1 | 250 | 1.00 | 1.00 |
+| 2 | 155 | 1.61 | 0.81 |
+| 3 | 139 | 1.80 | 0.60 |
+| 4 | 138 | 1.82 | 0.45 |
+| 5 | 143 | 1.75 | 0.35 |
+
+![Speed-up by number of workers](figures/parallel_scaling.png)
+
+The speed-up stops at about 1.8, from 3 workers on. Neither the longest job
+nor the serial work explains this. The longest of the 50 jobs took 12 s,
+and all of them together 240 s. The rest of a run, preparing the splits
+and writing the results, took at most about 20 s. So 3 workers could
+finish in about 100 s. They took 139 s.
+
+Instead, each job ran slower when others ran beside it. With 3 workers, the
+selection fits took 1.75 times as long as alone. The classifier fits, on 10
+to 250 genes, took the same time. A selection fit reads the whole training
+part, 1,488 patients × 28,552 genes, far more than the processor's cache
+holds. A classifier fit reads a few genes. This points to memory bandwidth,
+which all cores share, as the limit. We did not measure the bandwidth
+itself.
+
+With 6 workers, the memory cap gave each worker 1.26 GB. liblinear needed
+about 1.45 GB for one fit, was refused, and aborted. Every 6-worker run fell
+back to 3 workers (section 5.5). So on this 16 GB laptop, 3 workers are
+the useful maximum for this grid.
+
+Sources: [`scripts/parallel_scaling.py`](../scripts/parallel_scaling.py),
+[`figures/parallel_scaling.csv`](figures/parallel_scaling.csv); per-job
+times from [`scripts/parallel_job_times.py`](../scripts/parallel_job_times.py),
+[`figures/parallel_scaling_jobs_1_worker.csv`](figures/parallel_scaling_jobs_1_worker.csv)
+and [`figures/parallel_scaling_jobs_3_workers.csv`](figures/parallel_scaling_jobs_3_workers.csv).
 
 **Limits of this benchmark.** 3,000 of 28,552 genes, one task and 5
 splits, to see the whole flow in about a minute. Each selector and the

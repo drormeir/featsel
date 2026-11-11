@@ -18,7 +18,9 @@
   plain scikit-learn, with identical scores. Ten selectors run on a GPU
   with the same features as on the CPU. The filters run 2.6 to 49 times
   faster there. Exact solvers make Lasso, RFE, RFECV and Sequential
-  selection faster. (Task 3.)
+  selection faster. Running jobs in parallel gains at most 1.8 times on
+  full SCAN-B on this laptop: from 3 workers on, the jobs slow each other
+  down, which points to shared memory bandwidth (section 6.1). (Task 3.)
 - **A second dataset**, BreastMNIST image embeddings, run through the same
   pipeline unchanged. (Task 4.)
 - **A third dataset, unseen during the design**: FGVC-Aircraft photo

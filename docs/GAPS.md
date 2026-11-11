@@ -22,17 +22,14 @@ report does not list it yet.
   count. Repeat each point a few times.
 - **Source.** `final_report/06_making_it_fast.md`, 6.1, lines 54-59. Not in
   chapter 10. New as a gap.
-- **Status.** Ready to run, not run. `scripts/parallel_scaling.py` runs
-  the 6.1 grid on all genes and all five tasks (50 jobs), 3 repeats, and
-  prints time, speed-up and efficiency. Each run is a fresh process and its
-  row is saved as it ends. It drops any run whose workers fell after a
-  memory failure. In a first attempt on 2026-11-11, 5 or more workers broke
-  the runner's per-worker memory cap on this laptop: liblinear needed about
-  1.45 GB per fit, the cap at 6 workers was 1.26 GB, and liblinear aborts
-  when refused. So 12 workers cannot be measured here. Command:
-  `.venv/bin/python scripts/parallel_scaling.py --workers 1 2 3 4 5 6
-  --repeats 3 --resume`, about an hour. `--resume` keeps the 3 runs already
-  measured (1, 2 and 3 workers, first pass).
+- **Status.** Closed 2026-11-11. The 6.1 grid on all genes and all five
+  tasks (50 jobs), 1 to 6 workers, 3 runs each, each in a fresh process.
+  The speed-up stops at about 1.8 from 3 workers on (1.61, 1.80, 1.82 and
+  1.75 at 2 to 5 workers). Not the longest job (12 s of 240 s) nor serial
+  work: with 3 workers each selection fit took 1.75 times as long, while
+  the small classifier fits did not slow, which points to memory
+  bandwidth. 6 workers broke the memory cap and fell back to 3 in every
+  run, so 12 cannot be measured on this laptop. Section 6.1, with a figure.
 
 ### A2. The speed notebooks' overlap column is wrong at large sizes (task 3)
 

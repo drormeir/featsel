@@ -1,0 +1,47 @@
+{
+  "written": "2026-11-11T22:22:57+02:00",
+  "workers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "repeats": 3,
+  "n_genes": 28552,
+  "n_patients": 2976,
+  "grid": {
+    "selectors": [
+      "LassoSelector",
+      "RFESelector"
+    ],
+    "k": [
+      10,
+      50,
+      250
+    ],
+    "n_splits": 5,
+    "tasks": 5
+  },
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "cpu_count": 12,
+    "ram_gb": 15.5,
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "torch": "2.14.1",
+      "xgboost": "3.4.1"
+    },
+    "git_commit": "1b198ab84a6cc27dfaf5984152e3ca5b7822f28e",
+    "git_dirty": false,
+    "gpu": "NVIDIA GeForce GTX 1650",
+    "gpu_memory_gb": 4.0
+  }
+}
