@@ -109,16 +109,25 @@ Results at the largest size both sides reached:
 | Variance threshold | 0.83 s | 0.86 s | 0.13 s (6.4×) | yes | [variance_threshold](../featsel/selectors/variance_threshold/demos/speed.ipynb) |
 | Correlation (pandas full matrix) | 7.05 s | 6.89 s | 0.25 s (28×) | yes | [correlation](../featsel/selectors/correlation/demos/speed.ipynb) |
 | Mann-Whitney and Higher Criticism (our NumPy U test) | 3.76 s | — | 0.49 s (7.7×) | yes | [mann_whitney](../featsel/selectors/mann_whitney/demos/speed.ipynb) |
-| Mutual information, 10,000 features | 78.8 s | 18.4 s (4.3×) | 1.60 s (49×) | yes, bit for bit | [mutual_info](../featsel/selectors/mutual_info/demos/speed.ipynb) |
+| Berk-Jones (our NumPy U test) | 3.88 s | — | 0.46 s (8.4×) | yes | [berk_jones](../featsel/selectors/berk_jones/demos/speed.ipynb) |
+| Mutual information, 10,000 features | 78.3 s | 18.4 s (4.2×) | 1.60 s (49×) | yes, bit for bit | [mutual_info](../featsel/selectors/mutual_info/demos/speed.ipynb) |
 | Lasso (liblinear → PPDNA solver) | 5.66 s | — | 1.08 s (5.2×) | 91% overlap (see below) | [lasso](../featsel/selectors/lasso/demos/speed.ipynb) |
-| Tree importance, 10,000 features (1 thread → 12) | 103.3 s | 18.9 s (5.5×) | no GPU path | yes | [tree_importance](../featsel/selectors/tree_importance/demos/speed.ipynb) |
+| Tree importance, 10,000 features (1 thread → 12) | 103.7 s | 18.8 s (5.5×) | no GPU path | yes | [tree_importance](../featsel/selectors/tree_importance/demos/speed.ipynb) |
 | RFE (liblinear → exact Newton solver) | 26.1 s | 12.7 s (2.1×) | 15.4 s (1.7×) | not at every size (see below) | [rfe](../featsel/selectors/rfe/demos/speed.ipynb) |
-| RFECV, 10,000 features | 76.6 s | 51.8 s (1.5×) | 44.4 s (1.7×) | not at every size | [rfecv](../featsel/selectors/rfecv/demos/speed.ipynb) |
-| Sequential forward, 1,000 features | 191.3 s | 22.5 s (8.5×) | 4.9 s (39×) | yes | [sequential](../featsel/selectors/sequential/demos/speed.ipynb) |
+| RFECV, 10,000 features | 71.2 s | 48.9 s (1.5×) | 42.2 s (1.7×) | not at every size | [rfecv](../featsel/selectors/rfecv/demos/speed.ipynb) |
+| Sequential forward, 1,000 features | 163.8 s | 22.5 s (7.3×) | 4.9 s (34×) | yes | [sequential](../featsel/selectors/sequential/demos/speed.ipynb) |
 | Random | — | 0.02 s | — | — | [random_selection](../featsel/selectors/random_selection/demos/speed.ipynb) |
 
 Sizes are 30,000 features unless the row says otherwise. Every fit of
 every variant was reproducible.
+
+The mutual information, tree importance, RFECV and Sequential notebooks
+were run again after a fix to the overlap check: past the original's
+largest size, it had compared a variant with another variant instead of
+the original. That overlap is now left empty. The re-run moved most times
+by 7% or less. scikit-learn's Sequential selection took 164 s, against
+191 s before, so the GPU's lead fell from 39 to 34 times. Two timed fits
+cannot pin a time closer than that.
 
 The Lasso notebook also times the five tasks on real SCAN-B (2,976
 patients, 28,552 genes). PPDNA on the GPU took 0.7 to 1.4 s per fit.
@@ -259,7 +268,7 @@ run. Fitted scores are NumPy arrays on every device.
 - The runner is 3.2 times faster than plain scikit-learn on one core and
   5.3 times on twelve threads, with identical scores.
 - On the GPU, the filters run 2.6 to 49 times faster and Sequential
-  selection 39 times faster, with the same features.
+  selection 34 times faster, with the same features.
 - Lasso and RFE gained exact solvers that are faster. Because they are
   exact, they pick somewhat different genes than scikit-learn's default.
 - A cheap 4 GB GPU limits what can move to it. 64-bit work and large

@@ -30,7 +30,6 @@ research beyond the project's scope.
 | **Store each test patient's score**: the true label, the model's score and the decision threshold, so every metric can be derived later and a new metric needs no new run. | Designed, not built. Scores are not comparable across classifiers. A linear SVM gives raw decision values. A forest and k-NN give coarse probabilities. At 100 splits the scores would run to tens of millions of numbers. So they need a compact format such as Parquet, not CSV. |
 | **Tune the decision threshold** inside the split. | Not built. Macro-F1 and balanced accuracy use 0.5. AUC does not depend on it. |
 | **Random forest on the GPU.** | XGBoost ran out of memory at full size on the 4 GB GPU. NVIDIA's cuML fit, but was 3 times slower than scikit-learn at 3,000 × 3,000, and not for lack of memory (section 6.2). Unresolved. A larger GPU is the next test for XGBoost. |
-| **The speed notebooks' overlap column** past the original's largest size. | A bug in the benchmark's reference handling. Where the original stopped growing, the overlap is measured against the first variant that ran, not the original. This affects RFECV, tree importance and mutual information at 30,000 genes, and Sequential at 3,000 and 10,000 genes. |
 | **Validate a config before the run starts.** | A typo fails only when the first cell that uses it runs. |
 
 ### Reproducing the published labels
