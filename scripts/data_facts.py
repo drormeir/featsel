@@ -23,6 +23,7 @@ from sklearn.feature_selection import f_classif
 from sklearn.model_selection import StratifiedShuffleSplit
 
 from featsel_datasets.medmnist_breastmnist.breastmnist import BreastMNIST
+from featsel_datasets.medmnist_breastmnist.copies import copy_groups, copy_pairs
 from featsel_datasets.scanb_gse96058.featsel_view import load_xy
 from featsel_datasets.scanb_gse96058.gse96058 import GSE96058
 from featsel_datasets.scanb_gse96058.pam50 import PAM50_GENES
@@ -164,6 +165,43 @@ def breastmnist_facts():
     }
 
 
+def copy_facts():
+    """
+    How BreastMNIST's copies differ, and what simpler tests would find.
+
+    Each pair the registration search confirmed (copies.py) is described by
+    its transform and its pixels. The simpler tests are pixel equality and
+    the correlation of the two images as they are, without alignment.
+    """
+    data = BreastMNIST()
+    pairs = copy_pairs(data)
+    images = data.images.reshape(len(data.images), -1).astype(float)
+    first, second = images[pairs['first']], images[pairs['second']]
+    aligned = (pairs['shift'] < 1) & ((pairs['scale'] - 1).abs() < 0.01)
+
+    r = np.corrcoef(images)
+    copy_r = r[pairs['first'], pairs['second']]
+    group = np.full(len(images), -1)
+    group[[data.samples.index.get_loc(image) for image in copy_groups().index]] = copy_groups()
+    i, j = np.triu_indices_from(r, k=1)
+    other_r = r[i, j][(group[i] != group[j]) | (group[i] < 0)]
+
+    return {
+        'bm_copy_pairs': count(len(pairs)),
+        'bm_copy_pairs_identical': count((first == second).all(axis=1).sum()),
+        'bm_copy_pairs_aligned': count(aligned.sum()),
+        'bm_copy_shift_median': number(pairs['shift'].median(), 1),
+        'bm_copy_shift_max': number(pairs['shift'].max(), 0),
+        'bm_copy_scale_min': number(pairs['scale'].min(), 2),
+        'bm_copy_scale_max': number(pairs['scale'].max(), 2),
+        'bm_copy_grey_diff_median': number(np.median(np.abs(first - second).mean(axis=1)), 0),
+        'bm_copy_raw_r_above_09': count((copy_r > 0.9).sum()),
+        'bm_other_raw_r_above_09': count((other_r > 0.9).sum()),
+        'bm_other_raw_r_max': number(other_r.max(), 3),
+        'bm_copy_raw_r_above_other_max': count((copy_r > other_r.max()).sum()),
+    }
+
+
 def comparison_facts():
     """Feature counts Higher Criticism chose in the selector comparisons."""
     facts = {}
@@ -182,7 +220,7 @@ def main():
     args = parser.parse_args()
     data = GSE96058()
     facts = {**scanb_facts(data), **course_facts(data, args.course), **breastmnist_facts(),
-             **comparison_facts()}
+             **copy_facts(), **comparison_facts()}
     if OUT.exists():  # keep committed facts this machine cannot recompute
         facts = {**pd.read_csv(OUT, index_col='name', keep_default_na=False).value.to_dict(),
                  **facts}

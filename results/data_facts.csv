@@ -56,3 +56,15 @@ breastmnist_hc2004_min,1
 breastmnist_hc2004_max,6
 breastmnist_hc2008_min,204
 breastmnist_hc2008_max,204
+bm_copy_pairs,230
+bm_copy_pairs_identical,1
+bm_copy_pairs_aligned,28
+bm_copy_shift_median,2.0
+bm_copy_shift_max,28
+bm_copy_scale_min,0.86
+bm_copy_scale_max,1.09
+bm_copy_grey_diff_median,11
+bm_copy_raw_r_above_09,175
+bm_other_raw_r_above_09,17
+bm_other_raw_r_max,0.955
+bm_copy_raw_r_above_other_max,89

@@ -48,6 +48,17 @@ def copy_groups() -> pd.Series:
 
 def find_copies(data: BreastMNIST) -> pd.Series:
     """Search the images for copies; return each copied image's group, by image id."""
+    return _groups(data, copy_pairs(data))
+
+
+def copy_pairs(data: BreastMNIST) -> pd.DataFrame:
+    """
+    Every pair of images found to be copies, by image position.
+
+    Columns: first, second, and the affine transform mapping the first onto
+    the second, as its scale (the square root of its determinant) and its
+    shift in pixels.
+    """
     import cv2  # the 'embeddings' extra
 
     images = data.images
@@ -62,11 +73,19 @@ def find_copies(data: BreastMNIST) -> pd.Series:
                   for j in np.argsort(-similarity[i])[:N_CANDIDATES]}
 
     matcher = cv2.BFMatcher(cv2.NORM_L2)
-    pairs = [(i, j) for i, j in sorted(candidates)
-             if _is_copy(cv2, matcher, images[i], images[j], features[i], features[j])]
+    rows = []
+    for i, j in sorted(candidates):
+        affine = _copy_transform(cv2, matcher, images[i], images[j], features[i], features[j])
+        if affine is not None:
+            rows.append((i, j, np.sqrt(abs(np.linalg.det(affine[:, :2]))), np.hypot(*affine[:, 2])))
+    return pd.DataFrame(rows, columns=['first', 'second', 'scale', 'shift'])
 
-    first, second = np.array(pairs).T
-    graph = coo_matrix((np.ones(len(pairs)), (first, second)), shape=(len(images),) * 2)
+
+def _groups(data: BreastMNIST, pairs: pd.DataFrame) -> pd.Series:
+    """Join copy pairs into groups through shared images."""
+    images = data.images
+    graph = coo_matrix((np.ones(len(pairs)), (pairs['first'], pairs['second'])),
+                       shape=(len(images),) * 2)
     _, component = connected_components(graph, directed=False)
     sizes = np.bincount(component)
     copied = np.flatnonzero(sizes[component] > 1)
@@ -77,27 +96,29 @@ def find_copies(data: BreastMNIST) -> pd.Series:
                      index=pd.Index(data.samples.index[copied], name='image'), name='group')
 
 
-def _is_copy(cv2, matcher, image_a, image_b, features_a, features_b) -> bool:
-    """Whether one affine transform maps image_a onto image_b."""
+def _copy_transform(cv2, matcher, image_a, image_b, features_a, features_b) -> np.ndarray | None:
+    """The affine transform mapping image_a onto image_b if they are copies, else None."""
     (keys_a, desc_a), (keys_b, desc_b) = features_a, features_b
     if desc_a is None or desc_b is None or len(keys_a) < 2 or len(keys_b) < 2:
-        return False
+        return None
     good = [m for m, second in (p for p in matcher.knnMatch(desc_a, desc_b, k=2) if len(p) == 2)
             if m.distance < 0.75 * second.distance]
     if len(good) < MIN_INLIERS:
-        return False
+        return None
     src = np.array([keys_a[m.queryIdx].pt for m in good], dtype=np.float32)
     dst = np.array([keys_b[m.trainIdx].pt for m in good], dtype=np.float32)
     affine, inliers = cv2.estimateAffine2D(src, dst, ransacReprojThreshold=2.0)
     if affine is None or inliers.sum() < MIN_INLIERS:
-        return False
+        return None
     size = image_b.shape[::-1]
     warped = cv2.warpAffine(image_a, affine, size)
     overlap = cv2.warpAffine(np.full_like(image_a, 255), affine, size) == 255
     if overlap.sum() < 0.2 * overlap.size:
-        return False
+        return None
     a, b = warped[overlap].astype(float), image_b[overlap].astype(float)
-    return a.std() > 0 and b.std() > 0 and np.corrcoef(a, b)[0, 1] > MIN_CORRELATION
+    if a.std() == 0 or b.std() == 0 or np.corrcoef(a, b)[0, 1] <= MIN_CORRELATION:
+        return None
+    return affine
 
 
 if __name__ == '__main__':

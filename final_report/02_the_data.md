@@ -251,7 +251,31 @@ of 30 found no more.
 | Groups mixing malignant with benign or normal | 6 | 6 |
 
 The two agree closely. A few copies may be mirrored, which the keypoints
-used here do not match. The run without copies keeps one image of each
+used here do not match.
+
+**Why a simpler test would not do.** The search confirmed 230 pairs of
+copies. Only 1 pair is identical pixel for pixel. In 28 more, the
+transform moves the image by less than one pixel and changes its scale by
+less than 1%, yet the pixels still differ. The rest are shifted or scaled.
+The median shift is 2 pixels and the largest is 28. The scale runs from
+0.86 to 1.09. Even aligned, a copy differs from its twin by a median of 11
+grey levels out of 255. The images were cropped and resized separately, so
+the same scan gives different pixels.
+
+So a search for identical images finds 1 pair of 230. Correlating the
+images as they are, without aligning them, does no better:
+
+| Correlation of the images as they are | Copy pairs above it (of 230) | Other pairs above it (of 303,564) |
+|---|---|---|
+| 0.9 | 175 | 17 |
+| 0.955, the highest of any other pair | 89 | 0 |
+
+No threshold separates the two groups. At 0.9 it misses 55 copies and
+flags 17 pairs the search did not call copies. A threshold that flags none
+of those misses 141 copies. Aligning the images first is what separates
+them.
+
+The run without copies keeps one image of each
 group, and drops the 6 groups with conflicting labels whole. 585 images
 remain: 180 malignant and 405 benign or normal. Chapter 7 compares the
 results with and without the copies.
