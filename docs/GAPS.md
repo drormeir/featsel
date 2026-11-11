@@ -31,7 +31,8 @@ report does not list it yet.
   1.45 GB per fit, the cap at 6 workers was 1.26 GB, and liblinear aborts
   when refused. So 12 workers cannot be measured here. Command:
   `.venv/bin/python scripts/parallel_scaling.py --workers 1 2 3 4 5 6
-  --repeats 3`, about an hour.
+  --repeats 3 --resume`, about an hour. `--resume` keeps the 3 runs already
+  measured (1, 2 and 3 workers, first pass).
 
 ### A2. The speed notebooks' overlap column is wrong at large sizes (task 3)
 

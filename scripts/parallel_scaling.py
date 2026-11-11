@@ -14,13 +14,15 @@ only if it ended with the workers it started with: the runner halves its
 workers when one dies of memory exhaustion, which would mix two worker
 counts in one time. A run whose process crashed counts as lost too.
 
-Appends one row per run to --csv as soon as the run ends, with a JSON of
-the settings and the machine beside it, and prints the median time, the
+Appends one row per run to --csv as soon as the run ends, so --resume
+after a stop times only the runs still missing. Keeps the machine from
+sleeping while it runs. Writes a JSON of the settings and the machine beside
+the CSV, and prints the median time, the
 speed-up over one worker and the efficiency (speed-up per worker) for each
 worker count.
 
 Usage:
-    python scripts/parallel_scaling.py --workers 1 2 4 6 12 --repeats 3
+    python scripts/parallel_scaling.py --workers 1 2 3 4 5 6 --repeats 3 [--resume]
 """
 
 import argparse
@@ -33,6 +35,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from benchmark_speed import K_VALUES, LASSO, MODEL, N_SPLITS, RFE_PARAMS, SEED
+from run_until_done import keep_awake
 
 from featsel import environment
 from featsel.run import run
@@ -82,13 +85,15 @@ def isolated_run(data, n_jobs, folder):
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--workers', type=int, nargs='+', default=[1, 2, 4, 6, 12],
+    parser.add_argument('--workers', type=int, nargs='+', default=[1, 2, 3, 4, 5, 6],
                         help='Worker counts to time; must include 1, the reference')
     parser.add_argument('--repeats', type=int, default=3)
     parser.add_argument('--n-genes', type=int,
                         help='Random genes to keep, for a quick check; default all')
     parser.add_argument('--csv', type=Path,
                         default=ROOT / 'results' / 'local' / 'parallel_scaling.csv')
+    parser.add_argument('--resume', action='store_true',
+                        help='Keep the runs already in --csv and time only the rest')
     args = parser.parse_args()
 
     X, y = load_xy(target='pam50 subtype')
@@ -98,13 +103,18 @@ def main():
         X = X.iloc[:, genes]
 
     args.csv.parent.mkdir(parents=True, exist_ok=True)
-    args.csv.unlink(missing_ok=True)
-    with tempfile.TemporaryDirectory() as folder:
+    if not args.resume:
+        args.csv.unlink(missing_ok=True)
+    done = (set(pd.read_csv(args.csv)[['workers', 'repeat']].itertuples(index=False, name=None))
+            if args.csv.exists() else set())
+    with tempfile.TemporaryDirectory() as folder, keep_awake():
         data = Path(folder) / 'data.pkl'
         pd.to_pickle((X, y), data)
         del X, y
         for repeat in range(args.repeats):
             for n_jobs in args.workers:
+                if (n_jobs, repeat) in done:
+                    continue
                 seconds, ended_with = isolated_run(data, n_jobs, folder)
                 row = pd.DataFrame([{'workers': n_jobs, 'repeat': repeat, 'seconds': seconds,
                                      'ended_with_workers': ended_with}])

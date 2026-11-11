@@ -1,5 +1,6 @@
 """Tests for scripts/run_until_done.py: resuming the runner after a real crash."""
 
+import json
 import sys
 from pathlib import Path
 
@@ -34,6 +35,27 @@ def crash_once(*args, **kwargs):
 
 
 run_module.iter_rows = crash_once
+run_module.main()
+'''
+
+
+# A runner whose process aborts every time it runs split 1, as liblinear does
+# on a cell that never fits in memory.
+ALWAYS_CRASHING_JOB = '''
+import os
+
+import featsel.run as run_module
+
+real_selection_rows = run_module._selection_rows
+
+
+def crash_on_split_1(*args, **kwargs):
+    if args[4]['split'] == 1:
+        os.abort()
+    return real_selection_rows(*args, **kwargs)
+
+
+run_module._selection_rows = crash_on_split_1
 run_module.main()
 '''
 
@@ -79,6 +101,46 @@ def test_resumes_after_the_runner_process_aborts(tmp_path):
     assert marker.exists()
     assert len(out) == 6
     assert not out.duplicated(KEY_COLUMNS).any()
+
+
+def test_a_job_that_always_crashes_is_skipped_and_reported(tmp_path):
+    """Test that a job killing the runner's process each time is skipped on restart, not retried."""
+    config = small_experiment(tmp_path)
+    runner = tmp_path / 'crashing_job.py'
+    runner.write_text(ALWAYS_CRASHING_JOB)
+
+    code = run_until_done(['--config', str(config)], attempts=3, runner=(str(runner),))
+
+    out = pd.read_csv(tmp_path / 'out.csv')
+    report = json.loads((tmp_path / 'out.json').read_text())
+    assert code == 0
+    assert sorted(out['split'].unique()) == [0, 2]
+    assert len(out) == 4
+    # RandomSelector runs each k as its own job: both jobs of split 1 crashed.
+    assert len(report['out_of_memory']) == 2
+    assert all("crashed the runner's process" in f for f in report['out_of_memory'])
+    assert not (tmp_path / 'out.crashed').exists()
+    assert not (tmp_path / 'out.running').exists()
+
+
+def test_restarts_with_the_workers_the_runner_fell_back_to(tmp_path):
+    """Test that a restart passes the worker count the crashed run's JSON ended with."""
+    out = tmp_path / 'out.csv'
+    out.with_suffix('.json').write_text(json.dumps({'config': {'n_jobs': 2}}))
+    runner = tmp_path / 'record_args.py'
+    calls = tmp_path / 'calls'
+    runner.write_text(f'import sys\nfrom pathlib import Path\n'
+                      f'p = Path({str(calls)!r})\n'
+                      f'p.write_text((p.read_text() if p.exists() else "") + " ".join(sys.argv[1:]) + "\\n")\n'
+                      f'raise SystemExit(0 if p.read_text().count("\\n") > 1 else 1)\n')
+
+    code = run_until_done(['--out', str(out), '--n-jobs', '8'], attempts=3,
+                          runner=(str(runner),))
+
+    first, second = calls.read_text().splitlines()
+    assert code == 0
+    assert '--n-jobs 8' in first
+    assert '--n-jobs 2' in second and '--n-jobs 8' not in second
 
 
 def test_gives_up_after_its_attempts(tmp_path):

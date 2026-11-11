@@ -328,7 +328,7 @@ times the preprocessing.
 ## 5.5 Running for hours without supervision
 
 Long runs on a 16 GB laptop crashed at first: when memory ran out, the
-operating system killed the run with no message. Four mechanisms fix this.
+operating system killed the run with no message. Six mechanisms fix this.
 
 | Mechanism | What it does |
 |---|---|
@@ -336,6 +336,8 @@ operating system killed the run with no message. Four mechanisms fix this.
 | **Restart with fewer workers** | Compiled code can abort a worker instead of raising. The runner then resumes on its own with half the workers. With the default cap, each worker gets about twice as much memory. A cap set by hand stays the same. |
 | **Resume** | Rows are written as they finish. `--resume` skips the cells already in the CSV, so a stopped run continues where it stopped. |
 | **One GPU at a time** | A lock file makes GPU fits take turns. A GPU out-of-memory error becomes a `MemoryError`, handled as above. |
+| **Skip a job that kills the runner** | With one worker, a job runs in the runner's own process, so an abort in compiled code ends the run. While a job runs there, its name is kept in a file beside the CSV. A crash leaves that file behind. The next run skips the job and lists it at the end, with the cells that ran out of memory. A later `--resume` tries it again. |
+| **Restart after a crash** | `scripts/run_until_done.py` starts the runner. After a crash it starts it again with `--resume` and the number of workers the runner had fallen back to. It gives up after three restarts in a row that saved no new row and skipped no new job. It keeps the machine from sleeping while it runs. |
 
 **Shared memory.** Each prepared split is written once to `/dev/shm`, and
 every worker maps it read-only. So the data exists once in memory, not once
@@ -350,6 +352,18 @@ This cut peak selection memory by 30% to 45%, and 4 workers fit under a
 3 GB cap, where 2 fit before. Two later changes were not measured again:
 the one-sort U test needs about 1.25 times the memory, and the cap now
 counts data memory instead of address space.
+
+The last two mechanisms came from the scaling measurement of section 6.1.
+With 5 or 6 workers on full SCAN-B, liblinear needed about 1.45 GB per
+fit. The default cap allowed 1.26 GB at 6 workers, so liblinear was
+refused memory and aborted. The runner fell back to fewer workers, as
+designed. But many runs in one process left memory behind, and the process
+itself crashed, even with one worker. The scaling script now runs each
+measurement in a fresh process, saves each as it ends, and can resume.
+
+**Limits.** A reboot or a power loss stops a run, and nothing restarts it.
+The same command continues from the saved rows. A cell that never fits in
+memory is skipped and listed, not computed.
 
 **The cap counts data memory, not address space.** PyTorch's GPU libraries
 reserve address space they never use. Under an address-space cap below

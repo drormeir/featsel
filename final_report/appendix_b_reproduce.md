@@ -50,8 +50,11 @@ CSV. It records the exact versions, the machine and the git commit.
 
 Add `--resume` to any runner command to continue a stopped run. For a
 long unattended run, start it through `scripts/run_until_done.py` with the
-same arguments: it restarts the runner with `--resume` after a crash, up to
-three times (`--attempts`). Files in
+same arguments, for example `.venv/bin/python scripts/run_until_done.py
+--config configs/comparison_scanb_all_genes.yaml --n-jobs 4
+--max-worker-memory-gb 3`. It restarts the runner after a crash and keeps
+the machine awake. `scripts/parallel_scaling.py` takes `--resume` too. How
+the runs are protected, and the limits: section 5.5. Files in
 `results/local/` are not tracked by git. The frontier plots and tables used
 in this report are copied to [`figures/`](figures/).
 

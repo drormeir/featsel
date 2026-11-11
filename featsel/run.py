@@ -435,7 +435,8 @@ def _tuned(model, grid, tuning, seed):
     return GridSearchCV(model, grid, scoring=tuning['scoring'], cv=inner)
 
 
-def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip, truth):
+def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip, truth,
+              journal=None, job=None):
     """
     Every row of one job, and the cells that ran out of memory. The unit of
     parallel work: one selector, at the given k values, on one task of one
@@ -452,7 +453,13 @@ def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip
     worker shares, and the address space CUDA reserves without using, so a
     worker can use the GPU under a cap of a few GB. An address-space cap
     would refuse PyTorch's CUDA libraries below about 5 GB.
+
+    With journal set (one worker, so the job runs in the runner's own
+    process), the job's id is written there while it runs. A crash leaves
+    the file behind, and the next run skips that job (_crashed_jobs).
     """
+    if journal is not None:
+        journal.write_text(job)
     limit_gb = config['max_worker_memory_gb']
     previous = resource.getrlimit(resource.RLIMIT_DATA)
     if limit_gb is not None:
@@ -467,6 +474,8 @@ def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip
     finally:
         # Workers are reused for later jobs and later runs, so lift the cap.
         resource.setrlimit(resource.RLIMIT_DATA, previous)
+        if journal is not None:
+            journal.unlink(missing_ok=True)
     return rows, failures
 
 
@@ -495,10 +504,15 @@ def _prepare(X_train, X_test, preprocess, seed, folder):
     np.save(folder / 'X_test.npy', X_test)
 
 
-def iter_rows(X, y, config, failures, skip=frozenset(), truth=None):
+def iter_rows(X, y, config, failures, skip=frozenset(), truth=None, journal=None,
+              crashed=frozenset()):
     """
     Yield one result row per execution, and append each cell skipped for lack
     of memory to failures.
+
+    A job whose id is in crashed killed an earlier run's process; it is
+    skipped and reported in failures. With one worker, each job's id is kept
+    in journal while it runs (_job_rows).
 
     An execution is one (task, split, train size, preprocessing, selector, k,
     classifier) cell. Selection and preprocessing are fit on the training half
@@ -550,8 +564,17 @@ def iter_rows(X, y, config, failures, skip=frozenset(), truth=None):
                                 done = all(
                                     _key((*key, sel_name, k, _label(m))) in skip
                                     for k in k_values for m in config['models'])
-                                if not done:
-                                    cells.append((task_name, y_task, key, sel_spec, k_values))
+                                job = json.dumps([*key, sel_name, list(k_values)])
+                                if done:
+                                    continue
+                                if job in crashed:
+                                    failures.append(
+                                        f"{task_name} split {split} train_size {train_size}: "
+                                        f"{sel_name} k={list(k_values)}: crashed the "
+                                        "runner's process in an earlier run")
+                                else:
+                                    cells.append((task_name, y_task, key, sel_spec, k_values,
+                                                  job))
                     if not cells:
                         continue
 
@@ -563,12 +586,13 @@ def iter_rows(X, y, config, failures, skip=frozenset(), truth=None):
                     _prepare(*imputed, preprocess, context['seed'], folder)
                     pending[folder] = len(cells)
 
-                    for task_name, y_task, key, sel_spec, k_values in cells:
+                    for task_name, y_task, key, sel_spec, k_values, job in cells:
                         job_folders.append(folder)
                         yield delayed(_job_rows)(
                             folder, y_task[train_idx], y_task[test_idx],
                             {**context, 'task': task_name, 'key': key},
                             sel_spec, k_values, config, skip, truth,
+                            journal if config['n_jobs'] == 1 else None, job,
                         )
 
     try:
@@ -704,12 +728,14 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
     start = time.perf_counter()
     written = 0
     failures = []
+    crashed = _crashed_jobs(out_path)
     while True:
         skip = _done_keys(out_path)
         if skip:
             print(f"Resuming: {len(skip)} executions already in {out_path}")
         try:
-            written += _write_rows(X, y, config, failures, skip, truth, out_path, total)
+            written += _write_rows(X, y, config, failures, skip, truth, out_path, total,
+                                   crashed)
             break
         except TerminatedWorkerError:
             saved = len(_done_keys(out_path))
@@ -728,12 +754,18 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
                   f"are saved. Resuming with {config['n_jobs']} workers"
                   + (f", {config['max_worker_memory_gb']:.1f} GB each."
                      if config['max_worker_memory_gb'] is not None else "."))
+            # The JSON holds the workers now in use, for a restart after a crash.
+            environment.write_json(out_path.with_suffix('.json'), **details, finished=None)
 
     print(f"Wrote {written} executions to {out_path} "
           f"in {time.perf_counter() - start:.0f}s")
+    # A pass after fewer workers meets the same skipped cells again.
+    failures = list(dict.fromkeys(failures))
     environment.write_json(out_path.with_suffix('.json'), **details,
                            finished=environment.now(),
                            written=written, out_of_memory=failures)
+    # The crashed jobs are reported in the JSON; a later --resume tries them again.
+    out_path.with_suffix('.crashed').unlink(missing_ok=True)
     if failures:
         print(f"\nOut of memory, skipped ({len(failures)}):")
         for failure in failures:
@@ -743,7 +775,7 @@ def run(X, y, config, resume=False, target=None, truth=None, name=None):
     return out_path
 
 
-def _write_rows(X, y, config, failures, skip, truth, out_path, total):
+def _write_rows(X, y, config, failures, skip, truth, out_path, total, crashed):
     """
     Append every execution not in skip to out_path; return how many were written.
 
@@ -758,7 +790,8 @@ def _write_rows(X, y, config, failures, skip, truth, out_path, total):
     progress = tqdm(total=total, initial=len(skip), unit='exec',
                     smoothing=0.05, dynamic_ncols=True)
     with progress, open(out_path, 'a', newline='') as handle:
-        for row in iter_rows(X, y, config, failures, skip=skip, truth=truth):
+        for row in iter_rows(X, y, config, failures, skip=skip, truth=truth,
+                             journal=out_path.with_suffix('.running'), crashed=crashed):
             if writer is None:
                 writer = csv.DictWriter(handle, fieldnames=list(row))
                 if not has_header:
@@ -783,6 +816,24 @@ def _header(path):
     """The column names in the first line of a CSV."""
     with open(path, newline='') as handle:
         return next(csv.reader(handle))
+
+
+def _crashed_jobs(out_path):
+    """
+    The ids of jobs that killed the runner's process in an earlier run.
+
+    With one worker a job runs in the runner's own process. Compiled code
+    such as liblinear aborts that process when memory is refused, instead of
+    raising MemoryError, so the job cannot be skipped where it fails. Its id
+    is left in out_path's .running file. This moves it to the .crashed file,
+    which collects every such job until a run completes.
+    """
+    running, crashed = out_path.with_suffix('.running'), out_path.with_suffix('.crashed')
+    if running.exists():
+        with open(crashed, 'a') as handle:
+            handle.write(running.read_text() + '\n')
+        running.unlink()
+    return frozenset(crashed.read_text().splitlines()) if crashed.exists() else frozenset()
 
 
 def _auto_worker_cap_gb(X, n_jobs):

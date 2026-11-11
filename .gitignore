@@ -215,6 +215,9 @@ featsel_datasets/medmnist_breastmnist/copies.csv
 # Results are tracked, so the report's tables can be rebuilt from git. The
 # old full BreastMNIST grid (36 MB) is not: its config regenerates it.
 results/experiment_breastmnist.csv
+# The runner's crash notes beside an output CSV (featsel/run.py, _crashed_jobs).
+*.running
+*.crashed
 # Local runs: benchmarks and exploratory experiments, a CSV and a JSON of
 # its settings each, read by the plotting code. Not part of the report.
 results/local/

@@ -114,7 +114,10 @@ python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs -1
 ```
 
 `--out`, `--n-splits` and `--n-jobs` override the config. `--resume` skips
-rows already in the output CSV.
+rows already in the output CSV. For a long unattended run, give the same
+arguments to `scripts/run_until_done.py`: it restarts the runner with
+`--resume` after a crash and keeps the machine awake
+(`final_report/05_the_software.md`, section 5.5).
 
 ## Creating a new dataset
 
