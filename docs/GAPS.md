@@ -22,6 +22,13 @@ report does not list it yet.
   count. Repeat each point a few times.
 - **Source.** `final_report/06_making_it_fast.md`, 6.1, lines 54-59. Not in
   chapter 10. New as a gap.
+- **Status.** Ready to run, not run (a long run, left for 2026-11-11 by
+  decision). `scripts/parallel_scaling.py` runs the 6.1 grid on all genes
+  and all five tasks (50 jobs, so 12 workers have work), at 1, 2, 4, 6 and
+  12 workers, 3 repeats, and prints time, speed-up and efficiency. It
+  drops any run whose workers fell after a memory failure. Checked on 500
+  genes. Command: `.venv/bin/python scripts/parallel_scaling.py --workers
+  1 2 4 6 12 --repeats 3`.
 
 ### A2. The speed notebooks' overlap column is wrong at large sizes (task 3)
 
@@ -32,6 +39,11 @@ report does not list it yet.
 - **Why it matters.** "Same features as scikit-learn" is part of the task 3
   evidence. Some of those numbers are wrong.
 - **Source.** `final_report/10_open_work.md`, 10.1.
+- **Status.** Closed 2026-11-11. `featsel.benchmark` measures overlap
+  against the original only, NaN past its largest size; a test fails on
+  the old code. The four notebooks were re-run. Most times moved by 7% or
+  less; scikit-learn's Sequential selection took 164 s instead of 191 s,
+  so the GPU's lead is now 34 times, not 39. Section 6.2 is updated.
 
 ### A3. Does selection beat using all features? Not tested (task 2)
 
@@ -43,6 +55,16 @@ report does not list it yet.
 - **What closes it.** Add the all-features baseline to the 16-split
   comparison, and test it with the corrected test of B1.
 - **Source.** `final_report/10_open_work.md`, 10.1.
+- **Status.** Half done 2026-11-11. BreastMNIST: all 2,048 features ran on
+  the comparison's 20 splits. They scored higher on average than every
+  method at every `k`; at k = 250 no difference is significant, below
+  k = 50 every method trails by 0.07 or more (section 8.7).
+  `scripts/paired_tests.py` gained `--baseline` for this. SCAN-B is ready
+  to run, not run (a long run, left for 2026-11-11 by decision):
+  `.venv/bin/python -m featsel.run --config configs/comparison_scanb_all_genes.yaml
+  --n-jobs 4 --max-worker-memory-gb 3`, then `scripts/paired_tests.py
+  results/comparison_scanb.csv results/comparison_scanb_all_genes.csv
+  --baseline AllGenes`.
 
 ### A4. The frontier rests on 5 splits (task 2)
 
@@ -51,6 +73,16 @@ report does not list it yet.
   established.
 - **What closes it.** More splits: about 8 hours per 5 on SCAN-B.
 - **Source.** `final_report/10_open_work.md`, 10.1.
+- **Status.** Ready to run, not run (a long run, left for 2026-11-11 by
+  decision). The frontier CSVs have the runner's current columns, so
+  `--n-splits 16 --resume` on a frontier config adds splits 5 to 15 and
+  keeps the first five. The top methods are all in
+  `frontier_scanb70_gpu.yaml` and `frontier_scanb70_berkjones.yaml`, plus
+  tree importance in `frontier_scanb70_cpu.yaml`. A copy of the CPU config
+  with tree importance alone, writing to the same CSV, adds only its rows.
+  Extending these first would order the top of the frontier without the
+  slow wrappers. Then `scripts/paired_tests.py ... --metric roc_auc` gives
+  the corrected tests.
 
 ### A5. BreastMNIST holds copied images (task 4)
 
