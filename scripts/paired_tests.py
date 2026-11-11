@@ -20,6 +20,8 @@ comparison, the uncorrected Wilcoxon p-value.
 
 Usage:
     python scripts/paired_tests.py results/comparison_scanb.csv --metric macro_f1
+    python scripts/paired_tests.py results/comparison_breastmnist.csv \
+        results/comparison_breastmnist_all_features.csv --baseline AllFeatures
 """
 
 import argparse
@@ -52,9 +54,8 @@ def corrected_t(diff, test_over_train):
     return mean, mean - half, mean + half, p
 
 
-def compare(scores, first, second, k, test_over_train):
-    """Paired differences first - second at one k, over their common splits."""
-    a, b = scores.loc[(first, k)], scores.loc[(second, k)]
+def compare(a, b, k, first, second, test_over_train):
+    """Paired differences a - b, per-split scores of first and second, over common splits."""
     diff = (a - b).dropna()
     mean, low, high, p = corrected_t(diff, test_over_train)
     return {'k': k, 'first': first, 'second': second, 'splits': len(diff),
@@ -63,19 +64,26 @@ def compare(scores, first, second, k, test_over_train):
             'p_wilcoxon': wilcoxon(diff).pvalue if (diff != 0).any() else 1.0}
 
 
-def tests(results, metric):
+def tests(results, metric, baseline=None):
+    """
+    Every method against the random control and every pair of methods, at
+    each k. With a baseline, a selector label such as all features, every
+    method at every k is tested against that baseline instead.
+    """
     scores = per_split(results, metric)
     test_over_train = (results['n_test'] / results['n_train']).mean()
+    if baseline is not None:
+        reference = scores.loc[baseline].iloc[0]
+        return pd.DataFrame([compare(row, reference, k, method, baseline, test_over_train)
+                             for (method, k), row in scores.drop(baseline, level=0).iterrows()])
     rows = []
     for k in sorted(results['k'].dropna().unique()):
         methods = [s for s in scores.index.get_level_values(0).unique()
                    if (s, k) in scores.index]
-        if CONTROL in methods:
-            rows += [compare(scores, m, CONTROL, k, test_over_train)
-                     for m in methods if m != CONTROL]
-        others = [m for m in methods if m != CONTROL]
-        rows += [compare(scores, a, b, k, test_over_train)
-                 for a, b in itertools.combinations(others, 2)]
+        pairs = [(m, CONTROL) for m in methods if m != CONTROL] if CONTROL in methods else []
+        pairs += itertools.combinations([m for m in methods if m != CONTROL], 2)
+        rows += [compare(scores.loc[(a, k)], scores.loc[(b, k)], k, a, b, test_over_train)
+                 for a, b in pairs]
     return pd.DataFrame(rows)
 
 
@@ -85,9 +93,11 @@ def main(argv=None):
     parser.add_argument('csv', type=Path, nargs='+')
     parser.add_argument('--metric', default='macro_f1')
     parser.add_argument('--out', type=Path, help='CSV to write the table to')
+    parser.add_argument('--baseline', help='Selector label to test every method against, '
+                                           'such as all features')
     args = parser.parse_args(argv)
     results = pd.concat([pd.read_csv(path) for path in args.csv], ignore_index=True)
-    table = tests(results, args.metric)
+    table = tests(results, args.metric, args.baseline)
     if args.out:
         table.to_csv(args.out, index=False)
     with pd.option_context('display.width', 200):

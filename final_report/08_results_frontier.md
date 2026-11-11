@@ -320,6 +320,32 @@ What it shows:
 - These differences are within one or two standard deviations over 5
   splits (0.01 to 0.03). They are not tested for significance.
 
+### A paired test against all features
+
+The frontier has only 5 splits. So all 2,048 BreastMNIST features also
+ran on the comparison's 20 splits (chapter 7), with C tuned as there, and
+were tested against every method with the corrected paired test of
+section 7.3. Macro-F1 with all features: 0.822 [0.802, 0.835].
+
+| Method at its best `k` | Difference from all features [95% interval] | p |
+|---|---|---|
+| Lasso, k = 250 | −0.009 [−0.056, 0.038] | 0.69 |
+| RFE, k = 250 | −0.017 [−0.058, 0.023] | 0.38 |
+| Mann-Whitney, k = 250 | −0.021 [−0.069, 0.028] | 0.39 |
+| Tree importance, k = 250 | −0.024 [−0.070, 0.021] | 0.27 |
+| HC2008 and Berk-Jones, own count | −0.029 [−0.08, 0.02] | 0.22 to 0.25 |
+
+All features scored higher on average than every method at every `k`. At
+k = 250 no difference is significant: selection there costs little and
+buys a model an eighth the size. Below k = 50 every method falls short of
+all features by 0.07 or more in macro-F1. On SCAN-B the same test needs
+all 28,552 genes on the 16 comparison splits, a run of several hours that
+is not done yet (chapter 10).
+
+Config: [`configs/comparison_breastmnist_all_features.yaml`](../configs/comparison_breastmnist_all_features.yaml).
+Tests: [`figures/paired_tests_breastmnist_vs_all_features.csv`](figures/paired_tests_breastmnist_vs_all_features.csv),
+from `scripts/paired_tests.py ... --baseline AllFeatures`.
+
 ### BreastMNIST without the copied images
 
 The main methods and all features ran again on the 585 images left
