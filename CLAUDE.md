@@ -131,7 +131,7 @@ config. A CSV dataset config specifies:
 - Features: 2,048 ResNet-50 embedding dimensions per image (ImageNet weights, last layer removed)
 - Target `label`; all 780 images are used, MedMNIST's own split is ignored
 - Computing embeddings needs `torch`/`torchvision` (the `embeddings` extra); they are cached as `embeddings_resnet50.npz`
-- 339 images fall in 150 groups of copies (`copies.py`, tracked as `copies.csv`); `load_xy(drop_copies=True)`, or `dataset_params: {drop_copies: true}` in a config, keeps 585 images
+- 339 images fall in 150 groups of copies: `samples['copy_group']`, found on first use by `copies.py` (OpenCV, about 40 s) and cached as `copies.csv` beside the images, untracked; `BreastMNIST(find_copies=False)` skips it. `load_xy(drop_copies=True)`, or `dataset_params: {drop_copies: true}` in a config, keeps 585 images. Analysis: `demos/copies.ipynb`
 
 **Third dataset, unseen during the design: FGVC-Aircraft (`featsel_datasets/fgvc_aircraft/`)**
 - 1,200 aircraft photos (FGVC-Aircraft 2013b): Boeing 737 800 vs Airbus A320 family 400

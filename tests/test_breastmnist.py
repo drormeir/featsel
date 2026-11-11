@@ -1,23 +1,23 @@
 """
 Tests for the BreastMNIST loader on the real data.
 
-They run only when the images and the embeddings are already in the cache,
-because computing the embeddings needs PyTorch.
+They run only when the images, the embeddings and the copy groups are
+already in the cache, because computing the embeddings needs PyTorch and
+finding the copies needs OpenCV.
 """
 
 import numpy as np
 import pytest
 
 from featsel_datasets.medmnist_breastmnist.breastmnist import FILE, BreastMNIST
-from featsel_datasets.medmnist_breastmnist.copies import copy_groups
 from featsel_datasets.medmnist_breastmnist.featsel_view import load_xy
 
 
 @pytest.fixture(scope='module')
 def data():
     data = BreastMNIST()
-    if not all((data.cache_dir / name).exists() for name in (FILE, 'embeddings_resnet50.npz')):
-        pytest.skip('BreastMNIST or its embeddings are not cached')
+    if not all((data.cache_dir / name).exists() for name in (FILE, 'embeddings_resnet50.npz', 'copies.csv')):
+        pytest.skip('BreastMNIST, its embeddings or its copy groups are not cached')
     return data
 
 
@@ -41,7 +41,7 @@ def test_load_xy_aligns_embeddings_with_labels(data):
 
 def test_drop_copies_keeps_one_image_per_agreeing_group(data):
     """Test that one image of each copy group remains, none of a group with mixed labels."""
-    groups = copy_groups()
+    groups = data.samples['copy_group'].dropna()
     labels = data.samples['label']
     mixed = labels.loc[groups.index].groupby(groups).nunique() > 1
 
@@ -56,7 +56,7 @@ def test_drop_copies_keeps_one_image_per_agreeing_group(data):
 
 def test_copies_have_near_identical_embeddings(data):
     """Test that the first two images of a copy group embed almost alike, as copies should."""
-    groups = copy_groups()
+    groups = data.samples['copy_group'].dropna()
     emb = data.embeddings.loc[groups.index].to_numpy()
     emb = emb / np.linalg.norm(emb, axis=1, keepdims=True)
     first = groups.groupby(groups).head(1).sort_values().index
@@ -65,3 +65,11 @@ def test_copies_have_near_identical_embeddings(data):
     within = (emb[groups.index.get_indexer(first)] * emb[groups.index.get_indexer(second)]).sum(1)
 
     assert np.median(within) > 0.95
+
+
+def test_copy_groups_are_part_of_the_samples(data):
+    """Test the cached groups: 150 groups of 339 images; find_copies=False leaves them out."""
+    groups = data.samples['copy_group'].dropna()
+
+    assert (groups.nunique(), len(groups)) == (150, 339)
+    assert 'copy_group' not in BreastMNIST(data.cache_dir, find_copies=False).samples

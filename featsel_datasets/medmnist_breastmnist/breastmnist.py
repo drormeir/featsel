@@ -4,10 +4,11 @@ BreastMNIST: 780 breast ultrasound images, malignant vs benign or normal.
 Part of MedMNIST v2 (Yang et al., 2023), from the images of Al-Dhabyani et al.
 (2020). This module downloads the 224 x 224 version once, keeps it next to
 this file as a cache, and exposes it unchanged. It also turns each image into
-a 2,048-number ResNet-50 embedding, computed once and cached.
+a 2,048-number ResNet-50 embedding, and finds the images that are copies of
+others (copies.py). Both are computed once and cached beside the images.
 
-PyTorch is needed only to compute the embeddings. Reading the images, or
-embeddings already cached, does not import it.
+PyTorch is needed only to compute the embeddings, and OpenCV only to find
+the copies. Reading the images, or results already cached, imports neither.
 """
 
 from __future__ import annotations
@@ -20,6 +21,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from .copies import copy_groups, copy_pairs
 
 FILE = 'breastmnist_224.npz'
 URL = f'https://zenodo.org/records/10519652/files/{FILE}?download=1'
@@ -35,14 +38,21 @@ class BreastMNIST:
     Usage:
         data = BreastMNIST()
         data.images       # (780, 224, 224) uint8, in the order of data.samples
-        data.samples      # one row per image: 'label' and MedMNIST's 'split'
+        data.samples      # one row per image: 'label', MedMNIST's 'split',
+                          # and 'copy_group' (copies.py)
         data.embeddings   # 780 images x 2,048 ResNet-50 features
 
     Images are indexed train_000, ..., val_000, ..., test_000, ...
+
+    'copy_group' numbers each group of copied images; it is missing for an
+    image without copies. The first use finds the groups, which needs the
+    embeddings and OpenCV, and caches them as copies.csv. find_copies=False
+    leaves the column out and runs no search.
     """
 
-    def __init__(self, cache_dir: str | Path = Path(__file__).parent):
+    def __init__(self, cache_dir: str | Path = Path(__file__).parent, find_copies: bool = True):
         self.cache_dir = Path(cache_dir)
+        self.find_copies = find_copies
 
     def _file(self) -> Path:
         """Return the cached file, downloading and checking it first if missing."""
@@ -69,25 +79,40 @@ class BreastMNIST:
 
     @cached_property
     def samples(self) -> pd.DataFrame:
-        """One row per image: its label and its MedMNIST split."""
+        """One row per image: its label, its MedMNIST split and its copy group."""
         parts = []
         for split in SPLITS:
             labels = self._arrays[f'{split}_labels'][:, 0]
             index = [f'{split}_{i:03d}' for i in range(len(labels))]
             parts.append(pd.DataFrame(
                 {'label': [LABELS[v] for v in labels], 'split': split}, index=index))
-        return pd.concat(parts)
+        samples = pd.concat(parts)
+        if self.find_copies:
+            samples['copy_group'] = self._copy_groups(samples.index).astype('Int64')
+        return samples
+
+    def _copy_groups(self, index: pd.Index) -> pd.Series:
+        """Each copied image's group, by image id; searched once, then cached."""
+        path = self.cache_dir / 'copies.csv'
+        if not path.exists():
+            groups = copy_groups(copy_pairs(self.images, self._embedding_values()),
+                                 len(index))
+            groups.set_axis(index[groups.index]).rename_axis('image').to_csv(path)
+        return pd.read_csv(path, index_col='image')['group']
 
     @cached_property
     def embeddings(self) -> pd.DataFrame:
         """ResNet-50 embeddings, one row per image; computed once, then cached."""
+        values = self._embedding_values()
+        columns = [f'resnet50_{i:04d}' for i in range(values.shape[1])]
+        return pd.DataFrame(values, index=self.samples.index, columns=columns)
+
+    def _embedding_values(self) -> np.ndarray:
         path = self.cache_dir / 'embeddings_resnet50.npz'
         if not path.exists():
             np.savez_compressed(path, embeddings=_resnet50_embeddings(self.images))
         with np.load(path) as npz:
-            values = npz['embeddings']
-        columns = [f'resnet50_{i:04d}' for i in range(values.shape[1])]
-        return pd.DataFrame(values, index=self.samples.index, columns=columns)
+            return npz['embeddings']
 
 
 def _resnet50_embeddings(images: np.ndarray, batch_size: int = 32) -> np.ndarray:

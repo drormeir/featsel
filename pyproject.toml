@@ -59,8 +59,8 @@ dev = [
 optuna = [
     "optuna>=3.0.0",
 ]
-# Only to compute the BreastMNIST ResNet-50 embeddings, and to search its
-# copied images (copies.py); the cached embeddings and copies.csv need none.
+# Only to compute the BreastMNIST ResNet-50 embeddings and to find its copied
+# images (copies.py), each once; the cached results need none.
 embeddings = [
     "torch>=2.0",
     "torchvision>=0.15",

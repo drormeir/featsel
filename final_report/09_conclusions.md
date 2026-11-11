@@ -35,8 +35,9 @@
 2. Check for repeated samples. 93 patients appear twice in SCAN-B's HiSeq
    data. Random splits put them on both sides and leak. We kept one
    sample per patient. In BreastMNIST, a quarter of the images repeat
-   another, as a 2023 letter reports. We found the copies in BreastMNIST's
-   own images and reran without them. AUC fell by 0.01 to 0.03, and the
+   another, as a 2023 letter reports. Even MedMNIST's fixed split puts
+   copies on both sides of it, in 57 groups. We found the copies in
+   BreastMNIST's own images and reran without them. AUC fell by 0.01 to 0.03, and the
    fine ranking of methods changed. The main conclusions held.
 3. The gene values are on an arbitrary scale, with half the values tied at
    a floor. A rank test (Mann-Whitney U) fits this data. The F-test's

@@ -31,11 +31,15 @@ dimensions, so there are more features than images, as in SCAN-B.
 - `breastmnist.py` downloads the images from Zenodo, checks the published
   MD5, and exposes them unchanged. It computes the embeddings once (ImageNet
   ResNet-50 without its last layer, on the GPU if there is one) and caches
-  them. Computing needs the `embeddings` extra (`torch`, `torchvision`);
-  reading cached embeddings does not.
+  them. It also finds the images that are copies of others (`copies.py`)
+  once, and caches the groups as `copies.csv` beside the images; each
+  image's group is `samples['copy_group']`. Computing needs the `embeddings`
+  extra (`torch`, `torchvision`, `opencv-python-headless`); reading the
+  cache does not. `BreastMNIST(find_copies=False)` skips the search.
 - `featsel_view.py` defines `NAME`, `TARGET` (`label`) and `load_xy`: all 780
-  images, MedMNIST's own split ignored.
+  images, MedMNIST's own split ignored; `drop_copies=True` keeps 585.
 - `demos/tutorial.ipynb` shows the images, labels and embeddings;
+  `demos/copies.ipynb` the copied images, with examples;
   `demos/selection.ipynb` compares selectors, simulates leakage and
   summarizes the full run.
 

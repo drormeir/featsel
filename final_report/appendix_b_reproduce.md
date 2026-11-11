@@ -15,8 +15,9 @@ python3.13 -m venv .venv
 
 The first SCAN-B load downloads GSE96058 (592 MB) into
 `featsel_datasets/scanb_gse96058/`. The first BreastMNIST load downloads
-the images (31 MB) and computes the embeddings once. It uses the GPU when
-one is present, else the CPU.
+the images (31 MB), computes the embeddings once, and finds the copied
+images once (about 40 seconds). The embeddings use the GPU when one is
+present, else the CPU.
 
 Versions used: Python 3.13, scikit-learn 1.9, NumPy 2.5, SciPy 1.18,
 pandas 3.0, PyTorch with CUDA 13. Each run writes a JSON file beside its
@@ -29,7 +30,7 @@ CSV. It records the exact versions, the machine and the git commit.
 | Comparison, SCAN-B (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 4 --max-worker-memory-gb 3` | `results/comparison_scanb.csv` |
 | Comparison, BreastMNIST (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist.yaml --n-jobs -1` | `results/comparison_breastmnist.csv` |
 | Berk-Jones on the comparison's splits (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_scanb_berkjones.yaml --n-jobs 4 --max-worker-memory-gb 3`, and the same with `comparison_breastmnist_berkjones.yaml` | `results/comparison_*_berkjones.csv` |
-| BreastMNIST without its copies (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist_nocopies.yaml --n-jobs 4`. The copy groups come from `.venv/bin/python -m featsel_datasets.medmnist_breastmnist.copies`, which needs OpenCV (the `embeddings` extra) | `results/comparison_breastmnist_nocopies.csv`; `featsel_datasets/medmnist_breastmnist/copies.csv` |
+| BreastMNIST without its copies (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist_nocopies.yaml --n-jobs 4`. The first BreastMNIST load finds the copy groups and caches them; this needs OpenCV (the `embeddings` extra). The analysis is `featsel_datasets/medmnist_breastmnist/demos/copies.ipynb` | `results/comparison_breastmnist_nocopies.csv` |
 | All features on the comparison's splits (section 8.7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist_all_features.yaml --n-jobs 4`, then `.venv/bin/python scripts/paired_tests.py results/comparison_breastmnist.csv results/comparison_breastmnist_all_features.csv results/comparison_breastmnist_berkjones.csv --baseline AllFeatures --out final_report/figures/paired_tests_breastmnist_vs_all_features.csv`. SCAN-B: `comparison_scanb_all_genes.yaml` | `results/comparison_breastmnist_all_features.csv` |
 | Parallel speed-up by worker count (chapter 10) | `.venv/bin/python scripts/parallel_scaling.py --workers 1 2 4 6 12 --repeats 3` | `results/local/parallel_scaling.csv` and its JSON |
 | Comparison tables | `.venv/bin/python scripts/summarize_comparison.py results/comparison_scanb.csv --n-features 28552 --out <file>` | the tables of chapter 7 and Appendix D, in Markdown |
