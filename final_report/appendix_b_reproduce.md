@@ -32,7 +32,7 @@ CSV. It records the exact versions, the machine and the git commit.
 | Berk-Jones on the comparison's splits (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_scanb_berkjones.yaml --n-jobs 4 --max-worker-memory-gb 3`, and the same with `comparison_breastmnist_berkjones.yaml` | `results/comparison_*_berkjones.csv` |
 | BreastMNIST without its copies (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist_nocopies.yaml --n-jobs 4`. The first BreastMNIST load finds the copy groups and caches them; this needs OpenCV (the `embeddings` extra). The analysis is `featsel_datasets/medmnist_breastmnist/demos/copies.ipynb` | `results/comparison_breastmnist_nocopies.csv` |
 | All features on the comparison's splits (section 8.7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist_all_features.yaml --n-jobs 4`, then `.venv/bin/python scripts/paired_tests.py results/comparison_breastmnist.csv results/comparison_breastmnist_all_features.csv results/comparison_breastmnist_berkjones.csv --baseline AllFeatures --out final_report/figures/paired_tests_breastmnist_vs_all_features.csv`. SCAN-B: `comparison_scanb_all_genes.yaml` | `results/comparison_breastmnist_all_features.csv` |
-| Parallel speed-up by worker count (chapter 10) | `.venv/bin/python scripts/parallel_scaling.py --workers 1 2 4 6 12 --repeats 3` | `results/local/parallel_scaling.csv` and its JSON |
+| Parallel speed-up by worker count (chapter 10) | `.venv/bin/python scripts/parallel_scaling.py --workers 1 2 3 4 5 6 --repeats 3` | `results/local/parallel_scaling.csv` and its JSON |
 | Comparison tables | `.venv/bin/python scripts/summarize_comparison.py results/comparison_scanb.csv --n-features 28552 --out <file>` | the tables of chapter 7 and Appendix D, in Markdown |
 | Paired tests (chapter 7) | `.venv/bin/python scripts/paired_tests.py results/comparison_scanb.csv --metric macro_f1 --out final_report/figures/paired_tests_comparison_scanb.csv`, and the same for BreastMNIST | the tables of tests in [`figures/`](figures/) |
 | Classifier study (chapter 7) | `.venv/bin/python -m featsel.run --config configs/experiment_classifiers.yaml --n-splits 3` | `results/experiment_classifiers.csv`; figures from `notebooks/02_classifier_behaviour.ipynb` |
@@ -48,7 +48,10 @@ CSV. It records the exact versions, the machine and the git commit.
 | FGVC-Aircraft (section 8.8) | `.venv/bin/python -m featsel.run --config configs/aircraft70_gpu.yaml --n-jobs 1`; the first call downloads the 2.75 GB archive and computes the embeddings | `results/aircraft70_gpu.csv`; analysis in `featsel_datasets/fgvc_aircraft/demos/research.ipynb` |
 | Frontier plots | `.venv/bin/python scripts/plot_frontier.py <the three CSVs> --out results/local/frontier_scanb70_roc_auc.png` | one PNG and CSV for all tasks, and one per task |
 
-Add `--resume` to any runner command to continue a stopped run. Files in
+Add `--resume` to any runner command to continue a stopped run. For a
+long unattended run, start it through `scripts/run_until_done.py` with the
+same arguments: it restarts the runner with `--resume` after a crash, up to
+three times (`--attempts`). Files in
 `results/local/` are not tracked by git. The frontier plots and tables used
 in this report are copied to [`figures/`](figures/).
 

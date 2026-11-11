@@ -8,13 +8,16 @@ worker count runs `repeats` times. The repeats are the outer loop, so a
 drift in the machine's speed spreads over every worker count instead of
 falling on one.
 
-A run counts only if it ended with the workers it started with: the runner
-halves its workers when one dies of memory exhaustion, which would mix two
-worker counts in one time.
+Each run is a fresh process, so it starts from clean memory: on full
+SCAN-B, worker processes left by one run can starve the next. A run counts
+only if it ended with the workers it started with: the runner halves its
+workers when one dies of memory exhaustion, which would mix two worker
+counts in one time. A run whose process crashed counts as lost too.
 
-Writes one row per run to --csv, with a JSON of the settings and the
-machine beside it, and prints the median time, the speed-up over one worker
-and the efficiency (speed-up per worker) for each worker count.
+Appends one row per run to --csv as soon as the run ends, with a JSON of
+the settings and the machine beside it, and prints the median time, the
+speed-up over one worker and the efficiency (speed-up per worker) for each
+worker count.
 
 Usage:
     python scripts/parallel_scaling.py --workers 1 2 4 6 12 --repeats 3
@@ -22,6 +25,7 @@ Usage:
 
 import argparse
 import json
+import multiprocessing
 import tempfile
 import time
 from pathlib import Path
@@ -37,9 +41,11 @@ from featsel_datasets.scanb_gse96058.featsel_view import load_xy
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def timed_run(X, y, n_jobs, folder):
-    """Seconds of one runner pass over the grid, and the workers it ended with."""
+def timed_run(data, n_jobs, folder, result):
+    """Time one runner pass over the grid; write its seconds and final workers to result."""
+    X, y = pd.read_pickle(data)
     out = Path(folder) / f'run_{n_jobs}.csv'
+    out.unlink(missing_ok=True)
     config = {
         'output': str(out),
         'seed': SEED,
@@ -56,6 +62,20 @@ def timed_run(X, y, n_jobs, folder):
     run(X, y, config)
     seconds = time.perf_counter() - start
     ended_with = json.loads(out.with_suffix('.json').read_text())['config']['n_jobs']
+    Path(result).write_text(json.dumps([seconds, ended_with]))
+
+
+def isolated_run(data, n_jobs, folder):
+    """timed_run in a fresh process; (NaN, 0) if that process crashed."""
+    result = Path(folder) / 'result.json'
+    result.unlink(missing_ok=True)
+    process = multiprocessing.get_context('spawn').Process(
+        target=timed_run, args=(data, n_jobs, folder, result))
+    process.start()
+    process.join()
+    if process.exitcode != 0:
+        return float('nan'), 0
+    seconds, ended_with = json.loads(result.read_text())
     return seconds, ended_with
 
 
@@ -77,19 +97,23 @@ def main():
                                                            replace=False))
         X = X.iloc[:, genes]
 
-    rows = []
+    args.csv.parent.mkdir(parents=True, exist_ok=True)
+    args.csv.unlink(missing_ok=True)
     with tempfile.TemporaryDirectory() as folder:
+        data = Path(folder) / 'data.pkl'
+        pd.to_pickle((X, y), data)
+        del X, y
         for repeat in range(args.repeats):
             for n_jobs in args.workers:
-                seconds, ended_with = timed_run(X, y, n_jobs, folder)
-                rows.append({'workers': n_jobs, 'repeat': repeat, 'seconds': seconds,
-                             'ended_with_workers': ended_with})
+                seconds, ended_with = isolated_run(data, n_jobs, folder)
+                row = pd.DataFrame([{'workers': n_jobs, 'repeat': repeat, 'seconds': seconds,
+                                     'ended_with_workers': ended_with}])
+                row.to_csv(args.csv, mode='a', header=not args.csv.exists(), index=False)
+        n_patients, n_genes = pd.read_pickle(data)[0].shape
 
-    table = pd.DataFrame(rows)
-    args.csv.parent.mkdir(parents=True, exist_ok=True)
-    table.to_csv(args.csv, index=False)
+    table = pd.read_csv(args.csv)
     environment.write_json(args.csv.with_suffix('.json'), workers=args.workers,
-                           repeats=args.repeats, n_genes=X.shape[1], n_patients=X.shape[0],
+                           repeats=args.repeats, n_genes=n_genes, n_patients=n_patients,
                            grid={'selectors': ['LassoSelector', 'RFESelector'],
                                  'k': K_VALUES, 'n_splits': N_SPLITS, 'tasks': 5})
 
@@ -97,8 +121,8 @@ def main():
     summary = valid.groupby('workers').seconds.agg(['median', 'min', 'max', 'count'])
     summary['speed_up'] = summary.loc[1, 'median'] / summary['median']
     summary['efficiency'] = summary['speed_up'] / summary.index
-    print(f'{X.shape[0]} patients x {X.shape[1]} genes; '
-          f'{len(table) - len(valid)} runs lost workers and are left out.')
+    print(f'{n_patients} patients x {n_genes} genes; '
+          f'{len(table) - len(valid)} runs lost workers or crashed and are left out.')
     print(summary.round(2).to_string())
 
 

@@ -264,7 +264,7 @@ def _key(values):
 
 def _done_keys(path):
     """Read the keys of executions already present in an output CSV."""
-    if not Path(path).exists():
+    if not Path(path).exists() or Path(path).stat().st_size == 0:
         return set()
     done = pd.read_csv(path, usecols=KEY_COLUMNS, dtype=str, keep_default_na=False)
     return set(done.itertuples(index=False, name=None))

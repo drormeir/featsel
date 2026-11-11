@@ -22,13 +22,16 @@ report does not list it yet.
   count. Repeat each point a few times.
 - **Source.** `final_report/06_making_it_fast.md`, 6.1, lines 54-59. Not in
   chapter 10. New as a gap.
-- **Status.** Ready to run, not run (a long run, left for 2026-11-11 by
-  decision). `scripts/parallel_scaling.py` runs the 6.1 grid on all genes
-  and all five tasks (50 jobs, so 12 workers have work), at 1, 2, 4, 6 and
-  12 workers, 3 repeats, and prints time, speed-up and efficiency. It
-  drops any run whose workers fell after a memory failure. Checked on 500
-  genes. Command: `.venv/bin/python scripts/parallel_scaling.py --workers
-  1 2 4 6 12 --repeats 3`.
+- **Status.** Ready to run, not run. `scripts/parallel_scaling.py` runs
+  the 6.1 grid on all genes and all five tasks (50 jobs), 3 repeats, and
+  prints time, speed-up and efficiency. Each run is a fresh process and its
+  row is saved as it ends. It drops any run whose workers fell after a
+  memory failure. In a first attempt on 2026-11-11, 5 or more workers broke
+  the runner's per-worker memory cap on this laptop: liblinear needed about
+  1.45 GB per fit, the cap at 6 workers was 1.26 GB, and liblinear aborts
+  when refused. So 12 workers cannot be measured here. Command:
+  `.venv/bin/python scripts/parallel_scaling.py --workers 1 2 3 4 5 6
+  --repeats 3`, about an hour.
 
 ### A2. The speed notebooks' overlap column is wrong at large sizes (task 3)
 
@@ -61,8 +64,9 @@ report does not list it yet.
   k = 50 every method trails by 0.07 or more (section 8.7).
   `scripts/paired_tests.py` gained `--baseline` for this. SCAN-B is ready
   to run, not run (a long run, left for 2026-11-11 by decision):
-  `.venv/bin/python -m featsel.run --config configs/comparison_scanb_all_genes.yaml
-  --n-jobs 4 --max-worker-memory-gb 3`, then `scripts/paired_tests.py
+  `.venv/bin/python scripts/run_until_done.py --config
+  configs/comparison_scanb_all_genes.yaml --n-jobs 4 --max-worker-memory-gb 3`
+  (the runner, restarted with `--resume` after a crash), then `scripts/paired_tests.py
   results/comparison_scanb.csv results/comparison_scanb_all_genes.csv
   --baseline AllGenes`.
 
@@ -76,7 +80,8 @@ report does not list it yet.
 - **Status.** Ready to run, not run (a long run, left for 2026-11-11 by
   decision). The frontier CSVs have the runner's current columns, so
   `--n-splits 16 --resume` on a frontier config adds splits 5 to 15 and
-  keeps the first five. The top methods are all in
+  keeps the first five. Run it through `scripts/run_until_done.py`, which
+  passes `--resume` and restarts the runner after a crash. The top methods are all in
   `frontier_scanb70_gpu.yaml` and `frontier_scanb70_berkjones.yaml`, plus
   tree importance in `frontier_scanb70_cpu.yaml`. A copy of the CPU config
   with tree importance alone, writing to the same CSV, adds only its rows.

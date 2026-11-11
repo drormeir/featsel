@@ -533,6 +533,28 @@ def test_dead_worker_resumes_with_fewer_workers(experiment, monkeypatch, capsys)
     assert not resumed.duplicated(KEY_COLUMNS).any()
 
 
+def test_dead_worker_before_any_row_resumes(experiment, monkeypatch, capsys):
+    """Test that a worker death before the first row, leaving an empty CSV, still resumes."""
+    full = pd.read_csv(run_config(experiment))
+    real_iter_rows = run_module.iter_rows
+    calls = []
+
+    def dies_at_once(*args, **kwargs):
+        calls.append(args[2]['n_jobs'])
+        if len(calls) == 1:
+            raise TerminatedWorkerError('worker aborted')
+        yield from real_iter_rows(*args, **kwargs)
+
+    monkeypatch.setattr(run_module, 'iter_rows', dies_at_once)
+    experiment['n_jobs'] = 4
+
+    resumed = pd.read_csv(run_config(experiment))
+
+    assert calls == [4, 2]
+    assert 'Resuming with 2 workers' in capsys.readouterr().out
+    assert len(resumed) == len(full)
+
+
 def test_resume_refuses_other_columns(experiment):
     """Test that resuming into a CSV with another header raises instead of misaligning."""
     out = Path(experiment['output'])
