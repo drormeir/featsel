@@ -39,7 +39,8 @@ dimensions, so there are more features than images, as in SCAN-B.
 - `featsel_view.py` defines `NAME`, `TARGET` (`label`) and `load_xy`: all 780
   images, MedMNIST's own split ignored; `drop_copies=True` keeps 585.
 - `demos/tutorial.ipynb` shows the images, labels and embeddings;
-  `demos/copies.ipynb` the copied images, with examples;
+  `copies_report.md` and `demos/copies.ipynb` the copied images, with
+  examples;
   `demos/selection.ipynb` compares selectors, simulates leakage and
   summarizes the full run.
 

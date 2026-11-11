@@ -234,66 +234,18 @@ the training part while its twin is in the test part. The model is then
 partly tested on an image it has seen.
 
 **Finding the copies in BreastMNIST.** The letter names images by their
-original file names, which BreastMNIST does not keep. So we searched
-BreastMNIST's own images with the letter's method: two images are copies
-when one geometric transform maps one onto the other. For each image, its
-30 nearest images by embedding were checked. Matched keypoints (SIFT) had
-to fit one affine transform, with at least 15 agreeing points, and the
-aligned images had to correlate above 0.9. The separation was clear: 218
-pairs had 50 or more agreeing points and a correlation above 0.98, and
-almost every other pair had fewer than 10. Checking 100 neighbours instead
-of 30 found no more.
-
-| | The letter's list | Our search |
-|---|---|---|
-| Groups of copies | 153 | 150 |
-| Images in them | 346 | 339 |
-| Groups mixing malignant with benign or normal | 6 | 6 |
-
-The two agree closely. A few copies may be mirrored, which the keypoints
-used here do not match.
-
-**Why a simpler test would not do.** The search confirmed 230 pairs of
-copies. Only 1 pair is identical pixel for pixel. In 27 more, the
-transform moves the image by less than one pixel and changes its scale by
-less than 1%, yet the pixels still differ. The other 202 are shifted or
-scaled. The median shift is 2 pixels and the largest is 28. The scale runs
-from 0.86 to 1.09. As they stand, a copy differs from its twin by a median
-of 11 grey levels out of 255. The images were cropped and resized
-separately, so the same scan gives different pixels. Once aligned by the
-transform found, the two match closely.
-
-So a search for identical images finds 1 pair of 230. Correlating the
-images as they are, without aligning them, does no better:
-
-| Correlation of the images as they are | Copy pairs above it (of 230) | Other pairs above it (of 303,564) |
-|---|---|---|
-| 0.9 | 175 | 17 |
-| 0.955, the highest of any other pair | 89 | 0 |
-
-No threshold separates the two groups. At 0.9 it misses 55 copies and
-flags 17 pairs the search did not call copies. A threshold that flags none
-of those misses 141 copies. Aligning the images first is what separates
-them.
-
-**MedMNIST's own split leaks too.** This project draws its own splits, but
-MedMNIST ships a fixed train, validation and test split. 90 of the 150
-groups span more than one of its parts. 57 put copies in both its training
-and its test part. One such pair, `train_115` and `test_076`, is identical
-pixel for pixel, yet one is labelled malignant and the other benign or
-normal.
+original file names, which BreastMNIST does not keep. So the loader finds
+the copies in BreastMNIST's own images, with the letter's method,
+geometric registration. It finds 150 groups of 339 images, against the
+letter's 153 and 346. Even MedMNIST's own fixed split puts copies on both
+sides of it. The method, its checks and examples are in a separate report
+beside the loader:
+[`copies_report.md`](../featsel_datasets/medmnist_breastmnist/copies_report.md).
 
 The run without copies keeps one image of each group, and drops the 6
 groups with conflicting labels whole. 585 images remain: 180 malignant and
 405 benign or normal. Chapter 7 compares the results with and without the
 copies.
-
-The search is part of the loader. On first use it runs once, in about 40
-seconds, and caches the groups beside the downloaded images. Each image's
-group is a column of the dataset's samples. Code:
-[`copies.py`](../featsel_datasets/medmnist_breastmnist/copies.py). The
-analysis, with example pairs:
-[`demos/copies.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/copies.ipynb).
 
 Loader: [`featsel_datasets/medmnist_breastmnist/`](../featsel_datasets/medmnist_breastmnist/).
 Notebooks: [`demos/tutorial.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/tutorial.ipynb),

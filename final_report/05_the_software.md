@@ -238,7 +238,9 @@ filters. Their origin, their patients and how their genes were chosen
 could not be checked, and nobody else could reuse our preparation. The
 generic class makes no choice for the caller, so other researchers can use
 it alone. For BreastMNIST it also computes the ResNet-50 embeddings once,
-finds the copied images once (section 2.2), and caches both. It imports
+finds the copied images once
+([`copies_report.md`](../featsel_datasets/medmnist_breastmnist/copies_report.md)),
+and caches both. It imports
 PyTorch and OpenCV only in those steps, so cached runs never need them.
 
 - `X` is a pandas DataFrame and `y` a Series. Gene names reach the
