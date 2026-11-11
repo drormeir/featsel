@@ -304,7 +304,8 @@ notebooks read the CSV. A new plot never needs a new run.
 of one selector. A fast filter cuts the features first, and a slower
 method picks the final `k` from what is left. The runner builds the chain
 as a scikit-learn `Pipeline`. The recorded genes are always indices of the
-original features, and the selection time covers every step.
+original features, and the selection time covers every step. Section 8.9
+compares chains with their last step alone.
 
 **Nested tuning.** A model entry with a `grid` is tuned inside each split
 (section 3.8). The runner wraps the classifier in scikit-learn's

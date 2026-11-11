@@ -412,10 +412,78 @@ What it shows:
 - **The embedding mattered more than the selector.** Changing the weights
   moved AUC by 0.11. No selector moved it by a tenth of that at k = 500.
 
-## 8.9 Summary
+## 8.9 Two-stage selection
 
-- On SCAN-B, sub-second GPU filters (Mann-Whitney, HC2008) give the best
-  AUC for their cost. A 200-tree forest ties them at 17 times the cost.
+A common practice chains two methods: a fast filter cuts the features
+first, and a slower method picks the final `k` from what is left (Saeys et
+al. 2007). We tested three chains on the frontier's splits. Mann-Whitney
+on the GPU keeps 1,000 genes on SCAN-B, or 500 features on BreastMNIST.
+Then Lasso (liblinear), tree importance or RFE (Newton) picks `k`. Each
+chain is compared with its last step alone on all features, on the same
+splits. The selection time covers both steps.
+
+**SCAN-B**, mean AUC over 5 tasks and 5 splits:
+
+| Last step | k | Chain | Alone | Chain better on | Time: chain, alone |
+|---|---|---|---|---|---|
+| Lasso | 10 | **0.948** | 0.934 | 5 of 5 splits | 1.0 s, 4.1 s |
+| | 50 | **0.962** | 0.953 | 5 of 5 | |
+| | 250 | **0.962** | 0.959 | 5 of 5 | |
+| Tree importance | 10 | **0.938** | 0.933 | 4 of 5 | 2.8 s, 11.4 s |
+| | 50 | **0.960** | 0.953 | 5 of 5 | |
+| | 250 | 0.962 | **0.963** | 2 of 5 | |
+| RFE | 10 | **0.949** | 0.807 | 5 of 5 | 3.0 s, 6.0 s |
+| | 50 | **0.960** | 0.904 | 5 of 5 | |
+| | 250 | **0.958** | 0.940 | 5 of 5 | |
+
+**BreastMNIST**, mean AUC over 5 splits:
+
+| Last step | k | Chain | Alone | Chain better on | Time: chain, alone |
+|---|---|---|---|---|---|
+| Lasso | 10 | 0.729 | **0.760** | 1 of 5 | 0.04 s, 0.11 s |
+| | 50 | 0.843 | **0.861** | 1 of 5 | |
+| | 250 | 0.880 | **0.902** | 0 of 5 | |
+| Tree importance | 10 | 0.813 | **0.817** | 1 of 5 | 0.46 s, 0.58 s |
+| | 50 | 0.874 | **0.879** | 2 of 5 | |
+| | 250 | 0.879 | **0.888** | 2 of 5 | |
+| RFE | 10 | **0.800** | 0.771 | 5 of 5 | 0.25 s, 0.24 s |
+| | 50 | **0.853** | 0.830 | 5 of 5 | |
+| | 250 | 0.888 | **0.900** | 0 of 5 | |
+
+Configs: [`configs/frontier_scanb70_chains.yaml`](../configs/frontier_scanb70_chains.yaml),
+[`configs/frontier_breastmnist70_chains.yaml`](../configs/frontier_breastmnist70_chains.yaml).
+
+What it shows:
+
+- **On SCAN-B, a filter first helps every method, in time and mostly in
+  AUC.** The chains run 2 to 4 times faster. RFE gains most: at k = 10
+  its AUC rises from 0.807 to 0.949. Section 7.2 found that RFE alone
+  picks near-constant genes; the U test does not rank such genes high,
+  so the filter likely removes them. This explanation is not checked
+  gene by gene.
+- **At small `k` the chains are the best fixed-`k` methods on SCAN-B.** At
+  k = 50, Mann-Whitney then Lasso reaches 0.962, against 0.956 for the
+  best single method at that `k` (Lasso, PPDNA). They are still not on the
+  frontier: HC2008 and Berk-Jones reach 0.970 faster, with 2,855 genes.
+- **On BreastMNIST the filter costs Lasso and tree importance AUC.** Lasso
+  loses 0.02 to 0.03 on average, and the chain wins on at most 1 of 5
+  splits. The image features are weakly
+  correlated, and a combination of features carries more than the best
+  single ones (section 8.5). A one-at-a-time filter removes features
+  that only work together. RFE gains at small `k` there too.
+- **So the chain's value depends on the data**, as the methods' ranking
+  does. With 5 splits these differences are not tested for significance.
+
+## 8.10 Summary
+
+- On SCAN-B, sub-second GPU filters (Mann-Whitney, HC2008, Berk-Jones)
+  give the best AUC for their cost. A 200-tree forest ties them at 17
+  times the cost.
+- A Mann-Whitney filter before a slower method helped every method on
+  SCAN-B, in time and mostly in AUC, RFE most. On BreastMNIST it cost
+  Lasso and tree importance AUC.
+- Without BreastMNIST's copied images, AUC fell by about 0.01 to 0.03;
+  all features stayed best.
 - On BreastMNIST every method is cheap. Lasso is best at k = 250. With no
   limit on the count, using all 2,048 features is best. Selection there
   buys a smaller model, not a better one.

@@ -117,6 +117,12 @@ report does not list it yet.
   steps, or a selector class wraps a scikit-learn `Pipeline` of two
   selectors.
 - **Source.** New.
+- **Status.** Closed 2026-11-11. A config entry may give `steps`; the
+  runner builds a `Pipeline`. Three chains ran on both frontiers:
+  Mann-Whitney first, then Lasso, tree importance or RFE. On SCAN-B every
+  chain was 2 to 4 times faster than its last step alone and mostly
+  better; RFE at k = 10 rose from 0.807 to 0.949 AUC. On BreastMNIST the
+  filter cost Lasso and tree importance 0.004 to 0.03 AUC (section 8.9).
 
 ## B. Gaps in the report's academic quality
 

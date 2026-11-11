@@ -78,7 +78,9 @@
     SCAN-B. RFECV's default inner score is accuracy. It made RFECV keep
     one or two genes on imbalanced tasks. With AUC as its inner score it
     recovered (0.961 on SCAN-B). A wrapper is only as good as its inner
-    score.
+    score. A Mann-Whitney filter before RFE raised its AUC at 10 genes
+    from 0.81 to 0.95 on SCAN-B, at half the time. On BreastMNIST the same
+    filter cost Lasso and tree importance AUC.
 
 **About cost.**
 
