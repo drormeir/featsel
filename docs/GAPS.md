@@ -78,17 +78,21 @@ report does not list it yet.
   established.
 - **What closes it.** More splits: about 8 hours per 5 on SCAN-B.
 - **Source.** `final_report/10_open_work.md`, 10.1.
-- **Status.** Ready to run, not run (a long run, left for 2026-11-11 by
-  decision). The frontier CSVs have the runner's current columns, so
-  `--n-splits 16 --resume` on a frontier config adds splits 5 to 15 and
-  keeps the first five. Run it through `scripts/run_until_done.py`, which
-  passes `--resume` and restarts the runner after a crash. The top methods are all in
-  `frontier_scanb70_gpu.yaml` and `frontier_scanb70_berkjones.yaml`, plus
-  tree importance in `frontier_scanb70_cpu.yaml`. A copy of the CPU config
-  with tree importance alone, writing to the same CSV, adds only its rows.
-  Extending these first would order the top of the frontier without the
-  slow wrappers. Then `scripts/paired_tests.py ... --metric roc_auc` gives
-  the corrected tests.
+- **Status.** Ready to run, not run. The top methods of the SCAN-B frontier
+  are in three configs: `frontier_scanb70_gpu.yaml`,
+  `frontier_scanb70_berkjones.yaml` and `frontier_scanb70_tree.yaml` (tree
+  importance alone, without the slow wrappers of the cpu config). The tree
+  config's CSV starts as a copy of the cpu run's tree rows. All three CSVs
+  were checked on 2026-11-11 to resume their 5 splits with nothing to redo,
+  so `--n-splits 16` adds splits 5 to 15. From the first 5 splits, the 11
+  new ones take about 7 hours: 0.44 h per split on the GPU configs, 0.16 h
+  for tree importance. Commands, in this order:
+  - `.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_berkjones.yaml --n-jobs 1 --n-splits 16`
+  - `.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_tree.yaml --n-jobs 2 --n-splits 16`
+  - `.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_gpu.yaml --n-jobs 1 --n-splits 16`
+
+  Then `scripts/paired_tests.py` on the three CSVs with `--metric roc_auc`
+  gives the corrected tests.
 
 ### A5. BreastMNIST holds copied images (task 4)
 

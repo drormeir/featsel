@@ -14,7 +14,7 @@ to the file itself.
 | `comparison_breastmnist.yaml` | experiment | The same comparison on BreastMNIST (task 4) |
 | `comparison_scanb_berkjones.yaml`, `comparison_breastmnist_berkjones.yaml` | experiment | Berk-Jones on the comparison's own splits, in a separate CSV |
 | `comparison_breastmnist_nocopies.yaml` | experiment | The BreastMNIST comparison without its copied images, Berk-Jones included |
-| `frontier_*70_*.yaml` | experiment | The cost-quality frontier at 70% training: GPU, CPU and Sequential runs on the same splits; `_berkjones`, `_chains` (two-stage selection) and `_nocopies` add to it |
+| `frontier_*70_*.yaml` | experiment | The cost-quality frontier at 70% training: GPU, CPU and Sequential runs on the same splits; `_berkjones`, `_chains` (two-stage selection), `_nocopies` and `_tree` (tree importance alone, for 16 splits) add to it |
 | `experiment_classifiers.yaml` | experiment | Random vs Mann-Whitney across five classifiers, 12 splits |
 | `smoke_scanb.yaml` | experiment | Smoke test: every selector and classifier once on one SCAN-B split, about 3 minutes on 6 workers. A check, not a result |
 | `experiment_baseline.yaml` | experiment | The random-selection control on every PAM50 subtype-vs-rest task |
