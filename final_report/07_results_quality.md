@@ -213,7 +213,8 @@ stable. Mann-Whitney scores 0.53 to 0.69 over `k`, and both score 0.65 at
 204 features. Lasso is the least stable, at 0.14 to 0.21. Tree importance
 scores 0.20 to 0.30, and RFE 0.24 to 0.28.
 
-Tree importance scores best on SCAN-B and is the least stable. Its top
+Tree importance has the highest median score on SCAN-B and is the least
+stable. Its top
 genes change from split to split. Its score barely moves. Lasso and tree
 importance choose quite different genes on each split. Yet they score
 close to Mann-Whitney. Many gene sets predict equally well. So a selected
@@ -529,9 +530,11 @@ what `k` asks for. So Lasso does not stall there.
 
 **What carries over between datasets.** The main pattern holds on both.
 Every method beats random in the median. The gain is largest at small
-`k`. HC2008 stops at its edge. The fine ranking does not carry over. Tree
-importance leads on gene expression. Lasso and tree importance share the
-lead on image embeddings.
+`k`. HC2008 and Berk-Jones stop at their edge. The fine ranking does not
+carry over. Tree importance has the highest median on gene expression.
+Lasso and tree importance share it on image embeddings, and Mann-Whitney
+and tree importance once the copied images are removed. None of these
+leads is established by the corrected test.
 
 **Threats to validity.**
 
