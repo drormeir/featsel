@@ -7,7 +7,7 @@ This file decides what gets built. A private working agreement lives in
 ## 1. What this project is
 
 The M.Sc. final project for the Machine Learning and Data Science program at
-Reichman University. Supervisor: Dr. Ben Galili. Deadline: September 2026.
+Reichman University. Supervisor: Dr. Ben Galili.
 
 The authoritative spec is `references/MLDS_Feature_Selection.pdf`. Nothing
 else defines the requirements.
