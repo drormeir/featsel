@@ -22,7 +22,7 @@ faster.
 | Datasets | SCAN-B (five tasks) and BreastMNIST (one task) |
 | Methods | Random; Mann-Whitney, HC2008, Spearman correlation, mutual information and Lasso (PPDNA) on the GPU; Lasso (liblinear), tree importance (200 trees, 4 threads), RFE (liblinear and Newton), RFECV (Newton) on the CPU; Sequential (Newton) on the GPU. Added later on the same splits: RFECV scored by AUC (section 8.6), Berk-Jones on the GPU, and two-stage chains (section 8.9). |
 | `k` | 10, 50, 250, 1000 on SCAN-B; 10, 50, 250 on BreastMNIST; 5 and 10 for Sequential |
-| Splits | 5 random splits, 70% of the samples for training |
+| Splits | 5 random splits, 70% of the samples for training. On SCAN-B, the GPU methods, Berk-Jones and tree importance later ran on 16 (section 8.3) |
 | Classifier | logistic regression, C = 1 (not tuned, to keep the run short) |
 | Score | ROC AUC; macro-F1 and balanced accuracy also recorded |
 | Timing | median of 10 fits by fresh selectors (1 fit for Sequential); one fit at a time on the GPU |
@@ -93,16 +93,77 @@ splits. Bars: one standard deviation over splits. Table:
    large, almost any genes work, as chapter 7 found.
 5. **The top methods are close.** Their best AUCs differ by at most
    0.008. Over splits, the standard deviation is 0.002 to 0.004 for the
-   mean over tasks, and 0.002 to 0.017 for a single task. These
-   differences are not tested here. With 5 splits, the corrected paired
-   test of section 7.3 has only 4 degrees of freedom. With 16 splits, in
-   chapter 7, it could not order the top methods either.
+   mean over tasks, and 0.002 to 0.017 for a single task. With 5 splits,
+   the corrected paired test of section 7.3 has only 4 degrees of
+   freedom. So the top methods also ran on 16 splits, below.
 
 **Caution on HC2008 and Berk-Jones.** HC2008 kept 2,855 genes, the edge of
 its search, on every task and split, as in chapter 7. Berk-Jones kept
 2,841 to 2,855. They lead because they are as fast as Mann-Whitney and use
 nearly three times the genes of its largest `k`. It is not a sign that
 they chose a better count.
+
+### Sixteen splits for the top methods
+
+The five methods on the GPU, Berk-Jones, tree importance and random ran
+on 11 more splits, 16 in all. The first 5 are the splits above. The
+settings are unchanged. The CPU wrappers stayed at 5 splits. They score
+clearly lower and take hours.
+
+Each split's score is the mean AUC over the five tasks. We compare
+methods split by split with the corrected paired test of section 7.3.
+There are 73 tests, so, as in chapter 7, a difference counts as real
+when p < 0.05 / 73 = 0.0007 (Bonferroni).
+
+| Method | k = 10 | k = 50 | k = 250 | k = 1000 |
+|---|---|---|---|---|
+| Random | 0.788 | 0.904 | 0.931 | 0.952 |
+| Mann-Whitney | 0.931 | 0.950 | 0.957 | 0.966 |
+| Spearman correlation | 0.931 | 0.950 | 0.957 | 0.965 |
+| Mutual information | 0.935 | 0.952 | 0.959 | 0.967 |
+| Lasso, PPDNA | **0.948** | **0.958** | 0.960 | 0.962 |
+| Tree importance | 0.935 | 0.956 | **0.965** | **0.970** |
+
+Mean test AUC over 5 tasks and 16 splits. Berk-Jones kept 2,827 to 2,855
+genes and scored 0.970. HC2008 kept 2,855 and scored 0.970.
+
+![Paired differences on 16 splits](figures/frontier_scanb70_16_splits.png)
+
+*Figure 8.2. Each method's AUC minus Mann-Whitney's at the same `k`,
+paired over 16 splits. Bars: the corrected interval, widened for 73
+tests. Tests:
+[`figures/paired_tests_frontier_scanb70_16_splits.csv`](figures/paired_tests_frontier_scanb70_16_splits.csv).*
+
+**What it shows.**
+
+1. **Selection beats random.** Every method beats random at k = 10, 50
+   and 250, on all 16 splits. At k = 1000 every method still wins all 16
+   splits. Only tree importance, Berk-Jones and HC2008 pass the
+   threshold there. Mann-Whitney, correlation and mutual information miss
+   it narrowly (p = 0.0008 to 0.0009), and Lasso by more (p = 0.005).
+2. **Tree importance leads at k = 250.** It beats Mann-Whitney and
+   correlation by 0.007 AUC, on all 16 splits (p = 0.0002). Its lead
+   over Lasso and mutual information is not established.
+3. **Lasso falls behind at k = 1000.** Tree importance beats it by 0.008
+   (p = 0.0006). Berk-Jones and HC2008 beat it too (p = 0.0003 to 0.0004).
+4. **Lasso's lead at k = 10 is not established.** It scores 0.013 to
+   0.017 above the others and wins 15 or 16 of 16 splits. But p ≥ 0.002.
+5. **The top corner is a tie.** Berk-Jones, HC2008 and tree importance at
+   k = 1000 differ by at most 0.0001 AUC (p ≥ 0.72). Berk-Jones took
+   0.65 s per fit. Tree importance took 13.5 s, the median over the 16
+   splits. So the sub-second filters stay the best choice for their cost.
+6. **The correction matters again.** The uncorrected Wilcoxon test passes
+   63 of the 73 tests. The corrected test passes 23.
+
+Chapter 7 did not establish tree importance's lead over Mann-Whitney at
+any `k`. That test differs from this one: macro-F1 instead of AUC, 50% of
+the patients for training instead of 70%, and a tuned classifier. So the
+two results do not contradict each other. Under this protocol, the lead
+at k = 250 is real, and it is under 0.01 AUC.
+
+Figure 8.1 and the table above it stay on 5 splits. The CPU wrappers have
+only 5. Figure scripts: `scripts/paired_tests.py --own-count` and
+`scripts/plot_paired_differences.py`.
 
 ## 8.4 SCAN-B, each task
 
@@ -136,7 +197,7 @@ balanced task, and there RFECV works. Section 8.6 tests this hypothesis.
 
 ![Frontier on BreastMNIST](figures/frontier_breastmnist70_roc_auc.png)
 
-*Figure 8.2. BreastMNIST, 5 splits. Table:
+*Figure 8.3. BreastMNIST, 5 splits. Table:
 [`figures/frontier_breastmnist70_roc_auc.csv`](figures/frontier_breastmnist70_roc_auc.csv).*
 
 | Method | Best AUC (its `k`) | Time per fit | On frontier |
@@ -228,12 +289,12 @@ both datasets, everything else unchanged.
 
 ![Frontier on SCAN-B with RFECV scored by AUC](figures/frontier_scanb70_with_rfecv_auc_roc_auc.png)
 
-*Figure 8.3. SCAN-B frontier with RFECV scored by AUC added. Table:
+*Figure 8.4. SCAN-B frontier with RFECV scored by AUC added. Table:
 [`figures/frontier_scanb70_with_rfecv_auc_roc_auc.csv`](figures/frontier_scanb70_with_rfecv_auc_roc_auc.csv).*
 
 ![Frontier on BreastMNIST with RFECV scored by AUC](figures/frontier_breastmnist70_with_rfecv_auc_roc_auc.png)
 
-*Figure 8.4. BreastMNIST frontier with RFECV scored by AUC added. Table:
+*Figure 8.5. BreastMNIST frontier with RFECV scored by AUC added. Table:
 [`figures/frontier_breastmnist70_with_rfecv_auc_roc_auc.csv`](figures/frontier_breastmnist70_with_rfecv_auc_roc_auc.csv).*
 
 What the rerun shows:
@@ -322,7 +383,7 @@ What it shows:
 
 ### A paired test against all features
 
-The frontier has only 5 splits. So all 2,048 BreastMNIST features also
+The BreastMNIST frontier has only 5 splits. So all 2,048 BreastMNIST features also
 ran on the comparison's 20 splits (chapter 7), with C tuned as there, and
 were tested against every method with the corrected paired test of
 section 7.3. Macro-F1 with all features: 0.822 [0.802, 0.835].
@@ -504,7 +565,9 @@ What it shows:
 
 - On SCAN-B, sub-second GPU filters (Mann-Whitney, HC2008, Berk-Jones)
   give the best AUC for their cost. A 200-tree forest ties them at 17
-  times the cost.
+  times the cost. On 16 splits the tie holds (0.970 each). Tree
+  importance's lead over Mann-Whitney at k = 250, 0.007 AUC, is
+  established.
 - A Mann-Whitney filter before a slower method helped every method on
   SCAN-B, in time and mostly in AUC, RFE most. On BreastMNIST it cost
   Lasso and tree importance AUC.

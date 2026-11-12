@@ -18,6 +18,10 @@ the script reports the mean difference with its corrected 95% interval, how
 many splits the first method won, the corrected p-value, and, for
 comparison, the uncorrected Wilcoxon p-value.
 
+Methods that choose their own count, such as Higher Criticism, have no k.
+With --own-count they are tested against each other, and against every
+method at the largest k.
+
 Usage:
     python scripts/paired_tests.py results/comparison_scanb.csv --metric macro_f1
     python scripts/paired_tests.py results/comparison_breastmnist.csv \
@@ -64,11 +68,13 @@ def compare(a, b, k, first, second, test_over_train):
             'p_wilcoxon': wilcoxon(diff).pvalue if (diff != 0).any() else 1.0}
 
 
-def tests(results, metric, baseline=None):
+def tests(results, metric, baseline=None, own_count=False):
     """
     Every method against the random control and every pair of methods, at
     each k. With a baseline, a selector label such as all features, every
-    method at every k is tested against that baseline instead.
+    method at every k is tested against that baseline instead. With
+    own_count, the methods without a k are tested against each other and
+    against every method at the largest k.
     """
     scores = per_split(results, metric)
     test_over_train = (results['n_test'] / results['n_train']).mean()
@@ -84,6 +90,14 @@ def tests(results, metric, baseline=None):
         pairs += itertools.combinations([m for m in methods if m != CONTROL], 2)
         rows += [compare(scores.loc[(a, k)], scores.loc[(b, k)], k, a, b, test_over_train)
                  for a, b in pairs]
+    if own_count:
+        largest = results['k'].max()
+        own = [m for m, k in scores.index if pd.isna(k)]
+        others = [m for m, k in scores.index if k == largest]
+        rows += [compare(scores.loc[a].iloc[0], scores.loc[b].iloc[0], float('nan'), a, b,
+                         test_over_train) for a, b in itertools.combinations(own, 2)]
+        rows += [compare(scores.loc[a].iloc[0], scores.loc[(b, largest)], largest, a, b,
+                         test_over_train) for a in own for b in others]
     return pd.DataFrame(rows)
 
 
@@ -95,9 +109,11 @@ def main(argv=None):
     parser.add_argument('--out', type=Path, help='CSV to write the table to')
     parser.add_argument('--baseline', help='Selector label to test every method against, '
                                            'such as all features')
+    parser.add_argument('--own-count', action='store_true',
+                        help='Also test the methods that choose their own count')
     args = parser.parse_args(argv)
     results = pd.concat([pd.read_csv(path) for path in args.csv], ignore_index=True)
-    table = tests(results, args.metric, args.baseline)
+    table = tests(results, args.metric, args.baseline, args.own_count)
     if args.out:
         table.to_csv(args.out, index=False)
     with pd.option_context('display.width', 200):

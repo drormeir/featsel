@@ -75,21 +75,16 @@ report does not list it yet.
   established.
 - **What closes it.** More splits: about 8 hours per 5 on SCAN-B.
 - **Source.** `final_report/10_open_work.md`, 10.1.
-- **Status.** Ready to run, not run. The top methods of the SCAN-B frontier
-  are in three configs: `frontier_scanb70_gpu.yaml`,
-  `frontier_scanb70_berkjones.yaml` and `frontier_scanb70_tree.yaml` (tree
-  importance alone, without the slow wrappers of the cpu config). The tree
-  config's CSV starts as a copy of the cpu run's tree rows. All three CSVs
-  were checked on 2026-11-11 to resume their 5 splits with nothing to redo,
-  so `--n-splits 16` adds splits 5 to 15. From the first 5 splits, the 11
-  new ones take about 7 hours: 0.44 h per split on the GPU configs, 0.16 h
-  for tree importance. Commands, in this order:
-  - `.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_berkjones.yaml --n-jobs 1 --n-splits 16`
-  - `.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_tree.yaml --n-jobs 2 --n-splits 16`
-  - `.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_gpu.yaml --n-jobs 1 --n-splits 16`
-
-  Then `scripts/paired_tests.py` on the three CSVs with `--metric roc_auc`
-  gives the corrected tests.
+- **Status.** Closed 2026-11-12 for SCAN-B. The GPU methods, Berk-Jones,
+  tree importance and random ran on 16 splits: 10 min, 69 min and 5.2 h,
+  with no crash. 73 corrected tests, Bonferroni threshold 0.0007. Tree
+  importance beats Mann-Whitney at k = 250 by 0.007 AUC, and Lasso at
+  k = 1000 by 0.008. Berk-Jones, HC2008 and tree importance at k = 1000
+  tie at 0.970. Lasso's lead at k = 10 (0.013 to 0.017) is not
+  established. Section 8.3, with a figure. The CPU wrappers and the
+  BreastMNIST frontier stay at 5 splits: the wrappers score clearly
+  lower, and on BreastMNIST the 20-split comparison already holds the
+  tests (section 8.7).
 
 ### A5. BreastMNIST holds copied images (task 4)
 

@@ -65,7 +65,10 @@
 8. **The top methods cannot be told apart.** Tree importance had the
    highest median on gene expression. Lasso and tree importance shared it
    on image embeddings. A paired test corrected for overlapping splits
-   establishes neither lead. The broad pattern held on both datasets:
+   establishes neither lead. On the frontier's 16 splits, scored by AUC,
+   it establishes two small ones. Tree importance beats Mann-Whitney at
+   k = 250, and Lasso at k = 1000, by under 0.01 AUC (section 8.3). The
+   broad pattern held on both datasets:
    selection beats random most at small `k`, and RFE is weakest at small
    `k`.
 9. **Test with the splits' overlap in mind.** Random splits share most of
@@ -88,7 +91,8 @@
 **About cost.**
 
 12. **The cheap corner wins.** On SCAN-B, sub-second GPU filters reach AUC
-    0.97. Nothing slower is clearly better. On BreastMNIST everything is
+    0.97. Nothing slower is clearly better. On 16 splits, Berk-Jones at
+    0.65 s per fit ties a 200-tree forest at 13.5 s. On BreastMNIST everything is
     cheap. Lasso is best at k = 250.
 13. **A GPU helps sorting and matrix products, not everything.** A cheap
     GPU computes in 64 bits slowly and has little memory. It also needs
@@ -130,7 +134,9 @@ On SCAN-B: tree importance, Mann-Whitney and Lasso form a top group whose
 order is not established. Tree importance has the highest median, 0.29
 macro-F1 over random at k = 5 down to 0.03 at k = 1000. Mann-Whitney is
 within 0.03 of it and far more stable. The gain over random is
-established up to k = 100. On BreastMNIST: Lasso or tree importance,
+established up to k = 100. On the frontier, scored by AUC over 16
+splits, tree importance's lead over Mann-Whitney is established at
+k = 250 only, and it is 0.007. On BreastMNIST: Lasso or tree importance,
 whose order is not settled either. Lasso beats random by 0.22 at k = 5
 down to 0.07 at k = 250, in the median.
 
