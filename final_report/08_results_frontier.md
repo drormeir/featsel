@@ -342,9 +342,9 @@ On gene expression, selection helps a little. The two best methods on
 average, HC2008 and tree importance at k = 1000, beat all 28,552 genes by
 0.006. On LumB the best set beats them by 0.025. On Normal they tie.
 Mann-Whitney k = 1000 (0.966) only matches all genes. The gain is about
-one and a half standard deviations over splits. It is not tested for
-significance. The larger gain is size: a model on 1,000 genes instead of
-28,552, at no loss.
+one and a half standard deviations over splits. The paired test below,
+on 16 splits, does not establish it. The larger gain is size: a model on
+1,000 genes instead of 28,552, at no loss.
 
 ### BreastMNIST at larger `k`
 
@@ -383,10 +383,14 @@ What it shows:
 
 ### A paired test against all features
 
-The BreastMNIST frontier has only 5 splits. So all 2,048 BreastMNIST features also
-ran on the comparison's 20 splits (chapter 7), with C tuned as there, and
-were tested against every method with the corrected paired test of
-section 7.3. Macro-F1 with all features: 0.822 [0.802, 0.835].
+The frontier has too few splits to test against all features. So all
+features also ran on the comparison's splits (chapter 7): 20 on
+BreastMNIST, 16 on SCAN-B, with C tuned as there. Each method was
+tested against them with the corrected paired test of section 7.3, in
+macro-F1.
+
+**BreastMNIST.** Macro-F1 with all 2,048 features: median 0.822 over
+the splits, quartiles 0.802 and 0.835.
 
 | Method at its best `k` | Difference from all features [95% interval] | p |
 |---|---|---|
@@ -399,13 +403,48 @@ section 7.3. Macro-F1 with all features: 0.822 [0.802, 0.835].
 All features scored higher on average than every method at every `k`. At
 k = 250 no difference is significant: selection there costs little and
 buys a model an eighth the size. Below k = 50 every method falls short of
-all features by 0.07 or more in macro-F1. On SCAN-B the same test needs
-all 28,552 genes on the 16 comparison splits, a run of several hours that
-is not done yet (chapter 10).
+all features by 0.07 or more in macro-F1.
 
-Config: [`configs/comparison_breastmnist_all_features.yaml`](../configs/comparison_breastmnist_all_features.yaml).
-Tests: [`figures/paired_tests_breastmnist_vs_all_features.csv`](figures/paired_tests_breastmnist_vs_all_features.csv),
-from `scripts/paired_tests.py ... --baseline AllFeatures`.
+**SCAN-B.** Macro-F1 with all 28,552 genes: median 0.873 over the
+splits, quartiles 0.871 and 0.874. There are 47 tests, so, as in
+chapter 7, a difference counts as real when p < 0.05 / 47 = 0.001
+(Bonferroni).
+
+| Method at its best `k` | Difference from all genes [95% interval] | Splits won | p |
+|---|---|---|---|
+| HC2008 and Berk-Jones, own count (about 2,850) | +0.010 [0.001, 0.020] | 16 of 16 | 0.025 to 0.030 |
+| Mann-Whitney, k = 2,855 | +0.010 [0.001, 0.019] | 16 of 16 | 0.025 |
+| Mann-Whitney, k = 1000 | +0.006 [−0.007, 0.017] | 15 of 16 | 0.34 |
+| Tree importance, k = 1000 | +0.005 [−0.005, 0.015] | 13 of 16 | 0.30 |
+| Lasso, k = 1000 | −0.025 [−0.040, −0.009] | 0 of 16 | 0.004 |
+| RFE, k = 1000 | −0.026 [−0.042, −0.010] | 0 of 16 | 0.003 |
+
+What it shows:
+
+- **No selected set is established as better than all genes.** The best,
+  about 2,850 genes by the U test, beat all genes on all 16 splits, by
+  0.010. That is p = 0.025, short of the threshold.
+- **The top methods match all genes from k = 250 on.** Mann-Whitney and
+  tree importance at k = 250 to 1000 are within 0.007 of all genes, in
+  both directions. That is a model a hundredth to a thirtieth the size,
+  at no established loss.
+- **Below k = 50 every method falls short.** Mann-Whitney and tree
+  importance trail all genes by 0.03 to 0.09 at k = 5 to 20, established
+  (p ≤ 0.0006).
+- **Lasso and RFE trail all genes at every `k`.** Lasso by 0.025 even at
+  k = 1000, RFE by 0.026. This is established at k = 5, 10 and 500 for
+  Lasso, and at k = 5 to 500 for RFE.
+
+So on both datasets the answer is the same. Selection does not make the
+classifier better than all features. It makes it smaller at the same
+quality, once `k` is in the hundreds.
+
+Configs: [`configs/comparison_breastmnist_all_features.yaml`](../configs/comparison_breastmnist_all_features.yaml),
+[`configs/comparison_scanb_all_genes.yaml`](../configs/comparison_scanb_all_genes.yaml).
+Tests: [`figures/paired_tests_breastmnist_vs_all_features.csv`](figures/paired_tests_breastmnist_vs_all_features.csv)
+and [`figures/paired_tests_scanb_vs_all_genes.csv`](figures/paired_tests_scanb_vs_all_genes.csv),
+from `scripts/paired_tests.py ... --baseline AllFeatures` (`AllGenes` on
+SCAN-B).
 
 ### BreastMNIST without the copied images
 
@@ -577,7 +616,9 @@ What it shows:
   limit on the count, using all 2,048 features is best. Selection there
   buys a smaller model, not a better one.
 - On SCAN-B, the best selected sets beat all 28,552 genes by 0.006 AUC on
-  average (0.025 on LumB), with a model a tenth the size or less.
+  average (0.025 on LumB), with a model a tenth the size or less. On the
+  comparison's 16 splits no selected set is established as better than
+  all genes. From k = 250 the top methods match them.
 - Wrappers cost the most. On SCAN-B they also scored below the filters. On
   BreastMNIST, RFE scored close to Lasso at k = 250 (0.900 against 0.902).
 - On FGVC-Aircraft, an unseen dataset, the pipeline ran unchanged and

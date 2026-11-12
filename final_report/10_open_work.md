@@ -13,7 +13,6 @@ research beyond the project's scope.
 | Item | Why it matters | Effort |
 |---|---|---|
 | **Tuned classifier in the frontier.** C is fixed at 1 there. | Absolute AUCs may be a little low. A method needing a different C is disadvantaged. | Multiplies the classifier's cost by about 15. |
-| **A paired test of selection against all genes on SCAN-B.** Section 8.7 found a gain of 0.006 AUC over 5 splits. On BreastMNIST the 20-split test is done: no selected set beats all features (section 8.7). | Whether selection improves the classifier at all is a central question. 5 splits cannot settle a gain of this size. | `configs/comparison_scanb_all_genes.yaml`, then `scripts/paired_tests.py --baseline AllGenes`. Hours. |
 | **RFECV scored by AUC in the 16-split comparison.** On the frontier (5 splits, section 8.6) it no longer collapsed on SCAN-B. | Would give it the paired tests of chapter 7. | About 6 hours on SCAN-B. |
 | **RFE with a finer step and a forest with more trees in the comparison.** The comparison used RFE removing half the genes per round and 50 trees. | Both were chosen for speed. The frontier used step 0.1 and 200 trees, and RFE stayed weakest. So the conclusion is unlikely to change. | Hours. |
 | **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The comparison uses one classifier and one train fraction. | About four days on this laptop. Skipped by decision. |

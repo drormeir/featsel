@@ -107,8 +107,9 @@
     BreastMNIST, all 2,048 features gave AUC 0.921, more than any selected
     subset. On FGVC-Aircraft, all features gave 0.864, also the best. On
     SCAN-B, the best selected sets beat all 28,552 genes by only 0.006 on
-    average (0.025 on LumB), with a tenth of the genes or fewer. Know which
-    of the two you want.
+    average (0.025 on LumB), with a tenth of the genes or fewer. On 16
+    splits, the corrected test establishes no gain over all genes on
+    either dataset. Know which of the two you want.
 
 ## 9.3 What this project adds
 

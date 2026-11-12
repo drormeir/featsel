@@ -35,7 +35,7 @@ methods here, and much faster.
 | Do methods find the genes that define the label? | Rarely at small `k`, yet they predict it well: correlated genes stand in for them. | [7.6](07_results_quality.md#76-does-selection-find-the-pam50-genes) |
 | How much faster did we make it? | The runner 3.2 to 5.3 times over plain scikit-learn; GPU filters 2.6 to 49 times; Sequential selection 34 times; same features. | [6](06_making_it_fast.md) |
 | Why did RFECV fail, and can it be fixed? | Its default inner score, accuracy, made it keep 1 or 2 genes on imbalanced tasks. Scored by AUC it recovers to 0.961 on SCAN-B, still below a sub-second filter. | [8.6](08_results_frontier.md#86-rfecv-testing-the-hypothesis) |
-| Does selection beat using every feature? | Barely. On SCAN-B the best selected genes beat all 28,552 by 0.006 AUC (0.025 on LumB). On BreastMNIST all 2,048 features score best (0.921). The main gain is a much smaller model. | [8.7](08_results_frontier.md#87-is-selection-needed-at-all) |
+| Does selection beat using every feature? | No established gain. On SCAN-B the best selected genes beat all 28,552 by 0.006 AUC (0.025 on LumB), but on 16 splits the corrected test does not establish it. On BreastMNIST all 2,048 features score best (0.921). The main gain is a much smaller model. | [8.7](08_results_frontier.md#87-is-selection-needed-at-all) |
 | Does the pipeline work on unseen data? | Yes, unchanged and entirely on the GPU: aircraft photos, 10 splits in 5 minutes. Every method beat random by 0.09 to 0.12 AUC at 10 features. | [8.8](08_results_frontier.md#88-an-unseen-dataset-fgvc-aircraft) |
 
 ## Table of contents

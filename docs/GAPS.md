@@ -46,7 +46,7 @@ report does not list it yet.
   less; scikit-learn's Sequential selection took 164 s instead of 191 s,
   so the GPU's lead is now 34 times, not 39. Section 6.2 is updated.
 
-### A3. Does selection beat using all features? Not tested (task 2)
+### A3. Does selection beat using all features? (task 2)
 
 - **Problem.** On SCAN-B the best selected genes beat all genes by 0.006
   AUC, over 5 splits, untested. On BreastMNIST and FGVC-Aircraft all
@@ -56,19 +56,17 @@ report does not list it yet.
 - **What closes it.** Add the all-features baseline to the 16-split
   comparison, and test it with the corrected test of B1.
 - **Source.** `final_report/10_open_work.md`, 10.1.
-- **Status.** Half done 2026-11-11. BreastMNIST: all 2,048 features ran on
-  the comparison's 20 splits. They scored higher on average than every
-  method at every `k`; at k = 250 no difference is significant, below
-  k = 50 every method trails by 0.07 or more (section 8.7).
-  `scripts/paired_tests.py` gained `--baseline` for this. SCAN-B is ready
-  to run, not run (a long run, left for 2026-11-11 by decision):
-  `.venv/bin/python scripts/run_until_done.py --config
-  configs/comparison_scanb_all_genes.yaml --n-jobs 4 --max-worker-memory-gb 3`
-  (the runner, restarted with `--resume` after a crash), then `scripts/paired_tests.py
-  results/comparison_scanb.csv results/comparison_scanb_all_genes.csv
-  --baseline AllGenes`.
+- **Status.** Closed 2026-11-12. All features ran on the comparison's
+  splits and were tested against every method (`scripts/paired_tests.py
+  --baseline`). BreastMNIST, 20 splits: all 2,048 features scored higher
+  on average than every method at every `k`; at k = 250 no difference is
+  significant. SCAN-B, 16 splits, 22 minutes, no crash: no selected set
+  is established as better than all genes. The best, about 2,850 genes by
+  the U test, won all 16 splits by 0.010 macro-F1, p = 0.025, short of the
+  Bonferroni threshold of 0.001. From k = 250 the top methods are within
+  0.007 of all genes. Below k = 50 every method trails. Section 8.7.
 
-### A4. The frontier rests on 5 splits (task 2)
+### A4. The frontier rested on 5 splits (task 2)
 
 - **Problem.** On 5 splits the corrected paired test (B1) has 4 degrees
   of freedom. So the order of the top methods on the frontier is not
