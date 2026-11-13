@@ -26,6 +26,14 @@ commit.
 
 ## The experiments
 
+**The configs have moved ahead of the results.** On 2026-11-13 and 14 the
+configs changed. liblinear was dropped, Lasso chooses C and every method
+with a `k` list chooses `k` on validation sets, and the SCAN-B `k` list
+grew. The frontier results in chapter 8, and the comparison in chapter 7,
+come from the configs as they were before. To reproduce those numbers,
+check out the commit recorded in each result's JSON file. The commands
+below, on the current configs, give the next run's results.
+
 | Result | Command | Output |
 |---|---|---|
 | Comparison, SCAN-B (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 4 --max-worker-memory-gb 3` | `results/comparison_scanb.csv` |

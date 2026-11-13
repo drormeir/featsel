@@ -26,6 +26,12 @@ as the complex methods, and much faster.
 
 ## Key results at a glance
 
+These results come from runs made before 2026-11-13. Since then, RFE,
+RFECV and Lasso run only exact solvers, and every method chooses its
+number of features on validation sets instead of by test-set AUC
+(sections 3.11 and 6.2). The frontier will be rerun with these changes,
+and the results below updated.
+
 | Question | Answer | Where |
 |---|---|---|
 | Does selection beat random genes? | Yes, by 0.26 to 0.29 macro-F1 at 5 genes on SCAN-B; the gain shrinks to a few hundredths by 250 genes. | [7.2](07_results_quality.md#72-scan-b) |

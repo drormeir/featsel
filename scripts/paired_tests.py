@@ -79,9 +79,16 @@ def tests(results, metric, baseline=None, own_count=False):
     scores = per_split(results, metric)
     test_over_train = (results['n_test'] / results['n_train']).mean()
     if baseline is not None:
-        reference = scores.loc[baseline].iloc[0]
-        return pd.DataFrame([compare(row, reference, k, method, baseline, test_over_train)
-                             for (method, k), row in scores.drop(baseline, level=0).iterrows()])
+        # A baseline with one setting, such as all features, meets every
+        # method at every k. A baseline with a k list, such as random, meets
+        # each method at the same k only.
+        reference = scores.loc[baseline]
+        single = len(reference) == 1
+        return pd.DataFrame([
+            compare(row, reference.iloc[0] if single else reference.loc[k], k, method, baseline,
+                    test_over_train)
+            for (method, k), row in scores.drop(baseline, level=0).iterrows()
+            if single or k in reference.index])
     rows = []
     for k in sorted(results['k'].dropna().unique()):
         methods = [s for s in scores.index.get_level_values(0).unique()

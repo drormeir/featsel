@@ -156,10 +156,10 @@ Results at the largest size both sides reached:
 | Mann-Whitney and Higher Criticism (our NumPy U test) | 3.76 s | — | 0.49 s (7.7×) | yes | [mann_whitney](../featsel/selectors/mann_whitney/demos/speed.ipynb) |
 | Berk-Jones (our NumPy U test) | 3.88 s | — | 0.46 s (8.4×) | yes | [berk_jones](../featsel/selectors/berk_jones/demos/speed.ipynb) |
 | Mutual information, 10,000 features | 78.3 s | 18.4 s (4.2×) | 1.60 s (49×) | yes, bit for bit | [mutual_info](../featsel/selectors/mutual_info/demos/speed.ipynb) |
-| Lasso (liblinear → PPDNA solver) | 5.66 s | — | 1.08 s (5.2×) | 91% overlap (see below) | [lasso](../featsel/selectors/lasso/demos/speed.ipynb) |
+| Lasso (liblinear → PPDNA solver) | 5.48 s | 26.6 s (4.9× slower) | 0.99 s (5.5×) | 91% overlap (see below) | [lasso](../featsel/selectors/lasso/demos/speed.ipynb) |
 | Tree importance, 10,000 features (1 thread → 12) | 103.7 s | 18.8 s (5.5×) | no GPU path | yes | [tree_importance](../featsel/selectors/tree_importance/demos/speed.ipynb) |
-| RFE (liblinear → exact Newton solver) | 26.1 s | 12.7 s (2.1×) | 15.4 s (1.7×) | not at every size (see below) | [rfe](../featsel/selectors/rfe/demos/speed.ipynb) |
-| RFECV, 10,000 features | 71.2 s | 48.9 s (1.5×) | 42.2 s (1.7×) | not at every size | [rfecv](../featsel/selectors/rfecv/demos/speed.ipynb) |
+| RFE (liblinear → exact Newton solver) | 30.0 s | 13.9 s (2.2×) | 16.5 s (1.8×) | not at every size (see below) | [rfe](../featsel/selectors/rfe/demos/speed.ipynb) |
+| RFECV, 10,000 features | 72.5 s | 67.0 s (1.1×) | 41.7 s (1.7×) | not at every size | [rfecv](../featsel/selectors/rfecv/demos/speed.ipynb) |
 | Sequential forward, 1,000 features | 163.8 s | 22.5 s (7.3×) | 4.9 s (34×) | yes | [sequential](../featsel/selectors/sequential/demos/speed.ipynb) |
 | Random | — | 0.02 s | — | — | [random_selection](../featsel/selectors/random_selection/demos/speed.ipynb) |
 
@@ -174,9 +174,24 @@ by 7% or less. scikit-learn's Sequential selection took 164 s, against
 191 s before, so the GPU's lead fell from 39 to 34 times. Two timed fits
 cannot pin a time closer than that.
 
+The RFE, RFECV and Lasso rows were rerun on 2026-11-14, after liblinear
+was dropped. Their notebooks time liblinear at its defaults as the
+original.
+
 The Lasso notebook also times the five tasks on real SCAN-B (2,976
-patients, 28,552 genes). PPDNA on the GPU took 0.7 to 1.4 s per fit.
-liblinear took 4.5 to 5.8 s. So PPDNA was 3.2 to 7.0 times faster.
+patients, 28,552 genes). PPDNA on the GPU took 0.70 to 1.34 s per fit.
+liblinear took 4.3 to 5.8 s. So PPDNA on the GPU was 4.0 to 6.8 times
+faster. PPDNA on the CPU took 4.5 to 31.7 s. It was faster than
+liblinear only on Normal.
+
+The notebook standardizes the data in 32-bit floats, as the runner holds
+it. A few genes are nearly constant: their spread is 10⁻⁶ to 10⁻⁹ around
+the expression floor. 32-bit floats cannot hold so small a spread, so
+standardizing them turns rounding into values up to 0.06 apart from the
+64-bit result. Only 0.02% of the values move by more than 0.001. PPDNA on
+the CPU is sensitive to this. On LumB it took 35 s on data standardized
+in 32 bits and 7.3 s on data standardized in 64 bits, and kept 730 genes
+against 735.
 
 A second series ran on real SCAN-B. It used the training set of one
 split, Basal vs rest (1,488 patients, half of them), and the median of 5
@@ -284,11 +299,13 @@ for RFE and RFECV, PPDNA for Lasso. The reasons:
 For Lasso the speed argument is weaker. On the CPU, with C chosen from
 four values by 5-fold validation AUC, both solvers took the same total
 time over the five SCAN-B tasks: 379 s for liblinear, 381 s for PPDNA
-(single fits). PPDNA was faster on Basal, Her2 and Normal and slower on
+(single fits, on data standardized in 64 bits). On data standardized in
+32 bits, as above, a single PPDNA fit on the CPU was up to 5.8 times
+slower than liblinear. PPDNA was faster on Basal, Her2 and Normal and slower on
 LumA and LumB. Its cost grows with the number of genes the model keeps,
 and the luminal tasks keep the most. Both chose C = 0.1 on every task,
 and their validation AUCs agreed to the fourth digit. On a GPU, PPDNA was
-3.2 to 7.0 times faster. liblinear cannot use one.
+4.0 to 6.8 times faster. liblinear cannot use one.
 
 Lasso has no test that it is at most 5% slower than scikit-learn. Every
 other wrapped selector has one. The reason is that scikit-learn has no

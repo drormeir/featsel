@@ -31,6 +31,10 @@
 
 ## 9.2 What we learned
 
+The numbers below come from the runs of chapters 7 and 8, made before
+RFE, RFECV and Lasso dropped liblinear and before `k` was chosen on
+validation sets. They will be updated after the rerun.
+
 **About the data.**
 
 1. Read where the labels come from. PAM50 and the computed ER label are
