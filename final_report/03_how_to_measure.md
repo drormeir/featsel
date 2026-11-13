@@ -96,6 +96,26 @@ BreastMNIST, at a training fraction of 0.5. Sixteen splits keep the SCAN-B
 run under half an hour. Sixteen or more values support quartiles; five do
 not.
 
+**More splits help less than they seem.** Random splits share most of
+their training samples. So the corrected test of section 7.3 multiplies
+the variance by 1/J + n_test/n_train, for J splits. The second term does
+not shrink as J grows. So no number of splits makes the 95% interval
+narrower than a fixed limit. The table gives the interval's width as a
+multiple of that limit:
+
+| Splits J | 5 | 10 | 16 | 20 | 32 | 100 |
+|---|---|---|---|---|---|---|
+| Half for training | 1.55 | 1.21 | 1.12 | 1.09 | 1.06 | 1.02 |
+| 70% for training | 1.72 | 1.28 | 1.16 | 1.13 | 1.08 | 1.02 |
+
+The width combines the variance factor with the t value for J − 1
+degrees of freedom. Going from 5 splits to 16 narrows the interval by 28
+to 32%. Going beyond 16 can narrow it by at most 14% more. So 16 is not
+only what the laptop allowed. It captures most of what extra splits can
+give, on any machine. A difference the test cannot establish at 16
+splits will rarely be established by more splits. It needs more patients
+instead.
+
 We report the **median over splits with the first and third quartiles**,
 or the mean with the standard deviation where noted. The median ignores
 the occasional odd split. The quartiles describe the bulk of the values
