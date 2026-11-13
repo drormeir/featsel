@@ -31,11 +31,11 @@ usable genes: almost ten times more features than samples.
 
 This setting is often written p ≫ n: many more features (p) than samples
 (n). The same setting appears in text analysis and in image embeddings.
-It causes five problems.
+Five problems make it hard.
 
 **Overfitting.** With more features than samples, a linear classifier can
-separate any labeling of the training samples perfectly, even random
-labels. A perfect training score then says nothing.
+separate any labeling of the training set perfectly, even random labels.
+A perfect training score then says nothing.
 
 **False discoveries.** Suppose no gene were related to the label. Testing
 28,552 genes one by one at the usual 5% level would still flag about 1,400
@@ -43,15 +43,15 @@ genes by chance alone.
 
 **Correlated features.** Genes work in groups. When one gene of a group
 rises, hundreds of others rise with it. So many different gene sets can
-predict equally well. "The best genes" is not a single answer. The
+predict equally well. So "the best genes" is not a single answer. The
 project specification names this problem directly: removing all
 correlated features may be impractical.
 
-**Noise.** Both the biology and the measurement vary. Two samples of the
-same tumour, sequenced twice, do not give identical values (chapter 2).
+**Noise.** Both the biology and the measurement vary. The same tumour,
+sequenced twice, does not give identical values (chapter 2).
 
-**Cost.** Some methods train a classifier for every candidate feature or
-every step. With 28,552 genes, such methods can take hours or days.
+**Cost.** Some methods train a classifier for every candidate feature, or
+at every step. With 28,552 genes, such methods can take hours or days.
 
 ## 1.3 The goal of the project
 
@@ -65,7 +65,7 @@ The project specification (`references/MLDS_Feature_Selection.pdf`, Nov
 4. Run the pipeline on a second dataset, not necessarily gene expression.
 
 The deliverables are software that runs on an input dataset, and a final
-report. This project drives the software by a configuration file.
+report. In this project, a configuration file drives the software.
 
 ## 1.4 What we built and asked
 
@@ -73,7 +73,7 @@ report. This project drives the software by a configuration file.
 Each one behaves exactly like a scikit-learn selector. A user with an
 existing scikit-learn pipeline can swap their selector for ours and change
 nothing else. A runner runs the whole comparison. One YAML file drives it.
-It writes one row per experiment to a CSV table. See
+It writes one record per experiment to a CSV file. See
 [chapter 5](05_the_software.md).
 
 **The main question.** For a given number of features `k`, which method
@@ -82,9 +82,9 @@ features at random? The random control matters. If random genes do almost
 as well, a method has not found much.
 
 **The second question.** What does each method cost in time? Which
-methods give the best quality for their cost? We answer it with a
+methods give the best quality for their cost? We answer with a
 cost-quality frontier ([chapter 8](08_results_frontier.md)). It plots
-selection time against AUC, every method on one plot.
+selection time against AUC for every method on one plot.
 
 **The targets.** The breast cancer data offers several labels: the PAM50
 molecular subtype, estrogen receptor (ER) status, and survival. PAM50 is
@@ -94,21 +94,21 @@ becomes five binary tasks.
 ## 1.5 Scope
 
 This is a comparative study, not a new method. The project uses published
-methods. The one change is in HC2008: it centres each sorted p-value at
-its exact mean (section 4.4). The aim is a fair comparison under one
-protocol, and a fast, reliable tool to run it.
+methods. It changes only one of them, HC2008: our version centres each
+sorted p-value at its exact mean (section 4.4). The aim is a fair
+comparison under one protocol, and a fast, reliable tool to run it.
 
 ## 1.6 What earlier work found
 
 **Comparative studies on gene expression.** Dudoit et al. (2002) compared
-classifiers on three tumour gene expression datasets. Simple methods did as
-well as complex ones. Examples are diagonal linear discriminant analysis
-and nearest neighbours. Statnikov et al. (2005) compared classifiers and
+classifiers on three tumour gene expression datasets. Simple methods, such
+as diagonal linear discriminant analysis and nearest neighbours, did as
+well as complex ones. Statnikov et al. (2005) compared classifiers and
 gene selection methods on many multiclass cancer datasets. They found
 multiclass SVMs the most accurate classifiers. Bolón-Canedo et al. (2014)
-review the microarray datasets in common use. They also review the
-selection methods applied to them. Saeys et al. (2007) review selection
-methods for bioinformatics as a whole.
+review the microarray datasets in common use and the selection methods
+applied to them. Saeys et al. (2007) review selection methods for
+bioinformatics as a whole.
 
 **How our data differs.** Most of those datasets have tens to a few
 hundred samples. SCAN-B has thousands of patients. So its test sets are
@@ -124,16 +124,17 @@ mislead. Chapter 3 shows how this project handles each.
 | Trusting the spread of k-fold scores | Bengio and Grandvalet (2004) | Repeated random splits (3.3) |
 | Reporting scores without stability | Kuncheva (2007) | Kuncheva's index for every method (3.6) |
 
-**Where this project stands.** It compares methods from all three families,
-and Higher Criticism, under one protocol. It runs on one large gene
-expression cohort and one image dataset. This tests whether the ranking of
-methods carries over between domains. A second image dataset, unseen
-during the design, then tests the finished pipeline (section 8.8).
+**Where this project stands.** It compares methods from all three
+families (filters, embedded methods and wrappers), and Higher Criticism,
+under one protocol. It runs on one large gene expression cohort and one
+image dataset. This tests whether the ranking of methods carries over
+between domains. A second image dataset, unseen during the design, then
+tests the finished pipeline (section 8.8).
 
 ## 1.7 What this project adds
 
-This is a comparative study, so its contributions are evidence and tools,
-not a new method.
+The project's contributions are evidence and tools, not a new method
+(section 1.5).
 
 1. **A comparison at a cohort size earlier studies lacked.** Most earlier
    comparisons had tens to hundreds of samples. Here 2,976 patients give
@@ -143,19 +144,20 @@ not a new method.
 2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
    thresholds were built for rare, independent signal. Our data has
    widespread, correlated signal. Higher Criticism stopped at the edge of
-   its search on all three datasets, and Berk-Jones at or just before it
-   on the two it ran on. Both acted as top-10% filters (sections 7.5 and
-   8.8).
+   its search on all three datasets. Berk-Jones stopped at or just before
+   that edge on the two datasets it ran on. So both acted as top-10%
+   filters (sections 7.5 and 8.8).
 3. **A cost-quality frontier.** Selection time against AUC, for every
    method and setting on one plot. It shows which method to use for a time
    budget (chapter 8).
-4. **Drop-in selectors that are tested, fast and exact.** 16 selectors are
-   scikit-learn estimators. Those that copy a scikit-learn method pick the
-   same features, on the CPU and on a GPU. Exact solvers make Lasso, RFE
-   and Sequential selection faster. For Lasso and RFE they reach the
-   solution that scikit-learn's default stops short of (chapters 5 and 6).
-5. **Checks of the data that change its use.** Repeated patients in
-   SCAN-B, labels computed from the features, and copied images in
-   BreastMNIST, found in BreastMNIST's own images (chapter 2).
+4. **Drop-in selectors that are tested, fast and exact.** All 16
+   selectors are scikit-learn estimators. Those that copy a scikit-learn
+   method pick the same features as it, on the CPU and on a GPU. Exact
+   solvers make Lasso, RFE and Sequential selection faster. For Lasso and
+   RFE they also reach the solution that scikit-learn's default solver
+   stops short of (chapters 5 and 6).
+5. **Checks of the data that change its use.** SCAN-B repeats some
+   patients, and its labels are computed from the features. BreastMNIST
+   holds copied images; we found them in its own images (chapter 2).
 
 Section 9.3 repeats them in short.

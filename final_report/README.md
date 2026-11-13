@@ -4,9 +4,9 @@ M.Sc. final project, Machine Learning and Data Science, Reichman University.
 Supervisor: Dr. Ben Galili.
 
 This report is written for a reader with a B.Sc.-level background in
-machine learning. It explains the problem first. Then it gives the methods
-we tried, and then what we found. Each chapter is short and can be read
-alone.
+machine learning. It first explains the problem. It then describes the
+methods we tried, and finally what we found. Each chapter is short and can
+be read alone.
 
 ## In one paragraph
 
@@ -20,9 +20,9 @@ We compared the methods on breast cancer data (SCAN-B, 2,976 patients,
 A third dataset, aircraft photos, tested the finished pipeline on data it
 was not designed for. Every method was measured against a control that
 picks features at random. We also made the slow methods faster, many of
-them on a GPU. Then we measured cost against quality on one plot. The main
-finding: a simple one-gene-at-a-time test is almost as good as the complex
-methods here, and much faster.
+them on a GPU. Then we plotted cost against quality for every method. The
+main finding: here, a simple test of one gene at a time is almost as good
+as the complex methods, and much faster.
 
 ## Key results at a glance
 
@@ -31,12 +31,12 @@ methods here, and much faster.
 | Does selection beat random genes? | Yes, by 0.26 to 0.29 macro-F1 at 5 genes on SCAN-B; the gain shrinks to a few hundredths by 250 genes. | [7.2](07_results_quality.md#72-scan-b) |
 | Which method selects best? | No single method. Tree importance, Mann-Whitney and Lasso form a top group; a paired test corrected for overlapping splits cannot order them. Mann-Whitney is by far the most stable. | [7.2](07_results_quality.md#72-scan-b), [7.3](07_results_quality.md#73-are-the-differences-real-paired-tests), [7.8](07_results_quality.md#78-breastmnist) |
 | Which is the best value for time? | On SCAN-B, a GPU Mann-Whitney or Higher Criticism filter: AUC 0.97 in 0.66 s. Nothing slower is clearly better. | [8.3](08_results_frontier.md#83-scan-b-all-five-tasks) |
-| Does Higher Criticism pick its own count? | No: on all three datasets it stopped at the edge of its search, because the signal is neither rare nor independent. Berk-Jones, its exact relative, stopped at or just before the same edge. | [7.5](07_results_quality.md#75-higher-criticism-did-not-choose-its-own-count), [8.8](08_results_frontier.md#88-an-unseen-dataset-fgvc-aircraft) |
-| Do methods find the genes that define the label? | Rarely at small `k`, yet they predict it well: correlated genes stand in for them. | [7.6](07_results_quality.md#76-does-selection-find-the-pam50-genes) |
-| How much faster did we make it? | The runner 3.2 to 5.3 times over plain scikit-learn; GPU filters 2.6 to 49 times; Sequential selection 34 times; same features. | [6](06_making_it_fast.md) |
-| Why did RFECV fail, and can it be fixed? | Its default inner score, accuracy, made it keep 1 or 2 genes on imbalanced tasks. Scored by AUC it recovers to 0.961 on SCAN-B, still below a sub-second filter. | [8.6](08_results_frontier.md#86-rfecv-testing-the-hypothesis) |
-| Does selection beat using every feature? | No established gain. On SCAN-B the best selected genes beat all 28,552 by 0.006 AUC (0.025 on LumB), but on 16 splits the corrected test does not establish it. On BreastMNIST all 2,048 features score best (0.921). The main gain is a much smaller model. | [8.7](08_results_frontier.md#87-is-selection-needed-at-all) |
-| Does the pipeline work on unseen data? | Yes, unchanged and entirely on the GPU: aircraft photos, 10 splits in 5 minutes. Every method beat random by 0.09 to 0.12 AUC at 10 features. | [8.8](08_results_frontier.md#88-an-unseen-dataset-fgvc-aircraft) |
+| Does Higher Criticism pick its own count? | No. On all three datasets it stopped at the edge of its search, because the signal is neither rare nor independent. Berk-Jones, its exact relative, stopped at or just before the same edge on the two datasets it ran on. | [7.5](07_results_quality.md#75-higher-criticism-did-not-choose-its-own-count), [8.8](08_results_frontier.md#88-an-unseen-dataset-fgvc-aircraft) |
+| Do methods find the genes that define the label? | Rarely at small `k`. Yet they predict the label well, because correlated genes stand in for them. | [7.6](07_results_quality.md#76-does-selection-find-the-pam50-genes) |
+| How much faster did we make it? | The runner is 3.2 to 5.3 times faster than plain scikit-learn. GPU filters are 2.6 to 49 times faster, and Sequential selection 34 times. All select the same features as before. | [6](06_making_it_fast.md) |
+| Why did RFECV fail, and can it be fixed? | Its default validation score, accuracy, made it keep 1 or 2 genes on imbalanced tasks. Scored by AUC, it recovers to 0.961 on SCAN-B. That is still below a sub-second filter. | [8.6](08_results_frontier.md#86-rfecv-testing-the-hypothesis) |
+| Does selection beat using every feature? | No established gain. On SCAN-B the best selected genes beat all 28,552 by 0.006 AUC (0.025 on LumB). On 16 splits the corrected test does not establish this gain. On BreastMNIST all 2,048 features score best (0.921). The main gain of selection is a much smaller model. | [8.7](08_results_frontier.md#87-is-selection-needed-at-all) |
+| Does the pipeline work on unseen data? | Yes. It ran unchanged, entirely on the GPU: aircraft photos, 10 splits in 5 minutes. Every method beat random by 0.09 to 0.12 AUC at 10 features. | [8.8](08_results_frontier.md#88-an-unseen-dataset-fgvc-aircraft) |
 
 ## Table of contents
 
@@ -65,12 +65,14 @@ names its source. The two main experiments differ, and the report keeps
 them apart:
 
 - **The comparison** (chapter 7): 7 methods and 16 random splits (20 on
-  BreastMNIST). Half the samples train. Scored by macro-F1.
+  BreastMNIST). Half the samples form the training set. Scored by
+  macro-F1.
 - **The frontier** (chapter 8): 13 method settings and 5 random splits.
-  70% of the samples train. Scored by ROC AUC, with timing.
+  70% of the samples form the training set. Scored by ROC AUC, with
+  timing.
 
 Section 8.8 adds one more run, on the unseen aircraft dataset: 10 splits,
-70% training, ROC AUC.
+70% of the samples in the training set, scored by ROC AUC.
 
 Times are from one laptop: Intel i7-9750H (6 cores, 12 threads), 16 GB RAM,
 NVIDIA GeForce GTX 1650 with 4 GB. A time means something only on the

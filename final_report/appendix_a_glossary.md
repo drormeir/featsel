@@ -2,12 +2,13 @@
 
 [Back to contents](README.md)
 
-**AUC (ROC AUC).** The area under the ROC curve. Equal to the chance that
+**AUC (ROC AUC).** The area under the ROC curve. It equals the chance that
 a model scores a random positive sample above a random negative one. 0.5
-is guessing, 1.0 is perfect. It needs no decision threshold.
+is guessing, and 1.0 is perfect. It needs no decision threshold.
 
 **Balanced accuracy.** The average of the recall (true-positive rate) of
-each class. Always 0.5 for a model that predicts one class for everyone.
+each class. It is always 0.5 for a model that predicts one class for
+every sample.
 
 **Benjamini-Hochberg.** A procedure that keeps the expected share of false
 discoveries among the selected features below a chosen level (FDR).
@@ -24,15 +25,15 @@ the chance of even one false positive stays below α.
 Each tree of a random forest grows on one.
 
 **Cell.** One experiment: one task, split, method, `k` and classifier.
-One row of the runner's CSV.
+The runner writes one line of its results CSV per cell.
 
 **Control (random selection).** A method that picks `k` features at
-random. Every real method must beat it.
+random. A real method is useful only if it beats it.
 
 **Corrected resampled t-test.** A paired t-test over random splits that
 allows for their shared training samples (Nadeau and Bengio 2003). It
-multiplies the variance of the mean difference by a factor that grows
-with the test-to-training ratio.
+enlarges the variance of the mean difference by a factor. The factor grows
+with the ratio of test set size to training set size.
 
 **Cost-quality frontier.** The methods that no other method beats on both
 time and quality at once.
@@ -61,7 +62,7 @@ once.
 
 **Higher Criticism (HC).** A method that compares sorted p-values with
 what pure noise would give. It keeps the features up to the point of
-largest difference. So it picks its own count.
+largest difference. So it picks its own number of features.
 
 **k.** The number of features a method is asked to keep.
 
@@ -69,11 +70,12 @@ largest difference. So it picks its own count.
 different splits are, corrected for chance: 1 = identical, 0 = chance.
 
 **Lasso.** A linear model with an L1 penalty, λ·Σ|wᵢ|. The penalty sets
-many weights to exactly zero. Here it is logistic regression. scikit-learn's C
-is 1/λ, so a smaller C means a stronger penalty.
+many weights to exactly zero. Here the model is logistic regression.
+scikit-learn's C is 1/λ, so a smaller C means a stronger penalty. In the
+frontier, Lasso chooses C by AUC on validation sets.
 
-**Leakage.** Information from the test samples reaching the training. It
-makes test scores look better than they are.
+**Leakage.** Information from the test set reaching the training or the
+selection. It makes test scores look better than they are.
 
 **Macro-F1.** The F1 score of each class, averaged with equal weight. F1
 is the harmonic mean of precision and recall.
@@ -83,26 +85,29 @@ be larger than the other's. For two classes, U / (n₁n₂) is the feature's
 AUC.
 
 **Median and quartiles.** The middle value, and the values a quarter and
-three quarters of the way up. Robust to an odd split.
+three quarters of the way up. One unusual split barely moves them.
 
-**Monte Carlo split.** A random division into training and test parts,
-drawn afresh each time.
+**Monte Carlo split.** A random division of the samples into a training
+set and a test set, drawn afresh each time.
 
 **Mutual information.** How much knowing a feature reduces uncertainty
-about the label. Catches any kind of dependence, not only linear.
+about the label. It catches any kind of dependence, not only a linear
+one.
 
 **Newton's method.** An optimization method that uses second derivatives
-to take large, accurate steps. Converges in few iterations.
-
-**p ≫ n.** Many more features (p) than samples (n).
-
-**PAM50.** A published classifier that assigns a breast tumour to one of
-five subtypes from 50 genes.
+to take large, accurate steps. It converges in few iterations. RFE and
+RFECV solve their linear SVM with it.
 
 **Nogueira's stability.** A stability measure built from how often each
 feature is selected across splits (Nogueira et al. 2018). Unlike the
 Kuncheva index, it allows sets of different sizes. 1 = identical sets,
 0 = chance.
+
+**p ≫ n.** Many more features (p) than samples (n).
+
+**PAM50.** A published classifier that assigns a breast tumour to one of
+five subtypes from 50 genes. Here each subtype against the rest is a
+separate binary task.
 
 **Paired test.** A test on the differences between two methods measured on
 the same splits. It removes the noise shared by both.
@@ -115,7 +120,7 @@ on a bootstrap sample. At each split it tries a random subset of the
 features.
 
 **Rank once.** Fitting a method once per split and taking every `k` from
-its single ranking.
+its single ranking. Mutual information and correlation work this way.
 
 **RFE (recursive feature elimination).** A wrapper that trains a model,
 removes the features with the smallest weights, and repeats.
@@ -138,14 +143,25 @@ Unchanged by any increasing transform.
 training data changes a little.
 
 **Stratified.** A split that keeps the class proportions of the whole data
-in each part.
+in both the training set and the test set.
 
 **SVM (support vector machine).** A classifier that finds the boundary
 with the widest margin between classes. A linear SVM's weights rank
 features in RFE.
 
 **Task.** One binary prediction problem. SCAN-B gives five, each subtype
-against the rest. BreastMNIST gives one.
+against the rest. They are five separate problems. BreastMNIST and
+FGVC-Aircraft give one each.
+
+**Test set.** The samples of a split kept apart from all fitting,
+selection and tuning. It is used once, to score the final model.
+
+**Training set.** The samples of a split used to select features and fit
+the classifier.
+
+**Validation set.** A part of the training set held back to choose a
+setting, such as `k` or Lasso's C. To choose these two, the training set
+is cut into 5 folds, and each fold serves once as the validation set.
 
 **Wilcoxon signed-rank test.** A paired test that ranks the absolute
 differences and checks whether positive and negative ones balance. It

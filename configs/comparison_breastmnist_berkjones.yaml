@@ -1,5 +1,5 @@
 # Berk-Jones added to the BreastMNIST comparison (comparison_breastmnist.yaml):
-# the same protocol and the same 20 splits, so its rows pair with the
+# the same protocol and the same 16 splits, so its rows pair with the
 # comparison's split by split. A separate CSV, because the runner now writes
 # more columns than the comparison's CSV holds.
 # Run with: python -m featsel.run --config configs/comparison_breastmnist_berkjones.yaml --n-jobs 4

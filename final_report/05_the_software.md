@@ -13,7 +13,7 @@ about running safely. Speed itself is chapter 6.
    their selection step for one of ours, and change nothing else. This is
    why every selector behaves exactly like a scikit-learn selector. It is
    also why the ones that copy a scikit-learn method are tested to pick the
-   same genes.
+   same features.
 2. **A researcher comparing methods.** They write one YAML file and run
    `python -m featsel.run --config <file>`. The runner does the whole
    comparison of chapter 3 and writes one table.
@@ -30,9 +30,8 @@ flowchart LR
 
 ### How we chose this design
 
-We compared four designs for running experiments. Each was
-sketched on the same uses: data in memory, data in files, and the command
-line.
+We compared four designs for running experiments. We sketched each one on
+the same three uses: data in memory, data in files, and the command line.
 
 | Design | How it looks | Gain | Cost |
 |---|---|---|---|
@@ -55,7 +54,7 @@ Design 2 won. The core is `run(X, y, config)`, so data always arrives as
 features. It is known only for simulated data. When it is given, the
 runner also records recall and precision against it. `run_config(config)`
 loads the dataset named in the config and calls `run`. The command line
-calls `run_config`. Paths in a config file are relative to that file. So
+calls `run_config`. Paths in a config file are relative to that file, so
 the package never assumes this repository's layout.
 
 ## 5.2 Selectors are scikit-learn estimators
@@ -65,18 +64,17 @@ Every selector subclasses `FeatureSelector`, which inherits scikit-learn's
 
 - lists its parameters in `__init__` and only stores them;
 - does its work in `_fit`, and sets `support_`, a boolean mask over the
-  features. The base class's `fit` seeds where needed and then calls
-  `_fit`. `_fit` is abstract, so a selector without it fails when it is
-  created, not when it is fitted;
-- calls the base class's helpers with what they need as arguments. A
-  helper never reads a setting such as `self.n_features` that the base
-  class does not declare. So a selector can be understood from its own
-  file;
+  features. The base class's `fit` sets the seed where needed and then
+  calls `_fit`. `_fit` is abstract, so a selector without it fails when it
+  is created, not when it is fitted;
+- passes the base class's helpers what they need as arguments. A helper
+  never reads a setting that the base class does not declare, such as
+  `self.n_features`. So each selector can be understood from its own file;
 - inherits `transform`, `get_support`, `get_params` and `set_params` from
   scikit-learn.
 
-So it works in a `Pipeline` and with `clone`, `cross_val_score` and
-`GridSearchCV`. A misspelled parameter raises an error instead of being
+So a selector works in a `Pipeline` and with `clone`, `cross_val_score`
+and `GridSearchCV`. A misspelled parameter raises an error. It is not
 silently ignored.
 
 ```python
@@ -118,10 +116,11 @@ alias a config used, so runs stay comparable. A config may set its own
 misspelled class name then fails at import, not at run time.
 
 **Rank once.** Some methods produce a full ranking whose top `k` equals a
-separate fit at that `k`. They are Mann-Whitney, Lasso, tree importance
-and RFE (section 4.2). They set a class flag, `rank_once`, and give their order
-through `ranking()`. The runner fits them once per split and cuts the
-ranking at every `k`. Tests check that each cut equals a separate fit.
+separate fit at that `k`. They are Mann-Whitney, mutual information,
+correlation, Lasso, tree importance and RFE (section 4.2). They set a
+class flag, `rank_once`, and return their order through `ranking()`. The
+runner fits each of them once per split and cuts the ranking at every
+`k`. Tests check that each cut equals a separate fit.
 
 **Scores keep their own names.** A selector keeps its per-feature
 measurement under the name of what it measures: `scores_`,
@@ -130,12 +129,14 @@ measurement under the name of what it measures: `scores_`,
 a score in one selector and a position in another.
 
 **Seeds.** Every selector that uses randomness subclasses
-`FeatureSelectorRandom`. It takes `random_state`, 42 by default, and it
-must be an integer: `random_state=None` is not allowed, so every fit
-repeats. At the start of `fit` it seeds Python's and NumPy's random
-generators from it. It also seeds PyTorch's, once PyTorch is imported. A
-repeated fit therefore picks the same genes. Selectors without randomness
-take no seed. We rejected a generator kept inside the object.
+`FeatureSelectorRandom`. These are mutual information, tree importance
+and the random selector. It takes `random_state`, 42 by default. It must
+be an integer: `random_state=None` is not allowed, so every fit repeats.
+At the start of `fit` it seeds Python's and NumPy's random generators. It
+also seeds PyTorch's, once PyTorch is imported. A repeated fit therefore
+picks the same genes. Selectors without randomness take no seed. RFE,
+RFECV and Lasso are among them, since their exact solvers use no
+randomness (section 6.2). We rejected a generator kept inside the object.
 scikit-learn's `clone` does not copy it, and its draws would depend on the
 order of fits.
 
@@ -145,8 +146,8 @@ PyTorch tensor, on the CPU or on a GPU (chapter 6). Input is checked in
 a clean NumPy array.
 
 **How a selector computes is its own business.** It may wrap scikit-learn,
-or be its own CPU or GPU code. Replacing one with the other keeps the class
-name and the parameters, so configs and results do not change. Each
+or run its own CPU or GPU code. Replacing one with the other keeps the
+class name and the parameters, so configs and results do not change. Each
 selector lives in its own folder, `featsel/selectors/<name>/`, with its
 tests and notebooks beside it. A family (filter, embedded, wrapper) gets no
 folder, since it shares no code. The random selector's folder is
@@ -194,12 +195,13 @@ pipe[1].get_support().sum()     # the count Higher Criticism chose
 ```
 
 **Embeddings already in memory.** Transfer learning needs no file at all.
-A network's embeddings are an array, and the selector picks columns of it:
+A network's embeddings are an array. The selector picks embedding
+dimensions from it:
 
 ```python
 emb = backbone(images).detach().numpy()          # samples × embedding size
 sel = MannWhitneySelector(n_features=64).fit(emb, labels)
-columns = sel.get_support(indices=True)          # the 64 chosen dimensions
+dims = sel.get_support(indices=True)             # the 64 chosen dimensions
 ```
 
 A small model can then be trained on those 64 dimensions only.
@@ -213,9 +215,9 @@ A small model can then be trained on those 64 dimensions only.
   aliases cover those.
 - One file or folder per family. It becomes unmanageable once a method has
   CPU and GPU versions.
-- Reimplementing every scikit-learn method. Most selectors cost seconds
-  while model fitting costs minutes. So this gains nothing unless a timing
-  shows it.
+- Reimplementing every scikit-learn method. Most selectors cost seconds,
+  while model fitting costs minutes. A rewrite gains nothing unless a
+  timing shows it does.
 
 ## 5.3 Datasets: one loader per dataset
 
@@ -235,15 +237,15 @@ YAML schema foresees: several tables, archives, images.
 
 **Why.** The course's SCAN-B files came with no recorded source or
 filters. Their origin, their patients and how their genes were chosen
-could not be checked, and nobody else could reuse our preparation. The
+could not be checked. Nobody else could reuse our preparation either. The
 generic class makes no choice for the caller, so other researchers can use
-it alone. For BreastMNIST it also computes the ResNet-50 embeddings once,
-finds the copied images once
-([`copies_report.md`](../featsel_datasets/medmnist_breastmnist/copies_report.md)),
-and caches both. It imports
-PyTorch and OpenCV only in those steps, so cached runs never need them.
+it on its own. For BreastMNIST it also computes the ResNet-50 embeddings
+once and finds the copied images once
+([`copies_report.md`](../featsel_datasets/medmnist_breastmnist/copies_report.md)).
+It caches both. It imports PyTorch and OpenCV only in those steps, so
+cached runs never need them.
 
-- `X` is a pandas DataFrame and `y` a Series. Gene names reach the
+- `X` is a pandas DataFrame and `y` a Series. So gene names reach the
   selectors, and patients cannot be misaligned with their labels. This
   matters: GSE96058's gene file and patient file list samples in different
   orders.
@@ -265,9 +267,8 @@ PyTorch and OpenCV only in those steps, so cached runs never need them.
 **Limits.** The runner imports the module a config names. The module
 follows one fixed convention (`NAME`, `TARGET`, `load_xy`), with no
 registry. The runner tells a module from a CSV config by the `.yaml` or
-`.yml` ending. `featsel_datasets` is not
-installed with the package, so code outside the repository root must put
-the root on Python's path. The first SCAN-B load downloads 592 MB and takes
+`.yml` ending. `featsel_datasets` is not installed with the package. So
+code run outside the repository root must put the root on Python's path. The first SCAN-B load downloads 592 MB and takes
 about 85 s.
 
 ## 5.4 The runner
@@ -279,25 +280,40 @@ dataset: "featsel_datasets.scanb_gse96058.featsel_view"
 target: "pam50 subtype"
 output: "../results/local/frontier_scanb70_gpu.csv"
 seed: 42
-n_splits: 5
+n_splits: 16
 train_sizes: [0.7]
+k_validation: {cv: 5}
 metrics: [roc_auc, macro_f1, balanced_accuracy]
 selectors:
   - name: MannWhitneySelector
-    k: [10, 50, 250, 1000]
+    k: [10, 50, 250, 500, 1000, 1500, 2000]
     params: {device: "cuda"}
+  - name: LassoSelector
+    params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
 models:
   - name: logistic_regression
     params: {max_iter: 1000}
 ```
 
-The runner turns a multiclass target into one task per class. It draws
+The runner turns a multiclass target into binary tasks, one per class
+against the rest. PAM50 thus gives five separate tasks. The runner draws
 the splits. Then it runs every combination of task, split, selector, `k`
 and classifier. Each finished cell becomes a row of the CSV: the scores,
 the chosen genes, the selection time, peak memory, device, and whether
 repeated fits agreed. A JSON file beside the CSV records the machine, the
-library versions and the git commit. It is written at the start and again
-at the end of the run.
+library versions and the git commit. It is written at the start of the
+run and again at the end.
+
+**Choosing on validation sets.** With `k_validation`, every method with a
+list of `k` values also gets a validation AUC for each `k`. The runner
+cuts the training set into `cv` stratified folds, 5 in the experiments. In each fold it fits the selector on
+the other folds and scores the classifier on the validation fold. So `k`
+can be chosen without the test set. Lasso has no `k` list. It chooses its
+own C from `Cs` the same way, by validation AUC, and C sets its count.
+
+**A search runs once.** A selector that searches, such as Lasso with
+`Cs`, searches once per split. That time is stored in the column
+`search_time_s`. The timed repeats then fit with the value it chose.
 
 Analysis is separate from running: `featsel.analysis`, `scripts/` and the
 notebooks read the CSV. A new plot never needs a new run.
@@ -311,8 +327,8 @@ compares chains with their last step alone.
 
 **Nested tuning.** A model entry with a `grid` is tuned inside each split
 (section 3.8). The runner wraps the classifier in scikit-learn's
-`GridSearchCV`, with stratified Monte Carlo splits of the training part as
-its inner splits. The chosen values are stored with each row.
+`GridSearchCV`. Its inner splits are stratified Monte Carlo splits of the
+training set. The chosen values are stored with each row.
 
 **Parallel work.** One job is one selector on one task of one split. A
 rank-once selector covers all its `k` values in one job. Any other
@@ -320,10 +336,10 @@ selector gets one job per `k`. Jobs run on worker processes through
 joblib. Parallel work lives in the runner only.
 
 One split, stratified on the five-class PAM50 label, serves all five
-tasks. Without this, each worker would prepare its own copy of the data
-for each task, 2 to 3 GB. Each split is prepared
-once into shared memory. That saves the memory of every copy and five
-times the preprocessing.
+tasks. Each split is prepared once and placed in shared memory. Without
+this, each worker would prepare its own copy of the data for each task,
+2 to 3 GB each. Sharing saves the memory of every copy. It also does the
+preprocessing once instead of five times.
 
 ## 5.5 Running for hours without supervision
 
@@ -345,21 +361,22 @@ per worker.
 
 **What happened in practice.** Full SCAN-B needs several GB per worker.
 On the 16 GB laptop, six workers ran out of memory, and the operating
-system stopped the run. It resumed with fewer workers. With a cap of 3 GB per
-worker, the U-test selectors were skipped, and a second resume at a higher
+system stopped the run. It resumed with fewer workers. With a cap of 3 GB
+per worker, the U-test selectors were skipped. A second resume at a higher
 cap filled them in. Then we held the data as 32-bit floats (section 3.12).
-This cut peak selection memory by 30% to 45%, and 4 workers fit under a
-3 GB cap, where 2 fit before. Two later changes were not measured again:
-the one-sort U test needs about 1.25 times the memory, and the cap now
+This cut peak selection memory by 30% to 45%. Under a 3 GB cap, 4 workers
+then fit, where 2 fit before. Two later changes were not measured again.
+The one-sort U test needs about 1.25 times the memory. And the cap now
 counts data memory instead of address space.
 
 The last two mechanisms came from the scaling measurement of section 6.1.
-With 5 or 6 workers on full SCAN-B, liblinear needed about 1.45 GB per
-fit. The default cap allowed 1.26 GB at 6 workers, so liblinear was
-refused memory and aborted. The runner fell back to fewer workers, as
-designed. But many runs in one process left memory behind, and the process
-itself crashed, even with one worker. The scaling script now runs each
-measurement in a fresh process, saves each as it ends, and can resume.
+At that time, RFE and Lasso still ran liblinear. With 5 or 6 workers on
+full SCAN-B, liblinear needed about 1.45 GB per fit. The default cap
+allowed 1.26 GB at 6 workers. So liblinear was refused memory and
+aborted. The runner fell back to fewer workers, as designed. But many runs
+in one process left memory behind. The process itself then crashed, even
+with one worker. The scaling script now runs each measurement in a fresh
+process, saves each one as it ends, and can resume.
 
 **Limits.** A reboot or a power loss stops a run, and nothing restarts it.
 The same command continues from the saved rows. A cell that never fits in
@@ -367,7 +384,7 @@ memory is skipped and listed, not computed.
 
 **The cap counts data memory, not address space.** PyTorch's GPU libraries
 reserve address space they never use. Under an address-space cap below
-about 5 GB they could not even load. After a GPU call, a worker releases
+about 5 GB, they could not even load. So the cap counts data memory only. After a GPU call, a worker releases
 its cached GPU memory and keeps about 64 MB.
 
 ## 5.6 Tests
@@ -384,12 +401,16 @@ scikit-learn method:
   data (1,000 × 4,000), so that timing noise stays below 5%;
 - its GPU path selects the same features as its CPU path.
 
+RFE, RFECV and Lasso reach the exact solution (section 6.2). So their
+selection is compared with scikit-learn's liblinear run to a tight
+tolerance, not at its defaults. Lasso has no speed test, because no scikit-learn solver reaches
+its solution.
+
 These shared checks use one balanced binary dataset. Our real tasks are
 imbalanced. So two paths are also tested at positive fractions of 50%,
 20%, 10% and 5%: Lasso's PPDNA solver, and mutual information on the GPU.
-The runner has its
-own tests, for example that a parallel run gives the same results as a
-sequential one.
+The runner has its own tests. One checks that a parallel run gives the
+same results as a sequential one.
 
 ## 5.7 Where to find things
 

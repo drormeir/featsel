@@ -5,6 +5,12 @@
 Chapter 7 asked which method selects best. A practitioner also asks what
 each method costs. This chapter puts both on one plot.
 
+**Note: this chapter reports the first frontier run.** Since then,
+liblinear was dropped (section 6.2). Lasso now chooses its C, and every
+method with a `k` list chooses `k`, on validation sets (section 3.11). The
+SCAN-B `k` list grew to 10, 50, 250, 500, 1000, 1500 and 2000. This
+chapter will be updated after the rerun.
+
 ## 8.1 What a cost-quality frontier is
 
 Each point on the plot is one method at one `k`. Its x-position is the
@@ -12,7 +18,7 @@ selection time per fit, on a log scale. Its y-position is the test ROC
 AUC. A point is **on the frontier** when no other point is both faster and
 better. The frontier, drawn in blue, is the set of sensible choices. For
 any time budget, the best method you can afford is on it. Points off the
-frontier (gray) are dominated. Something else is at least as good and
+frontier (gray) are dominated: another point is at least as good and
 faster.
 
 ## 8.2 The experiment
@@ -27,18 +33,19 @@ faster.
 | Score | ROC AUC; macro-F1 and balanced accuracy also recorded |
 | Timing | median of 10 fits by fresh selectors (1 fit for Sequential); one fit at a time on the GPU |
 
-A preliminary run of the frontier trained on 50% of the patients. It
-let the GPU methods fall back to the CPU when the GPU was busy, so most of
-their fits ran on the CPU. Its times are not reported; chapter 7 cites it
-once, for RFE's choice of genes.
+A preliminary run of the frontier used 50% of the patients for training.
+It let the GPU methods fall back to the CPU when the GPU was busy, so most
+of their fits ran on the CPU. Its times are not reported. Chapter 7 cites
+it once, for RFE's choice of genes.
 
-The GPU methods ran with one worker, so no two fits shared the GPU. The
-CPU methods ran with two workers. Every GPU method's fits were recorded as
-running on the GPU. Two workers slow each other, so the CPU times are
-somewhat inflated. In the preliminary run, liblinear RFE on Basal took
-31 s per fit with two workers. Alone, on the same 1,488
-training patients, it took 23.1 s. Sequential selection got one fit per
-selection, because ten would have taken about 24 hours.
+In the run reported here, the GPU methods ran with one worker, so no two
+fits shared the GPU. Every GPU method's fits were recorded as running on
+the GPU. The CPU methods ran with two workers. Two workers slow each
+other, so the CPU times are somewhat inflated. For example, in the
+preliminary run, liblinear RFE on Basal took 31 s per fit with two
+workers. Alone, on the same 1,488 training patients, it took 23.1 s.
+Sequential selection was timed on one fit, not ten, because ten would
+have taken about 24 hours.
 
 Configs: [`configs/frontier_scanb70_*.yaml`](../configs/),
 [`configs/frontier_breastmnist70_*.yaml`](../configs/). Plot script:
@@ -53,6 +60,12 @@ The SCAN-B run took about 8 hours. BreastMNIST took about 3 minutes.
 *Figure 8.1. Selection time against test AUC, mean over 5 tasks and 5
 splits. Bars: one standard deviation over splits. Table:
 [`figures/frontier_scanb70_roc_auc.csv`](figures/frontier_scanb70_roc_auc.csv).*
+
+The five tasks are separate problems. The mean over tasks only
+summarizes them. Section 8.4 gives the results per task.
+
+In this run, each method's best `k` in the table below is the `k` with
+the highest test AUC.
 
 | Method | Best AUC (its `k`) | Time per fit at that `k` | Device | On frontier |
 |---|---|---|---|---|
@@ -75,20 +88,21 @@ splits. Bars: one standard deviation over splits. Table:
 1. **The cheap end is enough.** Berk-Jones, HC2008 and Mann-Whitney reach
    AUC 0.97 in 0.65 to 0.66 s. Nothing slower is clearly better. Tree
    importance ties HC2008 (0.970) but takes 17 times longer. Split by
-   split, each wins on some of the five splits. Berk-Jones, added later,
-   leads HC2008 by 0.0002 AUC and 0.01 s. That puts it alone on the
-   frontier, but the gap is far below the spread over splits (0.004).
+   split, tree importance and HC2008 each win on some of the five splits.
+   Berk-Jones, added later, leads HC2008 by 0.0002 AUC and 0.01 s. That
+   puts Berk-Jones alone on the frontier. But the gap is far below the
+   spread over splits (0.004).
 2. **The GPU moved five methods into the top-left corner.** Mann-Whitney,
    HC2008, Lasso (PPDNA), mutual information and correlation all run in
    under 4 s, at AUC 0.96 to 0.97. In the comparison of chapter 7,
    Mann-Whitney took about 10 s per fit. A NumPy version with one sort per
-   gene brought that to about 3 s on the CPU. The GPU then
-   took it below a second. Mutual information took more than a minute
-   (chapter 6).
+   gene brought that to about 3 s on the CPU. The GPU then took it below
+   a second. Mutual information, before its GPU version, took more than a
+   minute (chapter 6).
 3. **The wrappers lose on both axes.** RFE, RFECV and Sequential take 6 to
-   84 s per fit at their best `k`, and Sequential 170 s at k = 10. They
-   score below the simple filters. Sequential's 5 or 10 genes
-   cannot match 1,000 well-chosen ones.
+   84 s per fit at their best `k`, and Sequential takes 170 s at k = 10.
+   They score below the simple filters. Sequential's 5 or 10 genes cannot
+   match 1,000 well-chosen ones.
 4. **Random genes come close.** Random k = 1000 reaches 0.950. Once `k` is
    large, almost any genes work, as chapter 7 found.
 5. **The top methods are close.** Their best AUCs differ by at most
@@ -100,14 +114,15 @@ splits. Bars: one standard deviation over splits. Table:
 **Caution on HC2008 and Berk-Jones.** HC2008 kept 2,855 genes, the edge of
 its search, on every task and split, as in chapter 7. Berk-Jones kept
 2,841 to 2,855. They lead because they are as fast as Mann-Whitney and use
-nearly three times the genes of its largest `k`. It is not a sign that
-they chose a better count.
+nearly three times as many genes as its largest `k`. Their lead is not a
+sign that they chose a better count.
 
 ### Sixteen splits for the top methods
 
-The five methods on the GPU, Berk-Jones, tree importance and random ran
-on 11 more splits, 16 in all. The first 5 are the splits above. The
-settings are unchanged. The CPU wrappers stayed at 5 splits. They score
+Five GPU methods (Mann-Whitney, HC2008, correlation, mutual information
+and Lasso PPDNA), Berk-Jones, tree importance and random ran on 11 more
+splits, 16 in all. The first 5 are the splits above. The settings are
+unchanged. The CPU wrappers stayed at 5 splits, because they score
 clearly lower and take hours.
 
 Each split's score is the mean AUC over the five tasks. We compare
@@ -138,7 +153,7 @@ tests. Tests:
 
 1. **Selection beats random.** Every method beats random at k = 10, 50
    and 250, on all 16 splits. At k = 1000 every method still wins all 16
-   splits. Only tree importance, Berk-Jones and HC2008 pass the
+   splits, but only tree importance, Berk-Jones and HC2008 pass the
    threshold there. Mann-Whitney, correlation and mutual information miss
    it narrowly (p = 0.0008 to 0.0009), and Lasso by more (p = 0.005).
 2. **Tree importance leads at k = 250.** It beats Mann-Whitney and
@@ -147,7 +162,8 @@ tests. Tests:
 3. **Lasso falls behind at k = 1000.** Tree importance beats it by 0.008
    (p = 0.0006). Berk-Jones and HC2008 beat it too (p = 0.0003 to 0.0004).
 4. **Lasso's lead at k = 10 is not established.** It scores 0.013 to
-   0.017 above the others and wins 15 or 16 of 16 splits. But p ≥ 0.002.
+   0.017 above the others and wins 15 or 16 of 16 splits. But p ≥ 0.002,
+   above the threshold.
 5. **The top corner is a tie.** Berk-Jones, HC2008 and tree importance at
    k = 1000 differ by at most 0.0001 AUC (p ≥ 0.72). Berk-Jones took
    0.65 s per fit. Tree importance took 13.5 s, the median over the 16
@@ -156,13 +172,13 @@ tests. Tests:
    63 of the 73 tests. The corrected test passes 23.
 
 Chapter 7 did not establish tree importance's lead over Mann-Whitney at
-any `k`. That test differs from this one: macro-F1 instead of AUC, 50% of
+any `k`. Its test differs from this one: macro-F1 instead of AUC, 50% of
 the patients for training instead of 70%, and a tuned classifier. So the
 two results do not contradict each other. Under this protocol, the lead
 at k = 250 is real, and it is under 0.01 AUC.
 
-Figure 8.1 and the table above it stay on 5 splits. The CPU wrappers have
-only 5. Figure scripts: `scripts/paired_tests.py --own-count` and
+Figure 8.1 and the table above it stay on 5 splits, because the CPU
+wrappers have only 5. Figure scripts: `scripts/paired_tests.py --own-count` and
 `scripts/plot_paired_differences.py`.
 
 ## 8.4 SCAN-B, each task
@@ -175,10 +191,10 @@ only 5. Figure scripts: `scripts/paired_tests.py --own-count` and
 | [LumB vs rest](figures/frontier_scanb70_roc_auc_ovr_LumB.png) | HC2008 (0.970, 0.65 s), Berk-Jones (0.970, 0.65 s), Mann-Whitney k = 1000 (0.974, 0.67 s) | RFECV collapses to 0.64. |
 | [Normal vs rest](figures/frontier_scanb70_roc_auc_ovr_Normal.png) | Mann-Whitney k = 1000 (0.929, 0.65 s), Berk-Jones (0.947, 0.66 s) | The hardest task; RFECV at chance (0.50). |
 
-Click a task to see its plot. Each has a table beside it in
-[`figures/`](figures/). On every task the frontier above random selection
-holds only sub-second GPU methods. The exceptions are tree importance on
-LumA and two slower near-ties on Basal.
+Click a task to see its plot. Each plot has a table beside it in
+[`figures/`](figures/). On every task, the frontier above random selection
+holds only sub-second GPU methods, with two exceptions: tree importance on
+LumA, and two slower near-ties on Basal.
 
 ### Why RFECV failed on three tasks
 
@@ -187,10 +203,10 @@ frontier it kept only 1 or 2 genes on Her2, LumB and Normal. Its AUC there
 was 0.50 to 0.64. On LumA it kept 8,567 to 25,697 genes and scored 0.96.
 On Basal it kept 2,857 genes on four splits and 2 on one.
 
-Our hypothesis: RFECV's default inner score is accuracy. Take an
-imbalanced task with a strong penalty (C = 0.01). There the SVM predicts
-"rest" for almost everyone at any gene count. So the accuracy curve is
-flat. A flat curve makes the smallest count win the tie. LumA is the only
+Our hypothesis: RFECV's default inner score is accuracy. On an
+imbalanced task with a strong penalty (C = 0.01), the SVM predicts
+"rest" for almost every patient at any gene count. So the accuracy curve
+is flat. On a flat curve, the smallest count wins the tie. LumA is the only
 balanced task, and there RFECV works. Section 8.6 tests this hypothesis.
 
 ## 8.5 BreastMNIST
@@ -199,6 +215,9 @@ balanced task, and there RFECV works. Section 8.6 tests this hypothesis.
 
 *Figure 8.3. BreastMNIST, 5 splits. Table:
 [`figures/frontier_breastmnist70_roc_auc.csv`](figures/frontier_breastmnist70_roc_auc.csv).*
+
+As in section 8.3, each method's best `k` is the one with the highest
+test AUC.
 
 | Method | Best AUC (its `k`) | Time per fit | On frontier |
 |---|---|---|---|
@@ -219,33 +238,36 @@ balanced task, and there RFECV works. Section 8.6 tests this hypothesis.
 - With 2,048 features and 546 training images, every method takes 3 s or
   less. So cost hardly matters here.
 - **Lasso is the best choice at k = 250**: 0.90 in 0.11 s. RFECV scored by
-  AUC does better. But it picks its own, larger count (section 8.6). At
-  k = 250, the methods that see features together (Lasso, RFE, trees)
+  AUC does better, but it picks its own, larger count (section 8.6).
+- At k = 250, the methods that see features together (Lasso, RFE, trees)
   beat the one-at-a-time filters by 0.01 to 0.04. Image embedding
   features are weakly correlated with each other. A combination of them
-  carries more than the sum of single features.
+  carries more than the single features do one by one.
 - At k = 10 the order reverses. Mann-Whitney and correlation reach 0.84,
   tree importance 0.82, and Lasso and RFE 0.76 to 0.77.
 - RFECV works on this task (0.87). With its default inner score it kept 8
   to 212 features.
-- **Spearman correlation equals Mann-Whitney exactly** at every `k`. With a
-  binary label, |Spearman correlation| is the U test's tie-corrected z
-  score, up to a constant. The U test also applies a continuity
-  correction. With ties, that correction can reorder genes. On all SCAN-B
-  patients it changes no top-`k` set at k = 10 to 1000. Yet on SCAN-B the
-  two selectors differ slightly at every `k`, most at large `k`. The
-  correlation selector has two more steps. It keeps only features with
-  |correlation| ≥ 0.1. On SCAN-B that is 8,233 to 14,032 genes per task,
-  so it does not bind here. It also drops one gene of each pair
-  correlated above 0.95. So the difference comes mainly from that drop.
-- The drop step has a flaw. It drops a gene for a partner even when that
-  partner was itself dropped. So a gene can be lost although no kept gene
-  duplicates it.
+- **On BreastMNIST, Spearman correlation equals Mann-Whitney exactly** at
+  every `k`. This is expected. With a binary label, |Spearman
+  correlation| is the U test's tie-corrected z score, up to a constant.
+- **On SCAN-B the two selectors differ slightly** at every `k`, most at
+  large `k`. The U test also applies a continuity correction, which can
+  reorder genes when there are ties. But on all SCAN-B patients it changes
+  no top-`k` set at k = 10 to 1000. The difference comes from two extra
+  steps in the correlation selector. First, it keeps only features with
+  |correlation| ≥ 0.1. On SCAN-B that leaves 8,233 to 14,032 genes per
+  task, so this step does not bind here. Second, it drops one gene of each
+  pair correlated above 0.95. So the difference comes mainly from that
+  drop.
+- The drop step has a flaw. It drops a gene because of a partner even when
+  that partner was itself dropped. So a gene can be lost although no kept
+  gene duplicates it.
 
 ## 8.6 RFECV: testing the hypothesis
 
-We refit RFECV on one 70/30 split of four SCAN-B tasks, with three inner
-scores. Then we scored logistic regression on the genes it kept:
+We refit RFECV on four SCAN-B tasks, one split each (70% training, 30%
+test), with three inner scores. Then we scored logistic regression on the
+genes it kept:
 
 | Task | Inner score | Genes kept | Test AUC |
 |---|---|---|---|
@@ -266,9 +288,9 @@ thousands of genes and scores like the other methods. On Basal, where the
 classes separate easily, all three scores agree.
 
 **The lesson** is general. A wrapper that tunes itself by cross-validation
-inherits the weakness of its inner score. Accuracy on an imbalanced task
-rewards predicting the majority class. Then the smallest gene set wins the
-tie.
+inherits the weakness of its inner score. On an imbalanced task, accuracy
+rewards predicting the majority class. Then every gene count scores the
+same, and the smallest gene set wins the tie.
 
 Script: [`scripts/rfecv_scoring.py`](../scripts/rfecv_scoring.py).
 
@@ -301,12 +323,12 @@ What the rerun shows:
 
 - **On SCAN-B the collapse is gone**, but RFECV is still not worth its
   cost. It reaches 0.961, below Mann-Whitney at k = 1000 (0.966). It takes
-  41 s per fit, against 0.66 s. It also keeps thousands of genes. So it
-  does not answer "which few genes matter".
+  41 s per fit, against Mann-Whitney's 0.66 s. It also keeps thousands of
+  genes, so it does not answer "which few genes matter".
 - **On BreastMNIST, RFECV scored by AUC beats every method capped at
-  k = 250**: 0.916 in 1.4 s, ahead of Lasso k = 250 (0.902). But it keeps
-  416 to 1,436 of the 2,048 features, more than that cap. Section 8.7
-  shows that its lead comes from the larger count, not from better
+  k = 250**: 0.916 in 1.4 s, ahead of Lasso at k = 250 (0.902). But it
+  keeps 416 to 1,436 of the 2,048 features, more than that cap. Section
+  8.7 shows that its lead comes from the larger count, not from better
   choices.
 - With 5 splits these differences are not tested for significance
   (section 8.3, point 5).
@@ -338,19 +360,21 @@ Mean test AUC over 5 splits. Table:
 [`figures/frontier_scanb70_all_genes.csv`](figures/frontier_scanb70_all_genes.csv).
 Config: [`configs/frontier_scanb70_all_genes.yaml`](../configs/frontier_scanb70_all_genes.yaml).
 
-On gene expression, selection helps a little. The two best methods on
-average, HC2008 and tree importance at k = 1000, beat all 28,552 genes by
-0.006. On LumB the best set beats them by 0.025. On Normal they tie.
-Mann-Whitney k = 1000 (0.966) only matches all genes. The gain is about
-one and a half standard deviations over splits. The paired test below,
-on 16 splits, does not establish it. The larger gain is size: a model on
-1,000 genes instead of 28,552, at no loss.
+On gene expression, selection helps a little in AUC. The two best methods
+on average, HC2008 and tree importance at k = 1000, beat all 28,552 genes
+by 0.006. On LumB the best set beats all genes by 0.025. On Normal they
+tie. Mann-Whitney at k = 1000 (0.966) only matches all genes. The gain of
+0.006 is about one and a half standard deviations over splits. The
+paired test below, in macro-F1 on 16 splits, does not establish it. The
+larger gain is size: a model on 1,000 genes instead of 28,552, at no
+loss.
 
 ### BreastMNIST at larger `k`
 
 To test where RFECV's lead came from, we reran BreastMNIST on the same
-five splits at k = 500 and 1,000. We also ran it with all 2,048 features.
-This is random selection of every feature, that is, no selection.
+five splits at k = 500 and 1,000. We also ran it with all 2,048 features,
+that is, with no selection. (This ran as random selection of all 2,048
+features.)
 
 | Method | k = 250 | k = 500 | k = 1000 | Time per fit |
 |---|---|---|---|---|
@@ -370,9 +394,9 @@ Config: [`configs/frontier_breastmnist70_large_k.yaml`](../configs/frontier_brea
 What it shows:
 
 - **No selection is best for AUC on BreastMNIST.** All 2,048 features give
-  0.921. Random 1,000 features already reach 0.914. RFECV's 0.916 is not a
-  better choice of features. Its score is close to that of keeping them
-  all.
+  0.921. Random 1,000 features already reach 0.914. RFECV's 0.916 does
+  not reflect a better choice of features. It is close to the score of
+  keeping them all.
 - **Selection pays only when few features are allowed.** At k = 10 to 250
   the methods beat random clearly (section 8.5). By k = 1000 they do not.
   This is the same pattern as on SCAN-B (chapter 7).
@@ -383,11 +407,11 @@ What it shows:
 
 ### A paired test against all features
 
-The frontier has too few splits to test against all features. So all
+The frontier has too few splits for a test against all features. So all
 features also ran on the comparison's splits (chapter 7): 20 on
-BreastMNIST, 16 on SCAN-B, with C tuned as there. Each method was
-tested against them with the corrected paired test of section 7.3, in
-macro-F1.
+BreastMNIST and 16 on SCAN-B, with C tuned as in chapter 7. Each method
+was tested against all features with the corrected paired test of
+section 7.3. The score here is macro-F1, not AUC.
 
 **BreastMNIST.** Macro-F1 with all 2,048 features: median 0.822 over
 the splits, quartiles 0.802 and 0.835.
@@ -401,7 +425,7 @@ the splits, quartiles 0.802 and 0.835.
 | HC2008 and Berk-Jones, own count | −0.029 [−0.08, 0.02] | 0.22 to 0.25 |
 
 All features scored higher on average than every method at every `k`. At
-k = 250 no difference is significant: selection there costs little and
+k = 250 no difference is significant. So selection there costs little and
 buys a model an eighth the size. Below k = 50 every method falls short of
 all features by 0.07 or more in macro-F1.
 
@@ -422,8 +446,8 @@ chapter 7, a difference counts as real when p < 0.05 / 47 = 0.001
 What it shows:
 
 - **No selected set is established as better than all genes.** The best,
-  about 2,850 genes by the U test, beat all genes on all 16 splits, by
-  0.010. That is p = 0.025, short of the threshold.
+  about 2,850 genes by the U test, beat all genes by 0.010 on all 16
+  splits. But p = 0.025, short of the threshold.
 - **The top methods match all genes from k = 250 on.** Mann-Whitney and
   tree importance at k = 250 to 1000 are within 0.007 of all genes, in
   both directions. That is a model a hundredth to a thirtieth the size,
@@ -431,9 +455,9 @@ What it shows:
 - **Below k = 50 every method falls short.** Mann-Whitney and tree
   importance trail all genes by 0.03 to 0.09 at k = 5 to 20, established
   (p ≤ 0.0006).
-- **Lasso and RFE trail all genes at every `k`.** Lasso by 0.025 even at
-  k = 1000, RFE by 0.026. This is established at k = 5, 10 and 500 for
-  Lasso, and at k = 5 to 500 for RFE.
+- **Lasso and RFE trail all genes at every `k`.** Even at k = 1000, Lasso
+  trails by 0.025 and RFE by 0.026. The gap is established at k = 5, 10
+  and 500 for Lasso, and at k = 5 to 500 for RFE.
 
 So on both datasets the answer is the same. Selection does not make the
 classifier better than all features. It makes it smaller at the same
@@ -466,10 +490,11 @@ Mean test AUC over 5 splits; in brackets, the change from the run with
 the copies. Config:
 [`configs/frontier_breastmnist70_nocopies.yaml`](../configs/frontier_breastmnist70_nocopies.yaml).
 
-- **AUC fell by about 0.01 to 0.03 for most cells.** All features fell by
-  0.028. The change mixes the leak from the copies with a change in the
-  task: fewer images, differently balanced. Each change is within one or
-  two standard deviations over the splits.
+- **AUC fell by about 0.01 to 0.03 for most methods and `k`.** All
+  features fell by 0.028. The change mixes two effects: the leak from the
+  copies is gone, and the task changed (fewer images, differently
+  balanced). Each change is within one or two standard deviations over
+  the splits.
 - **The conclusions hold.** All features still score best. Selection still
   beats random clearly at k = 10 and by less at k = 250.
 
@@ -485,19 +510,20 @@ photos, 100 per model variant. The task is binary: Boeing 737 (800 photos)
 against the Airbus A320 family (400 photos). Both are narrow-body airliners
 that look alike. Each photo becomes 2,048 features from an ImageNet
 ResNet-50 without its last layer, as for BreastMNIST. No two photos are
-copies: no two photos' difference hashes differ by 4 bits or fewer, the
-closest pairs show different aircraft, and the most similar pair of
-embeddings has cosine similarity 0.86. The photos are licensed for
-non-commercial research only.
+copies, by three checks. No two photos' difference hashes differ by 4
+bits or fewer. The closest pairs show different aircraft. The most
+similar pair of embeddings has cosine similarity 0.86. The photos are
+licensed for non-commercial research only.
 
 **The weights mattered.** BreastMNIST used torchvision's `IMAGENET1K_V2`
-weights. Here they made 80% of the features exactly zero, and all features
-reached AUC 0.749. The `IMAGENET1K_V1` weights gave 0.1% zeros and 0.863
-(one check: five splits, C = 0.01). So this dataset uses V1.
+weights. Here they made 80% of the features exactly zero, and all
+features reached AUC 0.749. The `IMAGENET1K_V1` weights gave 0.1% zeros
+and AUC 0.863 (one check: five splits, C = 0.01). So this dataset uses
+V1.
 
 **The experiment.** 10 random splits, 70% of the photos for training,
 logistic regression with C = 1, ROC AUC. `k` = 10, 50, 250 and 500, and
-all 2,048 features. Every selector ran with `device='cuda'`; only the
+all 2,048 features. Every selector ran with `device='cuda'`. Only the
 random control, which reads no data, ran on the CPU. The 290 executions
 took 5 minutes.
 
@@ -525,16 +551,16 @@ What it shows:
   beats random on all 10 splits, by 0.09 to 0.12 AUC. The gain shrinks as
   `k` grows.
 - **Methods that see features together lead at larger `k`.** At k = 500,
-  RFE and Lasso beat random on every split; the one-at-a-time filters on 7
-  or 8 of 10. As on BreastMNIST, the signal is many weak features: the best
-  single feature reaches only AUC 0.690.
+  RFE and Lasso beat random on every split. The one-at-a-time filters beat
+  it on 7 or 8 of 10. As on BreastMNIST, the signal is spread over many
+  weak features: the best single feature reaches only AUC 0.690.
 - **No selection is best for AUC**, as on BreastMNIST. RFE at k = 500 comes
   within 0.007 of all features with a quarter of them.
 - **HC2008 stops at the edge of its search again**: 204 features, 0.1 ×
   2,048, on every split.
 - **The filters are the most stable.** Mann-Whitney and correlation reach
-  Kuncheva indices of 0.66 to 0.76; Lasso, mutual information and RFE 0.15
-  to 0.33; Sequential 0.07.
+  Kuncheva indices of 0.66 to 0.76. Lasso, mutual information and RFE
+  reach 0.15 to 0.33, and Sequential 0.07.
 - **The embedding mattered more than the selector.** Changing the weights
   moved AUC by 0.11. No selector moved it by a tenth of that at k = 500.
 
@@ -542,11 +568,12 @@ What it shows:
 
 A common practice chains two methods: a fast filter cuts the features
 first, and a slower method picks the final `k` from what is left (Saeys et
-al. 2007). We tested three chains on the frontier's splits. Mann-Whitney
-on the GPU keeps 1,000 genes on SCAN-B, or 500 features on BreastMNIST.
-Then Lasso (liblinear), tree importance or RFE (Newton) picks `k`. Each
-chain is compared with its last step alone on all features, on the same
-splits. The selection time covers both steps.
+al. 2007). We tested three chains on the frontier's splits. First,
+Mann-Whitney on the GPU keeps 1,000 genes on SCAN-B, or 500 features on
+BreastMNIST. Then Lasso (liblinear), tree importance or RFE (Newton)
+picks `k` of them. Each chain is compared with its last step run alone
+on all features, on the same splits. The chain's selection time covers
+both steps.
 
 **SCAN-B**, mean AUC over 5 tasks and 5 splits:
 
@@ -584,29 +611,30 @@ What it shows:
 - **On SCAN-B, a filter first helps every method, in time and mostly in
   AUC.** The chains run 2 to 4 times faster. RFE gains most: at k = 10
   its AUC rises from 0.807 to 0.949. Section 7.2 found that RFE alone
-  picks near-constant genes; the U test does not rank such genes high,
-  so the filter likely removes them. This explanation is not checked
-  gene by gene.
+  picks near-constant genes. The U test does not rank such genes high, so
+  the filter likely removes them. This explanation was not checked gene
+  by gene.
 - **At small `k` the chains are the best fixed-`k` methods on SCAN-B.** At
-  k = 50, Mann-Whitney then Lasso reaches 0.962, against 0.956 for the
-  best single method at that `k` (Lasso, PPDNA). They are still not on the
-  frontier: HC2008 and Berk-Jones reach 0.970 faster, with 2,855 genes.
+  k = 50, Mann-Whitney then Lasso reaches 0.962. The best single method at
+  that `k`, Lasso (PPDNA), reaches 0.956. The chains are still not on the
+  frontier: HC2008 and Berk-Jones reach 0.970 faster, with up to 2,855
+  genes.
 - **On BreastMNIST the filter costs Lasso and tree importance AUC.** Lasso
-  loses 0.02 to 0.03 on average, and the chain wins on at most 1 of 5
-  splits. The image features are weakly
-  correlated, and a combination of features carries more than the best
-  single ones (section 8.5). A one-at-a-time filter removes features
-  that only work together. RFE gains at small `k` there too.
+  loses 0.02 to 0.03 on average, and its chain wins on at most 1 of 5
+  splits. The image features are weakly correlated, and a combination of
+  features carries more than the best single ones (section 8.5). A
+  one-at-a-time filter removes features that only work together. RFE
+  still gains at small `k` on BreastMNIST.
 - **So the chain's value depends on the data**, as the methods' ranking
   does. With 5 splits these differences are not tested for significance.
 
 ## 8.10 Summary
 
 - On SCAN-B, sub-second GPU filters (Mann-Whitney, HC2008, Berk-Jones)
-  give the best AUC for their cost. A 200-tree forest ties them at 17
-  times the cost. On 16 splits the tie holds (0.970 each). Tree
-  importance's lead over Mann-Whitney at k = 250, 0.007 AUC, is
-  established.
+  give the best AUC for their cost. A 200-tree forest ties HC2008 and
+  Berk-Jones at 17 times the cost. On 16 splits the tie holds (0.970
+  each). Tree importance's lead over Mann-Whitney at k = 250, 0.007 AUC,
+  is established.
 - A Mann-Whitney filter before a slower method helped every method on
   SCAN-B, in time and mostly in AUC, RFE most. On BreastMNIST it cost
   Lasso and tree importance AUC.
@@ -617,8 +645,8 @@ What it shows:
   buys a smaller model, not a better one.
 - On SCAN-B, the best selected sets beat all 28,552 genes by 0.006 AUC on
   average (0.025 on LumB), with a model a tenth the size or less. On the
-  comparison's 16 splits no selected set is established as better than
-  all genes. From k = 250 the top methods match them.
+  comparison's 16 splits, in macro-F1, no selected set is established as
+  better than all genes. From k = 250 the top methods match them.
 - Wrappers cost the most. On SCAN-B they also scored below the filters. On
   BreastMNIST, RFE scored close to Lasso at k = 250 (0.900 against 0.902).
 - On FGVC-Aircraft, an unseen dataset, the pipeline ran unchanged and

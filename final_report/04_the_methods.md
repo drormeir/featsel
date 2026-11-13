@@ -18,21 +18,22 @@ The lasso (Tibshirani 1996) and random forests (Breiman 2001) are the two
 embedded methods used here. The family is a label, not shared code. In
 `featsel` each method is its own class.
 
-We add two more groups: **Higher Criticism** and its relative
-**Berk-Jones**, filters that pick their own number of features, and the
-**random control**.
+We add two more groups. The first is **Higher Criticism** and its relative
+**Berk-Jones**: filters that pick their own number of features. The second
+is the **random control**.
 
 **Multiple testing.** A filter that tests every gene runs thousands of
 tests. The Benjamini and Hochberg (1995) procedure keeps the expected
 share of false discoveries below a chosen level. Bonferroni correction
-controls the chance of even one false discovery, and is stricter. The FDR
-and FWE selectors apply these two.
+controls the chance of even one false discovery, so it is stricter. The
+FDR and FWE selectors apply these two corrections.
 
 ## 4.2 The 16 methods
 
-Every method is a class in `featsel.selectors`. "Ours vs scikit-learn"
-says whether it reproduces a scikit-learn method exactly (same genes).
-Tests check this.
+Every method is a class in `featsel.selectors`. The column "Ours vs
+scikit-learn" says whether the class selects exactly the same genes as a
+scikit-learn method. Tests check this. Where scikit-learn's solver stops
+early, the reference is that solver run to a tight tolerance.
 
 | Method | Family | Idea in one sentence | Main setting | Ours vs scikit-learn |
 |---|---|---|---|---|
@@ -50,7 +51,7 @@ Tests check this.
 | LassoSelector | embedded | L1-penalized logistic regression; keep the largest weights; the penalty sets most weights to exactly zero. | C, or values of C to choose from by validation AUC | same as `SelectFromModel` with liblinear run to a tight tolerance |
 | TreeImportanceSelector | embedded | Random forest; rank by how much each feature reduces impurity in the trees. | number of trees | same as `SelectFromModel(RandomForest)` |
 | RFESelector | wrapper | SVM-RFE: train a linear SVM, remove the features with the smallest weights, repeat (Guyon et al. 2002). | `k`, step, C | same as `RFE(LinearSVC)` with a converged SVM |
-| RFECVSelector | wrapper | RFE, with the number of features chosen by inner cross-validation. | step, C, folds | same as `RFECV` with a converged SVM |
+| RFECVSelector | wrapper | RFE, with the number of features chosen by cross-validation on the training set. | step, C, folds | same as `RFECV` with a converged SVM |
 | SequentialSelector | wrapper | Greedy forward search: add the one feature that most improves cross-validated accuracy, repeat. | `k`, folds | same as `SequentialFeatureSelector` with the default solver |
 
 Each method has a tutorial notebook:
@@ -58,27 +59,32 @@ Each method has a tutorial notebook:
 
 ### A few methods in more detail
 
-**Lasso.** The penalty λ·Σ|wᵢ| drives most weights to exactly zero.
-scikit-learn sets its strength by C = 1/λ, so a smaller C keeps fewer
-features. The
-features with non-zero weights are selected. One consequence matters later.
-In the comparison on SCAN-B, C = 1. Asked for 1,000 genes, Lasso keeps
-127 to 647 on four of the five tasks. On LumA it keeps 883 to 1,000. So asking
-it for 1,000 usually gives fewer. These counts came from liblinear, which
-at its default tolerance stops before the solution. On all 2,976 patients
-the exact solution keeps 196 genes on Basal where liblinear keeps 330, and
-907 on LumA where liblinear keeps 1,600 (section 6.2). LassoSelector now
-solves exactly, with PPDNA. Its frontier runs choose C by validation AUC
-instead of asking for k.
+**Lasso.** The penalty λ·Σ|wᵢ| drives most weights to exactly zero. The
+features with non-zero weights are selected. scikit-learn sets the
+penalty's strength by C = 1/λ, so a smaller C keeps fewer features.
+
+So C, not the request, caps the count. This matters later. In the
+comparison on SCAN-B, C = 1. Asked for 1,000 genes, Lasso kept 127 to 647
+on four of the five tasks, and 883 to 1,000 on LumA. So asking it for
+1,000 usually gave fewer.
+
+These counts came from liblinear, which at its default tolerance stops
+before the solution. On all 2,976 patients the exact solution keeps 196
+genes on Basal where liblinear keeps 330, and 907 on LumA where liblinear
+keeps 1,600 (section 6.2). LassoSelector no longer offers liblinear. It
+solves exactly, with PPDNA, and handles classification only. In the
+frontier it is not asked for `k`. It chooses C by validation AUC
+(section 3.11), and that C sets the count.
 
 **Random forest importance.** Each tree is grown on a bootstrap sample of
 the patients. At each split point a tree tries a random subset of
 √p features and picks the best. A feature's importance is the total drop
 in impurity it causes, averaged over the trees.
 
-**SVM-RFE.** A linear SVM's weight on a feature says how much the decision
-depends on it, on standardized data. RFE removes the weakest features,
-retrains, and repeats. The `step` sets how many go per round. A step of
+**SVM-RFE.** On standardized data, a linear SVM's weight on a feature says
+how much the decision depends on it. RFE removes the weakest features,
+retrains, and repeats. It runs only an exact Newton solver; liblinear is
+no longer offered. The `step` sets how many go per round. A step of
 0.1 removes 10% of the starting features each round, so about ten rounds.
 Guyon et al. (2002) introduced it on gene expression data from leukemia
 and colon cancer. It is a widely used wrapper for such data.
@@ -111,41 +117,41 @@ be cut from one ranking per split. The cut equals a separate fit at each
 `k`.
 
 RFE needs one more step. It is fit once, down to the smallest `k`. With a
-fixed step, the rounds for a larger `k` are the same up to that `k`'s last
-round. So we rank the features by the round they were removed in, and
-within a round by their weight. This ranking gives RFE's selection at
-every larger `k`. Tests
-check that every cut equals a separate fit. Chapter 6 shows the time this
-saves.
+fixed step, a fit to a larger `k` runs the same rounds and stops earlier.
+So we rank the features by the round they were removed in, and within a
+round by their weight. This ranking gives RFE's selection at every larger
+`k`. Tests check that every cut equals a separate fit. Chapter 6 shows the
+time this saves.
 
 ## 4.3 Why we score genes with the U test, not the F-test
 
 This was one of the main decisions of the project.
 
 **The data.** Chapter 2 showed two facts. Only the order of a gene's
-values is meaningful. And about half the values sit tied at a floor. Within a
-class, a gene is a pile of identical floor values plus a spread of detected
-values. It is not a normal curve.
+values is meaningful. And about half the values sit tied at a floor. So
+within a class, a gene is a pile of identical floor values plus a spread
+of detected values. It is not a normal curve.
 
 **The F-test** compares class means. Its result depends on the size of the
-values, so it would change under another, equally valid transform. Its
-p-values assume normal values with equal spread in both classes. The F
-statistic still ranks genes sensibly. But Higher Criticism reads its tiny
-p-values, and those rest on an assumption the data breaks.
+values, so another, equally valid transform would change it. Its p-values
+assume normal values with equal spread in both classes. The F statistic
+still ranks genes sensibly. But Higher Criticism reads its tiny p-values,
+and those rest on an assumption the data breaks.
 
 **The Mann-Whitney U test** (Mann and Whitney 1947) uses only the order of
-the values, and assumes no normal curve. For a binary task, U divided by
+the values. It assumes no normal curve. For a binary task, U divided by
 n₁n₂ is exactly the AUC of the gene used alone as a score (Hanley and
 McNeil 1982). So ranking genes by U-test p-value ranks them by how well
 each one alone separates the classes, in either direction. Only the tie
 correction, which differs from gene to gene, can shift this order
-slightly. Its p-value answers the question we
-want to ask. How likely is a separation this good if the labels were
-shuffled, with the class sizes fixed? Ties, such as the floor, get average
-ranks. So the floor is treated as what it is: one large group of tied
-values. With two classes, the U test is the same test as Kruskal-Wallis,
-"ANOVA on ranks". It needs exactly two classes, which matches the
-project's binary tasks.
+slightly.
+
+Its p-value answers the question we want to ask: how likely is a
+separation this good if the labels were shuffled, with the class sizes
+fixed? Ties, such as the floor, get average ranks. So the floor is treated
+as what it is: one large group of tied values. With two classes, the U
+test is the same test as Kruskal-Wallis, "ANOVA on ranks". It needs
+exactly two classes. Every task in the project is binary, so this fits.
 
 The p-value is the normal approximation with tie and continuity
 corrections, as in SciPy's `mannwhitneyu(method='asymptotic')`.
@@ -157,8 +163,8 @@ for Higher Criticism.
 
 So every filter in the experiments that runs a statistical test uses the
 U test. Correlation and mutual information, used in the frontier, run no
-test. One test for all filters makes the comparison a comparison of
-selection rules, not of tests. The F-test selectors stay in the package
+test. With one test for all filters, the comparison compares selection
+rules, not tests. The F-test selectors stay in the package
 as drop-in replacements for scikit-learn's. They are not used in the
 experiments.
 
@@ -166,10 +172,10 @@ experiments.
 10 s on SCAN-B, against about 1 s for the F-test. Mann-Whitney ranks once
 per split, so the cost is paid once per split, not once per `k`.
 
-**Its limit.** The normal approximation is not exact in the extreme tail,
-which is where HC2004 reads its p-values. With ties, the exact
-permutation p-value depends on each gene's own pattern of ties. So it
-cannot be computed once for all genes.
+**Its limit.** The normal approximation is not exact in the extreme tail.
+That is where HC2004 reads its p-values. The exact permutation p-value
+would fix this. But with ties it depends on each gene's own pattern of
+ties, so it cannot be computed once for all genes.
 
 **Numerical care.** Many genes have p-values below 10⁻³⁰⁸, where a
 standard 64-bit float rounds to 0. Higher Criticism needs to tell them
@@ -184,10 +190,9 @@ error of the log is at most 5 × 10⁻¹⁶ for the U test and 7 × 10⁻¹² fo
 the F-test.
 
 **A better model, not built.** Each gene could be described by four
-numbers. Two are the class sizes. The other two are the share of each
-class at the floor.
+numbers: the two class sizes, and the share of each class at the floor.
 That gives an exact null distribution per gene. It separates "how often
-the gene is detected" from "how high it is when detected". It needs a
+the gene is detected" from "how high it is when detected". But it needs a
 separate computation per floor count. It is left for future work
 ([Appendix C.4](appendix_c_data_details.md#c4-a-better-model-for-floor-heavy-genes-not-built)).
 
@@ -238,9 +243,9 @@ p-values behave under the null from independent p-values. Correlated
 genes give correlated p-values. Chapter 2 showed that neither of our
 datasets meets these conditions. Chapter 7 shows what HC does then.
 
-**Decision: alpha0 stays 0.1.** On SCAN-B the HC score is
-still rising at the edge of its search. Raising alpha0 because we know the
-signal is widespread would tune the method to the answer. A selector must
+**Decision: alpha0 stays 0.1.** On SCAN-B the HC score is still rising at
+the edge of its search. We could raise alpha0, since we know the signal is
+widespread. But that would tune the method to the answer. A selector must
 not assume what it is meant to find.
 
 ## 4.5 Berk-Jones
@@ -284,11 +289,11 @@ Its assumptions are those of HC: rare, weak and independent signal.
 | Experiment | Methods |
 |---|---|
 | The comparison (chapter 7) | Random, Mann-Whitney, Lasso, tree importance, RFE, HC2004, HC2008, Berk-Jones |
-| The frontier (chapter 8) | Random, Mann-Whitney, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso (two solvers), tree importance, RFE (two solvers), RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE |
+| The frontier (chapter 8) | Random, Mann-Whitney, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE. The first frontier run had two solvers each for Lasso (liblinear and PPDNA) and RFE (liblinear and Newton); the configurations now run only PPDNA and Newton. |
 | The classifier study (chapter 7) | Random and Mann-Whitney, with five classifiers |
 | The unseen dataset (section 8.8) | Random, Mann-Whitney, HC2008, correlation (Spearman), mutual information, Lasso (PPDNA), RFE (Newton), RFECV (Newton, scored by AUC), Sequential (Newton) |
 
 Variance threshold, ANOVA, Percentile, FDR and FWE are in the package and
-tested. They are not in the experiments. The last four use the F-test,
-which the U test replaces (section 4.3). Variance threshold uses no label
-at all.
+tested, but not in the experiments. The last four use the F-test, which
+the U test replaces (section 4.3). Variance threshold uses no label at
+all.

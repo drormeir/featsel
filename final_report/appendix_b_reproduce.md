@@ -15,13 +15,14 @@ python3.13 -m venv .venv
 
 The first SCAN-B load downloads GSE96058 (592 MB) into
 `featsel_datasets/scanb_gse96058/`. The first BreastMNIST load downloads
-the images (31 MB), computes the embeddings once, and finds the copied
-images once (about 40 seconds). The embeddings use the GPU when one is
-present, else the CPU.
+the images (31 MB). It then computes the embeddings and finds the copied
+images (about 40 seconds), once each. The embeddings use the GPU when one
+is present, else the CPU.
 
 Versions used: Python 3.13, scikit-learn 1.9, NumPy 2.5, SciPy 1.18,
 pandas 3.0, PyTorch with CUDA 13. Each run writes a JSON file beside its
-CSV. It records the exact versions, the machine and the git commit.
+CSV. The JSON records the exact versions, the machine and the git
+commit.
 
 ## The experiments
 
@@ -40,7 +41,7 @@ CSV. It records the exact versions, the machine and the git commit.
 | Runner against scikit-learn (chapter 6) | `.venv/bin/python scripts/benchmark_speed.py --n-genes 3000 --out <file>` | the table of section 6.1, and `results/speed_benchmark.csv` (see the note below) |
 | Speed of each method (chapter 6) | run `featsel/selectors/<name>/demos/speed.ipynb` | `results/local/speed/<ClassName>.csv`, such as `ANOVAFSelector.csv`, and `LassoSelector_scanb.csv` for Lasso on SCAN-B |
 | Frontier, SCAN-B (chapter 8) | `.venv/bin/python -m featsel.run --config configs/frontier_scanb70_gpu.yaml --n-jobs 1`, then `..._seq.yaml --n-jobs 1`, then `..._cpu.yaml --n-jobs 2` | `results/local/frontier_scanb70_*.csv` |
-| Frontier, SCAN-B, 16 splits (section 8.3) | `.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_gpu.yaml --n-jobs 1 --n-splits 16`, the same with `frontier_scanb70_berkjones.yaml`, and with `frontier_scanb70_tree.yaml --n-jobs 2` (its CSV starts as a copy of the cpu run's tree importance rows). Then `.venv/bin/python scripts/paired_tests.py results/local/frontier_scanb70_gpu.csv results/local/frontier_scanb70_berkjones.csv results/local/frontier_scanb70_tree.csv --metric roc_auc --own-count --out final_report/figures/paired_tests_frontier_scanb70_16_splits.csv`, and `.venv/bin/python scripts/plot_paired_differences.py final_report/figures/paired_tests_frontier_scanb70_16_splits.csv --reference MannWhitneySelector --out final_report/figures/frontier_scanb70_16_splits.png` | the three CSVs, extended from 5 splits to 16; the tests and the figure in [`figures/`](figures/) |
+| Frontier, SCAN-B, 16 splits (section 8.3) | `.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_gpu.yaml --n-jobs 1 --n-splits 16`, the same with `frontier_scanb70_berkjones.yaml`, and with `frontier_scanb70_tree.yaml --n-jobs 2` (its CSV starts as a copy of the cpu run's tree importance results for splits 0 to 4). Then `.venv/bin/python scripts/paired_tests.py results/local/frontier_scanb70_gpu.csv results/local/frontier_scanb70_berkjones.csv results/local/frontier_scanb70_tree.csv --metric roc_auc --own-count --out final_report/figures/paired_tests_frontier_scanb70_16_splits.csv`, and `.venv/bin/python scripts/plot_paired_differences.py final_report/figures/paired_tests_frontier_scanb70_16_splits.csv --reference MannWhitneySelector --out final_report/figures/frontier_scanb70_16_splits.png` | the three CSVs, extended from 5 splits to 16; the tests and the figure in [`figures/`](figures/). The configs now set 16 splits, so a fresh run of the row above already gives 16; this row records how the 5-split run was extended. |
 | Frontier, BreastMNIST (chapter 8) | the same with `configs/frontier_breastmnist70_*.yaml` | `results/local/frontier_breastmnist70_*.csv` |
 | RFECV scored by AUC (section 8.6) | `.venv/bin/python -m featsel.run --config configs/frontier_scanb70_rfecv_auc.yaml --n-jobs 2`, and the same with `frontier_breastmnist70_rfecv_auc.yaml`. One split, three inner scores: `.venv/bin/python scripts/rfecv_scoring.py` | `results/local/frontier_*70_rfecv_auc.csv`. The script prints its table and writes no file. |
 | BreastMNIST at larger `k` (section 8.7) | `.venv/bin/python -m featsel.run --config configs/frontier_breastmnist70_large_k.yaml --n-jobs 1` | `results/local/frontier_breastmnist70_large_k.csv` |
@@ -54,17 +55,16 @@ long unattended run, start it through `scripts/run_until_done.py` with the
 same arguments, for example `.venv/bin/python scripts/run_until_done.py
 --config configs/comparison_scanb_all_genes.yaml --n-jobs 4
 --max-worker-memory-gb 3`. It restarts the runner after a crash and keeps
-the machine awake. `scripts/parallel_scaling.py` takes `--resume` too. How
-the runs are protected, and the limits: section 5.5. Files in
-`results/local/` are not tracked by git. The frontier plots and tables used
-in this report are copied to [`figures/`](figures/).
+the machine awake. `scripts/parallel_scaling.py` takes `--resume` too.
+Section 5.5 describes how the runs are protected, and the limits. Git does
+not track the files in `results/local/`. The frontier plots and tables
+used in this report are copied to [`figures/`](figures/).
 
 The table of section 6.1 was measured when the runner fitted each
-selection once. It now fits each selection 10 times by default
-(`selection_repeats`).
-`benchmark_speed.py` does not set it to 1. So a rerun today times 10 fits
-per selection on the runner's side. Its runner times would not match the
-table.
+selection once. The runner now fits each selection 10 times by default
+(`selection_repeats`). `benchmark_speed.py` does not set it to 1. So a
+rerun today times 10 fits per selection on the runner's side, and its
+runner times would not match the table.
 
 ## Determinism
 
