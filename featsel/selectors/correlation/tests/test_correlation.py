@@ -49,6 +49,19 @@ class TestCorrelationSelector:
 
         assert list(by_text.get_support(indices=True)) == list(by_code.get_support(indices=True))
 
+    @pytest.mark.parametrize('method', ['pearson', 'spearman'])
+    def test_one_fit_serves_every_larger_k(self, sklearn_reference_data, method):
+        """Test that the top k of one fit is a separate fit's selection at each k."""
+        X, y = sklearn_reference_data
+        ranking = CorrelationSelector(n_features=5, target_threshold=0.0, method=method,
+                                      inter_feature_threshold=0.3).fit(X, y).ranking()
+
+        for k in [5, 20, 50, len(ranking)]:
+            separate = CorrelationSelector(n_features=k, target_threshold=0.0, method=method,
+                                           inter_feature_threshold=0.3).fit(X, y)
+            np.testing.assert_array_equal(np.sort(ranking[:k]),
+                                          separate.get_support(indices=True), err_msg=f'k={k}')
+
     def test_three_text_classes_raise(self):
         """Test that more than two text classes raise: they have no numeric order."""
         X = pd.DataFrame(np.random.default_rng(0).normal(size=(30, 4)))

@@ -139,14 +139,13 @@ VARIANTS = {
     'MannWhitneySelector': {'GPU': {'device': 'cuda'}},
     'HigherCriticismSelector': {'GPU': {'device': 'cuda'}},
     'BerkJonesSelector': {'GPU': {'device': 'cuda'}},
-    # PPDNA on the CPU is about five times slower than liblinear; it pays
-    # only on a GPU.
-    'LassoSelector': {'featsel PPDNA, GPU': {'solver': 'ppdna', 'device': 'cuda'}},
+    'LassoSelector': {'featsel PPDNA, CPU': {'device': 'cpu'},
+                      'featsel PPDNA, GPU': {'device': 'cuda'}},
     'TreeImportanceSelector': {'featsel, all threads': {'n_jobs': -1}},
-    'RFESelector': {'featsel Newton, CPU': {'solver': 'newton'},
-                    'featsel Newton, GPU': {'solver': 'newton', 'device': 'cuda'}},
-    'RFECVSelector': {'featsel Newton, CPU': {'solver': 'newton'},
-                      'featsel Newton, GPU': {'solver': 'newton', 'device': 'cuda'}},
+    'RFESelector': {'featsel Newton, CPU': {'device': 'cpu'},
+                    'featsel Newton, GPU': {'device': 'cuda'}},
+    'RFECVSelector': {'featsel Newton, CPU': {'device': 'cpu'},
+                      'featsel Newton, GPU': {'device': 'cuda'}},
     'SequentialSelector': {'featsel Newton, CPU': {'solver': 'newton'},
                            'featsel Newton, GPU': {'solver': 'newton', 'device': 'cuda'}},
 }

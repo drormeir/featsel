@@ -15,6 +15,10 @@ seed: 42
 n_splits: 16
 train_sizes: [0.7]
 preprocess: ["standard"]
+# Each method with a k list gets a validation AUC per k, from 5 folds of the
+# training set, so k can be chosen without the test set (featsel.chosen_k).
+k_validation:
+  cv: 5
 
 metrics:
   - roc_auc
@@ -22,24 +26,16 @@ metrics:
   - balanced_accuracy
 
 selectors:
-  - name: LassoSelector
-    label: Lasso_liblinear
-    k: [10, 50, 250, 1000]
-    params: {C: 1.0}
   - name: TreeImportanceSelector
-    k: [10, 50, 250, 1000]
+    k: [10, 50, 250, 500, 1000, 1500, 2000]
     params: {n_estimators: 200, n_jobs: 4}
   - name: RFESelector
-    label: RFE_liblinear
-    k: [10, 50, 250, 1000]
-    params: {C: 0.01}
-  - name: RFESelector
     label: RFE_newton
-    k: [10, 50, 250, 1000]
-    params: {C: 0.01, solver: "newton", device: "cpu"}
+    k: [10, 50, 250, 500, 1000, 1500, 2000]
+    params: {C: 0.01, device: "cpu"}
   - name: RFECVSelector
     label: RFECV_newton
-    params: {C: 0.01, cv: 5, solver: "newton", device: "cpu"}
+    params: {C: 0.01, cv: 5, device: "cpu"}
 
 models:
   - name: logistic_regression

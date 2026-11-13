@@ -55,6 +55,16 @@ class TestMutualInfoSelector:
         """Test that it selects the same features as SelectKBest(mutual_info_classif)."""
         assert_same_selection(*_with_sklearn(), *sklearn_reference_data)
 
+    def test_one_fit_serves_every_larger_k(self, sklearn_reference_data):
+        """Test that the top k of one fit is a separate fit's selection at each k."""
+        X, y = sklearn_reference_data
+        ranking = MutualInfoSelector(n_features=5, random_state=0).fit(X, y).ranking()
+
+        for k in [5, 20, 50, 120, 200]:
+            separate = MutualInfoSelector(n_features=k, random_state=0).fit(X, y)
+            np.testing.assert_array_equal(np.sort(ranking[:k]),
+                                          separate.get_support(indices=True), err_msg=f'k={k}')
+
     def test_not_slower_than_sklearn(self, sklearn_reference_data):
         """Test that fit is at most 5% slower than SelectKBest(mutual_info_classif)."""
         assert_not_slower(*_with_sklearn(), *sklearn_reference_data)

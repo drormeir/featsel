@@ -19,6 +19,10 @@ seed: 42
 n_splits: 16
 train_sizes: [0.7]
 preprocess: ["standard"]
+# Each method with a k list gets a validation AUC per k, from 5 folds of the
+# training set, so k can be chosen without the test set (featsel.chosen_k).
+k_validation:
+  cv: 5
 
 metrics:
   - roc_auc
@@ -40,10 +44,10 @@ selectors:
   - name: MutualInfoSelector
     k: [10, 50, 250]
     params: {device: "cuda"}
+  # No k: C, chosen from Cs by validation AUC, sets the count.
   - name: LassoSelector
     label: Lasso_ppdna
-    k: [10, 50, 250]
-    params: {C: 1.0, solver: "ppdna", device: "cuda"}
+    params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
 
 models:
   - name: logistic_regression

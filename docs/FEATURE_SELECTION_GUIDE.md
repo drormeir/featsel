@@ -476,8 +476,9 @@ minimize: (1/2n) Σ(y_i - Σ β_j x_ij)² + α Σ|β_j|
 
 where:
 - β_j = coefficient for feature j
-- α = regularization strength (larger α → more zeros). `LassoSelector` takes
-  `alpha` for regression and `C = 1/α` for classification
+- α = regularization strength (larger α → more zeros). `LassoSelector` is
+  L1 logistic regression, classification only, and takes `C = 1/α`; with
+  `Cs`, it chooses C by validation AUC
 - |β_j| = absolute value (creates sparsity)
 ```
 
@@ -494,8 +495,6 @@ from sklearn.linear_model import LogisticRegression
 selector = LassoSelector(
     n_features=50,
     C=0.1,  # Inverse regularization strength: smaller is sparser
-    task='classification',
-    random_state=42
 )
 
 pipe = Pipeline([
@@ -696,7 +695,6 @@ selector = RFESelector(
     n_features=50,
     step=0.1,   # remove 10% of the starting genes per round
     C=0.01,     # strong regularization; see below
-    random_state=42,
 )
 
 selector.fit(gene_expression_data, cancer_subtypes)
@@ -777,8 +775,7 @@ down to that count. It wraps scikit-learn's `RFECV`.
 ```python
 from featsel.selectors import RFECVSelector
 
-selector = RFECVSelector(step=0.1, cv=5, scoring='f1_macro', C=0.01,
-                         random_state=42)
+selector = RFECVSelector(step=0.1, cv=5, scoring='f1_macro', C=0.01)
 selector.fit(gene_expression_data, cancer_subtypes)
 
 print(selector.n_features_, 'genes chosen')
@@ -926,7 +923,7 @@ pipe = Pipeline([
 pipe = Pipeline([
     ('variance', VarianceThreshold(threshold=0.01)),
     ('anova', ANOVAFSelector(n_features=500)),
-    ('lasso', LassoSelector(n_features=100, C=0.1, random_state=42)),
+    ('lasso', LassoSelector(n_features=100, C=0.1)),
     ('clf', LogisticRegression())
 ])
 ```
@@ -982,7 +979,7 @@ for cls in (ANOVAFSelector, MutualInfoSelector, LassoSelector, TreeImportanceSel
 # Focus on sparsity
 pipe = Pipeline([
     ('variance', VarianceThreshold(threshold=0.05)),
-    ('lasso', LassoSelector(n_features=20, C=0.05, random_state=42)),
+    ('lasso', LassoSelector(n_features=20, C=0.05)),
     ('clf', LogisticRegression())
 ])
 

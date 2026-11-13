@@ -39,7 +39,7 @@ def main():
         y_test = (labels[test] == subtype).astype(int)
         for scoring in SCORINGS:
             start = time.perf_counter()
-            selector = RFECVSelector(C=0.01, cv=5, solver='newton', device='cpu',
+            selector = RFECVSelector(C=0.01, cv=5, device='cpu',
                                      scoring=scoring).fit(X_train, y_train)
             seconds = time.perf_counter() - start
             genes = selector.get_support(indices=True)

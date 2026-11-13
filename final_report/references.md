@@ -80,6 +80,10 @@ He, K., Zhang, X., Ren, S. and Sun, J. (2016). Deep residual learning for
 image recognition. *IEEE Conference on Computer Vision and Pattern
 Recognition (CVPR)*, 770-778. https://doi.org/10.1109/CVPR.2016.90
 
+Keerthi, S. S. and DeCoste, D. (2005). A modified finite Newton method for
+fast solution of large scale linear SVMs. *Journal of Machine Learning
+Research* 6, 341-361. https://jmlr.org/papers/volume6/keerthi05a/keerthi05a.pdf
+
 Kohavi, R. and John, G. H. (1997). Wrappers for feature subset selection.
 *Artificial Intelligence* 97(1-2), 273-324.
 https://doi.org/10.1016/S0004-3702(97)00043-X

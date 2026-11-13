@@ -40,22 +40,26 @@ N_SPLITS = 5
 K_VALUES = [10, 50, 250]
 TASK = 'Basal'
 
-# Fixed seeds in every estimator, so both sides fit the same models on
-# every split. The runner would otherwise derive a seed per split.
-LASSO = {'C': 1.0, 'random_state': SEED}
-RFE_PARAMS = {'C': 0.01, 'step': 0.5, 'random_state': SEED}
+# A fixed seed in the classifier, so both sides fit the same models on every
+# split. The runner would otherwise derive a seed per split.
+LASSO = {'C': 1.0}
+RFE_PARAMS = {'C': 0.01, 'step': 0.5}
 MODEL = {'max_iter': 1000, 'random_state': SEED}
 
 
 def sklearn_selectors(k):
-    """scikit-learn's own equivalent of each runner selector, at k."""
+    """
+    scikit-learn's own equivalent of each runner selector, at k. Our
+    selectors reach the exact solution, so liblinear runs to a tight
+    tolerance here: at its default it stops early and keeps other genes.
+    """
     return {
         'LassoSelector': SelectFromModel(
             LogisticRegression(l1_ratio=1, C=LASSO['C'], solver='liblinear',
-                               max_iter=1000, random_state=SEED),
+                               tol=1e-10, max_iter=1_000_000),
             max_features=k, threshold=np.finfo(float).tiny),
         'RFESelector': RFE(
-            LinearSVC(C=RFE_PARAMS['C'], max_iter=1000, random_state=SEED),
+            LinearSVC(C=RFE_PARAMS['C'], tol=1e-10, max_iter=100_000),
             n_features_to_select=k, step=RFE_PARAMS['step']),
     }
 

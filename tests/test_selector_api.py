@@ -42,13 +42,13 @@ SELECTORS = [
     FWESelector(alpha=0.05),
     HigherCriticismSelector(variant='2004'),
     HigherCriticismSelector(variant='2008'),
-    LassoSelector(n_features=10, random_state=0),
+    LassoSelector(n_features=10),
     MannWhitneySelector(n_features=10),
     MutualInfoSelector(n_features=10, random_state=0),
     PercentileSelector(percentile=50),
     RandomSelector(n_features=10, random_state=0),
-    RFECVSelector(cv=3, random_state=0),
-    RFESelector(n_features=10, random_state=0),
+    RFECVSelector(cv=3),
+    RFESelector(n_features=10),
     SequentialSelector(n_features=3, cv=3),
     TreeImportanceSelector(n_features=10, n_estimators=20, random_state=0),
     VarianceThreshold(threshold=0.0),
@@ -179,17 +179,17 @@ class TestHighDimensionalData:
         """Test Lasso selection when features far outnumber samples."""
         X, y = high_dim_data
 
-        selector = LassoSelector(n_features=50, random_state=42).fit(X, y)
+        selector = LassoSelector(n_features=50).fit(X, y)
         n_nonzero = len(selector.ranking())
 
         assert selector.transform(X).shape == (X.shape[0], min(50, n_nonzero))
 
     def test_lasso_multiclass_on_high_dim(self, high_dim_data):
-        """Test that multiclass targets work despite liblinear being binary-only."""
+        """Test that a multiclass target gives one coefficient row per class."""
         X, _ = high_dim_data
         y_multi = np.tile([0, 1, 2, 3, 4], X.shape[0] // 5 + 1)[:X.shape[0]]
 
-        selector = LassoSelector(n_features=20, random_state=42).fit(X, y_multi)
+        selector = LassoSelector(n_features=20).fit(X, y_multi)
 
         assert selector.coef_.shape[0] == 5
         assert selector.get_support().sum() == 20
@@ -199,7 +199,7 @@ def test_embedded_methods_agree_on_informative_data(small_classification_data):
     """Test that Lasso and tree importance overlap more than chance would."""
     X, y = small_classification_data
 
-    lasso = LassoSelector(n_features=10, random_state=42).fit(X, y)
+    lasso = LassoSelector(n_features=10).fit(X, y)
     trees = TreeImportanceSelector(n_features=10, n_estimators=50, random_state=42).fit(X, y)
 
     overlap = set(lasso.get_support(indices=True)) & set(trees.get_support(indices=True))

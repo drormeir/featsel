@@ -65,6 +65,8 @@ class MutualInfoSelector(FeatureSelectorRandom):
     (100, 10)
     """
 
+    rank_once = True
+
     def __init__(self, n_features=None, task='classification', n_neighbors=3,
                  random_state=42, device='auto', check_input=True):
         super().__init__(random_state)

@@ -19,18 +19,23 @@ import yaml
 from joblib.externals.loky.process_executor import TerminatedWorkerError
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.model_selection import (
+    GridSearchCV,
+    StratifiedKFold,
+    StratifiedShuffleSplit,
+)
 from sklearn.preprocessing import StandardScaler
 
 import featsel.run as run_module
-from featsel.analysis import kuncheva_index, nogueira_stability, summarize
+from featsel.analysis import chosen_k, kuncheva_index, nogueira_stability, summarize
 from featsel.metrics import KEY_COLUMNS, g_mean
 from featsel.run import build_tasks, load_config, load_dataset, run, run_config
 from featsel.selectors import (
     ANOVAFSelector,
     FeatureSelector,
     LassoSelector,
+    MannWhitneySelector,
     RFESelector,
     TreeImportanceSelector,
 )
@@ -687,3 +692,128 @@ class TestSelectionRepeats:
 
         with pytest.raises(ValueError, match='selection_repeats'):
             run_config(experiment)
+
+
+class TestKValidation:
+    """With k_validation, every k gets a validation AUC from folds of the training set."""
+
+    def test_every_k_gets_a_validation_auc(self, experiment):
+        """Test that ranked and per-k selectors are scored, and an own-count one is not."""
+        experiment['k_validation'] = {'cv': 3}
+        experiment['selectors'] = [
+            {'name': 'MannWhitneySelector', 'k': [5, 10], 'params': {'device': 'cpu'}},
+            {'name': 'ANOVAFSelector', 'k': [5, 10]},
+            {'name': 'LassoSelector'},
+        ]
+        df = pd.read_csv(run_config(experiment))
+
+        scored = df[df.selector != 'LassoSelector']
+        assert scored['validation_roc_auc'].between(0, 1).all()
+        assert (scored['validation_time_s'] > 0).all()
+        own_count = df[df.selector == 'LassoSelector']
+        assert own_count['validation_roc_auc'].isna().all()
+        assert own_count['validation_time_s'].isna().all()
+
+    def test_a_selector_can_opt_out(self, experiment):
+        """Test that k_validation: false on an entry skips its search."""
+        experiment['k_validation'] = {'cv': 3}
+        experiment['selectors'] = [{'name': 'ANOVAFSelector', 'k': [5, 10],
+                                    'k_validation': False}]
+        df = pd.read_csv(run_config(experiment))
+
+        assert df['validation_roc_auc'].isna().all()
+
+    def test_without_it_no_columns_are_added(self, experiment):
+        """Test that a config without k_validation writes the columns it always did."""
+        df = pd.read_csv(run_config(experiment))
+
+        assert 'validation_roc_auc' not in df.columns
+        assert 'validation_time_s' not in df.columns
+
+    def test_matches_a_search_by_hand(self):
+        """Test the scores against the same folds, selector and model built directly."""
+        X, y = make_classification(n_samples=120, n_features=60, n_informative=8,
+                                   random_state=0)
+        config = {'k_validation': {'cv': 3}, 'tuning': {},
+                  'models': [{'name': 'logistic_regression', 'params': {'max_iter': 1000}}]}
+        spec = {'name': 'MannWhitneySelector', 'k': [5, 20], 'params': {'device': 'cpu'}}
+
+        found = run_module._validation_auc(spec, [5, 20], 7, X, y, config, rank_once=True)
+
+        for k in (5, 20):
+            expected = []
+            for train, valid in StratifiedKFold(3, shuffle=True, random_state=7).split(X, y):
+                genes = MannWhitneySelector(n_features=k, device='cpu').fit(
+                    X[train], y[train]).get_support()
+                model = LogisticRegression(max_iter=1000, random_state=7).fit(
+                    X[train][:, genes], y[train])
+                expected.append(roc_auc_score(y[valid],
+                                              model.decision_function(X[valid][:, genes])))
+            assert found['validation_roc_auc'][(k, 'logistic_regression')] == \
+                pytest.approx(np.mean(expected))
+
+
+def test_chosen_k_takes_the_best_validation_auc():
+    """Test the choice per split, a tie to the smaller k, and an own-count row kept."""
+    base = {'task': 'binary', 'train_size': 0.7, 'preprocess': 'standard',
+            'model': 'logistic_regression'}
+    results = pd.DataFrame([
+        {**base, 'split': 0, 'selector': 'MW', 'k': 10, 'validation_roc_auc': 0.80, 'roc_auc': 0.7},
+        {**base, 'split': 0, 'selector': 'MW', 'k': 50, 'validation_roc_auc': 0.90, 'roc_auc': 0.6},
+        {**base, 'split': 1, 'selector': 'MW', 'k': 10, 'validation_roc_auc': 0.85, 'roc_auc': 0.8},
+        {**base, 'split': 1, 'selector': 'MW', 'k': 50, 'validation_roc_auc': 0.85, 'roc_auc': 0.9},
+        {**base, 'split': 0, 'selector': 'HC', 'k': np.nan, 'validation_roc_auc': np.nan,
+         'roc_auc': 0.75},
+    ])
+
+    chosen = chosen_k(results).set_index(['selector', 'split'])
+
+    assert chosen.loc[('MW', 0), 'k'] == 50
+    assert chosen.loc[('MW', 1), 'k'] == 10      # a tie: the smaller k
+    assert chosen.loc[('HC', 0), 'roc_auc'] == 0.75
+    assert len(chosen) == 3
+
+
+class TestSearchOnce:
+    """A selector that searches a hyperparameter searches once; the repeats fit with its choice."""
+
+    def test_lasso_searches_once_and_repeats_its_choice(self, experiment, monkeypatch):
+        """Test one fit with Cs, then every repeat with C fixed, and the same genes."""
+        experiment['n_splits'] = 1
+        experiment['selection_repeats'] = 3
+        experiment['selectors'] = [{'name': 'LassoSelector', 'params': {'Cs': [0.1, 1.0],
+                                                                        'cv': 3}}]
+        searched = []
+        original = LassoSelector._best_C
+
+        def counting(self, *args):
+            searched.append(self.Cs)
+            return original(self, *args)
+
+        monkeypatch.setattr(LassoSelector, '_best_C', counting)
+        df = pd.read_csv(run_config(experiment))
+
+        assert len(searched) == 3                  # one search per task, none per repeat
+        assert (df['search_time_s'] > 0).all()
+        assert df['selection_stable'].all()        # the repeats keep the search's genes
+
+    def test_a_selector_without_search_has_no_search_time(self, experiment):
+        """Test that search_time_s is empty for a selector that searches nothing."""
+        df = pd.read_csv(run_config(experiment))
+
+        assert df['search_time_s'].isna().all()
+
+    def test_a_chain_fixes_its_last_step(self):
+        """Test that a chain whose last step searches keeps its first step and fixes the last."""
+        X, y = make_classification(n_samples=120, n_features=60, n_informative=8,
+                                   random_state=0)
+        spec = {'steps': [{'name': 'ANOVAFSelector', 'params': {'n_features': 30}},
+                          {'name': 'LassoSelector', 'params': {'Cs': [0.1, 1.0], 'cv': 3}}]}
+        chain = run_module._make_selector(spec, None, 0).fit(X, y)
+
+        fixed = run_module._fixed(chain)
+
+        assert run_module._searches(chain)
+        assert not run_module._searches(fixed)
+        np.testing.assert_array_equal(run_module._selected(fixed.fit(X, y)),
+                                      run_module._selected(chain))

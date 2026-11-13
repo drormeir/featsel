@@ -169,7 +169,7 @@ featsel/
     ├── fdr/                 # FDRSelector
     ├── fwe/                 # FWESelector
     ├── higher_criticism/    # HigherCriticismSelector
-    ├── lasso/               # LassoSelector; ppdna.py: its GPU solver
+    ├── lasso/               # LassoSelector; ppdna.py: its solver, on the CPU or a GPU
     ├── mann_whitney/        # MannWhitneySelector
     ├── mutual_info/         # MutualInfoSelector; knn_1d.py: the estimate by sorting, CPU or GPU
     ├── percentile/          # PercentileSelector
@@ -203,6 +203,11 @@ ANOVAFSelector (`final_report/04_the_methods.md`, section 4.3).
 Every selector that wraps a scikit-learn method has two tests next to it:
 it selects the same features as that method, and `fit` plus `get_support` is
 at most 5% slower. The shared checks are in `tests/sklearn_reference.py`.
+RFE, RFECV and Lasso solve exactly, so their features are checked against
+scikit-learn's liblinear run to a tight tolerance. RFE and RFECV are timed
+against liblinear at its defaults. Lasso has no speed test: no
+scikit-learn solver reaches the exact L1 solution
+(`final_report/06_making_it_fast.md`, section 6.2).
 
 ## Feature Selection Usage
 
@@ -260,15 +265,13 @@ MutualInfoSelector(n_features=100, random_state=42)      # any dependence, slowe
 CorrelationSelector(n_features=100, target_threshold=0.1,
                     inter_feature_threshold=0.95)        # drops redundant pairs
 # Embedded
-LassoSelector(n_features=None, C=0.1, random_state=42)   # L1 model, picks its own count
-LassoSelector(C=0.1, solver='ppdna', device='cuda')      # the same L1 model solved to a tight
-                                                         # tolerance on the GPU (PPDNA); faster
+LassoSelector(C=0.1)                                     # L1 logistic model (PPDNA), picks its own count
+LassoSelector(Cs=[0.01, 0.1, 1, 10], cv=5)               # C chosen by validation AUC; binary only
 TreeImportanceSelector(n_features=100, random_state=42)  # random forest importance
 # Wrappers
-RFESelector(n_features=100, C=0.01, random_state=42)     # SVM-RFE; small C when p >> n
-RFESelector(n_features=100, C=0.01, solver='newton')     # the same SVM solved exactly; faster;
-                                                         # device='cuda' runs its products on a GPU
-RFECVSelector(cv=5, C=0.01, random_state=42)             # SVM-RFE, count chosen by inner CV
+RFESelector(n_features=100, C=0.01)                      # SVM-RFE, each SVM solved exactly (Newton);
+                                                         # small C when p >> n
+RFECVSelector(cv=5, C=0.01)                              # SVM-RFE, count chosen by inner CV
 SequentialSelector(n_features=10, cv=5)                  # greedy forward; slow, prefilter first
 SequentialSelector(n_features=10, solver='newton', device='cuda')  # every candidate of a step
                                                          # solved at once on the GPU; binary only
@@ -289,15 +292,18 @@ BerkJones and MutualInfo.
 - `'cpu'` always uses the CPU.
 - `'cuda'` waits for the GPU.
 
-RFE, RFECV and Sequential use a GPU only with `solver='newton'`, and Lasso
-only with `solver='ppdna'`; all four default to the CPU. RandomSelector reads
-only the shape, so it leaves a GPU tensor where it is. TreeImportance
-copies a GPU tensor to the CPU. MutualInfo runs regression, and a class of
-2 to 7 samples, in scikit-learn on the CPU.
+RFE, RFECV and Lasso take `device` too, and Sequential with `solver='newton'`;
+all four default to the CPU. RandomSelector reads only the shape, so it
+leaves a GPU tensor where it is. TreeImportance copies a GPU tensor to the
+CPU. MutualInfo runs regression, and a class of 2 to 7 samples, in
+scikit-learn on the CPU.
 
-LassoSelector's default, liblinear at its tolerance of 1e-4, stops far from
-the solution on SCAN-B: on Basal against the rest it keeps 330 genes where
-the solution has 196. `solver='ppdna'` reaches the solution.
+RFE, RFECV and Lasso have no liblinear option (`docs/DECISIONS.md`,
+2026-11-13). liblinear stops at a tolerance of 1e-4, far from the solution:
+on SCAN-B, Basal against the rest, its Lasso keeps 330 genes where the
+solution has 196. Newton (RFE, RFECV) and PPDNA (Lasso) reach it. Newton
+works in the samples' space, so it is slower than liblinear when samples
+outnumber features. Lasso is classification only.
 
 ### High-Dimensional Use Case (few samples, many features)
 

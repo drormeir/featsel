@@ -3,15 +3,17 @@ Lasso: rank features by the size of L1-regularized model coefficients.
 """
 
 import numpy as np
-from sklearn.linear_model import Lasso, LogisticRegression
-from sklearn.multiclass import OneVsRestClassifier
+from sklearn.base import clone
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import StratifiedKFold
 
 from .. import gpu
-from ..base import FeatureSelectorRandom
+from ..base import FeatureSelector
+from ..rfe.linear_svm import to_numpy
 from . import ppdna
 
 
-class LassoSelector(FeatureSelectorRandom):
+class LassoSelector(FeatureSelector):
     """
     Select features by the magnitude of L1-regularized model coefficients.
 
@@ -20,15 +22,23 @@ class LassoSelector(FeatureSelectorRandom):
     Cons: costs a model fit, unstable when features are strongly correlated,
     picks roughly one feature per correlated group
 
-    For classification this is L1-penalized logistic regression, for regression
-    it is Lasso. Feature importance is the absolute coefficient, summed over
-    classes in the multiclass case.
+    This is L1-penalized logistic regression, scikit-learn's
+    LogisticRegression(l1_ratio=1) objective. Classification only. Feature
+    importance is the absolute coefficient, summed over classes in the
+    multiclass case.
 
-    With solver='ppdna' the same L1 logistic regression is solved by a dual
-    Newton proximal point method (see ppdna.py) to a tight tolerance, on a
-    GPU or the CPU. Its selection is liblinear's at a tight tolerance. At
-    liblinear's default tolerance, 1e-4, liblinear stops early and keeps
-    slightly different features.
+    The model is solved by a dual Newton proximal point method, PPDNA (see
+    ppdna.py), to a tight tolerance, on a GPU or the CPU. Its selection is
+    liblinear's at a tight tolerance. At liblinear's default tolerance,
+    1e-4, liblinear stops early and keeps different features.
+
+    C sets how many coefficients are non-zero. Given Cs, a list of values,
+    the selector chooses C by inner stratified cross-validation: for each
+    value, it fits the model on each fold's training part and scores the
+    model's ROC AUC on the fold's held-out part. The value with the best
+    mean score wins; a tie goes to the smaller C, which keeps fewer
+    features. The model is then fit with that C on all of X. This costs
+    cv * len(Cs) + 1 fits.
 
     Parameters
     ----------
@@ -39,24 +49,19 @@ class LassoSelector(FeatureSelectorRandom):
         non-zero coefficient are selected, which lets the method choose its
         own feature count.
     C : float, default=1.0
-        Inverse regularization strength for classification. Smaller is sparser.
-    alpha : float, default=0.01
-        Regularization strength for regression. Larger is sparser.
-    task : str, default='classification'
-        Type of task: 'classification' or 'regression'.
+        Inverse regularization strength. Smaller is sparser. Ignored when
+        Cs is given.
+    Cs : list of float, optional
+        Values of C to choose from by cross-validation. Two classes only.
+    cv : int, default=5
+        Number of inner stratified folds, with Cs. Not shuffled, so a fit
+        repeats.
     max_iter : int, default=1000
-        Maximum solver iterations: liblinear's, or PPDNA's outer steps.
-    random_state : int, default=42
-        Random seed for the solver. PPDNA is deterministic.
-    solver : {'liblinear', 'ppdna'}, default='liblinear'
-        'liblinear' fits scikit-learn's LogisticRegression or Lasso. 'ppdna'
-        solves the same L1 logistic regression to a tight tolerance;
-        classification only.
+        Maximum PPDNA outer steps.
     device : str, default='cpu'
         Where PPDNA runs: 'cpu'; 'cuda', or another PyTorch device, there,
         waiting while another fit holds the GPU; 'auto' on a GPU when one is
-        present. A tensor X on a GPU runs there. liblinear runs on the CPU
-        only.
+        present. A tensor X on a GPU runs there.
 
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
@@ -67,28 +72,30 @@ class LassoSelector(FeatureSelectorRandom):
         The device the fit ran on.
     coef_ : np.ndarray
         Fitted model coefficients.
+    C_ : float
+        The C of the final fit: C, or the value chosen from Cs.
+    cv_results_ : dict
+        With Cs only: 'C', the values sorted, and per value the mean, the
+        standard deviation and each fold's validation ROC AUC.
 
     Examples
     --------
     >>> from featsel.selectors import LassoSelector
     >>> from sklearn.datasets import make_classification
     >>> X, y = make_classification(n_samples=100, n_features=20, n_informative=10)
-    >>> LassoSelector(n_features=10, random_state=42).fit_transform(X, y).shape
+    >>> LassoSelector(n_features=10).fit_transform(X, y).shape
     (100, 10)
     """
 
     rank_once = True
 
-    def __init__(self, n_features=None, C=1.0, alpha=0.01, task='classification',
-                 max_iter=1000, random_state=42, solver='liblinear', device='cpu',
+    def __init__(self, n_features=None, C=1.0, Cs=None, cv=5, max_iter=1000, device='cpu',
                  check_input=True):
-        super().__init__(random_state)
         self.n_features = n_features
         self.C = C
-        self.alpha = alpha
-        self.task = task
+        self.Cs = Cs
+        self.cv = cv
         self.max_iter = max_iter
-        self.solver = solver
         self.device = device
         self.check_input = check_input
 
@@ -101,65 +108,63 @@ class LassoSelector(FeatureSelectorRandom):
         X : pd.DataFrame or np.ndarray of shape (n_samples, n_features)
             Training data.
         y : pd.Series or np.ndarray of shape (n_samples,)
-            Target values.
+            Class labels.
 
         Returns
         -------
         self : LassoSelector
             Fitted selector.
         """
-        if self.solver == 'ppdna':
-            self._fit_ppdna(X, y)
-        elif self.solver == 'liblinear':
-            if self.device != 'cpu':
-                raise ValueError("solver='liblinear' runs on the CPU only; "
-                                 "use solver='ppdna' for another device")
-            self._fit_liblinear(*self._validate(X, y, check_input=self.check_input))
-            self.device_ = 'cpu'
-        else:
-            raise ValueError(f"solver must be 'liblinear' or 'ppdna', got {self.solver!r}")
-
-        self.support_ = self._mask(self.ranking()[:self.n_features])
-
-        if not self.support_.any():
-            raise ValueError(
-                "L1 regularization zeroed every coefficient. "
-                "Increase C (classification) or decrease alpha (regression)."
-            )
-        return self
-
-    def _fit_ppdna(self, X, y):
-        """coef_ by PPDNA: one problem for two classes, else one per class against the rest."""
-        if self.task != 'classification':
-            raise ValueError("solver='ppdna' is for classification only")
         X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
         self.device_ = gpu.resolve(self.device, X)
         classes = np.unique(y)
         with gpu.exclusive(self.device_):
-            # As liblinear: the second class against the first, or each against the rest.
-            self.coef_ = np.array([
-                ppdna.l1_logistic(X, (y == label) * 2.0 - 1.0, self.C, self.device_,
-                                  self.max_iter)[0]
-                for label in (classes[1:] if len(classes) == 2 else classes)])
+            self.C_ = self.C if self.Cs is None else self._best_C(X, y, classes)
+            self.coef_ = self._coef(X, y, classes, self.C_)[0]
 
-    def _fit_liblinear(self, X, y):
-        """coef_ by scikit-learn's LogisticRegression (liblinear) or Lasso."""
-        model = self._by_task(
-            self.task,
-            LogisticRegression(l1_ratio=1, C=self.C, solver='liblinear',
-                               max_iter=self.max_iter, random_state=self.random_state),
-            Lasso(alpha=self.alpha, max_iter=self.max_iter, random_state=self.random_state),
-        )
-        # liblinear is the fast L1 solver but is binary only, so multiclass
-        # goes through an explicit one-vs-rest wrapper.
-        if isinstance(model, LogisticRegression) and len(np.unique(y)) > 2:
-            model = OneVsRestClassifier(model)
+        self.support_ = self._mask(self.ranking()[:self.n_features])
+        if not self.support_.any():
+            raise ValueError("L1 regularization zeroed every coefficient. Increase C.")
+        return self
 
-        model.fit(X, y)
-        if isinstance(model, OneVsRestClassifier):
-            self.coef_ = np.vstack([est.coef_ for est in model.estimators_])
-        else:
-            self.coef_ = model.coef_
+    def searches(self):
+        """Whether fit chooses C from Cs."""
+        return self.Cs is not None
+
+    def fixed(self):
+        """This selector with the chosen C and no search."""
+        return clone(self).set_params(C=self.C_, Cs=None)
+
+    def _coef(self, X, y, classes, C):
+        """
+        Coefficients, one row per problem, and intercepts. As liblinear: the
+        second class against the first, or each class against the rest.
+        """
+        fits = [ppdna.l1_logistic(X, (y == label) * 2.0 - 1.0, C, self.device_, self.max_iter)
+                for label in (classes[1:] if len(classes) == 2 else classes)]
+        return np.array([coef for coef, _ in fits]), np.array([b for _, b in fits])
+
+    def _best_C(self, X, y, classes):
+        """The value in Cs with the best mean validation ROC AUC; a tie goes to the smaller."""
+        if len(classes) != 2:
+            raise ValueError(f"Cs needs two classes, got {len(classes)}")
+        Cs = np.sort(np.asarray(self.Cs, dtype=float))
+        folds = StratifiedKFold(self.cv).split(np.zeros((len(y), 1)), y)
+        scores = []
+        for train, test in folds:
+            X_train, X_test = X[train], to_numpy(X[test])
+            positive = y[test] == classes[1]
+            scores.append([])
+            for C in Cs:
+                coef, intercept = self._coef(X_train, y[train], classes, C)
+                scores[-1].append(roc_auc_score(positive, X_test @ coef[0] + intercept[0]))
+        scores = np.array(scores)
+        mean = scores.mean(axis=0)
+        self.cv_results_ = {
+            'C': Cs, 'mean_test_score': mean, 'std_test_score': scores.std(axis=0),
+            **{f'split{i}_test_score': fold for i, fold in enumerate(scores)},
+        }
+        return float(Cs[np.argmax(mean)])   # argmax takes the first best: the smaller C
 
     def ranking(self):
         """

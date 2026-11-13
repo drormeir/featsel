@@ -208,6 +208,9 @@ For every fit we record:
   classifier. In the frontier a fresh selector fits each selection 10
   times, and the median time is recorded. Sequential selection takes
   minutes, so it is fit once.
+- **Search time**: the time to choose `k`, or a method's own
+  hyperparameter, on validation sets (section 3.11). It is recorded apart
+  from the selection time.
 - **Peak memory** of the selection.
 - **The device**: CPU or GPU.
 - **Reproducibility**: whether every repeated fit chose the same genes.
@@ -319,6 +322,40 @@ On BreastMNIST it stops at 250.
 The first design gave `k` as a percent of the total sample count. Budgets
 would then compare across datasets and stay fixed across training fractions.
 With one training fraction, the experiments give `k` directly.
+
+**Choosing `k` on validation sets.** The goal is the best AUC, so a method
+should choose its own `k`. Choosing it by test-set AUC would use the test
+set twice. So in the frontier, each method chooses `k` on validation sets:
+
+1. The training set is cut into 5 folds.
+2. For each fold, the selector is fit on the other four folds.
+3. For each `k`, logistic regression is fit on the top `k` features and
+   scored by AUC on the held-back fold.
+4. The `k` with the best mean validation AUC wins. A tie goes to the
+   smaller `k`.
+5. That `k`'s classifier, fit on the whole training set, is scored once on
+   the test set.
+
+A method that ranks once fits once per fold for every `k`. So the search
+costs 5 extra fits, against the 10 timed fits of each selection. Its time
+is recorded apart from the selection time.
+
+Standardization is fit on the whole training set, so the validation
+folds helped set its means and spreads. That uses no labels. The test set
+stays untouched.
+
+On SCAN-B the frontier's `k` are 10, 50, 250, 500, 1000, 1500 and 2000,
+the same for every method. In the first frontier run, which stopped at
+1,000, AUC was still rising there for every method with a `k` list.
+
+Sequential selection does not search: one of its fits takes minutes.
+
+**A searching method is timed once.** Lasso chooses C from four values by
+5-fold validation AUC, and RFECV chooses its count the same way. Each
+searches once. Its 10 timed repeats then fit with what the search chose:
+Lasso with that C, RFECV as RFE to that count. The search's time is
+recorded on its own. The repeats select the same features as the search,
+and the runner checks this.
 
 ## 3.12 Data precision
 

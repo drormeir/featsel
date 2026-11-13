@@ -217,8 +217,7 @@ On all 2,976 patients (C = 1):
 | LumB | 1,029 | 733 | 0.58 |
 | Normal | 577 | 542 | 0.88 |
 
-Both are reproducible. We keep liblinear as the default, since it matches
-scikit-learn, and PPDNA as an option. Source:
+PPDNA is reproducible. Source:
 `results/local/speed/LassoSelector_scanb.csv` (not tracked in git).
 
 **Why PPDNA.** Simpler solvers were tried first. FISTA, even on a
@@ -244,14 +243,68 @@ removed when genes are strongly correlated. On the synthetic data at
 only 0.28. We also tried synthetic SCAN-B-shaped data with correlated
 genes. There, liblinear at its default tolerance (10⁻⁴) shared 32 of 50
 genes with the exact answer. At a tolerance of 10⁻⁸ it shared all 50. So
-the difference is liblinear stopping early, not an error in either. Again,
-liblinear stays the default. So the selector stays a drop-in for
-scikit-learn's RFE.
+the difference is liblinear stopping early, not an error in either.
 
-**The rule.** Some selectors have a faster solver that can select
-differently from scikit-learn's. They keep scikit-learn's solver and the
-CPU as the default. They never switch solver or device on their own. Each
-result row records the device used.
+**Newton's answer is the exact one.** liblinear's tolerance is a stopping
+rule, not part of the method. Its coordinate descent gets closer to the
+solution with every pass but never reaches it. The tolerance only says
+when to stop, to save time. Newton's method reaches the exact solution in
+a finite number of steps (Keerthi and DeCoste 2005, Theorem 1). Given
+unlimited time, liblinear would end at Newton's answer. So the Newton
+solver gives the selection SVM-RFE intends, and liblinear's default gives
+an approximation of it. On the SCAN-B frontier (section 8.3), the two
+score the same AUC at every `k`: 0.811 and 0.807 at k = 10, 0.959 and
+0.959 at k = 1000. Newton took 6.0 s per fit there, liblinear 57 s.
+
+PPDNA is not proven to stop exactly at Lasso's solution. It stops at a
+residual of 10⁻¹⁰, far tighter than liblinear's 10⁻⁴.
+
+**Dropping liblinear.** RFE, RFECV and Lasso no longer offer liblinear.
+Each runs only its exact solver: Newton for RFE and RFECV, PPDNA for
+Lasso. The reasons:
+
+- **Speed.** liblinear RFE took 57 s per fit on SCAN-B, Newton 6.0 s.
+  RFE with liblinear was the largest single cost of the frontier runs.
+- **Exactness.** Newton reaches the solution that liblinear only
+  approaches.
+- **Repeatability.** Unless its seed is fixed, liblinear shuffles the
+  data differently on each fit and keeps different genes. Newton and
+  PPDNA use no randomness, so the selectors lost `random_state` too.
+- **No loss in AUC.** On the frontier, the two RFE solvers and the two
+  Lasso solvers scored the same AUC at every `k`, within the spread over
+  splits.
+
+For Lasso the speed argument is weaker. On the CPU, with C chosen from
+four values by 5-fold validation AUC, both solvers took the same total
+time over the five SCAN-B tasks: 379 s for liblinear, 381 s for PPDNA
+(single fits). PPDNA was faster on Basal, Her2 and Normal and slower on
+LumA and LumB. Its cost grows with the number of genes the model keeps,
+and the luminal tasks keep the most. Both chose C = 0.1 on every task,
+and their validation AUCs agreed to the fourth digit. On a GPU, PPDNA was
+3.2 to 7.0 times faster. liblinear cannot use one.
+
+Lasso has no test that it is at most 5% slower than scikit-learn. Every
+other wrapped selector has one. scikit-learn has no solver that reaches
+Lasso's exact solution to compare with. Its Newton solvers refuse the L1
+penalty. The two that accept it, liblinear and saga, stop at a tolerance.
+They do less work for a different answer. On small synthetic data, PPDNA
+on the CPU was 3 to 4 times slower than liblinear at its defaults. So the
+speed comparison is the SCAN-B one above.
+
+The cost is the drop-in promise. These three selectors now select what
+scikit-learn selects with liblinear run to a tight tolerance, not with its
+defaults. Lasso also lost regression, which only liblinear supported. The
+project's tasks are all binary classification (section 2.1).
+
+Newton works in the samples' space, through an n × n kernel. So it wins
+only when genes outnumber samples. On synthetic data with 3,000 patients
+and 1,000 genes, Newton RFE took 7.7 s and liblinear 1.6 s. At 3,000 genes
+the two crossed: 7.5 s against 13.5 s.
+
+**The rule.** Every other selector selects what scikit-learn selects by
+default. Sequential's Newton solver is an option, not its default. No
+selector switches solver or device on its own. Each result row records
+the device used.
 
 ### Why the GPU does not always win
 
@@ -309,7 +362,8 @@ run. Fitted scores are NumPy arrays on every device.
   5.3 times on twelve threads, with identical scores.
 - On the GPU, the filters run 2.6 to 49 times faster and Sequential
   selection 34 times faster, with the same features.
-- Lasso and RFE gained exact solvers that are faster. Because they are
-  exact, they pick somewhat different genes than scikit-learn's default.
+- Lasso, RFE and RFECV now run only exact solvers. RFE's is 10 times
+  faster on SCAN-B. Because they are exact, they pick somewhat different
+  genes than scikit-learn's default, at the same AUC.
 - A cheap 4 GB GPU limits what can move to it. 64-bit work and large
   forests do not pay.

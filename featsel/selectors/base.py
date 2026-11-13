@@ -99,6 +99,21 @@ class FeatureSelector(SelectorMixin, BaseEstimator):
         """Learn which features to keep and return self."""
         return self._fit(X, y)
 
+    def searches(self):
+        """
+        Whether fit chooses a hyperparameter by cross-validation, such as
+        Lasso's C from Cs. If so, fixed() gives the fit without the search.
+        """
+        return False
+
+    def fixed(self):
+        """
+        After a fit that searched, an unfitted selector that fits with the
+        values the search chose and selects the same features, without
+        searching. The runner searches once and times its repeats with it.
+        """
+        raise NotImplementedError(f"{type(self).__name__} searches nothing")
+
     @abstractmethod
     def _fit(self, X, y=None):
         """Learn which features to keep; set `support_` and return self."""

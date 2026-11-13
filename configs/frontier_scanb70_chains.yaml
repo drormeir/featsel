@@ -16,6 +16,10 @@ seed: 42
 n_splits: 16
 train_sizes: [0.7]
 preprocess: ["standard"]
+# Each method with a k list gets a validation AUC per k, from 5 folds of the
+# training set, so k can be chosen without the test set (featsel.chosen_k).
+k_validation:
+  cv: 5
 
 metrics:
   - roc_auc
@@ -23,13 +27,13 @@ metrics:
   - balanced_accuracy
 
 selectors:
-  - label: MW1000+Lasso_liblinear
-    k: [10, 50, 250]
+  # No k: Lasso's C, chosen from Cs by validation AUC, sets the count.
+  - label: MW1000+Lasso_ppdna
     steps:
       - name: MannWhitneySelector
         params: {n_features: 1000, device: "cuda"}
       - name: LassoSelector
-        params: {C: 1.0}
+        params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
   - label: MW1000+TreeImportance
     k: [10, 50, 250]
     steps:
@@ -43,7 +47,7 @@ selectors:
       - name: MannWhitneySelector
         params: {n_features: 1000, device: "cuda"}
       - name: RFESelector
-        params: {C: 0.01, solver: "newton", device: "cpu"}
+        params: {C: 0.01, device: "cpu"}
 
 models:
   - name: logistic_regression

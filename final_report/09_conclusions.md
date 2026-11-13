@@ -102,7 +102,8 @@
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
     does on some synthetic data, and in 14 of 100 cells of a preliminary
     SCAN-B frontier run (section 8.2). The reason is that the default stops
-    before reaching the solution.
+    before reaching the solution. AUC did not change. So RFE, RFECV and
+    Lasso now run only their exact solvers (section 6.2).
 15. **Selection buys a smaller model more than a better one.** On
     BreastMNIST, all 2,048 features gave AUC 0.921, more than any selected
     subset. On FGVC-Aircraft, all features gave 0.864, also the best. On

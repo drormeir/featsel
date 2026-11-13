@@ -18,6 +18,10 @@ seed: 42
 n_splits: 16
 train_sizes: [0.7]
 preprocess: ["standard"]
+# Each method with a k list gets a validation AUC per k, from 5 folds of the
+# training set, so k can be chosen without the test set (featsel.chosen_k).
+k_validation:
+  cv: 5
 selection_repeats: 3
 
 metrics:
@@ -40,20 +44,21 @@ selectors:
   - name: MutualInfoSelector
     k: [10, 50, 250, 500]
     params: {device: "cuda"}
+  # No k: C, chosen from Cs by validation AUC, sets the count.
   - name: LassoSelector
     label: Lasso_ppdna
-    k: [10, 50, 250, 500]
-    params: {C: 1.0, solver: "ppdna", device: "cuda"}
+    params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
   - name: RFESelector
     label: RFE_newton
     k: [10, 50, 250, 500]
-    params: {C: 0.01, solver: "newton", device: "cuda"}
+    params: {C: 0.01, device: "cuda"}
   - name: RFECVSelector
     label: RFECV_newton_auc
-    params: {C: 0.01, cv: 5, scoring: "roc_auc", solver: "newton", device: "cuda"}
+    params: {C: 0.01, cv: 5, scoring: "roc_auc", device: "cuda"}
   - name: SequentialSelector
     label: Sequential_newton
     k: [5, 10]
+    k_validation: false   # a fit takes minutes; five folds per k would take hours
     params: {cv: 5, solver: "newton", device: "cuda"}
 
 models:

@@ -36,11 +36,17 @@ import pandas as pd
 import yaml
 from joblib import Parallel, delayed, effective_n_jobs
 from joblib.externals.loky.process_executor import TerminatedWorkerError
+from sklearn.base import clone
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import (
+    GridSearchCV,
+    StratifiedKFold,
+    StratifiedShuffleSplit,
+)
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import QuantileTransformer, StandardScaler
@@ -180,6 +186,28 @@ def _selected(selector, ranked=False):
     return chosen
 
 
+def _last_step(selector):
+    """A selector, or a chain's last step."""
+    return selector.steps[-1][1] if isinstance(selector, Pipeline) else selector
+
+
+def _searches(selector):
+    """Whether the selector, or a chain's last step, searches a hyperparameter."""
+    return _last_step(selector).searches()
+
+
+def _fixed(selector):
+    """
+    The fitted, searching selector as an unfitted one that fits with what the
+    search chose. A chain keeps its earlier steps, unfitted, and fixes its last.
+    """
+    if isinstance(selector, Pipeline):
+        *first, (name, last) = selector.steps
+        return Pipeline([*((step_name, clone(step)) for step_name, step in first),
+                         (name, last.fixed())])
+    return selector.fixed()
+
+
 def _devices(selector):
     """The devices a selector's steps ran on."""
     steps = [step for _, step in selector.steps] if isinstance(selector, Pipeline) else [selector]
@@ -288,6 +316,8 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
     sel_name = _selector_label(sel_spec)
     rank_once = _rank_once(sel_spec) and None not in k_values
     ranking = None
+    validates = _validates_k(config, sel_spec)
+    validation = {}
 
     for k in k_values:
         keys = {_label(m): (*context['key'], sel_name, k, _label(m))
@@ -300,6 +330,12 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 selector, selection = _repeated_selection(
                     sel_spec, min(k_values) if rank_once else k, split_seed,
                     X_train, y_train, config['selection_repeats'], rank_once)
+                if 'k_validation' in config:
+                    selection.update(_validation_auc(
+                        sel_spec, k_values if rank_once else [k], split_seed, X_train,
+                        y_train, config, rank_once) if validates else
+                        {'validation_time_s': float('nan')})
+                    validation = selection.pop('validation_roc_auc', validation)
             except MemoryError:
                 failures.append(f"{context['task']} split {context['split']} "
                                 f"train_size {context['train_size']}: {sel_name} k={k}")
@@ -372,7 +408,57 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
             if score_metrics:
                 y_score = _positive_score(model, X_test_sel)
                 row.update({name: fn(y_test, y_score) for name, fn in score_metrics.items()})
+            if 'k_validation' in config:
+                row['validation_roc_auc'] = validation.get((k, model_name), float('nan'))
             yield row
+
+
+def _validates_k(config, sel_spec):
+    """
+    Whether this selector's k is to be chosen on validation sets: the config
+    asks for it, the selector has more than one k, and its entry does not
+    opt out with `k_validation: false`.
+    """
+    return ('k_validation' in config and len(sel_spec.get('k', [None])) > 1
+            and sel_spec.get('k_validation', True))
+
+
+def _validation_auc(sel_spec, k_values, seed, X_train, y_train, config, rank_once):
+    """
+    The validation ROC AUC of every (k, model), to choose k without the test set.
+
+    The training set is cut into config['k_validation']['cv'] stratified
+    folds. In each, the selector is fit on the other folds, once for every k
+    when it ranks once, else once per k. Each model is fit on the top k
+    features and scored on the held-back fold. Returns the mean AUC per
+    (k, model label) as 'validation_roc_auc', and the seconds the whole
+    search took as 'validation_time_s'.
+    """
+    start = time.perf_counter()
+    folds = StratifiedKFold(config['k_validation']['cv'], shuffle=True, random_state=seed)
+    scores = {}
+    for train, valid in folds.split(np.zeros((len(y_train), 1)), y_train):
+        X_fit, X_valid = X_train[train], X_train[valid]
+        supports = {}
+        if rank_once:
+            selector = _make_selector(sel_spec, min(k_values), seed).fit(X_fit, y_train[train])
+            ranking = _selected(selector, ranked=True)
+            supports = {k: np.sort(ranking[:k]) for k in k_values}
+        else:
+            for k in k_values:
+                selector = _make_selector(sel_spec, k, seed).fit(X_fit, y_train[train])
+                supports[k] = _selected(selector)
+        for k, support in supports.items():
+            for model_spec in config['models']:
+                model = _instantiate(MODELS, model_spec, seed)
+                if 'grid' in model_spec:
+                    model = _tuned(model, model_spec['grid'], config['tuning'], seed)
+                model.fit(X_fit[:, support], y_train[train])
+                score = _positive_score(model, X_valid[:, support])
+                scores.setdefault((k, _label(model_spec)), []).append(
+                    roc_auc_score(y_train[valid], score))
+    return {'validation_roc_auc': {key: float(np.mean(s)) for key, s in scores.items()},
+            'validation_time_s': time.perf_counter() - start}
 
 
 def _repeated_selection(sel_spec, k, seed, X_train, y_train, repeats, rank_once):
@@ -384,10 +470,31 @@ def _repeated_selection(sel_spec, k, seed, X_train, y_train, repeats, rank_once)
     every device a fit ran on, as 'cpu+cuda' when 'auto' moved between them.
     selection_stable says whether every fit chose the same features, in the
     same ranked order for a rank_once selector.
+
+    A selector that searches a hyperparameter by cross-validation, such as
+    Lasso with Cs, searches once, untimed by the repeats; search_time_s is
+    that fit's time. The repeats then fit with what it chose, without the
+    search, and selection_stable also compares them with the search's own
+    choice. search_time_s is NaN for a selector that searches nothing.
     """
+    def build():
+        return _make_selector(sel_spec, k, seed)
+
     times, choices, devices = [], [], set()
+    search_time = float('nan')
+    probe = build()
+    if _searches(probe):
+        start = time.perf_counter()
+        probe.fit(X_train, y_train)
+        search_time = time.perf_counter() - start
+        choices.append(_selected(probe, ranked=rank_once))
+        searched = _fixed(probe)
+
+        def build():
+            return clone(searched)
+
     for repeat in range(repeats):
-        selector = _make_selector(sel_spec, k, seed)
+        selector = build()
         if repeat == 0:
             tracemalloc.start()
         start = time.perf_counter()
@@ -406,6 +513,7 @@ def _repeated_selection(sel_spec, k, seed, X_train, y_train, repeats, rank_once)
         'selection_stable': all(np.array_equal(choices[0], c) for c in choices[1:]),
         'selection_peak_mb': peak_bytes / 1024 ** 2,
         'selection_device': '+'.join(sorted(devices)),
+        'search_time_s': search_time,
     }
 
 
@@ -633,6 +741,9 @@ def print_plan(config, X, y, tasks, target, name, total):
 
     print(f"Repeats      : {config['selection_repeats']} fits per selection, "
           f"median time recorded")
+    if 'k_validation' in config:
+        print(f"k validation : {config['k_validation']['cv']} folds of each training set, "
+              "ROC AUC per k")
     print(f"Preprocess   : {', '.join(config['preprocess'])}")
     print(f"Metrics      : {', '.join(config['metrics'])}")
     print(f"Workers      : {config['n_jobs']} (parallel over task x selector jobs, "

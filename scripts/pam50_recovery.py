@@ -42,10 +42,10 @@ def methods(seed):
     """Each method as in configs/comparison_scanb.yaml, fit to the smallest k."""
     return {
         'MannWhitneySelector': MannWhitneySelector(n_features=10),
-        'LassoSelector': LassoSelector(n_features=10, C=1.0, random_state=seed),
+        'LassoSelector': LassoSelector(n_features=10, C=1.0),
         'TreeImportanceSelector': TreeImportanceSelector(n_features=10, n_estimators=200,
                                                          random_state=seed),
-        'RFESelector': RFESelector(n_features=10, C=0.01, step=0.5, random_state=seed),
+        'RFESelector': RFESelector(n_features=10, C=0.01, step=0.5),
     }
 
 

@@ -65,6 +65,10 @@ class CorrelationSelector(FeatureSelector):
         The device the correlations were computed on: 'cpu' or 'cuda'.
     target_corr_ : pd.Series
         Absolute correlation of each feature with target.
+    ranking_ : np.ndarray
+        Indices of the features kept after the redundancy step, largest
+        target correlation first. Its top k is the selection with
+        n_features=k, so one fit serves every k.
     selected_features_ : list
         Names (DataFrame input) or indices of selected features.
 
@@ -79,6 +83,8 @@ class CorrelationSelector(FeatureSelector):
     >>> CorrelationSelector(n_features=3).fit_transform(X, y).shape
     (100, 3)
     """
+
+    rank_once = True
 
     def __init__(self, n_features=None, target_threshold=0.1,
                  inter_feature_threshold=0.95, method='pearson', device='auto',
@@ -143,18 +149,21 @@ class CorrelationSelector(FeatureSelector):
             else:
                 to_drop.add(feat_i)
 
-        selected = [f for f in candidates if f not in to_drop]
+        kept = [i for i, f in zip(candidate_indices, candidates) if f not in to_drop]
 
-        if len(selected) == 0:
+        if len(kept) == 0:
             raise ValueError("All features were removed due to inter-feature correlation threshold")
 
         # 4. Select top n_features by target correlation
-        if self.n_features is not None and len(selected) > self.n_features:
-            selected = self.target_corr_[selected].nlargest(self.n_features).index.tolist()
-
-        self.selected_features_ = selected
-        self.support_ = np.isin(names, selected)
+        self.ranking_ = pd.Series(target_corr[kept], index=kept).nlargest(len(kept)).index.to_numpy()
+        chosen = self.ranking()[:self.n_features]
+        self.selected_features_ = [names[i] for i in sorted(chosen)]
+        self.support_ = self._mask(chosen)
         return self
+
+    def ranking(self):
+        """The features kept after the redundancy step, largest target correlation first."""
+        return self.ranking_
 
     def _candidates(self, target_corr):
         """Indices of the features at or above target_threshold; raises if none."""

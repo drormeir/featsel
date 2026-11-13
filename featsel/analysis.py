@@ -1,8 +1,8 @@
 """
 Aggregation of the runner's results.
 
-Both functions take the long-format DataFrame read from a runner CSV: one row
-per (task, split, train size, preprocessing, selector, k, model) execution.
+Every function takes the long-format DataFrame read from a runner CSV: one
+row per (task, split, train size, preprocessing, selector, k, model) execution.
 """
 
 import numpy as np
@@ -36,6 +36,25 @@ def summarize(results):
     }, axis=1)
     summary.columns = [f'{metric}_{stat}' for stat, metric in summary.columns]
     return summary.reset_index()
+
+
+def chosen_k(results):
+    """
+    One row per (task, split, train size, preprocessing, selector, model):
+    the k with the best validation ROC AUC, chosen without the test set.
+
+    Needs the 'validation_roc_auc' column, which the runner writes when the
+    config sets k_validation. A tie goes to the smaller k. A selector that
+    chooses its own count has one row per split and no validation score, so
+    its row passes through. The row keeps its test-set metrics, so a mean
+    over splits of its roc_auc estimates the AUC of the method with k chosen
+    on validation sets.
+    """
+    keys = [c for c in KEY_COLUMNS if c != 'k']
+    ordered = results.assign(_k=results['k'].fillna(-1)).sort_values(
+        [*keys, 'validation_roc_auc', '_k'], ascending=[True] * len(keys) + [False, True],
+        na_position='last')
+    return ordered.drop_duplicates(keys).drop(columns='_k').reset_index(drop=True)
 
 
 def kuncheva_index(results, n_total_features):

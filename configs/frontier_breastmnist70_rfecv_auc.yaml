@@ -22,7 +22,7 @@ metrics:
 selectors:
   - name: RFECVSelector
     label: RFECV_newton_auc
-    params: {C: 0.01, cv: 5, solver: "newton", device: "cpu", scoring: "roc_auc"}
+    params: {C: 0.01, cv: 5, device: "cpu", scoring: "roc_auc"}
 
 models:
   - name: logistic_regression

@@ -4,8 +4,7 @@
 # Run with: python -m featsel.run --config configs/frontier_scanb.yaml --n-jobs 2
 #
 # Output goes to results/local/, which git ignores. Each label is one point
-# per k. Selectors whose own variants give different genes (liblinear and
-# Newton) are separate labels, so the plot shows both.
+# per k.
 
 dataset: "featsel_datasets.scanb_gse96058.featsel_view"
 target: "pam50 subtype"
@@ -42,16 +41,12 @@ selectors:
     k: [10, 50, 250, 1000]
     params: {n_estimators: 200, n_jobs: 4}
   - name: RFESelector
-    label: RFE_liblinear
-    k: [10, 50, 250, 1000]
-    params: {C: 0.01}
-  - name: RFESelector
     label: RFE_newton
     k: [10, 50, 250, 1000]
-    params: {C: 0.01, solver: "newton", device: "auto"}
+    params: {C: 0.01, device: "auto"}
   - name: RFECVSelector
     label: RFECV_newton
-    params: {C: 0.01, cv: 5, solver: "newton", device: "auto"}
+    params: {C: 0.01, cv: 5, device: "auto"}
   - name: SequentialSelector
     label: Sequential_newton
     k: [5, 10]

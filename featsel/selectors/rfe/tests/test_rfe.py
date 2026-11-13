@@ -14,9 +14,15 @@ from tests.sklearn_reference import assert_not_slower, assert_same_selection
 
 
 def _sklearn(n_features=10, step=0.1, C=1.0):
-    """scikit-learn's RFE with a linear SVM, unfitted."""
+    """scikit-learn's RFE with a linear SVM at its defaults, unfitted."""
     return RFE(LinearSVC(C=C, max_iter=1000, random_state=0),
                n_features_to_select=n_features, step=step)
+
+
+def _converged(n_features=10, step=0.1):
+    """scikit-learn's RFE with LinearSVC run to a tiny tolerance, unfitted."""
+    return RFE(LinearSVC(tol=1e-10, max_iter=100_000), n_features_to_select=n_features,
+               step=step)
 
 
 @pytest.fixture(scope='module')
@@ -31,6 +37,25 @@ def narrow_data():
                                random_state=0)
 
 
+@pytest.fixture(scope='module')
+def wide_data():
+    """
+    More features than samples, the shape this package is for, to time on.
+    The Newton solver works in the samples' space, so with more samples
+    than features, as in narrow_data, liblinear is faster.
+    """
+    return make_classification(n_samples=100, n_features=2000, n_informative=10,
+                               random_state=0)
+
+
+def _cuda():
+    """PyTorch, or skip the test when no CUDA GPU is present."""
+    torch = pytest.importorskip('torch')
+    if not torch.cuda.is_available():
+        pytest.skip('no CUDA GPU')
+    return torch
+
+
 class TestRFESelector:
     """Tests for RFESelector."""
 
@@ -38,7 +63,7 @@ class TestRFESelector:
         """Test that exactly n_features survive the elimination."""
         X, y = small_classification_data
 
-        selector = RFESelector(n_features=5, random_state=0).fit(X, y)
+        selector = RFESelector(n_features=5).fit(X, y)
 
         assert selector.transform(X).shape == (100, 5)
 
@@ -46,7 +71,7 @@ class TestRFESelector:
         """Test that ranking_ is 1 exactly where a feature was kept."""
         X, y = small_classification_data
 
-        selector = RFESelector(n_features=5, random_state=0).fit(X, y)
+        selector = RFESelector(n_features=5).fit(X, y)
 
         assert np.array_equal(selector.ranking_ == 1, selector.get_support())
 
@@ -58,40 +83,51 @@ class TestRFESelector:
             RFESelector().fit(X, y)
 
     @pytest.mark.parametrize('step', [0.1, 0.5, 7])
-    def test_matches_sklearn(self, narrow_data, step):
-        """Test that it selects the same features as scikit-learn's RFE with a linear SVM."""
-        ours = RFESelector(n_features=10, step=step, random_state=0)
-        assert_same_selection(ours, _sklearn(step=step), *narrow_data)
+    def test_selects_as_converged_sklearn(self, narrow_data, step):
+        """Test that it selects what scikit-learn's RFE does with a converged LinearSVC."""
+        assert_same_selection(RFESelector(n_features=10, step=step), _converged(step=step),
+                              *narrow_data)
 
-    def test_matches_sklearn_on_three_classes(self, narrow_data):
+    def test_three_classes(self, narrow_data):
         """Test that a multiclass target sums the squared weights over classes, as scikit-learn."""
         X, _ = narrow_data
         y = np.arange(len(X)) % 3
-        assert_same_selection(RFESelector(n_features=10, random_state=0), _sklearn(), X, y)
+        assert_same_selection(RFESelector(n_features=10), _converged(), X, y)
 
     @pytest.mark.parametrize('step', [0.1, 0.5, 7])
     def test_one_fit_serves_every_larger_k(self, narrow_data, step):
-        """Test that the top k of one fit to k=5 is scikit-learn's RFE at each k."""
+        """Test that the top k of one fit to k=5 is the converged RFE at each k."""
         X, y = narrow_data
-        selector = RFESelector(n_features=5, step=step, random_state=0).fit(X, y)
-        ranking = selector.ranking()
+        ranking = RFESelector(n_features=5, step=step).fit(X, y).ranking()
 
         for k in [5, 10, 20, 35, 50]:
-            top = np.sort(ranking[:k])
-            reference = _sklearn(n_features=k, step=step).fit(X, y).get_support(indices=True)
-            np.testing.assert_array_equal(top, reference, err_msg=f'k={k}')
+            reference = _converged(n_features=k, step=step).fit(X, y).get_support(indices=True)
+            np.testing.assert_array_equal(np.sort(ranking[:k]), reference, err_msg=f'k={k}')
 
-    def test_not_slower_than_sklearn(self, narrow_data):
-        """Test that fit is at most 5% slower than scikit-learn's RFE with a linear SVM."""
-        assert_not_slower(RFESelector(n_features=10, random_state=0), _sklearn(), *narrow_data)
+    def test_not_slower_than_sklearn(self, wide_data):
+        """Test that fit is at most 5% slower than scikit-learn's RFE at its defaults."""
+        assert_not_slower(RFESelector(n_features=10), _sklearn(), *wide_data)
 
+    @pytest.mark.parametrize('step', [0.1, 0.5, 7])
+    def test_cuda_selects_as_cpu(self, narrow_data, step):
+        """Test that the products on the GPU give the CPU's selection."""
+        _cuda()
+        X, y = narrow_data
+        cpu = RFESelector(n_features=10, step=step).fit(X, y)
+        cuda = RFESelector(n_features=10, step=step, device='cuda').fit(X, y)
 
-def _cuda():
-    """PyTorch, or skip the test when no CUDA GPU is present."""
-    torch = pytest.importorskip('torch')
-    if not torch.cuda.is_available():
-        pytest.skip('no CUDA GPU')
-    return torch
+        np.testing.assert_array_equal(cuda.elimination_order_, cpu.elimination_order_)
+        assert cuda.device_ == 'cuda'
+
+    def test_gpu_tensor_runs_on_its_device(self, narrow_data):
+        """Test that a tensor on the GPU is fit there with device='auto'."""
+        torch = _cuda()
+        X, y = narrow_data
+        X_t = torch.as_tensor(X, dtype=torch.float32, device='cuda')
+
+        selector = RFESelector(n_features=10, device='auto').fit(X_t, y)
+
+        assert selector.device_ == str(X_t.device)
 
 
 class TestNewtonSVM:
@@ -113,41 +149,3 @@ class TestNewtonSVM:
         ours = Elimination(X, y, np.unique(y), C, 1000).squared_weights(np.arange(n_features))
 
         np.testing.assert_allclose(ours, expected, rtol=0, atol=1e-7 * expected.max())
-
-
-class TestNewtonRFE:
-    """RFESelector with solver='newton'."""
-
-    @pytest.mark.parametrize('step', [0.1, 0.5, 7])
-    def test_selects_as_converged_liblinear(self, narrow_data, step):
-        """Test that it selects what scikit-learn's RFE does with a converged LinearSVC."""
-        reference = RFE(LinearSVC(tol=1e-10, max_iter=100_000),
-                        n_features_to_select=10, step=step)
-        assert_same_selection(RFESelector(n_features=10, step=step, solver='newton'),
-                              reference, *narrow_data)
-
-    def test_liblinear_on_a_gpu_raises(self, narrow_data):
-        """Test that liblinear refuses a device it cannot use."""
-        with pytest.raises(ValueError, match='CPU only'):
-            RFESelector(n_features=10, device='cuda').fit(*narrow_data)
-
-    @pytest.mark.parametrize('step', [0.1, 0.5, 7])
-    def test_cuda_selects_as_cpu(self, narrow_data, step):
-        """Test that the products on the GPU give the CPU's selection."""
-        _cuda()
-        X, y = narrow_data
-        cpu = RFESelector(n_features=10, step=step, solver='newton').fit(X, y)
-        cuda = RFESelector(n_features=10, step=step, solver='newton', device='cuda').fit(X, y)
-
-        np.testing.assert_array_equal(cuda.elimination_order_, cpu.elimination_order_)
-        assert cuda.device_ == 'cuda'
-
-    def test_gpu_tensor_runs_on_its_device(self, narrow_data):
-        """Test that a tensor on the GPU is fit there with device='auto'."""
-        torch = _cuda()
-        X, y = narrow_data
-        X_t = torch.as_tensor(X, dtype=torch.float32, device='cuda')
-
-        selector = RFESelector(n_features=10, solver='newton', device='auto').fit(X_t, y)
-
-        assert selector.device_ == str(X_t.device)

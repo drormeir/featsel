@@ -63,7 +63,8 @@ supports classification only.
 | `tuning` | `{n_splits: 3, train_size: 0.5, scoring: roc_auc}` | Inner splits for models with a `grid`. `scoring` is a scikit-learn scorer name |
 | `seed` | `42` | Global seed; each split derives its own |
 | `n_splits` | `100` | Stratified Monte Carlo splits |
-| `selection_repeats` | `10` | Fits of each selection, each by a fresh selector. `selection_time_s` is their median; `selection_peak_mb` is the first fit's. `selection_stable` says whether every fit chose the same features |
+| `selection_repeats` | `10` | Fits of each selection, each by a fresh selector. `selection_time_s` is their median; `selection_peak_mb` is the first fit's. `selection_stable` says whether every fit chose the same features. A selector that searches a hyperparameter by cross-validation, such as Lasso with `Cs` or RFECV, searches once first, timed as `search_time_s`; the repeats then fit with what it chose |
+| `k_validation` | none | `{cv: 5}` adds `validation_roc_auc` to each row: the mean AUC of the row's k and model on `cv` folds of the training set, so k can be chosen without the test set (`featsel.chosen_k`). `validation_time_s` is the search's time per selection. Only selectors with more than one k; an entry opts out with `k_validation: false` |
 | `train_sizes` | `[0.5]` | Training fractions |
 | `preprocess` | `["standard"]` | `none`, `standard` or `quantile_normal`, fit on the training part |
 | `metrics` | all but `roc_auc` | `accuracy`, `macro_f1`, `balanced_accuracy`, `mcc`, `g_mean` from the predicted labels; `roc_auc` from the model's continuous score (`decision_function`, else `predict_proba`) |
@@ -94,7 +95,7 @@ selectors:
       - name: MannWhitneySelector
         params: {n_features: 1000}
       - name: RFESelector
-        params: {C: 0.01, solver: "newton"}
+        params: {C: 0.01}
 ```
 
 `selected_indices` are always indices of the original features, and

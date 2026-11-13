@@ -3,17 +3,16 @@ Recursive feature elimination that picks its own feature count by cross-validati
 """
 
 import numpy as np
-from sklearn.feature_selection import RFECV
 from sklearn.metrics import check_scoring
 from sklearn.model_selection import check_cv
 from sklearn.svm import LinearSVC
 
 from .. import gpu
-from ..base import FeatureSelectorRandom
+from ..base import FeatureSelector
 from ..rfe import RFESelector, linear_svm
 
 
-class RFECVSelector(FeatureSelectorRandom):
+class RFECVSelector(FeatureSelector):
     """
     SVM-RFE with the number of features chosen by cross-validation.
 
@@ -22,11 +21,10 @@ class RFECVSelector(FeatureSelectorRandom):
     feature count it passes, and keeps the count with the best mean score.
     Classification only.
 
-    With solver='liblinear' it wraps scikit-learn's RFECV. With
-    solver='newton' it runs the same procedure with RFESelector's exact
-    Newton solver: the same folds, the same score at every step, and the
-    same choice of count, the smallest among the best mean scores. Its
-    choice is scikit-learn's with a converged LinearSVC.
+    It runs scikit-learn's RFECV procedure with RFESelector's exact Newton
+    solver: the same folds, the same score at every step, and the same
+    choice of count, the smallest among the best mean scores. Its choice is
+    scikit-learn's with a converged LinearSVC.
 
     Best for: when the right feature count is unknown
     Pros: chooses its own count from held-out performance
@@ -47,15 +45,9 @@ class RFECVSelector(FeatureSelectorRandom):
     C : float, default=1.0
         Inverse regularization strength of the SVM.
     max_iter : int, default=1000
-        Maximum solver iterations per SVM fit.
-    random_state : int, default=42
-        Random seed for the SVM solver.
-    n_jobs : int, default=1
-        Folds evaluated in parallel, with solver='liblinear'.
-    solver : {'liblinear', 'newton'}, default='liblinear'
-        How each SVM is solved; see RFESelector.
+        Maximum Newton steps per SVM fit.
     device : str, default='cpu'
-        Where the newton solver's products with X run; see RFESelector.
+        Where the products with X run; see RFESelector.
     check_input : bool, default=True
         Validate X and y in fit. See FeatureSelector.
 
@@ -66,8 +58,8 @@ class RFECVSelector(FeatureSelectorRandom):
     ranking_ : np.ndarray
         1 for kept features; larger numbers were removed in earlier rounds.
     cv_results_ : dict
-        Mean and per-fold scores for each feature count tried. The newton
-        solver leaves out scikit-learn's per-fold supports and rankings.
+        Mean and per-fold scores for each feature count tried. scikit-learn's
+        per-fold supports and rankings are left out.
     device_ : str
         The device the SVM products ran on.
 
@@ -76,23 +68,19 @@ class RFECVSelector(FeatureSelectorRandom):
     >>> from featsel.selectors import RFECVSelector
     >>> from sklearn.datasets import make_classification
     >>> X, y = make_classification(n_samples=100, n_features=20, n_informative=5)
-    >>> selector = RFECVSelector(random_state=42).fit(X, y)
+    >>> selector = RFECVSelector().fit(X, y)
     >>> bool(selector.get_support().sum() == selector.n_features_)
     True
     """
 
     def __init__(self, step=0.1, cv=5, scoring=None, min_features_to_select=1,
-                 C=1.0, max_iter=1000, random_state=42, n_jobs=1, solver='liblinear',
-                 device='cpu', check_input=True):
-        super().__init__(random_state)
+                 C=1.0, max_iter=1000, device='cpu', check_input=True):
         self.step = step
         self.cv = cv
         self.scoring = scoring
         self.min_features_to_select = min_features_to_select
         self.C = C
         self.max_iter = max_iter
-        self.n_jobs = n_jobs
-        self.solver = solver
         self.device = device
         self.check_input = check_input
 
@@ -112,29 +100,6 @@ class RFECVSelector(FeatureSelectorRandom):
         self : RFECVSelector
             Fitted selector.
         """
-        if self.solver == 'newton':
-            return self._fit_newton(X, y)
-        if self.solver != 'liblinear':
-            raise ValueError(f"solver must be 'liblinear' or 'newton', got {self.solver!r}")
-        if self.device != 'cpu':
-            raise ValueError("solver='liblinear' runs on the CPU only; "
-                             "use solver='newton' for another device")
-        X, y = self._validate(X, y, check_input=self.check_input)
-        self.device_ = 'cpu'
-
-        svm = LinearSVC(C=self.C, max_iter=self.max_iter, random_state=self.random_state)
-        rfecv = RFECV(svm, step=self.step, cv=self.cv, scoring=self.scoring,
-                      min_features_to_select=self.min_features_to_select,
-                      n_jobs=self.n_jobs).fit(X, y)
-
-        self.n_features_ = rfecv.n_features_
-        self.ranking_ = rfecv.ranking_
-        self.cv_results_ = rfecv.cv_results_
-        self.support_ = rfecv.support_
-        return self
-
-    def _fit_newton(self, X, y):
-        """RFECV with every SVM solved by Newton's method, as scikit-learn runs it."""
         X, y = self._validate(X, y, keep_gpu_tensor=True, check_input=self.check_input)
         self.device_ = gpu.resolve(self.device, X)
         n_total = X.shape[1]
@@ -143,7 +108,7 @@ class RFECVSelector(FeatureSelectorRandom):
         scorer = check_scoring(LinearSVC(), scoring=self.scoring)
         rfe = RFESelector(n_features=min(self.min_features_to_select, n_total),
                           step=self.step, C=self.C, max_iter=self.max_iter,
-                          solver='newton', device=self.device_)
+                          device=self.device_)
         rfe.device_ = self.device_
 
         with gpu.exclusive(self.device_):
@@ -171,6 +136,16 @@ class RFECVSelector(FeatureSelectorRandom):
             'n_features': counts,
         }
         return self
+
+    def searches(self):
+        """RFECV always chooses its count by cross-validation."""
+        return True
+
+    def fixed(self):
+        """RFE down to the chosen count: the same final elimination, without the folds."""
+        return RFESelector(n_features=self.n_features_, step=self.step, C=self.C,
+                           max_iter=self.max_iter, device=self.device,
+                           check_input=self.check_input)
 
     def _fold_scores(self, rfe, X, y, train, test, classes, scorer):
         """One fold's score after every SVM fit of the elimination, and the feature counts."""

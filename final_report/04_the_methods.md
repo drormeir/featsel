@@ -47,10 +47,10 @@ Tests check this.
 | MutualInfoSelector | filter | Rank by mutual information, which catches any dependence, not only linear. | `k` | same scores as `mutual_info_classif`, bit for bit |
 | HigherCriticismSelector | filter, own count | Keep the features below the Higher Criticism threshold (section 4.4). | variant, alpha0 | none in scikit-learn |
 | BerkJonesSelector | filter, own count | Keep the features below the exact Berk-Jones threshold (section 4.5). | alpha0 | none in scikit-learn |
-| LassoSelector | embedded | L1-penalized logistic regression; keep the largest weights; the penalty sets most weights to exactly zero. | C | same as `SelectFromModel` with liblinear |
+| LassoSelector | embedded | L1-penalized logistic regression; keep the largest weights; the penalty sets most weights to exactly zero. | C, or values of C to choose from by validation AUC | same as `SelectFromModel` with liblinear run to a tight tolerance |
 | TreeImportanceSelector | embedded | Random forest; rank by how much each feature reduces impurity in the trees. | number of trees | same as `SelectFromModel(RandomForest)` |
-| RFESelector | wrapper | SVM-RFE: train a linear SVM, remove the features with the smallest weights, repeat (Guyon et al. 2002). | `k`, step, C | same as `RFE(LinearSVC)` with the default solver |
-| RFECVSelector | wrapper | RFE, with the number of features chosen by inner cross-validation. | step, C, folds | same as `RFECV` with the default solver |
+| RFESelector | wrapper | SVM-RFE: train a linear SVM, remove the features with the smallest weights, repeat (Guyon et al. 2002). | `k`, step, C | same as `RFE(LinearSVC)` with a converged SVM |
+| RFECVSelector | wrapper | RFE, with the number of features chosen by inner cross-validation. | step, C, folds | same as `RFECV` with a converged SVM |
 | SequentialSelector | wrapper | Greedy forward search: add the one feature that most improves cross-validated accuracy, repeat. | `k`, folds | same as `SequentialFeatureSelector` with the default solver |
 
 Each method has a tutorial notebook:
@@ -64,10 +64,12 @@ features. The
 features with non-zero weights are selected. One consequence matters later.
 In the comparison on SCAN-B, C = 1. Asked for 1,000 genes, Lasso keeps
 127 to 647 on four of the five tasks. On LumA it keeps 883 to 1,000. So asking
-it for 1,000 usually gives fewer. These counts are inflated: liblinear at
-its default tolerance stops before the solution. On all 2,976 patients the
-exact solution keeps 196 genes on Basal where liblinear keeps 330, and 907
-on LumA where liblinear keeps 1,600 (section 6.2).
+it for 1,000 usually gives fewer. These counts came from liblinear, which
+at its default tolerance stops before the solution. On all 2,976 patients
+the exact solution keeps 196 genes on Basal where liblinear keeps 330, and
+907 on LumA where liblinear keeps 1,600 (section 6.2). LassoSelector now
+solves exactly, with PPDNA. Its frontier runs choose C by validation AUC
+instead of asking for k.
 
 **Random forest importance.** Each tree is grown on a bootstrap sample of
 the patients. At each split point a tree tries a random subset of
