@@ -11,7 +11,7 @@ target: "label"
 output: "../results/comparison_breastmnist_all_features.csv"
 
 seed: 42
-n_splits: 20
+n_splits: 16
 train_sizes: [0.5]
 preprocess: ["standard"]
 selection_repeats: 1

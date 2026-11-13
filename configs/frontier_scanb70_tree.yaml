@@ -1,15 +1,15 @@
-# Tree importance alone on the SCAN-B frontier, for more splits (gap A4).
-# The same selector, parameters and splits as in frontier_scanb70_cpu.yaml,
-# without the slow wrappers, so the top methods can be compared on 16 splits:
-# this file, frontier_scanb70_gpu.yaml and frontier_scanb70_berkjones.yaml.
+# Tree importance alone on the SCAN-B frontier. The same selector,
+# parameters and splits as in frontier_scanb70_cpu.yaml, without the slow
+# wrappers, so the top methods reached 16 splits before the cpu config did.
 #
-# Its CSV starts as a copy of the cpu run's tree importance rows (splits 0 to
-# 4), so --resume computes only the new splits. Do not give both this CSV and
-# frontier_scanb70_cpu.csv to the same plot: their first 5 splits are the
-# same rows.
+# Its CSV started as a copy of the cpu run's tree importance rows (splits 0
+# to 4), so --resume computed only the new splits. Do not give both this CSV
+# and frontier_scanb70_cpu.csv to the same plot: their first splits are the
+# same rows. Once frontier_scanb70_cpu.yaml has 16 splits, it covers tree
+# importance and this config is not needed.
 #
 # Two workers, as in the cpu run, so the times compare.
-# Run with: python scripts/run_until_done.py --config configs/frontier_scanb70_tree.yaml --n-jobs 2 --n-splits 16
+# Run with: python scripts/run_until_done.py --config configs/frontier_scanb70_tree.yaml --n-jobs 2
 #
 # Output goes to results/local/, which git ignores.
 
@@ -19,7 +19,7 @@ target: "pam50 subtype"
 output: "../results/local/frontier_scanb70_tree.csv"
 
 seed: 42
-n_splits: 5
+n_splits: 16
 train_sizes: [0.7]
 preprocess: ["standard"]
 

@@ -9,7 +9,7 @@ target: "label"
 output: "../results/comparison_breastmnist.csv"
 
 seed: 42
-n_splits: 20
+n_splits: 16
 train_sizes: [0.5]
 preprocess: ["standard"]
 

@@ -14,7 +14,7 @@ target: "pam50 subtype"
 output: "../results/local/frontier_scanb70_seq.csv"
 
 seed: 42
-n_splits: 5
+n_splits: 16
 train_sizes: [0.7]
 preprocess: ["standard"]
 selection_repeats: 1

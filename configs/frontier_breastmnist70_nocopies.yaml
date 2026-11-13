@@ -15,7 +15,7 @@ target: "label"
 output: "../results/local/frontier_breastmnist70_nocopies.csv"
 
 seed: 42
-n_splits: 5
+n_splits: 16
 train_sizes: [0.7]
 preprocess: ["standard"]
 
