@@ -10,17 +10,13 @@ to the file itself.
 | File | Kind | Description |
 |------|------|-------------|
 | `template.yaml` | dataset | Documented template for a new CSV dataset config |
-| `comparison_scanb.yaml` | experiment | The selector comparison: every selector, k = 5 to 1000, logistic regression with tuned C, five subtype tasks, 16 splits |
-| `comparison_breastmnist.yaml` | experiment | The same comparison on BreastMNIST (task 4) |
-| `comparison_scanb_berkjones.yaml`, `comparison_breastmnist_berkjones.yaml` | experiment | Berk-Jones on the comparison's own splits, in a separate CSV |
-| `comparison_breastmnist_nocopies.yaml` | experiment | The BreastMNIST comparison without its copied images, Berk-Jones included |
-| `frontier_*70_*.yaml` | experiment | The cost-quality frontier at 70% training: GPU, CPU and Sequential runs on the same splits; `_berkjones`, `_chains` (two-stage selection), `_nocopies` and `_tree` (tree importance alone, for 16 splits) add to it |
+| `frontier_*70_*.yaml` | experiment | The cost-quality frontier at 70% training: GPU, CPU and Sequential runs on the same splits; `_berkjones`, `_chains` (two-stage selection), `_nocopies`, `_rfecv_auc` and `_all_genes` add to it |
 | `experiment_classifiers.yaml` | experiment | Random vs Mann-Whitney across five classifiers, 12 splits |
 | `smoke_scanb.yaml` | experiment | Smoke test: every selector and classifier once on one SCAN-B split, about 3 minutes on 6 workers. A check, not a result |
 | `experiment_baseline.yaml` | experiment | The random-selection control on every PAM50 subtype-vs-rest task |
 | `experiment_breastmnist.yaml` | experiment | The same design on BreastMNIST ResNet-50 embeddings (task 4), k scaled to 2,048 features |
 | `experiment_scanb.yaml` | experiment | The full SCAN-B design: four selectors, three train fractions |
-| `aircraft70_gpu.yaml` | experiment | FGVC-Aircraft, Boeing 737 vs A320 family: every selector on the GPU, k = 10 to 500 and all features, 10 splits at 70% training |
+| `aircraft70_gpu.yaml` | experiment | FGVC-Aircraft, Boeing 737 vs A320 family: every selector on the GPU, k = 10 to 1000 and all features, 16 splits at 70% training |
 
 ## Dataset
 

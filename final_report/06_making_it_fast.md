@@ -225,10 +225,9 @@ its output in `results/local/benchmark_selectors/` is not tracked. At all
 | Tree importance | scikit-learn's own forest, on all threads with `n_jobs=-1`. scikit-learn's default is one thread. On synthetic SCAN-B-shaped data (1,488 samples × 28,552 features), one fit took 21.5 s on one thread and 4.2 s on 12. In the runner, threads per worker times workers should not exceed the cores. |
 
 **RFE's step.** RFE removes a share of the remaining genes each round.
-The method comparison (`configs/comparison_scanb.yaml`) removes half per
-round (step 0.5), for speed. On SCAN-B,
-one fit took about 35 s at step 0.1 and 2.4 s at step 0.5 (single
-timings). The frontier uses step 0.1.
+A retired comparison removed half per round (step 0.5), for speed. On
+SCAN-B, one fit took about 35 s at step 0.1 and 2.4 s at step 0.5 (single
+timings). Every run now uses step 0.1.
 
 ### Why some methods do not pick the same features
 

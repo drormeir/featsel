@@ -28,26 +28,19 @@ commit.
 
 **The configs have moved ahead of the results.** On 2026-11-13 and 14 the
 configs changed. liblinear was dropped, Lasso chooses C and every method
-with a `k` list chooses `k` on validation sets, and the SCAN-B `k` list
-grew. The frontier results in chapter 8, and the comparison in chapter 7,
+with a `k` list chooses `k` on validation sets. The `k` lists
+grew, and the separate comparison protocol was retired. The results in chapters 7 and 8
 come from the configs as they were before. To reproduce those numbers,
 check out the commit recorded in each result's JSON file. The commands
 below, on the current configs, give the next run's results.
 
 | Result | Command | Output |
 |---|---|---|
-| Comparison, SCAN-B (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_scanb.yaml --n-jobs 4 --max-worker-memory-gb 3` | `results/comparison_scanb.csv` |
-| Comparison, BreastMNIST (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist.yaml --n-jobs -1` | `results/comparison_breastmnist.csv` |
-| Berk-Jones on the comparison's splits (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_scanb_berkjones.yaml --n-jobs 4 --max-worker-memory-gb 3`, and the same with `comparison_breastmnist_berkjones.yaml` | `results/comparison_*_berkjones.csv` |
-| BreastMNIST without its copies (chapter 7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist_nocopies.yaml --n-jobs 4`. The first BreastMNIST load finds the copy groups and caches them; this needs OpenCV (the `embeddings` extra). The analysis is `featsel_datasets/medmnist_breastmnist/demos/copies.ipynb` | `results/comparison_breastmnist_nocopies.csv` |
-| All features on the comparison's splits (section 8.7) | `.venv/bin/python -m featsel.run --config configs/comparison_breastmnist_all_features.yaml --n-jobs 4`, then `.venv/bin/python scripts/paired_tests.py results/comparison_breastmnist.csv results/comparison_breastmnist_all_features.csv results/comparison_breastmnist_berkjones.csv --baseline AllFeatures --out final_report/figures/paired_tests_breastmnist_vs_all_features.csv`. SCAN-B: `.venv/bin/python scripts/run_until_done.py --config configs/comparison_scanb_all_genes.yaml --n-jobs 4 --max-worker-memory-gb 3` (22 minutes), then `.venv/bin/python scripts/paired_tests.py results/comparison_scanb.csv results/comparison_scanb_all_genes.csv results/comparison_scanb_berkjones.csv --baseline AllGenes --out final_report/figures/paired_tests_scanb_vs_all_genes.csv` | `results/comparison_breastmnist_all_features.csv`, `results/comparison_scanb_all_genes.csv` |
 | Parallel speed-up by worker count (section 6.1) | `.venv/bin/python scripts/parallel_scaling.py --workers 1 2 3 4 5 6 --repeats 3`, then `.venv/bin/python scripts/plot_parallel_scaling.py results/local/parallel_scaling.csv --out final_report/figures/parallel_scaling.png`. Per-job times: `.venv/bin/python scripts/parallel_job_times.py --n-jobs 1 --out <file>`, and the same with `--n-jobs 3` | `results/local/parallel_scaling.csv` and its JSON, copied to [`figures/`](figures/) with the plot and the per-job CSVs |
-| Comparison tables | `.venv/bin/python scripts/summarize_comparison.py results/comparison_scanb.csv --n-features 28552 --out <file>` | the tables of chapter 7 and Appendix D, in Markdown |
-| Paired tests (chapter 7) | `.venv/bin/python scripts/paired_tests.py results/comparison_scanb.csv --metric macro_f1 --out final_report/figures/paired_tests_comparison_scanb.csv`, and the same for BreastMNIST | the tables of tests in [`figures/`](figures/) |
 | Classifier study (chapter 7) | `.venv/bin/python -m featsel.run --config configs/experiment_classifiers.yaml --n-splits 3` | `results/experiment_classifiers.csv`; figures from `notebooks/02_classifier_behaviour.ipynb` |
 | PAM50 gene recovery (chapter 7) | `.venv/bin/python scripts/pam50_recovery.py --n-splits 10 --out <file>` | the tables of section 7.6, in Markdown (the script overwrites its output file) |
 | Runner against scikit-learn (chapter 6) | `.venv/bin/python scripts/benchmark_speed.py --n-genes 3000 --out <file>` | the table of section 6.1, and `results/speed_benchmark.csv` (see the note below) |
-| Speed of each method (chapter 6) | run `featsel/selectors/<name>/demos/speed.ipynb` | `results/local/speed/<ClassName>.csv`, such as `ANOVAFSelector.csv`, and `LassoSelector_scanb.csv` for Lasso on SCAN-B |
+| Speed of each method (chapter 6) | `.venv/bin/python scripts/benchmark_speed_selectors.py <ClassName>`, with `--scanb` for the SCAN-B tasks | `results/local/speed/<ClassName>.csv`, such as `ANOVAFSelector.csv`, and `LassoSelector_scanb.csv` for Lasso on SCAN-B |
 | Frontier, SCAN-B (chapter 8) | `.venv/bin/python -m featsel.run --config configs/frontier_scanb70_gpu.yaml --n-jobs 1`, then `..._seq.yaml --n-jobs 1`, then `..._cpu.yaml --n-jobs 2` | `results/local/frontier_scanb70_*.csv` |
 | Frontier, SCAN-B, paired tests (section 8.3) | after the row above and `frontier_scanb70_berkjones.yaml`: `.venv/bin/python scripts/paired_tests.py results/local/frontier_scanb70_gpu.csv results/local/frontier_scanb70_berkjones.csv results/local/frontier_scanb70_cpu.csv --metric roc_auc --own-count --out final_report/figures/paired_tests_frontier_scanb70_16_splits.csv`, and `.venv/bin/python scripts/plot_paired_differences.py final_report/figures/paired_tests_frontier_scanb70_16_splits.csv --reference MannWhitneySelector --out final_report/figures/frontier_scanb70_16_splits.png` | the tests and the figure in [`figures/`](figures/) |
 | Frontier, BreastMNIST (chapter 8) | the same with `configs/frontier_breastmnist70_*.yaml` | `results/local/frontier_breastmnist70_*.csv` |
@@ -60,8 +53,8 @@ below, on the current configs, give the next run's results.
 Add `--resume` to any runner command to continue a stopped run. For a
 long unattended run, start it through `scripts/run_until_done.py` with the
 same arguments, for example `.venv/bin/python scripts/run_until_done.py
---config configs/comparison_scanb_all_genes.yaml --n-jobs 4
---max-worker-memory-gb 3`. It restarts the runner after a crash and keeps
+--config configs/frontier_scanb70_cpu.yaml --n-jobs 2
+`. It restarts the runner after a crash and keeps
 the machine awake. `scripts/parallel_scaling.py` takes `--resume` too.
 Section 5.5 describes how the runs are protected, and the limits. Git does
 not track the files in `results/local/`. The frontier plots and tables

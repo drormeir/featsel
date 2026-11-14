@@ -2,6 +2,9 @@
 
 [Back to contents](README.md)
 
+**Note: this appendix will be rebuilt** with chapter 7, from the frontier
+runs. Its tables come from the comparison protocol retired on 2026-11-14.
+
 This appendix gives the full output of the comparison of chapter 7. Each
 cell is the median over the splits (16 on SCAN-B, 20 on BreastMNIST). The
 first and third quartiles are in brackets. The script

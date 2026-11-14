@@ -2,6 +2,14 @@
 
 [Back to contents](README.md) · Previous: [6. Making it fast](06_making_it_fast.md) · Next: [8. Results: cost against quality](08_results_frontier.md)
 
+**Note: this chapter will be rebuilt.** It reports a separate comparison
+run with its own protocol: half the samples for training, macro-F1, a
+tuned classifier, and Lasso at fixed C. On 2026-11-14 that protocol was
+retired, so the report has one protocol (chapter 3). Its configs are
+deleted and remain in git history. After the rerun, this chapter will
+report the same questions (gain over random, stability, Higher Criticism,
+the PAM50 genes) from the frontier runs of chapter 8.
+
 ## 7.1 The experiment
 
 | Setting | SCAN-B | BreastMNIST |

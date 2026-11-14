@@ -27,13 +27,13 @@ The selector sees every gene. It sees none of the test patients' values.
 
 1. fills missing values with the training median, and standardizes every
    feature with the training mean and standard deviation;
-2. fits the selector, which returns the features;
-3. in the comparison, tunes the classifier's C on validation sets
-   (section 3.8);
-4. refits the classifier on the whole training set with the chosen C.
+2. chooses `k` on validation sets, for a method with a `k` list
+   (section 3.11);
+3. fits the selector, which returns the features;
+4. fits the classifier on the whole training set (section 3.8).
 
 The test set is then scored once. Nothing about it reaches the choice of
-features or of C.
+features or of `k`.
 
 ## 3.2 The most common mistake: selecting on all the data
 
@@ -93,10 +93,9 @@ same patients.
 
 **How many splits.** The first plan was 100 splits at three training
 fractions (0.5, 0.7 and 0.9), to draw a learning curve. The full grid would
-have taken about four days. The comparison ran 16 splits on SCAN-B and 20
-on BreastMNIST, with half the patients for training. Sixteen splits keep
-the SCAN-B run under half an hour. Sixteen or more values support
-quartiles; five do not.
+have taken about four days. Every run now uses 16 splits, with 70% of the
+samples for training. Sixteen or more values support quartiles; five do
+not.
 
 **More splits help less than they seem.** Random splits share most of
 their training samples. So the corrected test of section 7.3 multiplies
@@ -117,10 +116,9 @@ only what the laptop allowed. On any machine, it gives most of what extra
 splits can give. A difference the test cannot establish at 16 splits will
 rarely be established by more splits. It needs more patients instead.
 
-We report the **median over splits with the first and third quartiles**,
-or the mean with the standard deviation where noted. The median ignores
-the occasional odd split. The quartiles describe the bulk of the values
-without assuming they are symmetric.
+We report the **mean over splits**. It estimates the score on new
+patients. The first and third quartiles show the spread. They describe the
+bulk of the values without assuming they are symmetric.
 
 **What the spread means.** The spread measures how much a score moves when
 the same patients are split again. It is not a confidence interval for new
@@ -154,24 +152,17 @@ The tasks are imbalanced (chapter 2), so plain accuracy is misleading.
 
 | Score | What it measures | Why we use it |
 |---|---|---|
-| **ROC AUC** | The chance that the model scores a random positive patient above a random negative one. | It needs no decision threshold. So it does not mix the method's quality with a choice of costs. Main score of the frontier (chapter 8). |
-| **Macro-F1** | The average of the F1 score of each class. | It weights the small class as much as the large one. Main score of the comparison (chapter 7), because the runner began recording test AUC only after the comparison ran. |
-| **Balanced accuracy** | The average of the recall of each class. | A simple imbalance-robust check. |
+| **ROC AUC** | The chance that the model scores a random positive patient above a random negative one. | It needs no decision threshold. So it does not mix the method's quality with a choice of costs. The main score. |
+| **Macro-F1** | The average of the F1 score of each class. | It weights the small class as much as the large one. Recorded as a side score. |
+| **Balanced accuracy** | The average of the recall of each class. | A simple imbalance-robust check. Recorded as a side score. |
 
-The comparison also records:
-
-- **MCC**, the Matthews correlation coefficient, another imbalance-robust
-  check.
-- **G-mean**, the geometric mean of the two class recalls. It is stricter
-  than macro-F1: it is zero if either class is never predicted correctly.
-- **Accuracy**, for comparison with other work. Alone it misleads. On
-  Normal vs rest (200 against 2,776 patients), always predicting "rest"
-  scores 0.93.
+Plain accuracy is not used. On Normal vs rest (200 against 2,776
+patients), always predicting "rest" scores 0.93.
 
 **Why not F1 alone.** F1 fixes a trade-off between false positives and
 false negatives. That is a decision about costs, which a comparison of
-selection methods should not make. Accuracy, balanced accuracy, MCC and
-G-mean also depend on a decision threshold. So each implies some costs
+selection methods should not make. Accuracy and balanced accuracy also
+depend on a decision threshold. So each implies some costs
 too. AUC needs neither a threshold nor costs.
 
 AUC is computed per split, from one model on that split's test patients.
@@ -205,7 +196,7 @@ seed on every split, its measured stability would be a meaningless 1.0.
 For every fit we record:
 
 - **Selection time**: the time of the selector's `fit` alone, not of the
-  classifier. In the frontier each selection is fit 10 times, each time by
+  classifier. Each selection is fit 10 times, each time by
   a fresh selector, and the median time is recorded. Sequential selection
   takes minutes per fit, so it is fit once.
 - **Search time**: the time to choose `k`, or a method's own
@@ -222,41 +213,22 @@ The design also planned to state each method's time and memory complexity,
 derived from its algorithm, next to the measurements. A disagreement
 between the two would itself be worth reporting. This was not done.
 
-## 3.8 Tuning the classifier without leakage
+## 3.8 The classifier
 
-The classifier, L2-penalized logistic regression, has a strength parameter
-C. In the comparison (chapter 7) C is tuned inside each split, in three
-steps:
+The classifier is L2-penalized logistic regression with C = 1. The penalty
+is (λ/2)‖w‖², and scikit-learn's C is 1/λ. Features are standardized on
+the training set first. Otherwise the penalty would treat features on
+different scales differently. scikit-learn's default solver, `lbfgs`, does
+not penalize the bias term.
 
-1. The training set is split at random three times. Each time, half of it
-   is used to fit the classifier and the other half is a validation set.
-2. Each C from {0.01, 0.1, 1, 10, 100} is scored by its AUC on the three
-   validation sets.
-3. The classifier is refit on the whole training set with the best C.
+C is fixed, not tuned. Tuning it on validation sets would multiply the
+classifier's cost by about 15 (5 values of C times 3 validation sets), on
+top of the search for `k`. Every method gets the same classifier, so the
+ranking stays fair. But the absolute scores may be a little lower than
+with tuning.
 
-The test set is used once, at the end.
-
-The penalty is (λ/2)‖w‖², and scikit-learn's C is 1/λ. Features are
-standardized on the training set first. Otherwise the penalty would treat
-features on different scales differently. scikit-learn's default solver,
-`lbfgs`, does not penalize the bias term. (The `liblinear` solver does.)
-
-C is scored by AUC, not macro-F1. AUC does not depend on a decision
-threshold, so it scores C more smoothly on small validation sets.
-
-Tuning costs about 15 times the classifier's fitting: 5 values of C times
-3 validation sets.
-
-The selector is fit once on the whole training set, not once per
-validation set. So the validation patients helped choose the genes. This
-can bias the choice of C slightly. The test set stays untouched, so the
-reported scores stay honest.
-
-In the frontier (chapter 8) the classifier's C is fixed at 1, to keep the
-run short. Every method gets the same classifier, so the ranking stays
-fair. But the absolute scores may be a little lower than with tuning. This
-C is the classifier's. It is not Lasso's own C, which the frontier chooses
-on validation sets (section 3.11).
+This C is the classifier's. It is not Lasso's own C, which Lasso chooses on
+validation sets (section 3.11).
 
 ## 3.9 Reproducibility
 
@@ -309,17 +281,21 @@ with its transform. Then the comparison is no longer controlled.
 
 ## 3.11 The feature budget `k`
 
-In the comparison, `k` on SCAN-B is 5, 10, 20, 50, 100, 250, 500 and 1000.
-On BreastMNIST it stops at 250.
+On SCAN-B, `k` is 10, 50, 250, 500, 1000, 1500 and 2000, the same for
+every method. A first run stopped at 1,000. There, AUC was still rising
+for every method with a `k` list.
+
+On BreastMNIST and FGVC-Aircraft (2,048 features), `k` is 10, 50, 250, 500
+and 1000. Random selection also runs at 2,048, every feature. The list
+goes past the number of training images, because the goal is the best AUC,
+not a small set. A two-stage chain uses the same list, cut below the size
+its first step keeps.
 
 - **Why a sweep.** A single `k` cannot tell a method that is good at small
   budgets from one that works only when given many features.
 - **Why the same `k` for every method.** It makes the comparison with the
   random control fair.
 - **Why 50.** PAM50 is a 50-gene signature, so `k` = 50 is an anchor.
-- **Why the largest `k` stays below the training size.** The point of
-  selection here is to get below the number of samples. Selecting more
-  features than training samples is not a useful target.
 - **Selection against no selection.** A run on all features is kept as a
   reference. It shows whether selection helps the model or only makes it
   smaller ([section 8.7](08_results_frontier.md#87-is-selection-needed-at-all)).
@@ -330,8 +306,8 @@ With one training fraction, the experiments give `k` directly.
 
 **Choosing `k` on validation sets.** The goal is the best AUC, so a method
 should choose its own `k`. Choosing it by test AUC would use the test set
-twice: once to choose and once to score. So in the frontier, each method
-with a `k` list chooses `k` on validation sets:
+twice: once to choose and once to score. So each method with a `k` list
+chooses `k` on validation sets:
 
 1. The training set is cut into 5 folds. Each fold in turn is the
    validation set.
@@ -350,16 +326,6 @@ selection. Its time is recorded apart from the selection time.
 Standardization is fit on the whole training set, so the validation sets
 helped set its means and spreads. That uses no labels. The test set stays
 untouched.
-
-On SCAN-B the frontier's `k` are 10, 50, 250, 500, 1000, 1500 and 2000,
-the same for every method. The first frontier run stopped at 1,000. There,
-AUC was still rising for every method with a `k` list.
-
-On BreastMNIST and FGVC-Aircraft (2,048 features) the `k` are 10, 50, 250,
-500 and 1000. Random selection also runs at 2,048, every feature. The list
-goes past the number of training images, because the goal is the best AUC,
-not a small set. A two-stage chain uses the same list, cut below the size
-its first step keeps.
 
 Sequential selection does not search, because one of its fits takes
 minutes.
@@ -408,12 +374,9 @@ method wins.
   replicates.
 - The decision threshold is not tuned: 0.5 on the predicted probability.
   Macro-F1 and balanced accuracy depend on it. AUC does not.
-- In the comparison, the selectors' own settings, such as Lasso's penalty,
-  are fixed. In the frontier, Lasso chooses its penalty on validation sets
-  (section 3.11). The other settings stay fixed there too.
-- Choosing a "best `k`" from test scores would leak. So the comparison
-  reports whole curves over `k` and names no winning `k`. The frontier
-  chooses `k` on validation sets instead (section 3.11).
+- Lasso chooses its penalty on validation sets (section 3.11). The other
+  selectors' own settings stay fixed.
+- The classifier's C is fixed at 1 (section 3.8).
 - The runner stores each cell's metrics, not each test patient's score. So
   a new metric needs a new run. Storing the scores was designed but not
   built (chapter 10).

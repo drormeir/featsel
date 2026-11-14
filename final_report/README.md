@@ -67,15 +67,10 @@ and the results below updated.
 ## How to read the numbers
 
 Every number in this report comes from a file in the repository. Each table
-names its source. The two main experiments differ, and the report keeps
-them apart:
-
-- **The comparison** (chapter 7): 7 methods and 16 random splits (20 on
-  BreastMNIST). Half the samples form the training set. Scored by
-  macro-F1.
-- **The frontier** (chapter 8): 13 method settings and 5 random splits.
-  70% of the samples form the training set. Scored by ROC AUC, with
-  timing.
+names its source. Every experiment follows one protocol (chapter 3): 16
+random splits, 70% of the samples in the training set, `k` chosen on
+validation sets, scored by ROC AUC, with timing. Chapters 7 and 8 still
+report earlier runs under older protocols, until the rerun.
 
 Section 8.8 adds one more run, on the unseen aircraft dataset: 10 splits,
 70% of the samples in the training set, scored by ROC AUC.

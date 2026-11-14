@@ -12,10 +12,8 @@ beyond the project's scope.
 
 | Item | Why it matters | Effort |
 |---|---|---|
-| **Tuned classifier in the frontier.** The classifier's C is fixed at 1 there. | Absolute AUCs may be a little low. A method that needs a different C is at a disadvantage. | Multiplies the classifier's cost by about 15. |
-| **RFECV scored by AUC in the 16-split comparison.** On the frontier (5 splits, section 8.6) it no longer collapsed on SCAN-B. | Would give it the paired tests of chapter 7. | About 6 hours on SCAN-B. |
-| **RFE with a finer step and a forest with more trees in the comparison.** In the comparison, RFE removed half the genes per round, and the forest had 50 trees. | Both settings were chosen for speed. The frontier used step 0.1 and 200 trees, and RFE stayed weakest. So the conclusion is unlikely to change. | Hours. |
-| **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The comparison uses one classifier and one train fraction. | About four days on this laptop. Skipped by decision. |
+| **Tuned classifier.** The classifier's C is fixed at 1. | Absolute AUCs may be a little low. A method that needs a different C is at a disadvantage. | Multiplies the classifier's cost by about 15. |
+| **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The protocol uses one classifier and one train fraction. | About four days on this laptop. Skipped by decision. |
 | **A measured target on SCAN-B**, such as the pathologist's ER status. | Every SCAN-B task here predicts a computed label. A measured label would show whether the conclusions hold for clinical truth. | One config. The loader already supports it. |
 | **The quantile transform with every classifier** (section 3.10). With logistic regression it did not help. | Would show whether shrinkage LDA and k-NN gain from normal-shaped features. | One `k`, all classifiers. A run was started and cancelled. |
 | **Time and memory complexity per method**, derived from the algorithm. | Planned to sit next to the measured times. If the two disagree, that is a finding. | Writing only, no runs. |
