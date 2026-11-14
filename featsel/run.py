@@ -303,8 +303,8 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
     """
     Yield one row per (k, model) for one selector on one prepared task.
 
-    X_train and X_test are already imputed and scaled on the training half, so
-    nothing about the validation half has touched them.
+    X_train and X_test are already imputed and scaled on the training set, so
+    nothing about the test set has touched them.
 
     A selector or model that runs out of memory skips its cells and appends a
     description to failures; the rest of the job goes on.
@@ -534,9 +534,9 @@ def _tuned(model, grid, tuning, seed):
     """
     Wrap a model so that fit chooses its parameters from grid on inner splits.
 
-    The inner splits are stratified Monte Carlo draws from the training half
+    The inner splits are stratified Monte Carlo draws from the training set
     only (final_report/03_how_to_measure.md, 3.8). fit then refits on the whole
-    training half with the best values, and predict uses that refit model.
+    training set with the best values, and predict uses that refit model.
     """
     inner = StratifiedShuffleSplit(n_splits=tuning['n_splits'],
                                    train_size=tuning['train_size'], random_state=seed)
@@ -602,7 +602,7 @@ def _k_groups(sel_spec):
 
 
 def _prepare(X_train, X_test, preprocess, seed, folder):
-    """Scale an imputed split, fit on the training half, and save it to folder."""
+    """Scale an imputed split, fit on the training set, and save it to folder."""
     scaler = PREPROCESSORS[preprocess](seed)
     if scaler is not None:
         X_train = scaler.fit(X_train).transform(X_train)
@@ -623,8 +623,8 @@ def iter_rows(X, y, config, failures, skip=frozenset(), truth=None, journal=None
     in journal while it runs (_job_rows).
 
     An execution is one (task, split, train size, preprocessing, selector, k,
-    classifier) cell. Selection and preprocessing are fit on the training half
-    only, inside the split, so nothing about the validation half leaks into the
+    classifier) cell. Selection and preprocessing are fit on the training set
+    only, inside the split, so nothing about the test set leaks into the
     choice of features (Ambroise and McLachlan, PNAS 2002).
 
     Each split is stratified on the full target and shared by every task, so
@@ -737,7 +737,7 @@ def print_plan(config, X, y, tasks, target, name, total):
     for train_size in config['train_sizes']:
         n_train = round(train_size * n_samples)
         print(f"  train_size {train_size}: {n_train} train / "
-              f"{n_samples - n_train} validation")
+              f"{n_samples - n_train} test")
 
     print(f"Repeats      : {config['selection_repeats']} fits per selection, "
           f"median time recorded")
@@ -773,7 +773,7 @@ def print_plan(config, X, y, tasks, target, name, total):
     if any('grid' in spec for spec in config['models']):
         tuning = config['tuning']
         print(f"Tuning       : {tuning['n_splits']} inner splits at train_size "
-              f"{tuning['train_size']} of each training half, best {tuning['scoring']}")
+              f"{tuning['train_size']} of each training set, best {tuning['scoring']}")
 
     print(f"\nTotal        : {total} executions "
           f"({len(tasks)} tasks x {config['n_splits']} splits x "
