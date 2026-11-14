@@ -5,7 +5,7 @@
 # The classifier is scikit-learn's logistic regression, on the CPU.
 # Run with: python -m featsel.run --config configs/aircraft70_gpu.yaml --n-jobs 1
 #
-# 70% of 1,200 images is 840 training images, so k stops at 500.
+# k runs to 1,000, as on BreastMNIST; validation picks it.
 # Random at k = 2048 is every feature, no selection.
 # Three fits per selection, to time each one without a long run.
 
@@ -31,18 +31,18 @@ metrics:
 
 selectors:
   - name: RandomSelector
-    k: [10, 50, 250, 500, 2048]
+    k: [10, 50, 250, 500, 1000, 2048]
   - name: MannWhitneySelector
-    k: [10, 50, 250, 500]
+    k: [10, 50, 250, 500, 1000]
     params: {device: "cuda"}
   - name: HigherCriticismSelector
     label: HC2008
     params: {variant: "2008", device: "cuda"}
   - name: CorrelationSelector
-    k: [10, 50, 250, 500]
+    k: [10, 50, 250, 500, 1000]
     params: {method: "spearman", device: "cuda"}
   - name: MutualInfoSelector
-    k: [10, 50, 250, 500]
+    k: [10, 50, 250, 500, 1000]
     params: {device: "cuda"}
   # No k: C, chosen from Cs by validation AUC, sets the count.
   - name: LassoSelector
@@ -50,7 +50,7 @@ selectors:
     params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
   - name: RFESelector
     label: RFE_newton
-    k: [10, 50, 250, 500]
+    k: [10, 50, 250, 500, 1000]
     params: {C: 0.01, device: "cuda"}
   - name: RFECVSelector
     label: RFECV_newton_auc

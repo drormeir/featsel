@@ -355,6 +355,12 @@ On SCAN-B the frontier's `k` are 10, 50, 250, 500, 1000, 1500 and 2000,
 the same for every method. The first frontier run stopped at 1,000. There,
 AUC was still rising for every method with a `k` list.
 
+On BreastMNIST and FGVC-Aircraft (2,048 features) the `k` are 10, 50, 250,
+500 and 1000. Random selection also runs at 2,048, every feature. The list
+goes past the number of training images, because the goal is the best AUC,
+not a small set. A two-stage chain uses the same list, cut below the size
+its first step keeps.
+
 Sequential selection does not search, because one of its fits takes
 minutes.
 

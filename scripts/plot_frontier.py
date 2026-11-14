@@ -20,7 +20,7 @@ Several CSVs are read as one table, such as a run of the GPU selectors and
 a run of the CPU selectors; --out is then required.
 
 Usage:
-    python scripts/plot_frontier.py results/local/frontier_scanb.csv
+    python scripts/plot_frontier.py results/local/frontier_scanb70_gpu.csv
     python scripts/plot_frontier.py results/local/frontier_scanb70_gpu.csv \
         results/local/frontier_scanb70_cpu.csv --out results/local/frontier_scanb70.png
 """

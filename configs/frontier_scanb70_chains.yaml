@@ -35,14 +35,14 @@ selectors:
       - name: LassoSelector
         params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
   - label: MW1000+TreeImportance
-    k: [10, 50, 250]
+    k: [10, 50, 250, 500]
     steps:
       - name: MannWhitneySelector
         params: {n_features: 1000, device: "cuda"}
       - name: TreeImportanceSelector
         params: {n_estimators: 200, n_jobs: 4}
   - label: MW1000+RFE_newton
-    k: [10, 50, 250]
+    k: [10, 50, 250, 500]
     steps:
       - name: MannWhitneySelector
         params: {n_features: 1000, device: "cuda"}

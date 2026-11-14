@@ -8,8 +8,10 @@ each method costs. This chapter puts both on one plot.
 **Note: this chapter reports the first frontier run.** Since then,
 liblinear was dropped (section 6.2). Lasso now chooses its C, and every
 method with a `k` list chooses `k`, on validation sets (section 3.11). The
-SCAN-B `k` list grew to 10, 50, 250, 500, 1000, 1500 and 2000. This
-chapter will be updated after the rerun.
+SCAN-B `k` list grew to 10, 50, 250, 500, 1000, 1500 and 2000. On
+BreastMNIST it grew to 1,000, which absorbs the larger-`k` run of section
+8.7. SCAN-B dropped 11 flat genes (section 2.1). This chapter will be
+updated after the rerun.
 
 ## 8.1 What a cost-quality frontier is
 
@@ -389,7 +391,8 @@ features.)
 Mean test AUC over 5 splits. The k = 250 column is from section 8.5. Times
 differ slightly between the two runs. Table:
 [`figures/frontier_breastmnist70_large_k.csv`](figures/frontier_breastmnist70_large_k.csv).
-Config: [`configs/frontier_breastmnist70_large_k.yaml`](../configs/frontier_breastmnist70_large_k.yaml).
+Its config, `frontier_breastmnist70_large_k.yaml`, was merged into the
+main BreastMNIST configs on 2026-11-14: their `k` now run to 1,000.
 
 What it shows:
 

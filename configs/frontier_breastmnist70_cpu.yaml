@@ -27,11 +27,11 @@ metrics:
 
 selectors:
   - name: TreeImportanceSelector
-    k: [10, 50, 250]
+    k: [10, 50, 250, 500, 1000]
     params: {n_estimators: 200, n_jobs: 4}
   - name: RFESelector
     label: RFE_newton
-    k: [10, 50, 250]
+    k: [10, 50, 250, 500, 1000]
     params: {C: 0.01, device: "cpu"}
   - name: RFECVSelector
     label: RFECV_newton

@@ -30,9 +30,9 @@ metrics:
 
 selectors:
   - name: RandomSelector
-    k: [10, 50, 250, 2048]
+    k: [10, 50, 250, 500, 1000, 2048]
   - name: MannWhitneySelector
-    k: [10, 50, 250]
+    k: [10, 50, 250, 500, 1000]
     params: {device: "cuda"}
   - name: HigherCriticismSelector
     label: HC2008
@@ -45,11 +45,11 @@ selectors:
     label: Lasso_ppdna
     params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
   - name: TreeImportanceSelector
-    k: [10, 50, 250]
+    k: [10, 50, 250, 500, 1000]
     params: {n_estimators: 200, n_jobs: 4}
   - name: RFESelector
     label: RFE_newton
-    k: [10, 50, 250]
+    k: [10, 50, 250, 500, 1000]
     params: {C: 0.01, device: "cpu"}
 
 models:
