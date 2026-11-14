@@ -20,7 +20,7 @@ scanb_floor_share_200,51%
 scanb_non_normal_share,98.1%
 scanb_median_excess_kurtosis,1.44
 scanb_loaded_patients,"2,976"
-scanb_loaded_genes,"28,552"
+scanb_loaded_genes,"28,541"
 scanb_normal_patients,200
 scanb_rest_of_normal,"2,776"
 scanb_all_rest_accuracy,0.93
@@ -56,3 +56,4 @@ breastmnist_hc2004_min,1
 breastmnist_hc2004_max,6
 breastmnist_hc2008_min,204
 breastmnist_hc2008_max,204
+scanb_flat_genes,11

@@ -65,6 +65,7 @@ def scanb_facts(data):
     known = er['er status'].notna()
 
     X, y = load_xy(data)
+    kept = expression.loc[X.index]
     floor = expression.loc[hiseq.index].iloc[:, :200]
     normal_p = normaltest(X.values, axis=0).pvalue
     normal = y.value_counts()['Normal']
@@ -87,6 +88,8 @@ def scanb_facts(data):
         'scanb_er_disagree': count((er.loc[known, 'er status'] != er.loc[known, 'er prediction mgc']).sum()),
         'scanb_er_missing': count((~known).sum()),
         'scanb_single_value_genes': count((expression.nunique() == 1).sum()),
+        'scanb_flat_genes': count(((kept.max() - kept.min()) / kept.abs().max() < 1e-2)
+                                  .loc[kept.nunique() > 1].sum()),
         'scanb_floor_share_200': share((floor.values == floor.values.min()).mean()),
         'scanb_non_normal_share': share((normal_p < 0.05).mean(), 1),
         'scanb_median_excess_kurtosis': number(np.median(kurtosis(X.values, axis=0)), 2),

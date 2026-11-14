@@ -58,7 +58,7 @@ def load_data(synthetic, n_genes_max):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--n-genes', type=int, nargs='+', default=[1000, 3000, 10000, 28552])
+    parser.add_argument('--n-genes', type=int, nargs='+', default=[1000, 3000, 10000, 28541])
     parser.add_argument('--repeats', type=int, default=5)
     parser.add_argument('--max-seconds', type=float, default=120.0,
                         help='Skip larger sizes of a variant once its first fit passes this')

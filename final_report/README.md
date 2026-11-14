@@ -16,7 +16,7 @@ trained on all the genes is slow and can learn noise. Feature selection
 picks a small set of genes that still predicts well. We built `featsel`, a
 Python package of 16 feature selection methods that plug into scikit-learn.
 We compared the methods on breast cancer data (SCAN-B, 2,976 patients,
-28,552 genes) and on image data (BreastMNIST, 780 images, 2,048 features).
+28,541 genes) and on image data (BreastMNIST, 780 images, 2,048 features).
 A third dataset, aircraft photos, tested the finished pipeline on data it
 was not designed for. Every method was measured against a control that
 picks features at random. We also made the slow methods faster, many of
