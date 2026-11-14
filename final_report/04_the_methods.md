@@ -288,9 +288,9 @@ Its assumptions are those of HC: rare, weak and independent signal.
 
 | Experiment | Methods |
 |---|---|
-| The frontier (chapters 7 and 8) | Random, Mann-Whitney, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE. The first frontier run had two solvers each for Lasso (liblinear and PPDNA) and RFE (liblinear and Newton); the configurations now run only PPDNA and Newton. |
+| The frontier (chapters 7 and 8) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE. The first frontier run had two solvers each for Lasso (liblinear and PPDNA) and RFE (liblinear and Newton); the configurations now run only PPDNA and Newton. |
 | The classifier study (chapter 7) | Random and Mann-Whitney, with five classifiers |
-| The unseen dataset (section 8.8) | Random, Mann-Whitney, HC2008, correlation (Spearman), mutual information, Lasso (PPDNA), RFE (Newton), RFECV (Newton, scored by AUC), Sequential (Newton) |
+| The unseen dataset (section 8.8) | Random, Mann-Whitney, HC2004, HC2008, correlation (Spearman), mutual information, Lasso (PPDNA), RFE (Newton), RFECV (Newton, scored by AUC), Sequential (Newton) |
 
 Variance threshold, ANOVA, Percentile, FDR and FWE are in the package and
 tested, but not in the experiments. The last four use the F-test, which

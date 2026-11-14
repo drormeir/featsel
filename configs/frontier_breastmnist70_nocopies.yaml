@@ -37,6 +37,9 @@ selectors:
   - name: HigherCriticismSelector
     label: HC2008
     params: {variant: "2008", device: "cuda"}
+  - name: HigherCriticismSelector
+    label: HC2004
+    params: {variant: "2004", device: "cuda"}
   - name: BerkJonesSelector
     label: BerkJones
     params: {device: "cuda"}
