@@ -21,18 +21,17 @@ is present, else the CPU.
 
 Versions used: Python 3.13, scikit-learn 1.9, NumPy 2.5, SciPy 1.18,
 pandas 3.0, PyTorch with CUDA 13. Each run writes a JSON file beside its
-CSV. The JSON records the exact versions, the machine and the git
-commit.
+CSV with the exact versions, the machine and the git commit.
 
 ## The experiments
 
-**The configs have moved ahead of the results.** On 2026-11-13 and 14 the
-configs changed. liblinear was dropped, Lasso chooses C and every method
-with a `k` list chooses `k` on validation sets. The `k` lists
-grew, and the separate comparison protocol was retired. The results in chapters 7 and 8
-come from the configs as they were before. To reproduce those numbers,
-check out the commit recorded in each result's JSON file. The commands
-below, on the current configs, give the next run's results.
+**The configs have moved ahead of the results.** The configs changed on
+2026-11-13 and 14. liblinear was dropped. Lasso chooses C. Every method
+with a `k` list chooses `k` on validation sets. The `k` lists grew. The
+separate comparison protocol was retired. The results in chapters 7 and 8
+come from the earlier configs. To reproduce them, check out the commit
+recorded in each result's JSON file. The commands below, on the current
+configs, give the next run's results.
 
 | Result | Command | Output |
 |---|---|---|
@@ -50,28 +49,31 @@ below, on the current configs, give the next run's results.
 | FGVC-Aircraft (section 8.8) | `.venv/bin/python -m featsel.run --config configs/aircraft70_gpu.yaml --n-jobs 1`; the first call downloads the 2.75 GB archive and computes the embeddings | `results/aircraft70_gpu.csv`; analysis in `featsel_datasets/fgvc_aircraft/demos/research.ipynb` |
 | Frontier plots | `.venv/bin/python scripts/plot_frontier.py <the three CSVs> --out results/local/frontier_scanb70_roc_auc.png` | one PNG and CSV for all tasks, and one per task |
 
-Add `--resume` to any runner command to continue a stopped run. For a
-long unattended run, start it through `scripts/run_until_done.py` with the
-same arguments, for example `.venv/bin/python scripts/run_until_done.py
---config configs/frontier_scanb70_cpu.yaml --n-jobs 2
-`. It restarts the runner after a crash and keeps
-the machine awake. `scripts/parallel_scaling.py` takes `--resume` too.
-Section 5.5 describes how the runs are protected, and the limits. Git does
-not track the files in `results/local/`. The frontier plots and tables
-used in this report are copied to [`figures/`](figures/).
+Add `--resume` to any runner command, or to
+`scripts/parallel_scaling.py`, to continue a stopped run. For a long
+unattended run, start the runner through `scripts/run_until_done.py` with
+the same arguments:
 
-The table of section 6.1 was measured when the runner fitted each
-selection once. The runner now fits each selection 10 times by default
-(`selection_repeats`). `benchmark_speed.py` does not set it to 1. So a
-rerun today times 10 fits per selection on the runner's side, and its
-runner times would not match the table.
+```bash
+.venv/bin/python scripts/run_until_done.py --config configs/frontier_scanb70_cpu.yaml --n-jobs 2
+```
+
+It restarts the runner after a crash and keeps the machine awake.
+Section 5.5 describes how runs are protected, and the limits. Git does
+not track `results/local/`. The frontier plots and tables used in this
+report are copied to [`figures/`](figures/).
+
+**Note on section 6.1.** Its table was measured when the runner fitted
+each selection once. The runner now fits each selection 10 times by
+default (`selection_repeats`), and `benchmark_speed.py` does not set it
+to 1. So a rerun today would not match the table's runner times.
 
 ## Determinism
 
-One seed, 42. Split `s` uses 42 + `s`. Selections are identical across
-runs and devices. Times are not. They depend on the machine and its load.
-The frontier records whether repeated fits agreed (`selection_stable`) and
-where each ran (`selection_device`).
+One seed, 42; split `s` uses 42 + `s`. Selections are identical across
+runs and devices. Times are not: they depend on the machine and its load.
+The frontier records whether repeated fits agreed (`selection_stable`)
+and where each ran (`selection_device`).
 
 ## Tests
 
