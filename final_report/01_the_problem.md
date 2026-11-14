@@ -26,7 +26,7 @@ There are three reasons to do it.
 
 Gene expression measures how active each gene is in a tissue sample. One
 measurement gives about 30,000 numbers per patient. A large clinical study
-has a few thousand patients. In our data there are 2,976 patients and 28,552
+has a few thousand patients. In our data there are 2,976 patients and 28,541
 usable genes: almost ten times more features than samples.
 
 This setting is often written p ≫ n: many more features (p) than samples
@@ -38,7 +38,7 @@ separate any labeling of the training set perfectly, even random labels.
 A perfect training score then says nothing.
 
 **False discoveries.** Suppose no gene were related to the label. Testing
-28,552 genes one by one at the usual 5% level would still flag about 1,400
+28,541 genes one by one at the usual 5% level would still flag about 1,400
 genes by chance alone.
 
 **Correlated features.** Genes work in groups. When one gene of a group
@@ -51,7 +51,7 @@ correlated features may be impractical.
 sequenced twice, does not give identical values (chapter 2).
 
 **Cost.** Some methods train a classifier for every candidate feature, or
-at every step. With 28,552 genes, such methods can take hours or days.
+at every step. With 28,541 genes, such methods can take hours or days.
 
 ## 1.3 The goal of the project
 

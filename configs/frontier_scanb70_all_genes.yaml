@@ -1,7 +1,7 @@
-# The SCAN-B frontier's baseline with no selection: all 28,552 genes, on the
+# The SCAN-B frontier's baseline with no selection: all 28,541 genes, on the
 # same splits as frontier_scanb70_gpu.yaml. On BreastMNIST every feature beat
 # every selected subset (final_report/08_results_frontier.md, 8.7).
-# This asks the same on gene expression. Random at k = 28552 keeps every gene.
+# This asks the same on gene expression. Random at k = 28541 keeps every gene.
 # Run with: python -m featsel.run --config configs/frontier_scanb70_all_genes.yaml --n-jobs 2
 #
 # Output goes to results/local/, which git ignores.
@@ -23,7 +23,7 @@ metrics:
 
 selectors:
   - name: RandomSelector
-    k: [28552]
+    k: [28541]
 
 models:
   - name: logistic_regression

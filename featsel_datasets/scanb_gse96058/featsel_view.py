@@ -20,13 +20,17 @@ def load_xy(
     target: str = TARGET,
     instrument: str = 'HiSeq 2000',
     one_per_specimen: bool = True,
+    min_spread: float = 1e-2,
 ) -> tuple[pd.DataFrame, pd.Series]:
     """
     Return X (samples x genes) and y for one target.
 
     Keeps the samples sequenced on `instrument`, one sample per patient if
     `one_per_specimen` (the first in file order), and the samples whose
-    target is known. Drops genes with a single value across those samples.
+    target is known. Drops flat genes: those whose range across those
+    samples, divided by their largest absolute value, is below `min_spread`.
+    On SCAN-B these 11 genes sit at one value in almost every patient, and
+    standardizing them in float32 turns them into noise.
     Pass `data` to reuse a loaded dataset; otherwise it is read from the cache.
     """
     if data is None:
@@ -36,4 +40,5 @@ def load_xy(
         samples = samples[~samples['specimen'].duplicated()]
     y = samples[target].dropna()
     X = data.expression.loc[y.index]
-    return X.loc[:, X.nunique() > 1], y
+    spread = (X.max() - X.min()) / X.abs().max()
+    return X.loc[:, spread >= min_spread], y

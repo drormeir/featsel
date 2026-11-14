@@ -108,6 +108,9 @@ was not built.
 - Across all 3,409 GSE96058 samples, 2,236 genes have a single value.
   Across the 2,976 patients we keep, 2,313 do. They are dropped, which
   leaves 28,552.
+- 11 more genes are flat: (max − min) / max |x| is below 0.01. The rest are
+  at 0.057 or above, so the cutoff falls in a gap. Nine of the 11 have at
+  least 2,864 patients at their minimum. Dropping them leaves 28,541.
 
 ## C.6 Open questions
 

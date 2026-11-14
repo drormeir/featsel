@@ -289,10 +289,9 @@ discards the size of a fold change.
 We tested it on `scanb_small`, with F-test selection, logistic regression
 and 10 splits. Standardization was compared with a rank-to-normal
 transform and with scikit-learn's quantile transform. The two transforms
-tied with each other.
+tied with each other. Only the binary tasks are reported, since the project
+narrows the discussion to binary classification tasks.
 
-- On five classes, standardization won at every `k`. Macro-F1 was 0.734
-  against 0.597 at `k` = 10, and 0.870 against 0.855 at `k` = 500.
 - On the five binary tasks, most differences were within 0.01. Her2 and
   Normal gained up to 0.011. LumA lost up to 0.021; at `k` = 100 it lost
   on all 10 splits.

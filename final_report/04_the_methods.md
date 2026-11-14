@@ -91,7 +91,7 @@ and colon cancer. It is a widely used wrapper for such data.
 
 **Sequential forward selection.** It starts empty. At each step it tries
 every remaining feature, scores each by cross-validation, and adds the
-best. For 10 features out of 28,552 that is about 285,000 candidates, each
+best. For 10 features out of 28,541 that is about 285,000 candidates, each
 scored by 5-fold cross-validation: about 1.4 million model fits. It is the
 most expensive method here.
 

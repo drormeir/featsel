@@ -74,7 +74,7 @@ caches them beside it. For SCAN-B (`featsel_datasets/scanb_gse96058/`):
   GEO accession GSE96058 unchanged.
 - `featsel_view.py`: `NAME`, `TARGET` and `load_xy()`, this project's
   choices (HiSeq 2000 only, one sample per patient, chosen target, no
-  single-value genes). `load_xy` returns a DataFrame and a Series. An
+  flat genes). `load_xy` returns a DataFrame and a Series. An
   experiment config names this module as its `dataset`.
 - `demos/tutorial.ipynb`: what the dataset contains.
 

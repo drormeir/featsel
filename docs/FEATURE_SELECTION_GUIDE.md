@@ -68,12 +68,12 @@ Gene expression datasets typically contain measurements for 20,000+ genes but on
 
 The SCAN-B dataset (Sweden Cancerome Analysis Network - Breast) exemplifies these challenges:
 - **Goal**: Predict PAM50 molecular subtypes (Basal, LumA, LumB, Her2, Normal)
-- **Data**: 28,552 informative genes per patient (`featsel_datasets/scanb_gse96058/featsel_view.py`)
+- **Data**: 28,541 informative genes per patient (`featsel_datasets/scanb_gse96058/featsel_view.py`)
 - **Sample size**: 2,976 patients
 - **Clinical importance**: Subtype determines treatment strategy
 - **Need for interpretation**: Oncologists must understand which genes differentiate subtypes
 
-**The question**: From 28,552 genes, which 50-200 are most predictive of cancer subtype?
+**The question**: From 28,541 genes, which 50-200 are most predictive of cancer subtype?
 
 ---
 

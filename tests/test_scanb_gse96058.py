@@ -37,4 +37,5 @@ def test_load_xy_keeps_one_hiseq_sample_per_patient(data):
     assert samples['specimen'].is_unique
     assert y.notna().all()
     assert (y == samples['pam50 subtype']).all()
-    assert (X.nunique() > 1).all()
+    assert ((X.max() - X.min()) / X.abs().max() >= 1e-2).all()
+    assert X.shape[1] == 28541

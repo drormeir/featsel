@@ -18,13 +18,14 @@ accession GSE96058. Our loader downloads it once (592 MB) and caches it.
 
 **Size.** The archive holds 3,273 patients, 3,409 samples and 30,865
 genes. After the choices below, the project uses **2,976 patients and
-28,552 genes**.
+28,541 genes**.
 
 | Choice | Why |
 |---|---|
 | Keep only samples sequenced on the HiSeq 2000 machine (3,069 of 3,409). The other 340 were sequenced on a NextSeq 500. | Two machines can give different values for technical reasons alone. Mixing them would add a difference that has nothing to do with the tumour. The NextSeq samples add 297 patients not in the HiSeq set. They are left out. |
 | Keep one sample per patient (2,976 patients), the first in file order. | 93 of these patients have two HiSeq samples: a sample and its repeat. If one falls in the training set and the other in the test set, the model is tested on a patient it has already seen. |
 | Drop genes with a single value across the kept patients (2,313 genes). | They carry no information. |
+| Drop 11 more flat genes: their range across the kept patients is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, about 0.5% in expression. Standardizing them in float32 turns them into noise. On LumB vs rest, that noise made Lasso's solver about five times slower on the CPU. |
 
 **The repeat samples.** Brueffer et al. sequenced 136 tumours a second
 time, to test how reproducible their classifiers are. GSE96058 publishes

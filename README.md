@@ -120,7 +120,7 @@ The pipeline is dataset-agnostic. Each dataset needs a folder in
 ### SCAN-B Breast Cancer (GSE96058)
 
 - Downloaded from NCBI GEO on first use (592 MB) and cached locally
-- 2,976 patients (HiSeq 2000, one sample each), 28,552 genes for PAM50
+- 2,976 patients (HiSeq 2000, one sample each), 28,541 genes for PAM50
 - PAM50 molecular subtype labels (Basal, LumA, LumB, Her2, Normal)
 - Clinical and pathology fields: ER, PgR, HER2, Ki67, grade, survival
 
