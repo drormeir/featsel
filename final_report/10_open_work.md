@@ -24,7 +24,7 @@ Config validation and other known limits are in section 5.8.
 
 | Item | State |
 |---|---|
-| **Store each test patient's score**: the true label, the score and the decision threshold. Any metric could then be derived later without a new run. | Designed, not built. Scores differ across classifiers: a linear SVM gives raw decision values, a forest and k-NN give coarse probabilities. At 100 splits they would reach tens of millions of numbers, so they need a compact format such as Parquet, not CSV. |
+| **Store each test patient's score**: the true label, the score and the decision threshold. Any metric could then be derived later without a new run. | Designed, not built. Scores differ across classifiers: a linear SVM gives raw decision values, a forest and k-NN give coarse probabilities. Each SCAN-B result holds 893 test patients, so 16 splits of the frontier would already store millions of numbers. They need a compact format such as Parquet, not CSV. |
 | **Tune the decision threshold** on the training set of each split. | Not built. Macro-F1 and balanced accuracy use a threshold of 0.5. AUC does not depend on it. |
 | **Random forest on the GPU.** | Unresolved. XGBoost ran out of memory at full size on the 4 GB GPU; a larger GPU is its next test. NVIDIA's cuML fit, but was 3 times slower than scikit-learn at 3,000 × 3,000, and not for lack of memory (section 6.2). |
 

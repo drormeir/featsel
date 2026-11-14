@@ -357,7 +357,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 - Downloaded data is not tracked in git: `.gitignore` ignores `*.gz`, `*.npz`, `*.part` and `*.txt` anywhere, and a file that must be tracked is named as an exception (e.g. `!requirements.txt`); the loader code is tracked
 - Results in `results/` are tracked, so every number in the final report can be checked against git
 - `results/local/` is gitignored: benchmark series and exploratory runs, each a CSV plus a JSON of its settings and environment, for plotting
-- GSE96058's gene expression file is 592 MB; loading it takes about a minute
+- GSE96058's gene expression file is 592 MB. The first load downloads and parses it (about 85 s, report section 5.3); later loads read the local cache and are much faster
 - BreastMNIST's images are 31 MB; its cached embeddings 4 MB
 - When working with data loading, test on a subset first to avoid long load times
 
