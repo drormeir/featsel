@@ -23,7 +23,8 @@ methods, and much faster.
 
 ## Key results at a glance
 
-These results come from runs made before 2026-11-13. Since then, RFE,
+The image-data answers come from the rerun of 2026-11-14 (chapter 8). The
+SCAN-B answers still come from runs made before 2026-11-13. Since then, RFE,
 RFECV and Lasso use only exact solvers. Every method now chooses its
 number of features on validation sets, not by test-set AUC (sections 3.11
 and 6.2). The results will be updated after the rerun.
@@ -37,8 +38,8 @@ and 6.2). The results will be updated after the rerun.
 | Do methods find the genes that define the label? | Rarely at small `k`. Yet they predict the label well, because correlated genes stand in for them. | [7.6](07_results_quality.md#76-does-selection-find-the-pam50-genes) |
 | How much faster did we make it? | The runner: 3.2 to 5.3 times faster than plain scikit-learn. GPU filters: 2.6 to 49 times. Sequential selection: 34 times. All select the same features as before. | [6](06_making_it_fast.md) |
 | Why did RFECV fail, and can it be fixed? | Its default validation score, accuracy, made it keep 1 or 2 genes on imbalanced tasks. Scored by AUC, it recovers to 0.961 on SCAN-B. That is still below a sub-second filter. | [8.6](08_results_frontier.md#86-rfecv-testing-the-hypothesis) |
-| Does selection beat using every feature? | Not established. On SCAN-B the best selected genes beat all 28,552 by 0.006 AUC (0.025 on LumB), but the corrected test on 16 splits does not establish it. On BreastMNIST all 2,048 features score best (0.921). Selection's main gain is a much smaller model. | [8.7](08_results_frontier.md#87-is-selection-needed-at-all) |
-| Does the pipeline work on unseen data? | Yes. It ran unchanged, entirely on the GPU: aircraft photos, 10 splits in 5 minutes. Every method beat random by 0.09 to 0.12 AUC at 10 features. | [8.8](08_results_frontier.md#88-an-unseen-dataset-fgvc-aircraft) |
+| Does selection beat using every feature? | Not on image data: on BreastMNIST all 2,048 features score 0.924 and RFE ties them (0.923); on FGVC-Aircraft both score 0.862. Selection's gain there is a smaller model. SCAN-B (earlier run): the best selected genes beat all 28,552 by 0.006 AUC, not established by the corrected test. | [8.3](08_results_images.md#83-selection-against-all-features), [8.7](08_results_frontier.md#87-is-selection-needed-at-all) |
+| Does the pipeline work on unseen data? | Yes. It ran unchanged, entirely on the GPU, on aircraft photos. At 10 features, Mann-Whitney beat random by 0.124 AUC and RFE by 0.103, on all 16 splits. | [8.9](08_results_images.md#89-an-unseen-dataset-fgvc-aircraft) |
 
 ## Table of contents
 
@@ -50,8 +51,9 @@ and 6.2). The results will be updated after the rerun.
 | 4 | [The methods](04_the_methods.md) | The 16 methods: filters, embedded methods, wrappers, Higher Criticism and Berk-Jones. Why genes are scored with the U test. |
 | 5 | [The software](05_the_software.md) | Drop-in selectors, the config-driven runner, datasets, memory safety, reproducibility. |
 | 6 | [Making it fast](06_making_it_fast.md) | Task 3: the runner against plain scikit-learn; faster methods on the CPU and GPU. |
-| 7 | [Results: which method selects best](07_results_quality.md) | Both datasets: gain over random, stability, Higher Criticism, the PAM50 genes, and what it means. |
-| 8 | [Results: cost against quality](08_results_frontier.md) | Time against AUC for every method, on all five tasks and on each. The unseen dataset. |
+| 7 | [Results: SCAN-B](07_results_quality.md) | Being rebuilt from the rerun. Until then it reports an earlier comparison. |
+| 8 | [Results on image data](08_results_images.md) | BreastMNIST and FGVC-Aircraft: AUC at the chosen `k`, gain over random, all features, stability, Higher Criticism, chains. |
+| — | [Earlier frontier run](08_results_frontier.md) | Being replaced: its SCAN-B parts move to chapter 7, its image parts are superseded by chapter 8. |
 | 9 | [Conclusions](09_conclusions.md) | What we learned, in plain sentences. |
 | 10 | [Open work and next steps](10_open_work.md) | What is missing, and what is worth investigating next. |
 | A | [Glossary](appendix_a_glossary.md) | Short definitions of terms. |
@@ -65,9 +67,9 @@ and 6.2). The results will be updated after the rerun.
 Every number comes from a file in the repository, and each table names its
 source. Every experiment follows one protocol (chapter 3): 16 random
 splits, 70% of the samples in the training set, `k` chosen on validation
-sets, ROC AUC, and timing. Until the rerun, chapters 7 and 8 report
-earlier runs under older protocols. The aircraft run (section 8.8) uses 10
-splits, 70% in the training set, and ROC AUC.
+sets, ROC AUC, and timing. Chapter 8 (image data) comes from the rerun
+under this protocol. Until the SCAN-B rerun finishes, chapter 7 and the
+earlier frontier file report earlier runs under older protocols.
 
 Times are from one laptop: Intel i7-9750H (6 cores, 12 threads), 16 GB
 RAM, NVIDIA GeForce GTX 1650 with 4 GB. A time is meaningful only on the

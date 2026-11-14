@@ -1,6 +1,6 @@
 # 7. Results: which method selects best (task 2)
 
-[Back to contents](README.md) · Previous: [6. Making it fast](06_making_it_fast.md) · Next: [8. Results: cost against quality](08_results_frontier.md)
+[Back to contents](README.md) · Previous: [6. Making it fast](06_making_it_fast.md) · Next: [8. Results on image data](08_results_images.md)
 
 **Note: this chapter will be rebuilt.** It reports a separate comparison
 run with its own protocol: half the samples for training, macro-F1, a

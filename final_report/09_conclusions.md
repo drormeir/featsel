@@ -1,6 +1,6 @@
 # 9. Conclusions
 
-[Back to contents](README.md) · Previous: [8. Results: cost against quality](08_results_frontier.md) · Next: [10. Open work](10_open_work.md)
+[Back to contents](README.md) · Previous: [8. Results on image data](08_results_images.md) · Next: [10. Open work](10_open_work.md)
 
 ## 9.1 What we built
 

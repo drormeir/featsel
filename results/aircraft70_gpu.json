@@ -1,0 +1,190 @@
+{
+  "written": 512,
+  "started": "2026-11-14T09:41:32+02:00",
+  "resumed": true,
+  "dataset": "FGVC-Aircraft ResNet-50",
+  "target": "family",
+  "n_samples": 1200,
+  "n_features": 2048,
+  "config": {
+    "seed": 42,
+    "n_splits": 16,
+    "selection_repeats": 3,
+    "train_sizes": [
+      0.7
+    ],
+    "preprocess": [
+      "standard"
+    ],
+    "metrics": [
+      "roc_auc",
+      "macro_f1",
+      "balanced_accuracy"
+    ],
+    "n_jobs": 1,
+    "max_worker_memory_gb": 8.93209457397461,
+    "tuning": {
+      "n_splits": 3,
+      "train_size": 0.5,
+      "scoring": "roc_auc"
+    },
+    "dataset": "featsel_datasets.fgvc_aircraft.featsel_view",
+    "target": "family",
+    "output": "configs/../results/aircraft70_gpu.csv",
+    "k_validation": {
+      "cv": 5
+    },
+    "selectors": [
+      {
+        "name": "RandomSelector",
+        "k": [
+          10,
+          50,
+          250,
+          500,
+          1000,
+          2048
+        ]
+      },
+      {
+        "name": "MannWhitneySelector",
+        "k": [
+          10,
+          50,
+          250,
+          500,
+          1000
+        ],
+        "params": {
+          "device": "cuda"
+        }
+      },
+      {
+        "name": "HigherCriticismSelector",
+        "label": "HC2008",
+        "params": {
+          "variant": "2008",
+          "device": "cuda"
+        }
+      },
+      {
+        "name": "HigherCriticismSelector",
+        "label": "HC2004",
+        "params": {
+          "variant": "2004",
+          "device": "cuda"
+        }
+      },
+      {
+        "name": "CorrelationSelector",
+        "k": [
+          10,
+          50,
+          250,
+          500,
+          1000
+        ],
+        "params": {
+          "method": "spearman",
+          "device": "cuda"
+        }
+      },
+      {
+        "name": "MutualInfoSelector",
+        "k": [
+          10,
+          50,
+          250,
+          500,
+          1000
+        ],
+        "params": {
+          "device": "cuda"
+        }
+      },
+      {
+        "name": "LassoSelector",
+        "label": "Lasso_ppdna",
+        "params": {
+          "Cs": [
+            0.01,
+            0.1,
+            1.0,
+            10.0
+          ],
+          "cv": 5,
+          "device": "cuda"
+        }
+      },
+      {
+        "name": "RFESelector",
+        "label": "RFE_newton",
+        "k": [
+          10,
+          50,
+          250,
+          500,
+          1000
+        ],
+        "params": {
+          "C": 0.01,
+          "device": "cuda"
+        }
+      },
+      {
+        "name": "RFECVSelector",
+        "label": "RFECV_newton_auc",
+        "params": {
+          "C": 0.01,
+          "cv": 5,
+          "scoring": "roc_auc",
+          "device": "cuda"
+        }
+      },
+      {
+        "name": "SequentialSelector",
+        "label": "Sequential_newton",
+        "k": [
+          5,
+          10
+        ],
+        "k_validation": false,
+        "params": {
+          "cv": 5,
+          "solver": "newton",
+          "device": "cuda"
+        }
+      }
+    ],
+    "models": [
+      {
+        "name": "logistic_regression",
+        "params": {
+          "max_iter": 1000
+        }
+      }
+    ]
+  },
+  "finished": "2026-11-14T09:58:24+02:00",
+  "out_of_memory": [],
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "cpu_count": 12,
+    "ram_gb": 15.5,
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "torch": "2.14.1",
+      "xgboost": "3.4.1"
+    },
+    "git_commit": "7844112993c84ede1d404c728406087b3da532ca",
+    "git_dirty": false,
+    "gpu": "NVIDIA GeForce GTX 1650",
+    "gpu_memory_gb": 4.0
+  }
+}

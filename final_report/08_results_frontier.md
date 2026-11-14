@@ -5,7 +5,12 @@
 Chapter 7 asked which method selects best. A practitioner also asks what
 each method costs. This chapter puts both on one plot.
 
-**Note: this chapter reports the first frontier run.** Since then,
+**Note: this file is being replaced.** Its BreastMNIST and FGVC-Aircraft
+parts are superseded by the rerun, in
+[chapter 8, Results on image data](08_results_images.md). Its SCAN-B parts
+will move to chapter 7 when the SCAN-B rerun finishes.
+
+**It reports the first frontier run.** Since then,
 liblinear was dropped (section 6.2). Lasso now chooses its C, and every
 method with a `k` list chooses `k`, on validation sets (section 3.11). The
 SCAN-B `k` list grew to 10, 50, 250, 500, 1000, 1500 and 2000. On
