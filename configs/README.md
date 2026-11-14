@@ -104,7 +104,7 @@ column `tuned_params` holds the chosen values, `{}` for an untuned model.
 ## Running
 
 ```bash
-python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs -1
+python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs 4 --max-worker-memory-gb 3
 ```
 
 `--out`, `--n-splits` and `--n-jobs` override the config. `--resume` skips

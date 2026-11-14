@@ -77,7 +77,7 @@ Run a comparison from an experiment config. It names a dataset, the
 selectors, the models and the splits, and writes one CSV row per execution:
 
 ```bash
-python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs -1
+python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs 4 --max-worker-memory-gb 3
 python -m featsel.run --config configs/experiment_classifiers.yaml --resume   # continue a killed run
 ```
 
