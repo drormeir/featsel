@@ -134,7 +134,7 @@ course copies are in `final_report/02_the_data.md`.
 - Images downloaded from Zenodo on first use (31 MB); embeddings computed once
   with PyTorch (`pip install -e ".[embeddings]"`) and cached
 
-Config: `configs/experiment_breastmnist.yaml`. Notebooks in
+Config: `configs/frontier_breastmnist70_gpu.yaml`. Notebooks in
 `featsel_datasets/medmnist_breastmnist/demos/`.
 
 ## Status

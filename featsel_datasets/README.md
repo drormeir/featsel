@@ -44,7 +44,7 @@ dimensions, so there are more features than images, as in SCAN-B.
   `demos/selection.ipynb` compares selectors, simulates leakage and
   summarizes the full run.
 
-Experiment config: `configs/experiment_breastmnist.yaml`.
+Experiment config: `configs/frontier_breastmnist70_gpu.yaml`.
 
 ### FGVC-Aircraft, ResNet-50 embeddings (`fgvc_aircraft/`)
 

@@ -23,14 +23,14 @@ pip install -r requirements.txt
 ### Running the Pipeline
 ```bash
 # Run an experiment (from the repo root, so featsel_datasets imports)
-python -m featsel.run --config configs/experiment_scanb.yaml
+python -m featsel.run --config configs/frontier_scanb70_gpu.yaml
 
 # Load SCAN-B; the first call downloads GSE96058 (592 MB) into the cache
 python -c "from featsel_datasets.scanb_gse96058.featsel_view import load_xy; X, y = load_xy(); print(X.shape)"
 
 # The second dataset, BreastMNIST embeddings; the first call needs the
 # 'embeddings' extra (pip install -e ".[embeddings]") to compute them
-python -m featsel.run --config configs/experiment_breastmnist.yaml --n-jobs -1
+python -m featsel.run --config configs/frontier_breastmnist70_gpu.yaml --n-jobs 1
 ```
 
 ### Feature Selection
@@ -355,7 +355,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 
 ### Data Files
 - Downloaded data is not tracked in git: `.gitignore` ignores `*.gz`, `*.npz`, `*.part` and `*.txt` anywhere, and a file that must be tracked is named as an exception (e.g. `!requirements.txt`); the loader code is tracked
-- Results in `results/` are tracked, so every number in the final report can be checked against git. The one exception is the 36 MB `results/experiment_breastmnist.csv`
+- Results in `results/` are tracked, so every number in the final report can be checked against git
 - `results/local/` is gitignored: benchmark series and exploratory runs, each a CSV plus a JSON of its settings and environment, for plotting
 - GSE96058's gene expression file is 592 MB; loading it takes about a minute
 - BreastMNIST's images are 31 MB; its cached embeddings 4 MB

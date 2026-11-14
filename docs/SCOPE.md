@@ -80,7 +80,7 @@ Both are required by the four tasks. Both are decided and built.
 ultrasound images from MedMNIST v2, each turned into 2,048 ResNet-50
 embedding dimensions, malignant vs benign or normal. Not gene expression,
 more features than images, public (CC BY 4.0), a published benchmark. Code in
-`featsel_datasets/medmnist_breastmnist/`, config `configs/experiment_breastmnist.yaml`.
+`featsel_datasets/medmnist_breastmnist/`, config `configs/frontier_breastmnist70_gpu.yaml`.
 The original requirements and candidates follow.
 
 Requirements: high-dimensional, not gene

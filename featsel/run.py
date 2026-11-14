@@ -14,8 +14,8 @@ The core, `run(X, y, config)`, takes data already in memory. `run_config`
 loads the dataset named in the config first, and is what the command line uses.
 
 Usage:
-    python -m featsel.run --config configs/experiment_scanb.yaml
-    python -m featsel.run --config configs/experiment_scanb.yaml --resume --n-jobs -1
+    python -m featsel.run --config configs/frontier_scanb70_gpu.yaml
+    python -m featsel.run --config configs/frontier_scanb70_gpu.yaml --resume --n-jobs -1
 """
 
 import argparse
