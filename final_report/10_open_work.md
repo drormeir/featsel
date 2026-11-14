@@ -52,6 +52,17 @@ each class's share at the floor. These give an exact null distribution
 per gene. Such a test separates how often a gene is detected from how
 high it is when detected. The U test merges both.
 
+**How often does a random set beat a chosen one?** Our random control
+asks whether a method beats random features on average, at the same `k`.
+A sharper question: for a gene set of size `k` chosen by a method, what
+share of random size-`k` sets predict at least as well on the same split?
+That share is an empirical p-value for the chosen set, and it can be
+followed as `k` grows. A random set needs only a classifier fit, so
+thousands of draws per `k` are affordable. A stronger version draws random
+genes matched to the chosen ones in expression level and spread. In
+practice, it would check whether a published gene signature predicts
+better than chance signatures of its size.
+
 **Correlated genes as one unit.** Many methods pick different but
 equivalent genes on each split. Selecting groups of genes that move
 together could give stable, interpretable results.
