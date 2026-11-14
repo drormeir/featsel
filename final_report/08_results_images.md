@@ -11,6 +11,10 @@ in the training set, `k` chosen on validation sets, ROC AUC on the test set.
 `k` is 10, 50, 250, 500 or 1000; random selection also runs at 2,048, every
 feature. All numbers are means over the 16 splits.
 
+Random selection is the bar (section 3.4). A method has value at a given
+`k` only if it beats random features at that `k`. Random's curve ends at
+2,048, the all-features reference.
+
 Sources: [`scripts/summarize_frontier.py`](../scripts/summarize_frontier.py)
 wrote the `summary_*` tables in [`figures/`](figures/), and
 [`scripts/paired_tests.py`](../scripts/paired_tests.py) the `paired_tests_*`
@@ -32,7 +36,7 @@ Each method at the `k` it chose on validation sets:
 
 | Method | Test AUC [Q1, Q3] | Features kept | Selection, s per fit | Search, s |
 |---|---|---|---|---|
-| Random, all features | **0.924** [0.912, 0.936] | 2,048 on every split | 0.001 | 3.6 |
+| All features | **0.924** [0.912, 0.936] | 2,048 | none | none |
 | RFE | **0.923** [0.906, 0.938] | 1,000 | 0.18 | 0.9 |
 | Mann-Whitney | 0.918 [0.906, 0.924] | 1,000 | 0.010 | 0.5 |
 | Mutual information | 0.916 [0.908, 0.925] | 500 to 1,000 | 0.084 | 0.8 |
@@ -54,8 +58,7 @@ scored 0.798. Table:
 What it shows:
 
 - **Every method chose the largest `k` it was offered, or close to it.**
-  Validation AUC kept rising with `k`. The random control chose all 2,048
-  features on every split.
+  Validation AUC kept rising with `k`.
 - **No method beat all features.** RFE came closest, 0.0007 below.
 - **The GPU filters are the cheap choice.** Mann-Whitney reached 0.918 in
   0.010 s per fit. RFE gained 0.006 more for 18 times the time.
@@ -63,10 +66,10 @@ What it shows:
   with a binary label ranks features as the U test does. At `k` = 1000 it
   kept only about 700: its redundancy filter dropped the rest.
 
-## 8.2 Selection against random at the same `k`
+## 8.2 The bar: random features at each `k`
 
 At small `k`, selection matters. At large `k`, random features catch up.
-Mean test AUC at each `k`:
+Mean test AUC at each `k`; random at 2,048 is all features, 0.924:
 
 | Method | 10 | 50 | 250 | 500 | 1000 |
 |---|---|---|---|---|---|
@@ -187,7 +190,7 @@ BreastMNIST holds 150 groups of copied images (section 2.2). Without them,
 
 | Method | Test AUC | Features kept | Against all features (p) |
 |---|---|---|---|
-| Random, chosen `k` | 0.891 | 500 to 2,048 | — |
+| All features | **0.895** | 2,048 | — |
 | RFE | 0.891 | 500 to 1,000 | −0.003 (0.59) |
 | Tree importance | 0.885 | 500 to 1,000 | −0.009 (0.30) |
 | Mann-Whitney | 0.883 | 500 to 1,000 | −0.012 (0.09) |
@@ -196,7 +199,7 @@ BreastMNIST holds 150 groups of copied images (section 2.2). Without them,
 | Berk-Jones | 0.847 | 175 to 204 | −0.048 (0.02) |
 | HC2004 | 0.772 | 1 to 2 | −0.123 (< 0.001) |
 
-All features scored 0.895. Without the copies, all features and the best
+Without the copies, all features and the best
 methods lost about 0.03 AUC; Lasso lost 0.016, and HC2004 gained 0.014.
 The order changed little: tree importance moved above Mann-Whitney. So the
 copies inflate the scores but do not change the conclusions. Table:
@@ -211,8 +214,8 @@ copies inflate the scores but do not change the conclusions. Table:
 
 | Method | Test AUC | Features kept | Against all features: difference (p) |
 |---|---|---|---|
+| All features | **0.862** | 2,048 | — |
 | RFE | **0.862** | 500 to 1,000 | −0.000 (0.92) |
-| Random, chosen `k` | 0.861 | 1,000 to 2,048 | −0.001 (0.67) |
 | RFECV, by AUC | 0.858 | 620 to 2,048 | −0.004 (0.36) |
 | Mann-Whitney | 0.855 | 500 to 1,000 | −0.008 (0.34) |
 | Mutual information | 0.847 | 500 to 1,000 | −0.015 (0.13) |
@@ -222,7 +225,7 @@ copies inflate the scores but do not change the conclusions. Table:
 | Sequential, `k` = 10 | 0.703 | 10 | — |
 | HC2004 | 0.674 | 1 to 2 | −0.188 (< 0.001) |
 
-All features scored 0.862. Tables:
+Tables:
 [`figures/summary_aircraft70_chosen.csv`](figures/summary_aircraft70_chosen.csv),
 [`figures/summary_aircraft70_tests.csv`](figures/summary_aircraft70_tests.csv),
 [`figures/paired_tests_aircraft70.csv`](figures/paired_tests_aircraft70.csv).

@@ -92,7 +92,8 @@ is a widely used wrapper for such data.
 every remaining feature by cross-validation and adds the best. For 10
 features out of 28,541 that is about 285,000 candidates, each scored by
 5-fold cross-validation: about 1.4 million model fits, the most of any
-method here.
+method here. The count grows with `k`, so we run it only at `k` = 5 and 10
+(section 3.11).
 
 **The wrappers use different classifiers inside.** RFE and RFECV rank by a
 linear SVM (`LinearSVC`). Sequential scores candidates with logistic

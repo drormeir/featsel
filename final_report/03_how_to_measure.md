@@ -11,6 +11,7 @@ every experiment.
 | Splits | 16 random stratified splits, 70% of samples in the training set | 3.3 |
 | Main score | ROC AUC: mean over splits, quartiles for spread | 3.3, 3.5 |
 | Side scores | Macro-F1, balanced accuracy | 3.5 |
+| Baseline | Random features at each `k`: a method has value at `k` only above them | 3.4 |
 | `k` | Chosen on validation sets: 5 folds of the training set, best mean AUC, tie to the smaller `k` | 3.11 |
 | Classifier | Logistic regression, C fixed at 1 | 3.8 |
 | Lasso's C | Chosen on validation sets | 3.11 |
@@ -107,8 +108,7 @@ are split again. It is not a confidence interval for new patients.
 
 **Paired comparison.** All methods run on the same splits, which removes
 most split-to-split noise. A method's gain over the random control is its
-score minus the control's on the same split: at the same `k`, or each at
-its own chosen `k`. The
+score minus the control's on the same split, at the same `k`. The
 differences are not independent, so a standard paired test would
 overstate certainty. Chapter 7 uses the corrected resampled t-test of
 Nadeau and Bengio (2003), which widens the variance for the overlap
@@ -117,10 +117,22 @@ Nadeau and Bengio (2003), which widens the variance for the overlap
 ## 3.4 The random control
 
 The control picks `k` features at random, with a new draw on every split.
-It gets the same splits, `k` list and classifier as every method, and
-chooses its `k` on validation sets the same way. Without it, a
-comparison cannot tell whether a method finds signal or only reduces the
-number of features. Neekhra et al. (2025) found that small random subsets
+It is the most trivial selection method. It gets the same splits, `k` list
+and classifier as every method.
+
+Its test AUC at each `k` is a curve, and that curve is the bar. A method has
+value at a given `k` only if it scores above random at that `k`. Random
+selection costs almost nothing, so on the cost axis the curve sits at the
+cheap end. At the largest `k`, random selection keeps every feature, so the
+curve ends at the all-features reference.
+
+We do not compare a method with random at random's own chosen `k`. More
+random features almost always score better, so random would choose its
+largest `k`. That comparison would ask whether selection beats many
+features, which the all-features reference already answers.
+
+Without the control, a comparison cannot tell whether a method finds signal
+or only reduces the number of features. Neekhra et al. (2025) found that small random subsets
 matched or beat feature selection on 28 of 30 high-dimensional datasets.
 Chapter 7 shows this on our data too once `k` is large.
 
@@ -270,8 +282,14 @@ sets:
    the test set.
 
 A method that ranks once fits once per fold and cuts every `k` from that
-fit: 5 extra fits, against the 10 timed fits of each selection. Sequential
-selection does not search, because one fit takes minutes.
+fit: 5 extra fits, against the 10 timed fits of each selection.
+
+**Sequential selection runs only at `k` = 5 and 10, and does not search.**
+Each of its steps tries every remaining feature, with 5-fold
+cross-validation, so its cost grows at least linearly with `k`
+(section 4.2). On SCAN-B one fit at `k` = 10 already takes minutes; `k` =
+500 would take hours per split. A larger `k` needs a filter to cut the
+features first.
 
 Standardization is fit on the whole training set, so the validation sets
 helped set its means and spreads. That uses no labels, and the test set
@@ -312,7 +330,7 @@ Two single-number summaries were rejected:
   their own count give a point, not a curve.
 
 We report each method at its chosen `k`, and the whole curve of test AUC
-over `k`. One number hides where along `k` a method wins.
+over `k`, with random selection's curve as the bar. One number hides where along `k` a method wins.
 
 ## 3.14 Limits of this protocol
 

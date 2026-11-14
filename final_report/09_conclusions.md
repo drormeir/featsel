@@ -2,6 +2,11 @@
 
 [Back to contents](README.md) · Previous: [8. Results on image data](08_results_images.md) · Next: [10. Open work](10_open_work.md)
 
+Each dataset is its own classification problem, with its own frontier of
+cost against AUC (chapters 7 and 8). This chapter asks what the frontiers
+share: does one method lead at every time budget on every dataset, or can
+the best method for a budget not be known in advance?
+
 ## 9.1 What we built
 
 - **`featsel`**, a Python package of 16 feature selection methods covering

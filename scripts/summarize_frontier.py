@@ -4,11 +4,14 @@ Summarize frontier runs at the k each method chose on validation sets.
 For each task, one row per method: the mean test ROC AUC over the splits with
 its quartiles, the number of features chosen, the median selection, search
 and validation times, and Nogueira's stability over the splits. Then each
-method against the random control, and against every feature when the run
-has it, by the corrected resampled t-test of Nadeau and Bengio (2003): the
-variance of the mean difference is (1/J + n_test/n_train) times the sample
-variance, for J splits, with J - 1 degrees of freedom.
+method against every feature, when the run has it, by the corrected
+resampled t-test of Nadeau and Bengio (2003): the variance of the mean
+difference is (1/J + n_test/n_train) times the sample variance, for J
+splits, with J - 1 degrees of freedom.
 
+The random control is the bar at each k, so it appears in the curve table,
+not at a chosen k; scripts/paired_tests.py tests each method against it at
+the same k. Random selection at every feature is the all-features row.
 Sequential selection does not choose its k (it takes minutes per fit), so it
 is left out of the chosen-k tables; its AUC at each k is in the curve table.
 
@@ -16,7 +19,8 @@ Usage:
     python scripts/summarize_frontier.py --n-features 2048 \
         --out final_report/figures/summary_breastmnist70 results/local/frontier_breastmnist70_*.csv
 
-Writes <out>_chosen.csv, <out>_tests.csv and <out>_curve.csv.
+Writes <out>_chosen.csv and <out>_curve.csv, and <out>_tests.csv when the
+run has every feature.
 """
 
 import argparse
@@ -60,25 +64,18 @@ def chosen_table(chosen, n_features):
     return table.reset_index().sort_values(['task', 'roc_auc'], ascending=[True, False])
 
 
-def tests_table(chosen, everything, n_features):
-    """Each method at its chosen k against the random control and against every feature."""
-    references = {'random control, chosen k': chosen[chosen.selector == 'RandomSelector']}
-    if len(everything):
-        references[f'all {n_features} features'] = everything
+def tests_table(chosen, everything):
+    """Each method at its chosen k against every feature, on the same splits."""
     n_test, n_train = chosen.n_test.iloc[0], chosen.n_train.iloc[0]
+    ref = everything.set_index(['task', 'split'])['roc_auc']
     rows = []
-    for against, reference in references.items():
-        ref = reference.set_index(['task', 'split'])['roc_auc']
-        for (task, name), part in chosen.groupby(['task', 'selector']):
-            if name == 'RandomSelector':
-                continue
-            diff = (part.set_index(['task', 'split'])['roc_auc'] - ref).dropna()
-            mean, low, high, p = corrected_test(diff, n_test, n_train)
-            rows.append({'task': task, 'selector': name, 'against': against,
-                         'mean_diff': mean, 'ci_low': low, 'ci_high': high, 'p_value': p,
-                         'wins': int((diff > 0).sum()), 'splits': len(diff)})
-    return pd.DataFrame(rows).sort_values(['against', 'task', 'mean_diff'],
-                                          ascending=[True, True, False])
+    for (task, name), part in chosen.groupby(['task', 'selector']):
+        diff = (part.set_index(['task', 'split'])['roc_auc'] - ref).dropna()
+        mean, low, high, p = corrected_test(diff, n_test, n_train)
+        rows.append({'task': task, 'selector': name,
+                     'mean_diff': mean, 'ci_low': low, 'ci_high': high, 'p_value': p,
+                     'wins': int((diff > 0).sum()), 'splits': len(diff)})
+    return pd.DataFrame(rows).sort_values(['task', 'mean_diff'], ascending=[True, False])
 
 
 def main():
@@ -87,19 +84,23 @@ def main():
     parser.add_argument('csv', nargs='+')
     parser.add_argument('--n-features', type=int, required=True,
                         help='Features in the data; random selection at this k is every feature')
-    parser.add_argument('--out', required=True, help='Prefix of the three CSVs to write')
+    parser.add_argument('--out', required=True, help='Prefix of the CSVs to write')
     args = parser.parse_args()
 
     df = pd.concat([pd.read_csv(p) for p in args.csv], ignore_index=True)
     sequential = df.selector.str.startswith('Sequential')
-    chosen = chosen_k(df[~sequential])
-    everything = df[(df.selector == 'RandomSelector') & (df.k == args.n_features)]
+    random = df.selector == 'RandomSelector'
+    chosen = chosen_k(df[~sequential & ~random])
+    everything = df[random & (df.k == args.n_features)].assign(
+        selector=f'all {args.n_features} features', search_time_s=np.nan,
+        validation_time_s=np.nan)
 
     tables = {
-        'chosen': chosen_table(chosen, args.n_features),
-        'tests': tests_table(chosen, everything, args.n_features),
+        'chosen': chosen_table(pd.concat([chosen, everything]), args.n_features),
         'curve': df.groupby(['task', 'selector', 'k'])['roc_auc'].mean().unstack('k').reset_index(),
     }
+    if len(everything):
+        tables['tests'] = tests_table(chosen, everything)
     for name, table in tables.items():
         table.to_csv(f'{args.out}_{name}.csv', index=False)
         print(f'\n=== {name}\n' + table.round(4).to_string(index=False))
