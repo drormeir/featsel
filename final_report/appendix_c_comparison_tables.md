@@ -2,7 +2,7 @@
 
 [Back to contents](README.md)
 
-The full output behind chapters 7 and 8. Every number is a mean over the 16
+The full output behind chapters 7 and 8. Every AUC is a mean over the 16
 splits. `scripts/summarize_frontier.py` wrote the CSVs these tables are
 built from, in [`figures/`](figures/): `summary_<run>_curve.csv` (test AUC
 at every `k`) and `summary_<run>_chosen.csv` (each method at the `k` it

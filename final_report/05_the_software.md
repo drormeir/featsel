@@ -195,8 +195,8 @@ package, with two parts:
 - a class that downloads the published files once, caches them, and
   exposes everything in them unchanged: `GSE96058`, `BreastMNIST`,
   `FGVCAircraft`;
-- `featsel_view.py`, with this project's choices (HiSeq only, one sample
-  per patient, the target), `NAME`, `TARGET` and `load_xy()`, which
+- `featsel_view.py`, with this project's choices for that dataset (for
+  SCAN-B: HiSeq only, one sample per patient, the target), `NAME`, `TARGET` and `load_xy()`, which
   returns `X` and `y`.
 
 A config names the view module. A new dataset needs only a new folder;
@@ -291,9 +291,10 @@ always indices of the original features, and the selection time covers
 every step. Sections 7.9 and 8.7 compare chains with their last step
 alone.
 
-**Nested tuning.** A model entry with a `grid` is tuned inside each split
-(section 3.8), by scikit-learn's `GridSearchCV` on stratified Monte Carlo
-splits of the training set. The chosen values are stored with each row.
+**Nested tuning.** A model entry with a `grid` is tuned inside each
+split, by scikit-learn's `GridSearchCV` on stratified Monte Carlo splits
+of the training set. The chosen values are stored with each row. The
+method comparisons do not use it: they keep C fixed (section 3.8).
 
 **Parallel work.** One job is one selector on one task of one split. A
 rank-once selector covers all its `k` values in one job; any other gets
@@ -335,10 +336,9 @@ the one-sort U test needs about 1.25 times the memory, and the cap moved
 from address space to data memory.
 
 The last two mechanisms came from the scaling measurement of section 6.1,
-when RFE and Lasso still ran liblinear. With 5 or 6 workers on full
-SCAN-B, liblinear needed about 1.45 GB per fit; the default cap at 6
-workers allowed 1.26 GB. So
-it aborted, and the runner fell back to fewer workers, as designed. But
+when RFE and Lasso still ran liblinear. With 6 workers on full SCAN-B,
+the default cap allowed 1.26 GB per worker, but liblinear needed about
+1.45 GB per fit. So it aborted, and the runner fell back to fewer workers, as designed. But
 many runs in one process left memory behind, and the process crashed
 even with one worker. The scaling script now runs each measurement in a
 fresh process, saves it as it ends, and can resume.

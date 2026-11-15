@@ -26,9 +26,10 @@ advance? It ends with the limits of the answer.
   and 2.)
 - **Speed**, in the runner and in the selectors. The runner is 3.2 to
   5.3 times faster than plain scikit-learn, with identical scores. Ten
-  selectors run on a GPU and pick the same features as on the CPU. The
-  filters run 2.6 to 49 times faster there. Exact solvers make Lasso, RFE,
-  RFECV and Sequential selection faster. Running jobs in parallel gains at
+  filters run on a GPU and pick the same features as on the CPU. They run
+  2.6 to 49 times faster there. Lasso, RFE, RFECV and Sequential selection
+  can also run on a GPU. Exact solvers make RFE, RFECV and Sequential
+  selection faster, and Lasso faster on a GPU. Running jobs in parallel gains at
   most 1.8 times on full SCAN-B on this laptop. From 3 workers on, the jobs
   slow each other down. This points to shared memory bandwidth
   (section 6.1). (Task 3.)
@@ -36,7 +37,7 @@ advance? It ends with the limits of the answer.
   pipeline unchanged. (Task 4.)
 - **A third dataset, unseen during the design**: FGVC-Aircraft photo
   embeddings. It needed a loader and a config, but no change to the
-  package. It ran entirely on the GPU in 17 minutes. (Task 4.)
+  package. It ran entirely on the GPU. (Task 4.)
 
 ## 9.2 Key decisions
 
@@ -47,9 +48,9 @@ given.
 |---|---|---|
 | Select features inside every split, never on all the data | Selection on all the data lets the test samples choose the features | On pure noise, selection on all the data gave AUC 0.96 instead of the true 0.5 (section 3.2) |
 | A random control at every `k` | A method has found something only if it beats random features of the same number | It showed that selection gains most at 10 features, and that random features catch up as `k` grows (sections 7.2, 8.2) |
-| A t-test corrected for overlapping splits | Random splits share most of their training samples, so a plain paired t-test is overconfident | Established gains over all genes fell from 52 to 20 of 70 comparisons (section 9.3, item 9) |
-| The public GSE96058 data, one sample per patient, not the course copies | The course copies keep 93 repeated patients and lack 11 of the 50 PAM50 genes | It removed a leak, and made the PAM50 recovery test possible (sections 2.1, 7.6) |
-| The U test, not the F-test, for every filter | Half the gene values sit at a floor, and only their order is meaningful | One valid test for all filters, so the comparison is between selection rules, not tests (section 4.3) |
+| A t-test corrected for overlapping splits | Random splits share most of their training samples, so a plain paired t-test is overconfident | Established differences from all genes fell from 52 to 20 of 70 comparisons; 10 of the 20 are gains (sections 3.3, 9.3 item 9) |
+| The public GSE96058 data, one sample per patient, not the course copies | The course copies keep 93 repeated patients, and `scanb_small` lacks 11 of the 50 PAM50 genes | It removed a leak, and made the PAM50 recovery test possible (sections 2.1, 7.6) |
+| The U test, not the F-test, for every filter | About half the gene values sit at a floor (in the first 200 genes), and only their order is meaningful | One valid test for all filters, so the comparison is between selection rules, not tests (section 4.3) |
 | Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | Scores fell by about 0.03 AUC without the copies; the order of methods held (section 8.8) |
 | Exact solvers, not liblinear, for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became 8 times faster and repeatable, at the same AUC (section 6.2) |
 | RFECV scored by AUC, not accuracy | Accuracy rewards the majority class on imbalanced tasks | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (section 7.8) |
@@ -58,8 +59,9 @@ given.
 
 ## 9.3 What we learned
 
-The numbers come from the runs of chapters 7 and 8, all under the protocol
-of chapter 3.
+The numbers come from the runs of chapters 7 and 8. The method
+comparisons follow the protocol of chapter 3; the side studies keep the
+settings stated in their sections.
 
 **About the data.**
 
@@ -74,17 +76,19 @@ of chapter 3.
    BreastMNIST's own images and reran without them. All features and the
    best methods lost about 0.03 AUC. The order of methods changed little
    (section 8.8).
-3. The gene values are on an arbitrary scale, with half the values tied at
-   a floor. The F-test's assumptions do not hold for such values. A rank
+3. The gene values are on an arbitrary scale. In the first 200 genes,
+   about half the values are tied at a floor. The F-test's assumptions do not hold for such values. A rank
    test (Mann-Whitney U) does not need them, so it fits this data.
 
 **About selection.**
 
 4. **Selection matters most when few features are allowed.** At 10
-   features, every method but RFE alone beats random ones by 0.10 to 0.20
-   AUC on SCAN-B, and the good methods by 0.10 to 0.16 on the image data. The gain shrinks as `k`
-   grows. On Basal and on BreastMNIST it is gone by 250 to 1,000. On LumA
-   and LumB it lasts to 2,000 genes (sections 7.2 and 8.2).
+   features, the filters, tree importance, the chains and Sequential beat
+   random ones by 0.10 to 0.20 AUC on SCAN-B. On the image data, the
+   filters and tree importance beat them by 0.10 to 0.16. The gain shrinks
+   as `k` grows. On Basal it is gone by 250 genes, and on BreastMNIST by
+   1,000 features. On LumA and LumB about 0.02 remains at 2,000 genes
+   (sections 7.2 and 8.2).
 5. **The signal is widespread.** Thousands of genes carry it, and they
    move together. So random genes catch up as `k` grows, and many
    different gene sets predict equally well.
@@ -111,14 +115,14 @@ of chapter 3.
 10. **Higher Criticism needs rare signal.** On all three datasets HC2008
     stopped at the edge of its search, 10% of the features. Berk-Jones ran
     on SCAN-B and BreastMNIST only. There it stopped at or just before
-    that edge. Their signal is not rare. As a top-10%
+    that edge. The signal in these datasets is not rare. As a top-10%
     filter, both are among the best on SCAN-B (0.970) and the most stable
     (0.92). HC2004 keeps one or two features and is the weakest method.
 11. **Wrappers pay only in some places, and only with care.** RFE was the
     best method on both image datasets at large `k`, tied with all
     features. On SCAN-B it was below the filters, and at 10 genes it scored
-    below random genes on two tasks (not established). A Mann-Whitney filter first raised RFE's
-    mean AUC at 10 genes from 0.78 to 0.95, and made it the best method at
+    below random genes on two tasks (not established). A Mann-Whitney
+    filter first raised RFE's mean AUC at 10 genes from 0.78 to 0.95, and made it the best method at
     10 genes on four SCAN-B tasks. RFECV's default inner score, accuracy,
     made it keep one gene on three imbalanced tasks. Scored by AUC it
     recovered (0.962 on SCAN-B). Sequential selection beat random but took
@@ -136,12 +140,12 @@ of chapter 3.
     0.67 s for one fit. A method that chooses its own count skips this.
 14. **A GPU helps sorting and matrix products, not everything.** A cheap
     GPU is slow in 64-bit arithmetic and has little memory. The data must
-    also be copied to it. RFE stayed faster on the CPU. The random forest
-    could not move to the GPU.
+    also be copied to it. RFE stayed faster on the CPU. On this 4 GB GPU,
+    the random forest did not fit at full size (section 6.2); a larger GPU
+    is open work (section 10.1).
 15. **Exactness has a price in agreement.** Faster exact solvers can pick
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
-    does on some synthetic data, and in 14 of 100 cells of a preliminary
-    SCAN-B frontier run. The reason is that the default stops before it
+    does on some synthetic data. The reason is that the default stops before it
     reaches the solution. AUC did not change. So RFE, RFECV and Lasso now
     run only their exact solvers (section 6.2).
 16. **Selection buys a smaller model more often than a better one.** On
@@ -175,7 +179,8 @@ Section 1.7 lists the contributions. In short:
 
 - A method comparison on a cohort of 2,976 patients, against a random
   control at every `k`, with paired tests corrected for overlapping
-  splits. The correction removed most of the claimed gains over all genes.
+  splits. The correction removed most of the claimed differences from all
+  genes.
 - Evidence that Higher Criticism and Berk-Jones, used as selectors on
   data with widespread signal, reduce to a fixed top-10% filter.
 - A cost-quality frontier per dataset, over every method and setting.
@@ -213,7 +218,8 @@ described in the section given.
   ResNet-50 (chapter 2). The results may not hold on other data.
 - Every SCAN-B task predicts PAM50, a label computed from the genes, not
   measured (section 2.1). No measured target was run (section 10.1).
-- The BreastMNIST results in sections 8.1 to 8.7 include copied images.
+- The BreastMNIST results in sections 8.1 to 8.7 and 8.10 include copied
+  images.
   Without them, the scores fall by about 0.03 AUC (section 8.8).
 
 **The protocol.**
@@ -237,7 +243,8 @@ described in the section given.
 - Every time comes from one laptop with a 4 GB consumer GPU (chapter 6).
   A time is meaningful only on that machine.
 - The runner's speed-up over scikit-learn was measured before liblinear
-  was dropped. A rerun today would not match it (Appendix A).
+  was dropped, and before each selection was fit 10 times. A rerun today
+  would not match it (section 6.1, Appendix A).
 
 **Higher Criticism.** No dataset here has rare signal. So these results
 do not test HC in the setting it was built for (section 10.2).

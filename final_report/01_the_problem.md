@@ -83,14 +83,15 @@ time cost? A cost-quality frontier answers this
 
 **The targets.** The breast cancer data offers several labels: the PAM50
 molecular subtype, estrogen receptor (ER) status, and survival. PAM50 is
-the main target, split into five binary tasks. Chapter 2 explains both
-choices.
+the only target we ran, split into five binary tasks (chapter 2). ER was
+planned but not run (Appendix B.1).
 
 ## 1.5 Scope
 
-This is a comparative study, not a new method. It changes only one
-published method, HC2008: our version centres each sorted p-value at its
-exact mean (section 4.4). The aim is a fair comparison under one protocol,
+This is a comparative study, not a new method. It changes two published
+methods. Our HC2008 centres each sorted p-value at its exact mean
+(section 4.4). Berk-Jones, published as a test, is used here as a
+selection threshold (section 4.5). The aim is a fair comparison under one protocol,
 and a fast, reliable tool to run it.
 
 ## 1.6 What earlier work found
@@ -134,7 +135,8 @@ during the design, then tests the finished pipeline (section 8.9).
    (sections 7.1 and 8.1).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method pick the same features, on the CPU and on a GPU.
-   Exact solvers make Lasso, RFE and Sequential selection faster. For
+   Exact solvers make RFE, RFECV and Sequential selection faster, and
+   Lasso faster on a GPU. For
    Lasso and RFE they also reach the solution that scikit-learn's default
    solver stops short of (chapters 5 and 6).
 5. **Checks of the data that change its use.** SCAN-B repeats some

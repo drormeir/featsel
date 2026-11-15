@@ -94,7 +94,8 @@ about the label. It catches any dependence, not only a linear one.
 
 **Newton's method.** An optimization method that uses second derivatives
 to take large, accurate steps, so it converges in few iterations. RFE and
-RFECV solve their linear SVM with it.
+RFECV solve their linear SVM with it. Sequential selection solves its
+logistic regressions with it.
 
 **Nogueira's stability.** A stability measure built from how often each
 feature is selected across splits (Nogueira et al. 2018). Unlike the
@@ -118,7 +119,8 @@ grows on a bootstrap sample and tries a random subset of the features at
 each split.
 
 **Rank once.** Fitting a method once per split and taking every `k` from
-its single ranking, as mutual information and correlation do.
+its single ranking, as Mann-Whitney, mutual information, correlation,
+tree importance and RFE do (section 4.2).
 
 **RFE (recursive feature elimination).** A wrapper that trains a model,
 removes the features with the smallest weights, and repeats.
@@ -126,7 +128,9 @@ removes the features with the smallest weights, and repeats.
 **RFECV.** RFE that picks the number of features by inner
 cross-validation.
 
-**Sample.** One unit the data describes: a patient or an image.
+**Sample.** One unit the data describes: a sequenced tumour, an image or
+a photo. In SCAN-B some patients have two samples; we keep one per
+patient (section 2.1).
 
 **scikit-learn.** The standard Python machine learning library. Our
 selectors follow its interface.

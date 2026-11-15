@@ -3,8 +3,9 @@
 [Back to contents](README.md) · Previous: [2. The data](02_the_data.md) · Next: [4. The methods](04_the_methods.md)
 
 A selection method is judged by what its genes do for a classifier on
-patients it has not seen. This chapter describes the one protocol used for
-every experiment.
+patients it has not seen. This chapter describes the protocol of every
+method comparison. A few side studies keep their own settings, stated
+where they appear.
 
 | Part | Choice | Section |
 |---|---|---|
@@ -19,8 +20,8 @@ every experiment.
 
 ## 3.1 The basic flow
 
-One experiment is a *cell*. For each split, on the training set only, the
-runner:
+One experiment is a *cell*: one task, split, method, `k` and classifier.
+On each split, on the training set only, the runner:
 
 1. fills missing values with the training median, and standardizes every
    feature with the training mean and standard deviation;
@@ -71,10 +72,11 @@ cross-validation:
 - Leave-one-out was rejected. A one-patient test set has no AUC or
   macro-F1, so only one pooled number remains, with no spread. Training
   sets differ by one patient, so stability reads near 1.0 for every
-  method. And it costs one model per patient: 2,976 per cell on SCAN-B.
+  method. And it costs one model per patient: 2,976 models per method and
+  `k` on SCAN-B.
 
 Random splits still overlap, since all come from the same 2,976 patients.
-But the dependence is no longer forced by k-fold's disjoint test sets.
+The corrected test below allows for this overlap.
 
 **On SCAN-B, one split serves all five tasks.** Each split is stratified on
 the five-class PAM50 label, so every subtype-vs-rest task is scored on the
@@ -82,8 +84,8 @@ same patients.
 
 **How many splits.** The first plan was 100 splits at training fractions
 0.5, 0.7 and 0.9, for a learning curve. That grid would have taken about
-four days. Every run now uses 16 splits with 70% of samples in the
-training set. Sixteen or more values support quartiles; five do not.
+four days. Every method comparison now uses 16 splits with 70% of
+samples in the training set. Sixteen or more values support quartiles; five do not.
 
 **More splits help less than they seem.** The corrected test below
 multiplies the variance by 1/J + n_test/n_train, for J splits. The second
@@ -231,11 +233,13 @@ normality. A quantile transform maps each feature to a normal distribution
 through its ranks, but discards the size of a fold change. On
 `scanb_small`, with F-test selection, logistic regression and 10 splits,
 standardization was compared with a rank-to-normal transform and
-scikit-learn's quantile transform. The two transforms tied. On the five
-binary tasks:
+scikit-learn's quantile transform. The two transforms tied with each
+other. Against standardization, on the five binary tasks:
 
 - Most differences were within 0.01. Her2 and Normal gained up to 0.011.
-  LumA lost up to 0.021; at `k` = 100 it lost on all 10 splits.
+  LumA lost up to 0.021; at `k` = 100 it lost on all 10 splits. The
+  results files of this test were not kept, and the score of this
+  comparison is not recorded.
 - With C tuned on validation sets and scored by AUC, differences stayed
   within 0.004, except LumA at `k` = 100 (−0.017).
 
@@ -248,12 +252,13 @@ A method with its own preprocessing mixes the method with its transform.
 
 ## 3.11 The feature budget `k`
 
-On SCAN-B, `k` is 10, 50, 250, 500, 1000, 1500 and 2000. A first run
-stopped at 1,000, where AUC was still rising for every method with a `k`
-list. On BreastMNIST and FGVC-Aircraft (2,048 features), `k` is 10, 50,
-250, 500 and 1000; random selection also runs at 2,048. The list passes the
-number of training images, because the goal is the best AUC, not a small
-set. A two-stage chain uses the same list, cut below the size its first
+On SCAN-B, `k` is 10, 50, 250, 500, 1000, 1500 and 2000; random selection
+also runs at 28,541, every gene. A first run stopped at 1,000, where AUC
+was still rising for every method with a `k` list. On BreastMNIST and
+FGVC-Aircraft (2,048 features), `k` is 10, 50, 250, 500 and 1000; random
+selection also runs at 2,048. The largest `k`, 1,000, is more than the
+number of training images (546 and 840), because the goal is the best
+AUC, not a small set. A two-stage chain uses the same list, cut below the size its first
 step keeps.
 
 - **Why a sweep.** One `k` cannot tell a method good at small budgets from

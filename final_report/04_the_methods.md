@@ -48,7 +48,7 @@ to a tight tolerance.
 | MutualInfoSelector | filter | Rank by mutual information, which catches any dependence, not only linear. | `k` | same scores as `mutual_info_classif`, bit for bit |
 | HigherCriticismSelector | filter, own count | Keep the features below the Higher Criticism threshold (section 4.4). | variant, alpha0 | none in scikit-learn |
 | BerkJonesSelector | filter, own count | Keep the features below the exact Berk-Jones threshold (section 4.5). | alpha0 | none in scikit-learn |
-| LassoSelector | embedded | L1-penalized logistic regression; the penalty sets most weights to exactly zero; keep the largest weights. | C, or values of C to choose from by validation AUC | same as `SelectFromModel` with liblinear run to a tight tolerance |
+| LassoSelector | embedded | L1-penalized logistic regression; the penalty sets most weights to exactly zero; keep the features with a non-zero weight. | C, or values of C to choose from by validation AUC | same as `SelectFromModel` with liblinear run to a tight tolerance |
 | TreeImportanceSelector | embedded | Random forest; rank by how much each feature reduces impurity in the trees. | number of trees | same as `SelectFromModel(RandomForest)` |
 | RFESelector | wrapper | SVM-RFE: train a linear SVM, remove the features with the smallest weights, repeat (Guyon et al. 2002). | `k`, step, C | same as `RFE(LinearSVC)` with a converged SVM |
 | RFECVSelector | wrapper | RFE, with the number of features chosen by cross-validation on the training set. | step, C, folds | same as `RFECV` with a converged SVM |
@@ -69,7 +69,7 @@ Asked for 1,000 genes, Lasso kept 127 to 647 on four of the five tasks,
 and 883 to 1,000 on LumA.
 
 liblinear at its default tolerance stops before the solution. On all
-2,976 patients the exact solution keeps 196 genes on Basal where liblinear
+2,976 patients, at C = 1, the exact solution keeps 196 genes on Basal where liblinear
 keeps 330, and 907 on LumA where liblinear keeps 1,600 (section 6.2).
 LassoSelector now solves exactly, with PPDNA, and handles classification
 only. In the experiments it takes no `k`. It chooses C by validation AUC
@@ -110,9 +110,11 @@ gone. The frontier uses this selector as it is.
 
 ### One ranking for every `k`
 
-Mann-Whitney, Lasso and tree importance rank all features in one fit that
-does not depend on `k`. So their top 10, top 50 and top 250 are cut from
-one ranking per split. Each cut equals a separate fit at that `k`.
+Mann-Whitney, mutual information, correlation, Lasso and tree importance
+rank all features in one fit that does not depend on `k`. So their top
+10, top 50 and top 250 are cut from one ranking per split. Each cut
+equals a separate fit at that `k`. In the method comparisons Lasso takes
+no `k`; its ranking is used in the PAM50 recovery (section 7.6).
 
 RFE needs one more step. It is fit once, down to the smallest `k`. With a
 fixed step, a fit to a larger `k` runs the same rounds and stops earlier.
@@ -124,7 +126,8 @@ time this saves.
 ## 4.3 Why we score genes with the U test, not the F-test
 
 **The data.** Chapter 2 showed two facts. Only the order of a gene's
-values is meaningful. And about half the values sit tied at a floor. So
+values is meaningful. And in the first 200 genes, about half the values
+sit tied at a floor. So
 within a class, a gene is a pile of identical floor values plus a spread
 of detected values, not a normal curve.
 
@@ -215,12 +218,14 @@ changes one detail:
 The change from i/N to i/(N+1) is small for the large N here. It is not
 in the papers. We have not measured how much it moves the selected count.
 
-HC2004 keeps i/N, because its formula is already exact as written. It
-standardizes the share of p-values below the threshold t = p₍ᵢ₎. Under the
-null, that share has mean t and variance t(1 − t)/N. Using the exact
-variance of the sorted p-value in HC2008, μᵢ(1 − μᵢ)/(N + 2), would only
-multiply every HC(i) by the same constant, √((N + 2)/N). So it selects
-the same genes as HC2008, and is not a separate variant.
+HC2004 keeps i/N. Its formula is already exact as written: it
+standardizes the share of p-values below the threshold t = p₍ᵢ₎, and
+under the null that share has mean t and variance t(1 − t)/N.
+
+HC2008 could also use the exact variance of the sorted p-value,
+μᵢ(1 − μᵢ)/(N + 2). That would only multiply every HC(i) by the same
+constant, √((N + 2)/N). The selected genes would not change, so this is
+not a separate variant.
 
 Donoho and Jin (2004) also give HC⁺, which skips p-values below 1/N. It
 was not used. On `scanb_small`, the earlier course copy, every p-value
@@ -236,7 +241,7 @@ features are *rare* (a small share of all features), *weak*, and
 weak" setting. Donoho and Jin (2008, 2009) turned it into a selection
 threshold and proved it optimal there. Both papers derive the null
 behavior of the sorted p-values from independent p-values. Correlated
-genes give correlated p-values. Chapter 2 showed that neither of our
+genes give correlated p-values. Chapter 2 showed that none of our three
 datasets meets these conditions. Sections 7.5 and 8.5 show what HC does then.
 
 **Decision: alpha0 stays 0.1.** On SCAN-B the HC score is still rising at
@@ -343,7 +348,10 @@ How the derivations go:
   system when r < n, else an n × n one (section 6.2).
 - **Sequential** at step j scores every remaining feature with j features
   on F folds. Each fit needs a j × j Hessian, in O(n j²) per Newton step.
-  Summed over the k steps, this gives the k³.
+  Summed over the k steps, this gives the k³. This is a bound for large
+  k. At k = 5 and 10, the measured time grew about in step with k
+  (section 7.10). At so small a k, work that does not grow with j, such
+  as the passes over the data, probably dominates.
 
 **Choosing `k` adds work.** A method that ranks once is fit 5 more times,
 once per validation set, and a classifier is fit for each `k` on each
@@ -351,5 +359,6 @@ once per validation set, and a classifier is fit for each `k` on each
 
 **What the costs predict.** The filters grow as p · n log n or less, so
 they stay cheap at any p. RFE and RFECV grow with n² p and n³: they gain
-when p ≫ n, and lose when n is large (section 6.2). Sequential grows with
-k³ and with p, so it runs only at small `k` (section 3.11).
+when p ≫ n, and lose when samples far outnumber features (section 6.2). Sequential grows with
+p and at least in step with k, so it runs only at small `k`
+(section 3.11).

@@ -122,7 +122,7 @@ Mean test AUC at each `k`, for random genes and for Mann-Whitney:
 | | Mann-Whitney | 0.941 | 0.972 | 0.981 | 0.983 | 0.985 | 0.986 | |
 | LumA | Random | 0.750 | 0.870 | 0.920 | 0.911 | 0.927 | 0.939 | 0.958 |
 | | Mann-Whitney | 0.893 | 0.908 | 0.944 | 0.940 | 0.951 | 0.958 | |
-| LumB | Random | 0.753 | 0.879 | 0.922 | 0.917 | 0.938 | 0.949 | 0.948 |
+| LumB | Random | 0.753 | 0.879 | 0.922 | 0.917 | 0.937 | 0.949 | 0.948 |
 | | Mann-Whitney | 0.912 | 0.953 | 0.958 | 0.963 | 0.972 | 0.970 | |
 | Normal | Random | 0.790 | 0.877 | 0.891 | 0.909 | 0.927 | 0.930 | 0.941 |
 | | Mann-Whitney | 0.914 | 0.925 | 0.910 | 0.906 | 0.927 | 0.940 | |
@@ -154,7 +154,8 @@ What it shows:
 - **Basal is easy.** Random genes reach 0.98 at 50 genes. After that no
   method beats them.
 - **On LumA and LumB the gain lasts.** At 2,000 genes, the filters and
-  tree importance still beat random by about 0.02.
+  tree importance still beat random by about 0.02. On Her2 and Normal a
+  smaller gain remains for some filters (table above).
 - **Random's curve is not smooth.** On LumA it drops from 0.920 at 250 to
   0.911 at 500. Each split draws new random genes, so the curve is noisy.
 
@@ -165,12 +166,14 @@ Each method at its chosen `k`, against all 28,541 genes on the same splits:
 | Task | Established gains (p < 0.05) | Established losses |
 |---|---|---|
 | Basal | none | HC2004 |
-| Her2 | none | RFECV by accuracy; HC2004 lost 0.116, but p = 0.10 |
+| Her2 | none | RFECV by accuracy |
 | LumA | none | Lasso −0.006, Mann-Whitney 1000 then tree importance −0.007, HC2004 |
 | LumB | ten methods, +0.014 to +0.023, each on all 16 splits | HC2004, RFECV by accuracy |
 | Normal | none | Mann-Whitney 1000 then RFE −0.023, HC2004, RFECV by accuracy |
 
 Table: [`figures/summary_scanb70_tests.csv`](figures/summary_scanb70_tests.csv).
+On Her2, HC2004 lost 0.116, but with p = 0.10 the loss is not
+established.
 
 - **On LumB, selection beats all genes.** Correlation gained 0.023,
   Mann-Whitney 0.023, tree importance 0.022, mutual information 0.022,
@@ -178,8 +181,8 @@ Table: [`figures/summary_scanb70_tests.csv`](figures/summary_scanb70_tests.csv).
 - **On the other four tasks, no gain is established.** On Basal the
   methods gained 0.003 to 0.007 and won 11 to 14 of 16 splits, but the
   corrected test cannot tell this from noise.
-- The filters and tree importance never lose to all genes. On one task of
-  five they are clearly better.
+- No loss is established for the filters and tree importance. On one
+  task of five they are clearly better.
 
 ## 7.4 Stability
 
@@ -216,7 +219,7 @@ the most stable methods (0.92).
 
 HC2004 kept one or two genes. It scored 0.874, the lowest of all but RFECV
 by accuracy. Its statistic peaks at the single strongest p-value
-(section 4.4).
+(section 4.5).
 
 Neither variant found the point where the signal ends. HC2008's score is
 still rising at the edge of its search (Appendix B.3): the signal is not
@@ -373,7 +376,7 @@ At the chosen `k`, in mean AUC over tasks, Mann-Whitney then Lasso beats
 Lasso alone by 0.005, and Mann-Whitney then RFE beats RFE alone by 0.002.
 Mann-Whitney then tree importance loses 0.004 to tree importance alone.
 The chains keep at most 500 genes, by design. Their selection is faster:
-6 times for tree importance, 2.3 times for RFE.
+6 times for tree importance, about 2.4 times for RFE.
 
 ## 7.10 Sequential selection
 
@@ -382,7 +385,8 @@ time per fit was 276 s at `k` = 5 and 582 s at `k` = 10: the cost grows in
 step with `k`. At 10 genes it beat random on every task, and scored above
 Mann-Whitney on Her2, LumA and LumB. But Mann-Whitney then RFE scored above
 it on all five tasks, in 3 s instead of 10 minutes. Sequential was timed on
-one fit, not ten.
+one fit per split. The other methods use the median of 10 fits
+(section 3.7).
 
 ## 7.11 Cost
 
@@ -469,12 +473,12 @@ is 2²⁰ bytes.)
 
 - On SCAN-B, eleven methods score within 0.01 AUC of each other at their
   chosen `k`. No method leads on every task.
-- At 10 genes, every method but RFE alone beats random genes by 0.10 to
-  0.20 AUC. On Basal
-  the gain is gone by 250 genes; on LumA and LumB it lasts to 2,000.
+- At 10 genes, the filters, tree importance, the chains and Sequential
+  beat random genes by 0.10 to 0.20 AUC. On Basal the gain is gone by
+  250 genes. On LumA and LumB about 0.02 remains at 2,000 genes.
 - Against all 28,541 genes, selection gains 0.014 to 0.023 on LumB. On the
-  other tasks no gain is established, and the filters and tree importance
-  do not lose.
+  other tasks no gain is established, and no loss is established for the
+  filters and tree importance.
 - HC2008 and Berk-Jones stop at the edge of their search, 10% of the genes.
   As a top-10% filter they are among the best, and the most stable.
 - For a small gene set, filter first: Mann-Whitney then RFE is the best at

@@ -43,7 +43,7 @@ Each method at the `k` it chose on validation sets:
 | RFECV, scored by AUC | 0.912 [0.898, 0.926] | 212 to 1,844 | 0.21 | 1.6 |
 | Tree importance | 0.906 [0.895, 0.921] | 500 to 1,000 | 0.76 | 3.6 |
 | Correlation (Spearman) | 0.905 [0.893, 0.915] | 500 to 742 | 0.021 | 0.5 |
-| Lasso | 0.898 [0.880, 0.917] | 101 to 239 | 0.095 | 2.1 |
+| Lasso | 0.898 [0.879, 0.917] | 101 to 239 | 0.095 | 2.1 |
 | RFECV, scored by accuracy | 0.889 [0.881, 0.905] | 8 to 212 | 0.19 | 1.1 |
 | HC2008 | 0.868 [0.859, 0.884] | 204 | 0.010 | none |
 | Berk-Jones | 0.867 [0.857, 0.884] | 189 to 204 | 0.008 | none |
@@ -57,7 +57,8 @@ scored 0.798. Table:
 
 What it shows:
 
-- **Every method chose the largest `k` it was offered, or close to it.**
+- **Every method with a `k` list chose the largest `k` it was offered, or
+  close to it.**
   Validation AUC kept rising with `k`.
 - **No method beat all features.** RFE came closest, 0.0007 below.
 - **The GPU filters are the cheap choice.** Mann-Whitney reached 0.918 in
@@ -86,7 +87,7 @@ features, 0.924:
 |---|---|---|---|---|---|
 | Random | 0.674 | 0.764 | 0.842 | 0.877 | 0.908 |
 | Mann-Whitney | 0.829 | 0.846 | 0.874 | 0.894 | 0.918 |
-| Mutual information | 0.817 | 0.869 | 0.884 | 0.897 | 0.918 |
+| Mutual information | 0.817 | 0.869 | 0.884 | 0.897 | 0.917 |
 | Tree importance | 0.816 | 0.872 | 0.876 | 0.900 | 0.910 |
 | RFE | 0.764 | 0.829 | 0.902 | 0.917 | 0.923 |
 
@@ -130,8 +131,8 @@ splits:
 
 Table: [`figures/summary_breastmnist70_tests.csv`](figures/summary_breastmnist70_tests.csv).
 
-The best methods tie all features. Lasso, correlation and the methods that
-choose their own count lose. On these embeddings, selection buys a smaller
+The best methods tie all features. Lasso, correlation, HC2008, Berk-Jones
+and HC2004 lose (p < 0.05). On these embeddings, selection buys a smaller
 model, not a better one. A model on 1,000 features scores the same as one
 on 2,048.
 
@@ -152,9 +153,10 @@ Nogueira's measure over the 16 splits, at the chosen `k` (section 3.6):
 | Mutual information | 0.22 |
 | RFECV, by AUC | 0.19 |
 
-The filters that score each feature alone are the most stable. The methods
-that look at features together pick a different set on each split, at the
-same AUC. So many different sets serve equally well.
+Mann-Whitney, correlation, HC2008 and Berk-Jones are the most stable
+(0.69 to 0.76). Mutual information, RFE, RFECV, Lasso and tree importance
+pick a different set on each split (0.19 to 0.34), at about the same AUC.
+So many different sets serve equally well.
 
 ## 8.5 Higher Criticism and Berk-Jones
 
@@ -164,7 +166,7 @@ the same AUC and stability. Both lose to Mann-Whitney at 250 features by
 about 0.006, and to all features by 0.056.
 
 HC2004 kept 1 to 3 features. It scored 0.758, the lowest of all. Its
-statistic peaks at the single strongest p-value (section 4.4).
+statistic peaks at the single strongest p-value (section 4.5).
 
 Neither variant found the point where the signal ends. The signal is
 spread wide: 24% to 28% of the dimensions pass the Benjamini-Hochberg test
@@ -218,10 +220,10 @@ are faster and better than every method. The best method, RFE, reaches
 | Lasso | 0.882 | 73 to 182 | −0.013 (0.28) |
 | HC2008 | 0.848 | 204 | −0.047 (0.02) |
 | Berk-Jones | 0.847 | 175 to 204 | −0.048 (0.02) |
-| HC2004 | 0.772 | 1 to 2 | −0.123 (< 0.001) |
+| HC2004 | 0.771 | 1 to 2 | −0.123 (< 0.001) |
 
 Without the copies, all features and the best
-methods lost about 0.03 AUC; Lasso lost 0.016, and HC2004 gained 0.014.
+methods lost about 0.03 AUC; Lasso lost 0.016, and HC2004 gained 0.013.
 The order changed little: tree importance moved above Mann-Whitney. So the
 copies inflate the scores but do not change the conclusions. Table:
 [`figures/summary_breastmnist70_nocopies_chosen.csv`](figures/summary_breastmnist70_nocopies_chosen.csv).
@@ -238,7 +240,7 @@ copies inflate the scores but do not change the conclusions. Table:
 | All features | **0.862** | 2,048 | — |
 | RFE | **0.862** | 500 to 1,000 | −0.000 (0.92) |
 | RFECV, by AUC | 0.858 | 620 to 2,048 | −0.004 (0.36) |
-| Mann-Whitney | 0.855 | 500 to 1,000 | −0.008 (0.34) |
+| Mann-Whitney | 0.854 | 500 to 1,000 | −0.008 (0.34) |
 | Mutual information | 0.847 | 500 to 1,000 | −0.015 (0.13) |
 | Lasso | 0.846 | 132 to 336 | −0.016 (0.03) |
 | Correlation | 0.824 | 250 to 465 | −0.038 (0.009) |
@@ -271,16 +273,16 @@ threshold of 0.5 (section 3.14), on both image datasets:
 |---|---|---|---|---|
 | All features | 0.855 [0.842, 0.867] | 0.843 | **0.794** [0.788, 0.811] | 0.788 |
 | RFE | **0.856** [0.844, 0.866] | 0.846 | 0.793 [0.783, 0.809] | 0.788 |
-| Mann-Whitney | 0.849 [0.835, 0.865] | 0.839 | 0.783 [0.777, 0.799] | 0.779 |
-| Mutual information | 0.845 [0.836, 0.852] | 0.835 | 0.786 [0.776, 0.797] | 0.781 |
+| Mann-Whitney | 0.849 [0.834, 0.865] | 0.839 | 0.783 [0.777, 0.799] | 0.779 |
+| Mutual information | 0.845 [0.836, 0.852] | 0.834 | 0.786 [0.776, 0.797] | 0.781 |
 | Tree importance | 0.845 [0.832, 0.861] | 0.837 | — | — |
 | Correlation (Spearman) | 0.837 [0.825, 0.852] | 0.828 | 0.755 [0.739, 0.773] | 0.753 |
 | RFECV, scored by AUC | 0.831 [0.805, 0.847] | 0.823 | 0.789 [0.779, 0.802] | 0.785 |
-| Lasso | 0.825 [0.803, 0.847] | 0.816 | 0.782 [0.765, 0.796] | 0.777 |
+| Lasso | 0.824 [0.803, 0.847] | 0.816 | 0.782 [0.765, 0.796] | 0.777 |
 | HC2008 | 0.788 [0.777, 0.804] | 0.789 | 0.741 [0.732, 0.757] | 0.738 |
 | Berk-Jones | 0.788 [0.772, 0.804] | 0.790 | — | — |
 | Sequential, `k` = 10 | 0.708 [0.686, 0.726] | 0.690 | 0.620 [0.601, 0.638] | 0.617 |
-| HC2004 | 0.625 [0.601, 0.642] | 0.614 | 0.553 [0.543, 0.563] | 0.565 |
+| HC2004 | 0.625 [0.601, 0.642] | 0.614 | 0.553 [0.542, 0.563] | 0.564 |
 
 "—": not run on that dataset. The chains and RFECV scored by accuracy are
 in the tables only:
@@ -289,8 +291,8 @@ in the tables only:
 from [`scripts/summarize_side_metrics.py`](../scripts/summarize_side_metrics.py).
 
 The picture of AUC holds. RFE ties all features. Mann-Whitney and mutual
-information come within 0.011 of them. The methods that cap their own
-count (Lasso, HC, Berk-Jones) lose more. No selected set beats all
+information come within 0.011 of them. The methods that choose a smaller
+count of their own (Lasso, HC, Berk-Jones) lose more. No selected set beats all
 features by more than 0.001 macro-F1.
 
 **Memory.** By the measure of section 7.12, every fit took under 20 MB,
@@ -300,15 +302,21 @@ features, memory does not limit any method here.
 ## 8.11 Summary
 
 - On both image datasets, no selection method beats all 2,048 features.
-  RFE ties them; Mann-Whitney and mutual information come within 0.01.
-- Selection helps at small budgets: at `k` = 10 it gains 0.10 to 0.16 AUC
-  over random features.
+  RFE ties them. Mann-Whitney comes within 0.01 on both. Mutual
+  information comes within 0.01 on BreastMNIST and 0.015 on
+  FGVC-Aircraft.
+- Selection helps at small budgets. At `k` = 10, the filters and tree
+  importance gain 0.10 to 0.16 AUC over random features. RFE gains 0.09
+  to 0.10, and Sequential 0.09 to 0.13.
 - Filters lead at small `k`; RFE leads from `k` = 250.
-- Most methods chose the largest `k` they were offered, or close to it.
-  Correlation kept fewer, because of its redundancy filter. Methods that cap themselves
-  lower (Lasso, Higher Criticism, Berk-Jones, chains) lose AUC.
-- Filters are the most stable; RFE, mutual information and RFECV pick
-  different features on each split at the same AUC.
+- Most methods with a `k` list chose the largest `k` they were offered,
+  or close to it. Correlation kept fewer, because of its redundancy
+  filter. Methods that keep fewer features lose AUC: Lasso, Higher
+  Criticism and Berk-Jones by their own count, and the chains by their
+  cap of 250.
+- Mann-Whitney, correlation, HC2008 and Berk-Jones are the most stable.
+  RFE, mutual information, RFECV, Lasso and tree importance pick
+  different features on each split at about the same AUC.
 - Macro-F1 gives the same picture as AUC.
 - Every method runs in under a second per fit, except Sequential (1.4 to
   3.5 s). On these data, cost does not decide the choice.

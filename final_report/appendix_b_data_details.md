@@ -52,9 +52,9 @@ Known difficulties:
 - **Scoring.** The `k` that reaches all 50 genes is set by the weakest
   gene. It may rank thousands deep for every method. So we report the
   whole curve, and the ranks at which 50% and 90% of the genes are found.
-- **Methods without a full ranking.** FDR, FWE, Lasso without a fixed
-  count, and Higher Criticism return a set. Each gives one point, not a
-  curve.
+- **Methods without a full ranking.** Lasso ranks only the genes with a
+  non-zero weight, so its curve stops early (section 7.6). FDR, FWE and
+  Higher Criticism return a set, not a ranking, so they were not run.
 - **Correlated substitutes.** A gene highly correlated with a PAM50 gene
   carries the same signal, but does not count toward recall. Section 2.1
   ("Signal is everywhere") explains why this is common here.

@@ -6,10 +6,10 @@ Task 3 asks for infrastructure that speeds up feature selection. We worked
 at two levels: the whole experiment (the runner) and each method (faster
 algorithms, and a GPU).
 
-The speed-ups in this chapter's tables come from series of measurements
-on several sizes, never from one timing. The few single timings in the
-text are marked as such. They explain a design choice and claim no
-speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM,
+The speed-ups of section 6.2 come from series of measurements on several
+sizes. The comparison of section 6.1 is one grid at one size, run once
+per setting. The few single timings in the text are marked as such. They
+explain a design choice and claim no speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM,
 and an NVIDIA GTX 1650 with 4 GB.
 
 The SCAN-B measurements here were made before the 11 flat genes were
@@ -48,6 +48,9 @@ with liblinear run to a tight tolerance. It has not been re-run since.
 | runner, 1 core | 10.4 | 3.2 |
 | scikit-learn, 12 threads | 22.3 | 1.5 |
 | runner, 12 threads | 6.3 | 5.3 |
+
+Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
+[`results/speed_benchmark.csv`](../results/speed_benchmark.csv).
 
 **Why.** The runner does less work, not different work:
 
@@ -123,9 +126,6 @@ tree importance alone half. The classifiers, with their tuning of C, took
 the rest. Memory, not cores, limited the run to 2 workers. So the runs now
 hold the data in 32-bit floats (section 3.12).
 
-Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
-[`results/speed_benchmark.csv`](../results/speed_benchmark.csv).
-
 ## 6.2 Each method, faster
 
 Each selector has a speed notebook,
@@ -139,7 +139,8 @@ stops growing. Two fits show a gap of several times, not of a few
 percent.
 
 Results at the largest size both sides reached (30,000 features unless
-noted). Every fit of every variant was reproducible.
+noted). Every fit of every variant was reproducible. For the U-test rows,
+the "Original" column is our own NumPy U test, the CPU version.
 
 | Method | Original | Ours, CPU | Ours, GPU | Same features? | Notebook |
 |---|---|---|---|---|---|
@@ -161,31 +162,33 @@ Lasso fit took 0.71 to 1.36 s with PPDNA on the GPU, 3.9 to 7.0 times
 faster than liblinear (Appendix D.2).
 
 A second series ran on real SCAN-B: the training set of one split, Basal
-vs rest (1,488 patients, half of them), median of 5 fits. Script:
+vs rest (1,488 patients, half of them), median of 5 fits. The three
+Sequential times are single fits. Script:
 [`scripts/benchmark_selectors.py`](../scripts/benchmark_selectors.py);
 its output in `results/local/benchmark_selectors/` is not tracked. At all
-28,552 genes:
+28,552 genes, unless noted:
 
 | Method | scikit-learn's solver | Exact Newton solver, CPU | Exact Newton solver, GPU |
 |---|---|---|---|
 | RFE | 23.1 s | 2.8 s | 3.4 s |
 | RFECV | 111 s | 18.1 s | 17.3 s |
-| Sequential | 324 s at only 1,000 genes | 186 s at 10,000 genes | 146 s |
+| Sequential | 324 s at only 1,000 genes | 186 s at 10,000 genes | 146 s at 28,552 genes |
 
 ### Where the speed comes from
 
 | Method | What changed |
 |---|---|
-| U test | One sort per gene gives the ranks and the tie groups. On the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed there, exactly, in 64-bit floats. The p-value is finished on the CPU, so every device gives identical results. Before this work a U-test fit took about 10 s on SCAN-B. The NumPy version replaced two ranking passes by one sort. At 3,000 × 10,000 it took 2.15 s, against 6.59 s before and 3.76 s for SciPy, at about 1.25 times the peak memory. |
+| U test | One sort per gene gives the ranks and the tie groups. On the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed there, exactly, in 64-bit floats. The p-value is finished on the CPU, so every device gives identical results. Before this work a U-test fit took about 10 s on SCAN-B. The NumPy version replaced two ranking passes by one sort, at about 1.25 times the peak memory. In the speed series it takes 1.27 s at 3,000 × 10,000 and 3.76 s at 3,000 × 30,000. |
 | F-test, variance | Class sums as one vector product per class, on the GPU. |
 | Correlation | The gene-gene correlations are computed in blocks, so the full 28,552 × 28,552 matrix is never held in memory. |
 | Mutual information | scikit-learn's estimate (Ross 2014) finds nearest neighbours with a KD-tree. For one feature, a sort per class finds the k-th neighbour, and a binary search counts the points within its radius. The random noise, the distances and the order of every mean are scikit-learn's, so the scores are identical, bit for bit. A class of 2 to 7 samples, and regression, go to scikit-learn, which uses brute-force distances there. The GPU path draws scikit-learn's noise on the CPU and sends it over. |
 | Lasso | PPDNA (Liu and Zhou 2023), a semismooth Newton method, solves the same L1 problem to a tight tolerance on the GPU. |
 | RFE, RFECV | An exact Newton solver for the linear SVM (Chapelle 2007). With fewer samples than genes, it works through the samples' n × n kernel matrix (3,000 × 3,000, not 30,000 genes wide). The matrix is kept between rounds. |
 | Sequential | Each step solves all candidate features at once: one batched Newton problem on the logistic regressions, in PyTorch, in 64 bits. The candidates share the features already chosen, so every Hessian block is one product over all candidates and no design matrix is built. Each fit starts from that candidate's solution at the previous step. It selects what scikit-learn does with a converged logistic regression. It covers two classes, forward search and accuracy, and raises an error otherwise. The GPU wins here: the work is wide elementwise passes and large products. |
-| Tree importance | scikit-learn's own forest on all threads (`n_jobs=-1`). scikit-learn's default is one thread. On synthetic SCAN-B-shaped data (1,488 samples × 28,552 features), one fit took 21.5 s on one thread and 4.2 s on 12. In the runner, threads per worker times workers should not exceed the cores. |
+| Tree importance | scikit-learn's own forest on all threads (`n_jobs=-1`). scikit-learn's default is one thread. On synthetic SCAN-B-shaped data (1,488 samples × 28,552 features), one fit took 21.5 s on one thread and 4.2 s on 12. In the runner, threads per worker times workers should not exceed the 12 hardware threads. |
 
-**RFE's step.** RFE removes a share of the remaining genes each round. A
+**RFE's step.** RFE removes a fixed share of the starting genes each
+round. A
 retired comparison used step 0.5 for speed. On SCAN-B, one fit took about
 35 s at step 0.1 and 2.4 s at step 0.5 (single timings). Every run now
 uses step 0.1.
@@ -204,19 +207,18 @@ On all 2,976 patients (C = 1):
 | LumB | 1,029 | 733 | 0.58 |
 | Normal | 577 | 542 | 0.88 |
 
-PPDNA is reproducible. Source:
+PPDNA is reproducible. These counts are from the GPU. On the CPU, PPDNA
+keeps 1 to 3 genes fewer on LumA and LumB (906 and 730). Source:
 `results/local/speed/LassoSelector_scanb.csv` (not tracked in git).
 
-**Why PPDNA.** Simpler solvers failed, and PPDNA itself needed three
-changes from its paper to work on SCAN-B-shaped data (Appendix D.3).
-
-**RFE.** The cause is the same. When genes are strongly correlated,
+**RFE.** The cause is the same as for Lasso: liblinear's tolerance. When
+genes are strongly correlated,
 liblinear's tolerance changes which genes are removed. On the synthetic
 data at 3,000 features, the Jaccard index between the two gene sets was
 only 0.28. On synthetic SCAN-B-shaped data with correlated genes,
 liblinear at its default tolerance (10⁻⁴) shared 32 of 50 genes with the
-exact answer. At 10⁻⁸ it shared all 50. So liblinear stops early; neither
-is in error.
+exact answer. At 10⁻⁸ it shared all 50. So liblinear's default stops
+early. The two differ by tolerance; neither has a bug.
 
 **Newton's answer is the exact one.** liblinear's tolerance is a stopping
 rule, not part of the method. Its coordinate descent nears the solution
@@ -230,6 +232,9 @@ For Lasso the claim is weaker. PPDNA is not proven to stop exactly at
 Lasso's solution. It stops at a residual of 10⁻¹⁰, far tighter than
 liblinear's 10⁻⁴.
 
+**Why PPDNA.** Simpler solvers failed, and PPDNA itself needed changes
+from its paper to work on SCAN-B-shaped data (Appendix D.3).
+
 **Dropping liblinear.** RFE, RFECV and Lasso no longer offer liblinear,
 and have no `solver` parameter. Each runs only its exact solver: Newton
 for RFE and RFECV, PPDNA for Lasso. The reasons:
@@ -242,14 +247,15 @@ for RFE and RFECV, PPDNA for Lasso. The reasons:
 - **Repeatability.** Unless its seed is fixed, liblinear shuffles the
   data differently on each fit and keeps different genes. Newton and
   PPDNA use no randomness, so the selectors lost `random_state` too.
-- **No loss in AUC.** On the frontier, the two RFE solvers and the two
+- **No loss in AUC.** On that first frontier run, the two RFE solvers and the two
   Lasso solvers scored the same AUC at every `k`, within the spread over
   splits. For RFE: 0.811 and 0.807 at k = 10, 0.959 and 0.959 at
   k = 1000.
 
-For Lasso the speed argument is weaker. On the CPU the two solvers took
-the same time; only on a GPU, which liblinear cannot use, was PPDNA
-clearly faster. Lasso also has no test that it is at most 5% slower than
+For Lasso the speed argument is weaker. With C chosen by validation, the
+two solvers took the same total time on the CPU over the five SCAN-B
+tasks. A single PPDNA fit on the CPU was often slower. Only on a GPU,
+which liblinear cannot use, was PPDNA clearly faster. Lasso also has no test that it is at most 5% slower than
 scikit-learn, because no scikit-learn solver reaches its exact solution
 (Appendix D.4).
 
@@ -260,12 +266,12 @@ It is now classification only. The project's tasks are all binary
 classification (section 2.1).
 
 Newton has one limit. It works in the samples' space, through an n × n
-kernel, so it wins only when genes outnumber samples. On synthetic data
-with 3,000 patients and 1,000 genes, Newton RFE took 7.7 s and liblinear
-1.6 s. At 3,000 genes the two crossed: 7.5 s against 13.5 s.
+kernel, so it loses when samples far outnumber genes. On synthetic data
+with 3,000 samples and 1,000 genes, Newton RFE took 7.6 s and liblinear
+1.6 s. At 3,000 genes Newton was already faster: 7.5 s against 13.6 s.
 
-**The rule.** Every other selector selects what scikit-learn selects by
-default. Sequential's Newton solver is an option, not its default. No
+**The rule.** Every other selector that copies a scikit-learn method
+selects what scikit-learn selects by default. Sequential's Newton solver is an option, not its default. No
 selector picks its solver on its own. The device is chosen at run time
 only under `device='auto'` (section 6.3). Each result records the device
 used.

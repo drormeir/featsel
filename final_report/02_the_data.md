@@ -24,7 +24,7 @@ remain.
 | Keep only HiSeq 2000 samples: 3,069 of 3,409. The other 340 are NextSeq 500. | Two machines can differ for technical reasons alone. The NextSeq samples add 297 patients not in the HiSeq set. They are left out. |
 | Keep one sample per patient, the first in file order: 2,976 patients. | 93 of them have a HiSeq sample and its repeat. Split between the training set and the test set, they would test the model on a patient it has seen. |
 | Drop 2,313 genes with a single value across the kept patients. | They carry no information. |
-| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, about 0.5%. Standardized in float32, they become noise. On LumB vs rest, that noise made Lasso's solver about five times slower on the CPU. |
+| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32, they become noise. On LumB vs rest, that noise made Lasso's solver about five times slower on the CPU. |
 
 **The repeat samples.** Brueffer et al. sequenced 136 tumours twice, to
 test their classifiers' reproducibility. GSE96058 lists each repeat as
@@ -146,8 +146,9 @@ So a gene that moves with ESR1 separates Basal from the rest about as
 strongly as ESR1 does.
 
 As a result, more than 10% of all genes carry signal in every task. On
-`scanb_small`, with the F-test, 4,792 to 6,964 of the 9,259 usable genes
-per task had a p-value below 1/9,259. A one-split test on GSE96058 showed
+`scanb_small`, with the F-test, 4,792 to 6,964 genes per task had a
+p-value below 1/9,259. Here 9,259 is the number of its 9,264 genes left
+after the CSV loader dropped genes with a single value. A one-split test on GSE96058 showed
 the same. This explains three later results:
 
 - Higher Criticism stops at the edge of its search (7.5).

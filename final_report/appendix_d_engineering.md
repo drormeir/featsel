@@ -10,10 +10,11 @@ genes were dropped (section 2.1).
 
 ## D.1 How the timings were checked
 
-The mutual information, tree importance, RFECV and Sequential notebooks
-were run again after a fix. Past the original's largest size, the overlap
-check had compared two of our variants instead of one with the original.
-That overlap is now left empty. Most times moved by 7% or less.
+The speed notebooks had a defect. Past the largest size scikit-learn
+reached, the "Same features?" check compared two of our variants instead
+of one of ours with scikit-learn's. That cell is now left empty. After
+the fix, the mutual information, tree importance, RFECV and Sequential
+notebooks were run again. Most times moved by 7% or less.
 scikit-learn's Sequential selection took 164 s, against 191 s before, so
 the GPU's lead fell from 39 to 34 times. Two timed fits cannot pin a time
 closer than that.
@@ -30,8 +31,8 @@ first run within 2%.
 
 ## D.2 Lasso on real SCAN-B
 
-The script also times Lasso on the five tasks of real SCAN-B (2,976
-patients, 28,552 genes):
+The script of Appendix D.1 also times Lasso on the five tasks of real
+SCAN-B (2,976 patients, 28,552 genes):
 
 | One Lasso fit per task | Seconds | Against liblinear |
 |---|---|---|
@@ -39,13 +40,14 @@ patients, 28,552 genes):
 | PPDNA, GPU | 0.71 to 1.36 | 3.9 to 7.0 times faster |
 | PPDNA, CPU | 4.5 to 31.3 | faster on Basal and Normal, up to 5.9 times slower on LumB |
 
-The notebook standardizes the data in 32-bit floats, as the runner holds
+The script standardizes the data in 32-bit floats, as the runner holds
 it. A few genes are nearly constant: their spread is 10⁻⁶ to 10⁻⁹ around
 the expression floor. 32-bit floats cannot hold so small a spread.
 Standardizing them gives values up to 0.06 apart from the 64-bit result.
 Only 0.02% of the values move by more than 0.001. PPDNA on the CPU is
-sensitive to this. On LumB it took 35 s on data standardized in 32 bits
-and 7.3 s in 64 bits, and kept 730 genes against 735. This is why the 11
+sensitive to this. In a separate pair of single fits on LumB, it took
+35 s on data standardized in 32 bits and 7.3 s in 64 bits, and kept 730
+genes against 735. This is why the 11
 flat genes were later dropped (section 2.1).
 
 ## D.3 Why PPDNA, and how ours departs from the paper
@@ -53,14 +55,20 @@ flat genes were later dropped (section 2.1).
 Simpler solvers failed. FISTA, even on a working set of genes, only tied
 liblinear. Parallel coordinate descent overshot on correlated genes.
 SSNAL handles only the squared loss. Our PPDNA departs from the paper
-(Liu and Zhou 2023) in three ways, each needed on SCAN-B-shaped data:
+(Liu and Zhou 2023) in five ways, each needed on SCAN-B-shaped data:
 
+- The intercept is penalized like a weight, as liblinear penalizes it.
+  This makes the problem the same as liblinear's.
 - Its proximal step size starts at 40 C and grows five-fold per outer
   step, up to 10⁶ C. Beyond that, rounding loses the digits the weights
   are made of.
 - The Newton matrix is factored in 32-bit floats, where this GPU is fast.
   The solution is refined in 64 bits.
-- It also stops when three outer steps fail to halve the best residual.
+- The inner loop also stops when full Newton steps no longer shrink the
+  gradient. Below that floor of 64-bit rounding, more steps only add
+  noise.
+- The outer loop also stops when three outer steps fail to halve the best
+  residual.
   On 28,552 genes, rounding sets a floor near 10⁻⁹, above the target of
   10⁻¹⁰. Without this rule, Basal ran all 1,000 outer steps in 43 s.
   With it, 0.73 s (single timings), and every task stopped within 7 to
@@ -76,15 +84,15 @@ bits). PPDNA was faster on Basal, Her2 and Normal and slower on LumA and
 LumB. Its cost grows with the number of genes the model keeps, and the
 luminal tasks keep the most. Both chose C = 0.1 on every task. Their
 validation AUCs agreed to the fourth digit. Only on a GPU, which
-liblinear cannot use, was PPDNA clearly faster (section D.2).
+liblinear cannot use, was PPDNA clearly faster (Appendix D.2).
 
 Unlike every other wrapped selector, Lasso has no test that it is at most
 5% slower than scikit-learn. No scikit-learn solver reaches Lasso's exact
-solution. Its Newton solvers refuse the L1 penalty. liblinear and saga
+solution. scikit-learn's Newton solvers refuse the L1 penalty. liblinear and saga
 accept it but stop at a tolerance: less work, a different answer. On
 small synthetic data, PPDNA on the CPU was 3 to 4 times slower than
 liblinear at its defaults. So Lasso's speed comparison is the SCAN-B one
-of section D.2.
+of Appendix D.2.
 
 ## D.5 The random forest on a GPU
 
@@ -102,8 +110,8 @@ A 4 GB GPU is small. The forest trials:
 Only 21 of XGBoost's top 50 genes were scikit-learn's. That does not show
 a different method. scikit-learn under another seed shares only about 20
 of its own top 50 at full size (Jaccard 0.25). cuML's slowness was not
-memory. Capping its trees at depth 8 took 4.5 s, at depth 16 15.1 s, and
-with no cap 21.1 s. So most of the time goes to the middle levels, where
+memory. In a second set of single fits, capping its trees at depth 8 took
+4.5 s, at depth 16 15.1 s, and with no cap 21.1 s. So most of the time goes to the middle levels, where
 nodes are many. Tree importance therefore stays on the CPU.
 
 ## D.6 Libraries we did not use

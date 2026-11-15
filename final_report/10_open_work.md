@@ -69,7 +69,8 @@ together could give stable, interpretable results.
 **Stability-aware selection.** Stability selection (Meinshausen and
 Bühlmann 2010) keeps the features chosen often across many subsamples.
 It trades speed for stability. This study shows that stability is the
-weak point of the best-scoring method, tree importance.
+weak point of tree importance. On SCAN-B it scored as well as
+Mann-Whitney (0.969), with stability 0.27 against 0.76 (section 7.4).
 
 **Rebuilding the five-class prediction.** Each PAM50 subtype against the
 rest is a separate binary task here. Combining the five classifiers into
