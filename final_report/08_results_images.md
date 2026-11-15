@@ -188,6 +188,16 @@ matters, since every method preferred larger `k`.
 BreastMNIST holds 150 groups of copied images (section 2.2). Without them,
 585 images remain. The same protocol gives:
 
+![Frontier on BreastMNIST without the copied images](figures/frontier_breastmnist70_nocopies_roc_auc.png)
+
+*Each point is one method at one `k`: median selection time per fit, and
+mean test AUC over the 16 splits. Table:
+[`figures/frontier_breastmnist70_nocopies_roc_auc.csv`](figures/frontier_breastmnist70_nocopies_roc_auc.csv).*
+
+Only random features are on the frontier. All 2,048 features (0.895)
+are faster and better than every method. The best method, RFE at 1,000
+features, reaches 0.892.
+
 | Method | Test AUC | Features kept | Against all features (p) |
 |---|---|---|---|
 | All features | **0.895** | 2,048 | — |
