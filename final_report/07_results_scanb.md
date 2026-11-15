@@ -181,12 +181,68 @@ no `k` to choose.
 
 The PAM50 label is computed from 50 known genes. A strong method should rank
 them high. [`scripts/pam50_recovery.py`](../scripts/pam50_recovery.py)
-measures where the 50 lie in each method's ranking, under the protocol of
-chapter 3.
+measures where the 50 lie in each method's ranking: 10 splits, 70% of the
+patients in the training set, all five tasks. Mann-Whitney runs on the
+GPU, Lasso chooses its C on validation sets, the forest has 200 trees, and
+RFE ranks by elimination order.
 
-**Pending.** The earlier run of this check used an older protocol (half the
-patients in the training set). It is being rerun with 70%, and its results
-will go here.
+**Share of the 50 PAM50 genes found in the top `k`**, mean over tasks and
+splits:
+
+| Method | 10 | 50 | 100 | 250 | 500 | 1,000 | 2,500 | 5,000 | 10,000 |
+|---|---|---|---|---|---|---|---|---|---|
+| Random (expected) | 0.00 | 0.00 | 0.00 | 0.01 | 0.02 | 0.04 | 0.09 | 0.18 | 0.35 |
+| Mann-Whitney | **0.05** | **0.12** | **0.17** | 0.25 | 0.31 | 0.42 | **0.57** | **0.73** | **0.85** |
+| Tree importance | 0.04 | 0.11 | **0.17** | **0.27** | **0.38** | **0.46** | 0.53 | 0.60 | 0.69 |
+| Lasso | **0.05** | 0.09 | 0.10 | 0.12 | 0.12 | 0.12 | 0.12 | 0.12 | 0.12 |
+| RFE | 0.01 | 0.03 | 0.04 | 0.07 | 0.11 | 0.16 | 0.25 | 0.34 | 0.45 |
+
+**Share found in the top 50, per task**, mean over splits:
+
+| Method | Basal | Her2 | LumA | LumB | Normal |
+|---|---|---|---|---|---|
+| Mann-Whitney | 0.08 | 0.06 | **0.26** | 0.14 | 0.06 |
+| Tree importance | 0.07 | 0.09 | 0.20 | 0.16 | 0.01 |
+| Lasso | 0.08 | 0.09 | 0.13 | 0.14 | 0.01 |
+| RFE | 0.04 | 0.06 | 0.02 | 0.01 | 0.00 |
+
+**Rank by which half and 90% of the 50 are found**, median over tasks and
+splits:
+
+| Method | Half found by rank | 90% found by rank |
+|---|---|---|
+| Mann-Whitney | 1,031 | 12,986 |
+| Tree importance | 1,971 | 21,976 |
+| RFE | 12,612 | 24,852 |
+| Lasso | never | never |
+
+Random selection would find half by rank 14,271. Lasso ranks only genes
+with a non-zero weight, so it never reaches half.
+
+- **Every method finds PAM50 genes faster than chance.** Mann-Whitney finds
+  half in its top 1,031 genes.
+- **Tree importance matches Mann-Whitney at 100 genes and leads from 250
+  to 1,000**, then falls behind: its last PAM50 genes lie deep.
+- **RFE finds few**: 3% in its top 50. Its AUC at small `k` was also the
+  weakest (section 7.9).
+- **Lasso stops at 12%.** It gives a non-zero weight to too few genes to
+  reach the rest.
+- **But the share in the top 50 is low for every method**: at most 26%
+  (Mann-Whitney on LumA). Yet these methods predict the label well at 50
+  genes (section 7.2).
+- Mann-Whitney's lead is partly built in. Parker et al. chose the 50 genes
+  by testing each gene alone (chapter 2), as Mann-Whitney ranks them.
+
+**Good prediction does not need the genes that define the label.** Each
+PAM50 gene moves with hundreds of others, and these predict just as well.
+Each task also needs only part of the 50. So a low share here does not
+mean poor selection. It does mean that a method's gene list is one of many
+equally good answers.
+
+**Limit.** The share counts all 50 genes in every task, though a single
+subtype may depend on only some of them.
+
+Results: [`results/pam50_recovery.md`](../results/pam50_recovery.md).
 
 ## 7.7 Does the classifier matter?
 
@@ -323,6 +379,10 @@ AUC.
   10 genes on four tasks, and RFE alone is the worst.
 - RFECV needs AUC as its inner score on imbalanced tasks. With accuracy it
   keeps one gene.
+- The methods find few of the 50 PAM50 genes in their top 50, at most 12%
+  on average, yet predict the subtypes well: correlated genes stand in.
+- Selection helps every classifier at small `k`. Logistic regression is the
+  best classifier at 1,000 genes; k-NN needs selection most.
 - HC2008 and Berk-Jones are the best value: 0.970 mean AUC in 0.66 s per
   fit, with no `k` to choose. Mann-Whitney scores 0.969 in the same time
   per fit, plus 26 s to choose `k`. Mutual information, the best mean

@@ -66,10 +66,13 @@ of chapter 3.
 5. **The signal is widespread.** Thousands of genes carry it, and they
    move together. So random genes catch up as `k` grows, and many
    different gene sets predict equally well.
-6. **A gene list is therefore not a unique answer.** On SCAN-B, tree
-   importance scored as well as Mann-Whitney (0.969 mean AUC) but kept a
-   different set on each split: stability 0.27 against 0.76. So report
-   stability next to accuracy (section 7.4).
+6. **A gene list is therefore not a unique answer.** PAM50 is defined by
+   50 genes. In their top 50, the methods found on average at most 12% of
+   them (26% on the best task), yet they predicted the subtypes well
+   (section 7.6). On SCAN-B, tree importance scored as well as
+   Mann-Whitney (0.969 mean AUC) but kept a different set on each split:
+   stability 0.27 against 0.76. So report stability next to accuracy
+   (section 7.4).
 7. **Simple is enough.** Mann-Whitney, one gene at a time, is within 0.002
    AUC of the best mean on SCAN-B, and within 0.01 of the best on both
    image datasets. It is among the most stable, and on a GPU it takes under
