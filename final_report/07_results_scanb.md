@@ -191,14 +191,44 @@ will go here.
 ## 7.7 Does the classifier matter?
 
 A side study runs Mann-Whitney and random selection with five classifiers:
-logistic regression, linear SVM, random forest, k-nearest neighbours and
-shrinkage LDA. It asks how much a separate selection step adds on top of
-each classifier's own regularization. It is the evidence for using logistic
-regression in every other run.
+logistic regression, linear SVM, random forest (200 trees), k-nearest
+neighbours (k = 5) and shrinkage LDA. It asks how much a separate selection
+step adds on top of each classifier's own regularization. It is the
+evidence for using logistic regression in every other run.
 
-**Pending.** The study is being rerun on SCAN-B without its 11 flat genes
-(config: [`configs/experiment_classifiers.yaml`](../configs/experiment_classifiers.yaml)).
-Its results will go here.
+It keeps its own settings, chosen before the protocol of chapter 3: 12
+splits, half the patients in the training set (1,488 each side), macro-F1,
+and `k` = 10, 25, 50, 100, 250, 500 and 1000 with no choice of `k`. So its
+numbers are not comparable with the rest of this chapter.
+
+Mean macro-F1 over the 12 splits and five tasks:
+
+| Classifier | Selection | 10 | 50 | 250 | 1000 |
+|---|---|---|---|---|---|
+| Logistic regression | Mann-Whitney | 0.813 | 0.844 | 0.855 | **0.873** |
+| | Random | 0.597 | 0.772 | 0.816 | 0.849 |
+| Linear SVM | Mann-Whitney | 0.808 | 0.841 | 0.830 | 0.840 |
+| | Random | 0.574 | 0.764 | 0.791 | 0.807 |
+| Random forest | Mann-Whitney | 0.813 | 0.842 | **0.861** | 0.862 |
+| | Random | 0.618 | 0.712 | 0.764 | 0.796 |
+| k-NN | Mann-Whitney | 0.803 | 0.834 | 0.851 | 0.844 |
+| | Random | 0.598 | 0.674 | 0.702 | 0.713 |
+| Shrinkage LDA | Mann-Whitney | 0.811 | 0.845 | 0.857 | 0.825 |
+| | Random | 0.609 | 0.774 | 0.833 | 0.832 |
+
+- **Selection helps every classifier at small `k`.** At 10 genes,
+  Mann-Whitney beats random by 0.20 to 0.23 macro-F1.
+- **The gain shrinks with `k`, at different rates.** At 1,000 genes it is
+  0.13 for k-NN, 0.07 for the random forest, 0.02 to 0.03 for the linear
+  models, and −0.007 for shrinkage LDA. k-NN's distances over many random
+  genes are dominated by noise, so it needs selection most.
+- **Logistic regression is the best classifier at 1,000 genes** (0.873),
+  and still rising at the largest `k` tested.
+- **The gain differs by subtype.** At 10 genes, averaged over the
+  classifiers, it runs from 0.13 (LumA) to 0.29 (Basal).
+
+Results: [`results/experiment_classifiers.csv`](../results/experiment_classifiers.csv).
+Config: [`configs/experiment_classifiers.yaml`](../configs/experiment_classifiers.yaml).
 
 ## 7.8 RFECV: accuracy against AUC
 
