@@ -6,7 +6,7 @@ The project uses two main datasets. The first, breast cancer gene
 expression, comes with the specification. The second, ultrasound images,
 answers task 4 with another domain. A third, aircraft photos, was added
 after the design was fixed. It tests the pipeline on data it was not
-built for (section 8.8).
+built for (section 8.9).
 
 ## 2.1 SCAN-B breast cancer gene expression
 
@@ -109,7 +109,7 @@ A computed label has two consequences.
 1. **Predicting PAM50 partly re-learns a published classifier.** Scores
    may be higher than on a measured clinical outcome.
 2. **We know the right answer.** We can check whether a method finds the
-   50 genes ([chapter 7](07_results_quality.md), section 7.6).
+   50 genes ([section 7.6](07_results_scanb.md#76-does-selection-find-the-pam50-genes)).
 
 **The ER label in the course's copy is also computed, not measured.** It
 equals `er prediction mgc` on all 3,069 samples, coded 1 = negative and
@@ -197,7 +197,7 @@ and cached. Two GPU runs gave identical values.
 | Principal components for 50% / 90% / 99% of the variance | 12 / 150 / 462 |
 
 The U-test ranges are over the training sets of the comparison's first 5
-splits (chapter 7).
+splits of an earlier run, with half the images in the training set.
 
 As in SCAN-B, the signal is widespread: about a quarter of the features
 separate the classes. Unlike SCAN-B, pairs of features are only weakly
@@ -220,7 +220,7 @@ all 780 source images (Yang et al. 2023), so all of these are in our data.
 | Defect | Extent | Effect |
 |---|---|---|
 | "+" calipers | some images | not measured |
-| Copies: the same scan, shifted, scaled or cropped | The letter's text gives 155 copies, 19% of the set. Its own list holds 153 groups of 346 images, so 193 images repeat another. Some copies carry a different label: in the letter's numbering, image 42 is benign and its copy 488 malignant. | compared in chapter 7 |
+| Copies: the same scan, shifted, scaled or cropped | The letter's text gives 155 copies, 19% of the set. Its own list holds 153 groups of 346 images, so 193 images repeat another. Some copies carry a different label: in the letter's numbering, image 42 is benign and its copy 488 malignant. | compared in section 8.8 |
 | The axilla rather than the breast | 70 images, more than 8% | not measured |
 | A biopsy needle | at least 7 images | not measured |
 
@@ -239,7 +239,7 @@ a report beside the loader:
 
 The run without copies keeps one image per group and drops the 6 groups
 with conflicting labels. 585 images remain: 180 malignant and 405 benign
-or normal. Chapter 7 compares the results with and without the copies.
+or normal. Section 8.8 compares the results with and without the copies.
 
 Loader: [`featsel_datasets/medmnist_breastmnist/`](../featsel_datasets/medmnist_breastmnist/).
 Notebooks: [`demos/tutorial.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/tutorial.ipynb),
@@ -247,7 +247,7 @@ Notebooks: [`demos/tutorial.ipynb`](../featsel_datasets/medmnist_breastmnist/dem
 
 ## 2.3 Summary
 
-| | SCAN-B | BreastMNIST | FGVC-Aircraft (section 8.8) |
+| | SCAN-B | BreastMNIST | FGVC-Aircraft (section 8.9) |
 |---|---|---|---|
 | Domain | gene expression (RNA sequencing) | ultrasound images, ResNet-50 embeddings | aircraft photos, ResNet-50 embeddings |
 | Samples | 2,976 patients | 780 images | 1,200 photos |

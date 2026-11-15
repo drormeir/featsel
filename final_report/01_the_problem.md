@@ -74,7 +74,7 @@ features? If random genes do almost as well, a method has found little.
 
 **The second question.** Which methods give the best quality for their
 time cost? A cost-quality frontier answers this
-([chapter 8](08_results_frontier.md)).
+(chapters [7](07_results_scanb.md) and [8](08_results_images.md)).
 
 **The targets.** The breast cancer data offers several labels: the PAM50
 molecular subtype, estrogen receptor (ER) status, and survival. PAM50 is
@@ -113,21 +113,20 @@ those datasets have tens to a few hundred samples.
 wrappers and Higher Criticism under one protocol. Running on a gene
 expression cohort and an image dataset tests whether the ranking of
 methods carries over between domains. A second image dataset, unseen
-during the design, then tests the finished pipeline (section 8.8).
+during the design, then tests the finished pipeline (section 8.9).
 
 ## 1.7 What this project adds
 
 1. **A comparison at a cohort size earlier studies lacked.** Here 2,976
-   patients give test sets of 893, large enough to separate
-   methods that score close together. A paired test corrected for
-   overlapping splits checks the differences (chapter 7).
+   patients give test sets of 893. A paired test corrected for
+   overlapping splits checks the differences (chapters 7 and 8).
 2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
    thresholds were built for rare, independent signal. On our widespread,
    correlated signal, both stopped at or near the edge of their search and
-   acted as top-10% filters (sections 7.5 and 8.8).
+   acted as top-10% filters (sections 7.5 and 8.5).
 3. **A cost-quality frontier.** One plot of selection time against AUC,
    for every method and setting. It shows which method fits a time budget
-   (chapter 8).
+   (sections 7.1 and 8.1).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method pick the same features, on the CPU and on a GPU.
    Exact solvers make Lasso, RFE and Sequential selection faster. For
@@ -137,4 +136,4 @@ during the design, then tests the finished pipeline (section 8.8).
    patients, and its labels are computed from the features. BreastMNIST
    holds copies of its own images (chapter 2).
 
-Section 9.3 sums these up.
+Section 9.4 sums these up.

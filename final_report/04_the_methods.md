@@ -237,7 +237,7 @@ weak" setting. Donoho and Jin (2008, 2009) turned it into a selection
 threshold and proved it optimal there. Both papers derive the null
 behavior of the sorted p-values from independent p-values. Correlated
 genes give correlated p-values. Chapter 2 showed that neither of our
-datasets meets these conditions. Chapter 7 shows what HC does then.
+datasets meets these conditions. Sections 7.5 and 8.5 show what HC does then.
 
 **Decision: alpha0 stays 0.1.** On SCAN-B the HC score is still rising at
 the edge of its search. We could raise alpha0, since we know the signal is
@@ -285,8 +285,8 @@ assumptions are those of HC: rare, weak and independent signal.
 | Experiment | Methods |
 |---|---|
 | The frontier (chapters 7 and 8) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE. The first frontier run had two solvers each for Lasso (liblinear and PPDNA) and RFE (liblinear and Newton); the configurations now run only PPDNA and Newton. |
-| The classifier study (chapter 7) | Random and Mann-Whitney, with five classifiers |
-| The unseen dataset (section 8.8) | Random, Mann-Whitney, HC2004, HC2008, correlation (Spearman), mutual information, Lasso (PPDNA), RFE (Newton), RFECV (Newton, scored by AUC), Sequential (Newton) |
+| The classifier study (section 7.7) | Random and Mann-Whitney, with five classifiers |
+| The unseen dataset (section 8.9) | Random, Mann-Whitney, HC2004, HC2008, correlation (Spearman), mutual information, Lasso (PPDNA), RFE (Newton), RFECV (Newton, scored by AUC), Sequential (Newton) |
 
 Variance threshold, ANOVA, Percentile, FDR and FWE are in the package and
 tested, but not in the experiments. The last four use the F-test, which

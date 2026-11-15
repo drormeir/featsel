@@ -10,8 +10,9 @@ difference is (1/J + n_test/n_train) times the sample variance, for J
 splits, with J - 1 degrees of freedom.
 
 The random control is the bar at each k, so it appears in the curve table,
-not at a chosen k; scripts/paired_tests.py tests each method against it at
-the same k. Random selection at every feature is the all-features row.
+not at a chosen k. The bar table tests each method against it at the same k,
+per task, by the same corrected test. Random selection at every feature is
+the all-features row.
 Sequential selection does not choose its k (it takes minutes per fit), so it
 is left out of the chosen-k tables; its AUC at each k is in the curve table.
 
@@ -19,8 +20,8 @@ Usage:
     python scripts/summarize_frontier.py --n-features 2048 \
         --out final_report/figures/summary_breastmnist70 results/local/frontier_breastmnist70_*.csv
 
-Writes <out>_chosen.csv and <out>_curve.csv, and <out>_tests.csv when the
-run has every feature.
+Writes <out>_chosen.csv, <out>_curve.csv and <out>_bar.csv, and
+<out>_tests.csv when the run has every feature.
 """
 
 import argparse
@@ -78,6 +79,25 @@ def tests_table(chosen, everything):
     return pd.DataFrame(rows).sort_values(['task', 'mean_diff'], ascending=[True, False])
 
 
+def bar_table(df):
+    """Each method with a k list against random selection at the same k."""
+    n_test, n_train = df.n_test.iloc[0], df.n_train.iloc[0]
+    ref = df[df.selector == 'RandomSelector'].set_index(['task', 'k', 'split'])['roc_auc']
+    rows = []
+    for (task, name, k), part in df[df.k.notna()].groupby(['task', 'selector', 'k']):
+        if name == 'RandomSelector':
+            continue
+        diff = (part.set_index(['task', 'k', 'split'])['roc_auc'] - ref).dropna()
+        if len(diff) < 2:
+            continue
+        mean, low, high, p = corrected_test(diff, n_test, n_train)
+        rows.append({'task': task, 'selector': name, 'k': int(k),
+                     'mean_diff': mean, 'ci_low': low, 'ci_high': high, 'p_value': p,
+                     'wins': int((diff > 0).sum()), 'splits': len(diff)})
+    return pd.DataFrame(rows).sort_values(['task', 'k', 'mean_diff'],
+                                          ascending=[True, True, False])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -98,6 +118,7 @@ def main():
     tables = {
         'chosen': chosen_table(pd.concat([chosen, everything]), args.n_features),
         'curve': df.groupby(['task', 'selector', 'k'])['roc_auc'].mean().unstack('k').reset_index(),
+        'bar': bar_table(df),
     }
     if len(everything):
         tables['tests'] = tests_table(chosen, everything)

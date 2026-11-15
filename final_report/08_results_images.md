@@ -1,6 +1,6 @@
 # 8. Results on image data: BreastMNIST and FGVC-Aircraft
 
-[Back to contents](README.md) · Previous: [7. Results: SCAN-B](07_results_quality.md) · Next: [9. Conclusions](09_conclusions.md)
+[Back to contents](README.md) · Previous: [7. Results on SCAN-B](07_results_scanb.md) · Next: [9. Conclusions](09_conclusions.md)
 
 This chapter reports the two image datasets. Each image is a ResNet-50
 embedding of 2,048 features (chapter 2). BreastMNIST is task 4. FGVC-Aircraft

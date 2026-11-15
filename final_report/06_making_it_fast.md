@@ -1,6 +1,6 @@
 # 6. Making it fast (task 3)
 
-[Back to contents](README.md) · Previous: [5. The software](05_the_software.md) · Next: [7. Results: quality](07_results_quality.md)
+[Back to contents](README.md) · Previous: [5. The software](05_the_software.md) · Next: [7. Results on SCAN-B](07_results_scanb.md)
 
 Task 3 asks for infrastructure that speeds up feature selection. We worked
 at two levels: the whole experiment (the runner) and each method (faster
@@ -104,7 +104,8 @@ and [`figures/parallel_scaling_jobs_3_workers.csv`](figures/parallel_scaling_job
 
 The original design had 100 splits at three training fractions (300 in
 all), 6 selectors and nested tuning. We extrapolated its cost from the
-classifier study's 12-split run with the F-test (section 7.7). Without
+classifier study's 12-split run with the F-test
+(`results/experiment_classifiers_anova_12splits.csv`). Without
 the linear SVM classifier, it needed about 30 to 35 CPU-hours: a day and
 a half on one core, shorter in proportion with more cores. RFE removing
 one feature per round would take about 2,300 hours. Removing 10% per
@@ -273,8 +274,8 @@ liblinear's 10⁻⁴.
 and have no `solver` parameter. Each runs only its exact solver: Newton
 for RFE and RFECV, PPDNA for Lasso. The reasons:
 
-- **Speed.** On the SCAN-B frontier (section 8.3), liblinear RFE took
-  57 s per fit, Newton 6.0 s. RFE with liblinear was the largest single
+- **Speed.** In the first SCAN-B frontier run (5 splits, since
+  replaced), liblinear RFE took 57 s per fit, Newton 6.0 s. RFE with liblinear was the largest single
   cost of the frontier runs.
 - **Exactness.** Newton reaches the solution that liblinear only
   approaches.
@@ -366,7 +367,7 @@ Ten selectors share one rule for choosing where to run:
 `'auto'` never waits, so a parallel run never stalls on the GPU. It uses
 the GPU only when PyTorch loads, a GPU is present, and no other fit holds
 it. It falls back to the CPU when the GPU runs out of memory. `'cuda'`
-raises an error if the GPU cannot run. The frontier runs (chapter 8) set
+raises an error if the GPU cannot run. The frontier runs (chapters 7 and 8) set
 `'cuda'`, so every timing of a GPU method was really taken on the GPU.
 
 A file lock lets one fit at a time hold the GPU. Batch sizes come from

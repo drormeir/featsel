@@ -85,7 +85,7 @@ same patients.
 four days. Every run now uses 16 splits with 70% of samples in the
 training set. Sixteen or more values support quartiles; five do not.
 
-**More splits help less than they seem.** The corrected test of section 7.3
+**More splits help less than they seem.** The corrected test below
 multiplies the variance by 1/J + n_test/n_train, for J splits. The second
 term does not shrink with J, so the 95% interval has a fixed lower limit.
 Width as a multiple of that limit (variance factor combined with the t
@@ -110,9 +110,8 @@ are split again. It is not a confidence interval for new patients.
 most split-to-split noise. A method's gain over the random control is its
 score minus the control's on the same split, at the same `k`. The
 differences are not independent, so a standard paired test would
-overstate certainty. Chapter 7 uses the corrected resampled t-test of
-Nadeau and Bengio (2003), which widens the variance for the overlap
-(section 7.3).
+overstate certainty. Chapters 7 and 8 use the corrected resampled t-test
+of Nadeau and Bengio (2003), which widens the variance for the overlap.
 
 ## 3.4 The random control
 
@@ -134,7 +133,7 @@ features, which the all-features reference already answers.
 Without the control, a comparison cannot tell whether a method finds signal
 or only reduces the number of features. Neekhra et al. (2025) found that small random subsets
 matched or beat feature selection on 28 of 30 high-dimensional datasets.
-Chapter 7 shows this on our data too once `k` is large.
+Sections 7.2 and 8.2 show this on our data too once `k` is large.
 
 ## 3.5 Scores
 
@@ -261,7 +260,7 @@ step keeps.
 - **Why 50.** PAM50 is a 50-gene signature.
 - **No selection.** A run on all features is kept as a reference. It shows
   whether selection helps the model or only shrinks it
-  ([section 8.7](08_results_frontier.md#87-is-selection-needed-at-all)).
+  (sections [7.3](07_results_scanb.md#73-selection-against-all-genes) and [8.3](08_results_images.md#83-selection-against-all-features)).
 
 The first design gave `k` as a percent of the total sample count, to
 compare budgets across datasets and training fractions. With one training

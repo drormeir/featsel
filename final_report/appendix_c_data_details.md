@@ -45,7 +45,7 @@ all genes once per split. Counting the PAM50 genes down the ranking gives
 a recall curve over `k`. For the random control, the expected recall is
 the line `k` / number of genes. A strong method reaches the full list at
 a small `k`. The results are in
-[section 7.6](07_results_quality.md#76-does-selection-find-the-pam50-genes).
+[section 7.6](07_results_scanb.md#76-does-selection-find-the-pam50-genes).
 
 Known difficulties:
 
@@ -65,12 +65,12 @@ The experiment needs a gene set with all 50 genes. GSE96058 has them.
 ## C.3 Higher Criticism and the share of signal
 
 HC searches only the smallest 10% of p-values (alpha0 = 0.1). On SCAN-B,
-the HC score is still rising at that edge. HC2008 kept 2,855 to 2,856
-genes on every task and split. HC2004 kept 1 to 6 genes, with a median
-of 1.
+the HC score is still rising at that edge. HC2008 kept 2,854 or 2,855
+of the 28,541 genes on every task and split (section 7.5). HC2004 kept 1
+or 2 genes, with a median of 1.
 
-HC first scored genes by the F-test. The comparison never ran HC with the
-F-test. A one-split test on SCAN-B checked the switch to the U test:
+HC first scored genes by the F-test. A one-split test on SCAN-B, before
+the 11 flat genes were dropped, checked the switch to the U test:
 
 | | Genes kept with the U test | Macro-F1, F-test → U test |
 |---|---|---|
