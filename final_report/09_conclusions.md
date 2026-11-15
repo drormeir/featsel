@@ -59,8 +59,8 @@ of chapter 3.
 **About selection.**
 
 4. **Selection matters most when few features are allowed.** At 10
-   features, the good methods beat random ones by 0.10 to 0.20 AUC on
-   SCAN-B, and by 0.10 to 0.16 on the image data. The gain shrinks as `k`
+   features, every method but RFE alone beats random ones by 0.10 to 0.20
+   AUC on SCAN-B, and the good methods by 0.10 to 0.16 on the image data. The gain shrinks as `k`
    grows. On Basal and on BreastMNIST it is gone by 250 to 1,000. On LumA
    and LumB it lasts to 2,000 genes (sections 7.2 and 8.2).
 5. **The signal is widespread.** Thousands of genes carry it, and they
@@ -87,8 +87,9 @@ of chapter 3.
    corrected resampled t-test passed 164. Against all genes, it cut the
    established differences from 52 to 20.
 10. **Higher Criticism needs rare signal.** On all three datasets HC2008
-    stopped at the edge of its search, 10% of the features. Berk-Jones
-    stopped at or just before it. Their signal is not rare. As a top-10%
+    stopped at the edge of its search, 10% of the features. Berk-Jones ran
+    on SCAN-B and BreastMNIST only. There it stopped at or just before
+    that edge. Their signal is not rare. As a top-10%
     filter, both are among the best on SCAN-B (0.970) and the most stable
     (0.92). HC2004 keeps one or two features and is the weakest method.
 11. **Wrappers pay only in some places, and only with care.** RFE was the
@@ -167,8 +168,8 @@ For a given number of features `k`, which method gives the best
 classifier, and by how much over random?
 
 At small `k`, the answer depends on the dataset. At 10 genes on SCAN-B,
-Mann-Whitney then RFE is best on four tasks of five, and the filters beat
-random genes by 0.12 to 0.19 AUC. At 10 features on the image data, the
+Mann-Whitney then RFE is best on four tasks of five, and the filters and
+tree importance beat random genes by 0.12 to 0.19 AUC. At 10 features on the image data, the
 filters and tree importance lead, by 0.10 to 0.16 over random.
 
 At the `k` each method chose, the top methods cannot be told apart. On
@@ -178,3 +179,43 @@ Mann-Whitney lie within 0.01 of all features.
 If time also counts, a GPU filter is the practical choice. On SCAN-B,
 HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
 per fit, 0.001 to 0.002 below the best.
+
+## 9.6 Limits
+
+These conclusions hold under the conditions below. Each limit is
+described in the section given.
+
+**The data.**
+
+- Three datasets. Two of them are image embeddings from the same network,
+  ResNet-50 (chapter 2). The results may not hold on other data.
+- Every SCAN-B task predicts PAM50, a label computed from the genes, not
+  measured (section 2.1). No measured target was run (section 10.1).
+- The BreastMNIST results in sections 8.1 to 8.7 include copied images.
+  Without them, the scores fall by about 0.03 AUC (section 8.8).
+
+**The protocol.**
+
+- One classifier, logistic regression, with C fixed at 1 (section 3.8).
+  The classifier study used other settings (section 7.7).
+- One training fraction, 70%, and 16 splits. The spread over splits is not
+  a confidence interval for new patients (section 3.14).
+- The five SCAN-B tasks share patients, so they are not independent
+  replicates (section 3.14).
+- Each selector's own settings are fixed, except Lasso's C (section 3.14).
+  HC keeps alpha0 = 0.1 (section 4.4). The correlation selector has a
+  known defect (section 4.2).
+- Side studies keep their own protocols: the PAM50 recovery uses 10
+  splits (section 7.6), the classifier study 12 splits at 50% (section
+  7.7). Some early results come from the course copy `scanb_small`, which
+  keeps the repeated patients (section 2.1).
+
+**The cost.**
+
+- Every time comes from one laptop with a 4 GB consumer GPU (chapter 6).
+  A time is meaningful only on that machine.
+- The runner's speed-up over scikit-learn was measured before liblinear
+  was dropped. A rerun today would not match it (Appendix B).
+
+**Higher Criticism.** No dataset here has rare signal. So these results
+do not test HC in the setting it was built for (section 10.2).

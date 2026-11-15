@@ -12,6 +12,10 @@ text are marked as such. They explain a design choice and claim no
 speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM,
 and an NVIDIA GTX 1650 with 4 GB.
 
+The SCAN-B measurements here were made before the 11 flat genes were
+dropped (section 2.1). So they use 28,552 genes, not the 28,541 of
+chapter 7 (Appendix C.5).
+
 ## 6.1 The runner against plain scikit-learn
 
 Most selectors and all classifiers come from scikit-learn, so the
@@ -380,8 +384,8 @@ The device used is recorded with every result.
   5.3 times on twelve threads, with identical scores.
 - On the GPU, the filters run 2.6 to 49 times faster and Sequential
   selection 34 times faster, with the same features.
-- Lasso, RFE and RFECV now run only exact solvers. RFE's is 10 times
-  faster on SCAN-B. Because they are exact, they pick somewhat different
+- Lasso, RFE and RFECV now run only exact solvers. RFE's is 8 times
+  faster on SCAN-B (23.1 s against 2.8 s, section 6.2). Because they are exact, they pick somewhat different
   genes from scikit-learn's defaults, at the same AUC.
 - A cheap 4 GB GPU limits what can move to it. On it, 64-bit work and
   large forests do not pay.

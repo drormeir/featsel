@@ -292,3 +292,64 @@ Variance threshold, ANOVA, Percentile, FDR and FWE are in the package and
 tested, but not in the experiments. The last four use the F-test, which
 the U test replaces (section 4.3). Variance threshold uses no label at
 all.
+
+## 4.7 Cost in time and memory
+
+The measured times are in chapter 6 and section 7.11. This section gives
+the cost that follows from each algorithm, as implemented in `featsel`.
+It shows how each cost grows with the data. It does not give the constant
+factors, and it does not include the GPU.
+
+The symbols:
+
+- n: training samples. p: features. k: features kept.
+- T: trees in the forest. F: folds of an inner cross-validation.
+- R: rounds of RFE (about 10 at step 0.1). t: Newton steps.
+- m: the correlation selector's candidates, the features whose
+  correlation with the label passes its threshold.
+- r: the genes active in one Lasso Newton step.
+
+The data itself takes O(np) memory for every method. The memory column
+gives what a method needs beyond it.
+
+| Method | Time per fit | Memory beyond the data |
+|---|---|---|
+| Random | O(p) | O(p) |
+| Variance threshold, F-test (ANOVA, FWE) | O(np) | O(p) |
+| FDR, Percentile | O(np + p log p): the F-test, then a sort of the p-values | O(p) |
+| Mann-Whitney (U test) | O(p · n log n): one sort per feature | up to O(np) for the ranks |
+| HC2004, HC2008 | the U test, plus O(p log p) to sort the p-values | as the U test |
+| Berk-Jones | as HC, plus a log Beta CDF at each of the 0.1 · p searched ranks | as the U test |
+| Correlation (Spearman) | O(p · n log n) for the ranks, plus O(n m²) for the pairs among the candidates | O(nm) for the candidates, plus one block of 1,024 × m correlations |
+| Mutual information | O(p · n log n): per feature, one sort per class and one binary search per sample | O(n) per feature |
+| Lasso (PPDNA) | per Newton step, O(np) for the products with X, plus O(n r² + min(n, r)³) for its linear system | O(n r + min(n, r)²) |
+| Tree importance | O(T · √p · n log² n), if each tree has depth O(log n) | O(T n) for the trees |
+| RFE (Newton) | O(n² p) for the n × n kernel and its updates, plus O(t n³) per round, R rounds | O(n²) |
+| RFECV | about F + 1 times RFE | O(n²) |
+| Sequential (Newton) | k steps. Step j fits about p · F models on j features, so O(t · F · p · n · k³) in total | O(p k²) for the Hessian blocks of all candidates |
+
+How the derivations go:
+
+- **The U test** sorts each feature once. The sort gives the ranks and the
+  tie groups (section 6.2).
+- **The forest** tries √p features at each node. Each level of a tree
+  sorts at most n samples on them. If a tree has depth O(log n), that
+  gives O(√p · n log² n) per tree. A fully grown tree on imbalanced data
+  can be deeper, and then it costs more.
+- **RFE** forms the kernel X Xᵀ once, in O(n² p). Each round subtracts the
+  share of the removed features. Over all rounds this also costs O(n² p).
+  Each Newton step solves an n × n system, in O(n³).
+- **Lasso** solves its Newton system through the r active genes: an r × r
+  system when r < n, else an n × n one (section 6.2).
+- **Sequential** at step j scores every remaining feature with j features
+  on F folds. Each fit needs a j × j Hessian, in O(n j²) per Newton step.
+  Summed over the k steps, this gives the k³.
+
+**Choosing `k` adds work.** A method that ranks once is fit 5 more times,
+once per validation set, and a classifier is fit for each `k` on each
+(section 3.11). Lasso searches 4 values of C on 5 validation sets.
+
+**What the costs predict.** The filters grow as p · n log n or less, so
+they stay cheap at any p. RFE and RFECV grow with n² p and n³: they gain
+when p ≫ n, and lose when n is large (section 6.2). Sequential grows with
+k³ and with p, so it runs only at small `k` (section 3.11).

@@ -6,7 +6,7 @@ The project uses two main datasets. The first, breast cancer gene
 expression, comes with the specification. The second, ultrasound images,
 answers task 4 with another domain. A third, aircraft photos, was added
 after the design was fixed. It tests the pipeline on data it was not
-built for (section 8.9).
+built for (section 2.3; results in section 8.9).
 
 ## 2.1 SCAN-B breast cancer gene expression
 
@@ -245,9 +245,42 @@ Loader: [`featsel_datasets/medmnist_breastmnist/`](../featsel_datasets/medmnist_
 Notebooks: [`demos/tutorial.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/tutorial.ipynb),
 [`demos/selection.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb).
 
-## 2.3 Summary
+## 2.3 FGVC-Aircraft photo embeddings (unseen during the design)
 
-| | SCAN-B | BreastMNIST | FGVC-Aircraft (section 8.9) |
+**Why this dataset.** BreastMNIST shaped the design of the pipeline. A
+dataset added after the design was fixed tests whether the pipeline works
+on data it was not built for. It needed a loader and a config, but no
+change to the package (section 8.9).
+
+**Source.** FGVC-Aircraft 2013b (Maji et al. 2013) holds 10,000 aircraft
+photos: 100 model variants of 100 photos each, grouped into families and
+manufacturers. The loader downloads the archive once (2.75 GB) and reads
+it in one pass, without unpacking it. The site publishes no checksum, so
+the loader checks only the file size.
+
+**Licence.** The photos are for non-commercial research only. They are
+not stored in the repository and not shown in any notebook output.
+
+**The task.** Boeing 737 (800 photos) against the Airbus A320 family:
+A318, A319, A320 and A321 (400 photos). These are two families of
+narrow-body airliners that look alike. We use the photos of all three
+official splits and draw our own random splits, as for the other
+datasets.
+
+**Features.** Each photo loses the copyright banner at its bottom, 20
+pixels high. It then goes through ResNet-50 with its last layer removed,
+as for BreastMNIST: 2,048 numbers per photo. The weights differ:
+torchvision's `IMAGENET1K_V1`, not V2. In a first test on this task, V2's
+features were 80% exact zeros and gave AUC 0.749 with all features. V1's
+were 0.1% zeros and gave 0.863. Features with a single value across the
+1,200 photos are dropped.
+
+Loader: [`featsel_datasets/fgvc_aircraft/`](../featsel_datasets/fgvc_aircraft/).
+Analysis: [`demos/research.ipynb`](../featsel_datasets/fgvc_aircraft/demos/research.ipynb).
+
+## 2.4 Summary
+
+| | SCAN-B | BreastMNIST | FGVC-Aircraft |
 |---|---|---|---|
 | Domain | gene expression (RNA sequencing) | ultrasound images, ResNet-50 embeddings | aircraft photos, ResNet-50 embeddings |
 | Samples | 2,976 patients | 780 images | 1,200 photos |

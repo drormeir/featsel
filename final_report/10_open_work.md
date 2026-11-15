@@ -15,7 +15,6 @@ Section 10.2 lists research beyond its scope.
 | **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The protocol uses one classifier and one train fraction. | About four days on this laptop. Skipped by decision. |
 | **A measured target on SCAN-B**, such as the pathologist's ER status. | Every SCAN-B task here predicts a computed label. A measured label would test the conclusions against clinical truth. | One config. The loader supports it. |
 | **The quantile transform with every classifier** (section 3.10). It did not help logistic regression. | Would show whether shrinkage LDA and k-NN gain from normal-shaped features. | One `k`, all classifiers. A run was started and cancelled. |
-| **Time and memory complexity per method**, derived from the algorithm. | To sit next to the measured times. A disagreement would be a finding. | Writing only, no runs. |
 | **How SCAN-B computed `pam50 subtype`.** | The GEO notes say only that it implements Parker's method, after centring to a reference set, with unpublished R scripts (section 2.1, Appendix C.2). | Reading other SCAN-B papers. |
 
 ### Software

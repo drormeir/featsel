@@ -186,8 +186,8 @@ For every fit we record:
 - **Reproducibility**: whether every repeated fit chose the same genes.
 
 Classifier training time is not counted: it is the same for every method
-at the same `k`. The design planned to state each method's time and memory
-complexity next to the measurements. This was not done.
+at the same `k`. Section 4.7 gives each method's cost in time and memory,
+as it follows from the algorithm.
 
 ## 3.8 The classifier
 

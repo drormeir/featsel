@@ -191,12 +191,12 @@ BreastMNIST holds 150 groups of copied images (section 2.2). Without them,
 ![Frontier on BreastMNIST without the copied images](figures/frontier_breastmnist70_nocopies_roc_auc.png)
 
 *Each point is one method at one `k`: median selection time per fit, and
-mean test AUC over the 16 splits. Table:
+mean test AUC with one standard deviation over the 16 splits. Table:
 [`figures/frontier_breastmnist70_nocopies_roc_auc.csv`](figures/frontier_breastmnist70_nocopies_roc_auc.csv).*
 
 Only random features are on the frontier. All 2,048 features (0.895)
-are faster and better than every method. The best method, RFE at 1,000
-features, reaches 0.892.
+are faster and better than every method. The best method, RFE, reaches
+0.892 at 1,000 features, and 0.891 at the `k` it chose.
 
 | Method | Test AUC | Features kept | Against all features (p) |
 |---|---|---|---|
@@ -258,7 +258,8 @@ The pattern of BreastMNIST holds:
 - Selection helps at small budgets: at `k` = 10 it gains 0.10 to 0.16 AUC
   over random features.
 - Filters lead at small `k`; RFE leads from `k` = 250.
-- Every method chose the largest `k` it could. Methods that cap themselves
+- Most methods chose the largest `k` they were offered, or close to it.
+  Correlation kept fewer, because of its redundancy filter. Methods that cap themselves
   lower (Lasso, Higher Criticism, Berk-Jones, chains) lose AUC.
 - Filters are the most stable; RFE, mutual information and RFECV pick
   different features on each split at the same AUC.

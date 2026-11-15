@@ -25,11 +25,11 @@ methods, and much faster.
 
 | Question | Answer | Where |
 |---|---|---|
-| Does selection beat random genes? | Yes, most at small `k`: at 10 features by 0.10 to 0.20 AUC on SCAN-B and 0.10 to 0.16 on image data. The gain shrinks as `k` grows; on LumA and LumB it lasts to 2,000 genes. | [7.2](07_results_scanb.md#72-the-bar-random-genes-at-each-k), [8.2](08_results_images.md#82-the-bar-random-features-at-each-k) |
+| Does selection beat random genes? | Yes, most at small `k`: at 10 features by 0.10 to 0.20 AUC on SCAN-B (every method but RFE alone) and 0.10 to 0.16 on image data. The gain shrinks as `k` grows; on LumA and LumB it lasts to 2,000 genes. | [7.2](07_results_scanb.md#72-the-bar-random-genes-at-each-k), [8.2](08_results_images.md#82-the-bar-random-features-at-each-k) |
 | Which method selects best? | No single method. On SCAN-B eleven methods lie within 0.01 mean AUC, and none leads on every task. On image data RFE ties all features. Mann-Whitney is within 0.01 of the best everywhere and among the most stable. | [7.1](07_results_scanb.md#71-what-each-method-reaches), [7.4](07_results_scanb.md#74-stability), [8.1](08_results_images.md#81-breastmnist-what-each-method-reaches) |
 | Which is the best value for time? | A GPU filter. On SCAN-B, HC2008 and Berk-Jones reach 0.970 mean AUC in 0.66 s per fit; the best, mutual information, reaches 0.971 in 3.6 s. | [7.11](07_results_scanb.md#711-cost) |
 | Can the best method for a budget be known in advance? | No. RFE leads at large `k` on image data and trails on SCAN-B; at 10 features filters lead on image data, Mann-Whitney then RFE on SCAN-B. | [9.3](09_conclusions.md#93-across-the-datasets) |
-| Does Higher Criticism pick its own count? | No. On all three datasets it stopped at the edge of its search, 10% of the features: the signal is not rare. Berk-Jones stopped at or just before that edge. | [7.5](07_results_scanb.md#75-higher-criticism-and-berk-jones), [8.5](08_results_images.md#85-higher-criticism-and-berk-jones) |
+| Does Higher Criticism pick its own count? | No. On all three datasets HC2008 stopped at the edge of its search, 10% of the features: the signal is not rare. Berk-Jones, run on SCAN-B and BreastMNIST, stopped at or just before that edge. | [7.5](07_results_scanb.md#75-higher-criticism-and-berk-jones), [8.5](08_results_images.md#85-higher-criticism-and-berk-jones) |
 | Do methods find the genes that define the label? | Rarely at small `k`: at most 12% of the 50 PAM50 genes in the top 50, on average. Yet they predict the label well, because correlated genes stand in for them. | [7.6](07_results_scanb.md#76-does-selection-find-the-pam50-genes) |
 | How much faster did we make it? | The runner: 3.2 to 5.3 times faster than plain scikit-learn. GPU filters: 2.6 to 49 times. Sequential selection: 34 times. All select the same features as before. | [6](06_making_it_fast.md) |
 | Why did RFECV fail, and can it be fixed? | Its default validation score, accuracy, made it keep one gene on three imbalanced tasks. Scored by AUC, it recovers to 0.962 on SCAN-B, level with RFE but below a sub-second filter. | [7.8](07_results_scanb.md#78-rfecv-accuracy-against-auc) |
@@ -41,14 +41,14 @@ methods, and much faster.
 | # | Chapter | Contents |
 |---|---|---|
 | 1 | [The problem](01_the_problem.md) | Feature selection, why few samples and many features make it hard, the four tasks, earlier studies. |
-| 2 | [The data](02_the_data.md) | SCAN-B and BreastMNIST: where the labels come from, and the traps we found. |
+| 2 | [The data](02_the_data.md) | SCAN-B, BreastMNIST and FGVC-Aircraft: where the labels come from, and the traps we found. |
 | 3 | [How to measure a selection method](03_how_to_measure.md) | Testing a method without fooling yourself: leakage, splits, the random control, metrics, stability. |
 | 4 | [The methods](04_the_methods.md) | The 16 methods: filters, embedded methods, wrappers, Higher Criticism and Berk-Jones. Why genes are scored with the U test. |
 | 5 | [The software](05_the_software.md) | Drop-in selectors, the config-driven runner, datasets, memory safety, reproducibility. |
 | 6 | [Making it fast](06_making_it_fast.md) | Task 3: the runner against plain scikit-learn; faster methods on the CPU and GPU. |
 | 7 | [Results on SCAN-B](07_results_scanb.md) | AUC per task at the chosen `k`, gain over random, all genes, stability, Higher Criticism, RFECV, chains, Sequential, cost. |
 | 8 | [Results on image data](08_results_images.md) | BreastMNIST and FGVC-Aircraft: AUC at the chosen `k`, gain over random, all features, stability, Higher Criticism, chains. |
-| 9 | [Conclusions](09_conclusions.md) | What we learned, what the datasets share, and the answer to the main question. |
+| 9 | [Conclusions](09_conclusions.md) | What we learned, what the datasets share, the answer to the main question, and the limits. |
 | 10 | [Open work and next steps](10_open_work.md) | What is missing, and what is worth investigating next. |
 | A | [Glossary](appendix_a_glossary.md) | Short definitions of terms. |
 | B | [How to reproduce](appendix_b_reproduce.md) | The commands, configs and notebooks behind every number. |

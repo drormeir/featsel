@@ -25,8 +25,9 @@ genes). Configs: `configs/frontier_scanb70_*.yaml`.
 ![Frontier on SCAN-B](figures/frontier_scanb70_roc_auc.png)
 
 *Each point is one method at one `k`: median selection time per fit, and
-mean test AUC over tasks and splits. A point is on the frontier (blue) when
-no other point is both faster and better. The mean over tasks hides
+mean test AUC over tasks and splits, with a bar of one standard deviation.
+A point is on the frontier (blue) when no other point is both faster and
+better. The mean over tasks hides
 differences between tasks; the per-task plots follow. Table:
 [`figures/frontier_scanb70_roc_auc.csv`](figures/frontier_scanb70_roc_auc.csv).*
 
@@ -83,6 +84,8 @@ Test AUC at the `k` each method chose on validation sets:
 | RFECV, scored by accuracy | 0.984 | 0.583 | 0.959 | 0.566 | 0.505 | 0.720 |
 
 Table: [`figures/summary_scanb70_chosen.csv`](figures/summary_scanb70_chosen.csv).
+For each task, Appendix D.1 gives the spread of test AUC (first and third
+quartiles), the genes kept, the times and the stability.
 
 What it shows:
 
@@ -134,7 +137,8 @@ Table: [`figures/summary_scanb70_bar.csv`](figures/summary_scanb70_bar.csv).
 What it shows:
 
 - **At 10 genes, selection matters a lot.** Every filter and tree
-  importance beat random by 0.12 to 0.19 AUC, on every task.
+  importance beat random by 0.12 to 0.19 AUC, on every task. With the
+  chains and Sequential, the range is 0.10 to 0.20.
 - **Basal is easy.** Random genes reach 0.98 at 50 genes. After that no
   method beats them.
 - **On LumA and LumB the gain lasts.** At 2,000 genes, the filters and
@@ -400,7 +404,8 @@ AUC.
 
 - On SCAN-B, eleven methods score within 0.01 AUC of each other at their
   chosen `k`. No method leads on every task.
-- At 10 genes, selection beats random genes by 0.10 to 0.20 AUC. On Basal
+- At 10 genes, every method but RFE alone beats random genes by 0.10 to
+  0.20 AUC. On Basal
   the gain is gone by 250 genes; on LumA and LumB it lasts to 2,000.
 - Against all 28,541 genes, selection gains 0.014 to 0.023 on LumB. On the
   other tasks no gain is established, and the filters and tree importance
