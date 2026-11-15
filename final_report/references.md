@@ -46,6 +46,10 @@ Chapelle, O. (2007). Training a support vector machine in the primal.
 *Neural Computation* 19(5), 1155-1178.
 https://doi.org/10.1162/neco.2007.19.5.1155
 
+DLMF. *NIST Digital Library of Mathematical Functions*, chapter 8,
+"Incomplete Gamma and Related Functions", section 8.17, "Incomplete Beta
+Functions". Release 1.2.8, 2026-09-15. https://dlmf.nist.gov/8.17
+
 Donoho, D. and Jin, J. (2004). Higher criticism for detecting sparse
 heterogeneous mixtures. *Annals of Statistics* 32(3), 962-994.
 https://doi.org/10.1214/009053604000000265
@@ -149,9 +153,6 @@ microarray gene expression cancer diagnosis. *Bioinformatics* 21(5),
 Tibshirani, R. (1996). Regression shrinkage and selection via the lasso.
 *Journal of the Royal Statistical Society, Series B* 58(1), 267-288.
 https://doi.org/10.1111/j.2517-6161.1996.tb02080.x
-
-Wilcoxon, F. (1945). Individual comparisons by ranking methods.
-*Biometrics Bulletin* 1(6), 80-83. https://doi.org/10.2307/3001968
 
 Yang, J., Shi, R., Wei, D., et al. (2023). MedMNIST v2 - a large-scale
 lightweight benchmark for 2D and 3D biomedical image classification.

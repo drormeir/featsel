@@ -193,7 +193,8 @@ Each dataset has its own folder in `featsel_datasets/`, outside the
 package, with two parts:
 
 - a class that downloads the published files once, caches them, and
-  exposes everything in them unchanged: `GSE96058`, `BreastMNIST`;
+  exposes everything in them unchanged: `GSE96058`, `BreastMNIST`,
+  `FGVCAircraft`;
 - `featsel_view.py`, with this project's choices (HiSeq only, one sample
   per patient, the target), `NAME`, `TARGET` and `load_xy()`, which
   returns `X` and `y`.
@@ -204,8 +205,9 @@ the package does not change.
 **Why.** The course's SCAN-B files had no recorded source or filters.
 Their origin, patients and gene choice could not be checked, and nobody
 could reuse our preparation. The generic class makes no choice for the
-caller, so others can use it alone. For BreastMNIST it also computes the
-ResNet-50 embeddings and finds the copied images
+caller, so others can use it alone. For the image datasets it also
+computes the ResNet-50 embeddings. For BreastMNIST it finds the copied
+images
 ([`copies_report.md`](../featsel_datasets/medmnist_breastmnist/copies_report.md)),
 once each, and caches both. It imports PyTorch and OpenCV only for those
 steps, so cached runs never need them.
@@ -286,7 +288,8 @@ read the CSV. A new plot never needs a new run.
 cuts the features, and a slower method picks the final `k` from the rest.
 The runner builds it as a scikit-learn `Pipeline`. Recorded genes are
 always indices of the original features, and the selection time covers
-every step. Section 8.9 compares chains with their last step alone.
+every step. Sections 7.9 and 8.7 compare chains with their last step
+alone.
 
 **Nested tuning.** A model entry with a `grid` is tuned inside each split
 (section 3.8), by scikit-learn's `GridSearchCV` on stratified Monte Carlo

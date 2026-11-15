@@ -251,7 +251,42 @@ The pattern of BreastMNIST holds:
   and lost 0.038.
 - HC2008 stops at the edge of its search; HC2004 keeps one or two features.
 
-## 8.10 Summary
+## 8.10 Side scores and memory
+
+Macro-F1 and balanced accuracy at the `k` each method chose, with a
+threshold of 0.5 (section 3.14), on both image datasets:
+
+| Method | BreastMNIST macro-F1 [Q1, Q3] | Balanced accuracy | FGVC-Aircraft macro-F1 [Q1, Q3] | Balanced accuracy |
+|---|---|---|---|---|
+| All features | 0.855 [0.842, 0.867] | 0.843 | **0.794** [0.788, 0.811] | 0.788 |
+| RFE | **0.856** [0.844, 0.866] | 0.846 | 0.793 [0.783, 0.809] | 0.788 |
+| Mann-Whitney | 0.849 [0.835, 0.865] | 0.839 | 0.783 [0.777, 0.799] | 0.779 |
+| Mutual information | 0.845 [0.836, 0.852] | 0.835 | 0.786 [0.776, 0.797] | 0.781 |
+| Tree importance | 0.845 [0.832, 0.861] | 0.837 | — | — |
+| Correlation (Spearman) | 0.837 [0.825, 0.852] | 0.828 | 0.755 [0.739, 0.773] | 0.753 |
+| RFECV, scored by AUC | 0.831 [0.805, 0.847] | 0.823 | 0.789 [0.779, 0.802] | 0.785 |
+| Lasso | 0.825 [0.803, 0.847] | 0.816 | 0.782 [0.765, 0.796] | 0.777 |
+| HC2008 | 0.788 [0.777, 0.804] | 0.789 | 0.741 [0.732, 0.757] | 0.738 |
+| Berk-Jones | 0.788 [0.772, 0.804] | 0.790 | — | — |
+| Sequential, `k` = 10 | 0.708 [0.686, 0.726] | 0.690 | 0.620 [0.601, 0.638] | 0.617 |
+| HC2004 | 0.625 [0.601, 0.642] | 0.614 | 0.553 [0.543, 0.563] | 0.565 |
+
+"—": not run on that dataset. The chains and RFECV scored by accuracy are
+in the tables only:
+[`figures/summary_breastmnist70_side.csv`](figures/summary_breastmnist70_side.csv),
+[`figures/summary_aircraft70_side.csv`](figures/summary_aircraft70_side.csv),
+from [`scripts/summarize_side_metrics.py`](../scripts/summarize_side_metrics.py).
+
+The picture of AUC holds. RFE ties all features. Mann-Whitney and mutual
+information come within 0.011 of them. The methods that cap their own
+count (Lasso, HC, Berk-Jones) lose more. No selected set beats all
+features by more than 0.001 macro-F1.
+
+**Memory.** By the measure of section 7.12, every fit took under 20 MB,
+in the median over splits. The largest single fit took 61 MB. With 2,048
+features, memory does not limit any method here.
+
+## 8.11 Summary
 
 - On both image datasets, no selection method beats all 2,048 features.
   RFE ties them; Mann-Whitney and mutual information come within 0.01.
@@ -263,5 +298,6 @@ The pattern of BreastMNIST holds:
   lower (Lasso, Higher Criticism, Berk-Jones, chains) lose AUC.
 - Filters are the most stable; RFE, mutual information and RFECV pick
   different features on each split at the same AUC.
+- Macro-F1 gives the same picture as AUC.
 - Every method runs in under a second per fit, except Sequential (1.4 to
   3.5 s). On these data, cost does not decide the choice.

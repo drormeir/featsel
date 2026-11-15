@@ -46,8 +46,8 @@ methods, and much faster.
 | 4 | [The methods](04_the_methods.md) | The 16 methods: filters, embedded methods, wrappers, Higher Criticism and Berk-Jones. Why genes are scored with the U test. |
 | 5 | [The software](05_the_software.md) | Drop-in selectors, the config-driven runner, datasets, memory safety, reproducibility. |
 | 6 | [Making it fast](06_making_it_fast.md) | Task 3: the runner against plain scikit-learn; faster methods on the CPU and GPU. |
-| 7 | [Results on SCAN-B](07_results_scanb.md) | AUC per task at the chosen `k`, gain over random, all genes, stability, Higher Criticism, RFECV, chains, Sequential, cost. |
-| 8 | [Results on image data](08_results_images.md) | BreastMNIST and FGVC-Aircraft: AUC at the chosen `k`, gain over random, all features, stability, Higher Criticism, chains. |
+| 7 | [Results on SCAN-B](07_results_scanb.md) | AUC per task at the chosen `k`, gain over random, all genes, stability, Higher Criticism, RFECV, chains, Sequential, cost, side scores and memory. |
+| 8 | [Results on image data](08_results_images.md) | BreastMNIST and FGVC-Aircraft: AUC at the chosen `k`, gain over random, all features, stability, Higher Criticism, chains, side scores and memory. |
 | 9 | [Conclusions](09_conclusions.md) | What we learned, what the datasets share, the answer to the main question, and the limits. |
 | 10 | [Open work and next steps](10_open_work.md) | What is missing, and what is worth investigating next. |
 | A | [Glossary](appendix_a_glossary.md) | Short definitions of terms. |

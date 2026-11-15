@@ -161,9 +161,5 @@ the classifier.
 setting, such as `k` or Lasso's C. For these two, the training set is cut
 into 5 folds, and each fold serves once as the validation set.
 
-**Wilcoxon signed-rank test.** A paired test that ranks the absolute
-differences and checks whether positive and negative ones balance. It
-assumes independent pairs, which random splits are not.
-
 **Wrapper.** A method that searches over feature subsets by training a
 classifier on each.

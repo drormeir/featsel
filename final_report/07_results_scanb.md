@@ -400,7 +400,60 @@ The whole SCAN-B run took about 33 hours: 18 for Sequential, 6 for the GPU
 methods, 5 for the CPU methods, 2.4 for the chains, and 1.1 for RFECV by
 AUC.
 
-## 7.12 Summary
+## 7.12 Side scores and memory
+
+AUC is the main score (section 3.5). Macro-F1 and balanced accuracy are
+side scores. They use a decision threshold, fixed at 0.5 (section 3.14).
+At the `k` each method chose, mean over the five tasks:
+
+| Method | Macro-F1 | Range over tasks | Balanced accuracy | Peak memory of a fit, MB |
+|---|---|---|---|---|
+| Mutual information | **0.881** | 0.773 to 0.963 | 0.869 | 454 |
+| Berk-Jones | **0.881** | 0.778 to 0.966 | 0.869 | 174 |
+| HC2008 | **0.881** | 0.777 to 0.966 | 0.869 | 166 |
+| Correlation (Spearman) | 0.879 | 0.768 to 0.962 | 0.869 | 93 |
+| Mann-Whitney | 0.879 | 0.770 to 0.960 | 0.869 | 166 |
+| Tree importance | 0.877 | 0.763 to 0.960 | 0.867 | 88 |
+| Mann-Whitney 1000, then Lasso | 0.872 | 0.756 to 0.957 | 0.866 | 172 |
+| Mann-Whitney 1000, then RFE | 0.870 | 0.735 to 0.964 | 0.862 | 172 |
+| Mann-Whitney 1000, then tree importance | 0.869 | 0.733 to 0.962 | 0.861 | 172 |
+| RFECV, scored by AUC | 0.867 | 0.747 to 0.960 | 0.857 | 633 |
+| RFE | 0.865 | 0.743 to 0.963 | 0.854 | 633 |
+| Lasso | 0.864 | 0.733 to 0.961 | 0.849 | 227 |
+| All 28,541 genes | 0.864 | 0.731 to 0.958 | 0.853 | under 1 |
+| Sequential, `k` = 10 | 0.834 | 0.685 to 0.951 | 0.815 | 227 |
+| HC2004 | 0.729 | 0.642 to 0.804 | 0.700 | 166 |
+| RFECV, scored by accuracy | 0.669 | 0.482 to 0.957 | 0.680 | 633 |
+
+The memory column is the median over tasks and splits. Table, per task
+with quartiles:
+[`figures/summary_scanb70_side.csv`](figures/summary_scanb70_side.csv),
+from [`scripts/summarize_side_metrics.py`](../scripts/summarize_side_metrics.py).
+
+What it shows:
+
+- **The order is almost that of AUC.** The six best methods by AUC are
+  also the six best by macro-F1, within 0.004 of each other.
+- **By macro-F1, Normal is the hardest task for every method.** It is the
+  most imbalanced: 200 patients against 2,776.
+- **On Normal, selection gains macro-F1 that AUC does not show.** All
+  genes reach macro-F1 0.731; Mann-Whitney 0.770 and HC2008 0.777. Their
+  AUCs are almost equal: 0.941, 0.939 and 0.946. So with all genes, the
+  threshold of 0.5 suits the model less well. These differences were not
+  tested.
+
+**What the memory measure counts.** The runner traces the first timed fit
+with Python's `tracemalloc` (section 3.7). It counts the memory that
+Python and NumPy allocate during the fit, on the CPU. It does not count
+the data already in memory, memory on the GPU, or memory that compiled
+libraries allocate outside NumPy, such as scikit-learn's trees or
+PyTorch's tensors. So the numbers compare fits of one method, not methods
+on different devices. By this measure, every fit stayed under 1 GB. RFE
+and RFECV took the most, 633 MB: at 2,083 training patients and 28,541
+genes, one copy of the data in 64-bit floats takes 454 MB. (Here 1 MB
+is 2²⁰ bytes.)
+
+## 7.13 Summary
 
 - On SCAN-B, eleven methods score within 0.01 AUC of each other at their
   chosen `k`. No method leads on every task.
@@ -420,6 +473,8 @@ AUC.
   on average, yet predict the subtypes well: correlated genes stand in.
 - Selection helps every classifier at small `k`. Logistic regression is the
   best classifier at 1,000 genes; k-NN needs selection most.
+- By macro-F1 the order of methods is almost that of AUC. On Normal,
+  selection gains macro-F1 over all genes at the same AUC (not tested).
 - HC2008 and Berk-Jones are the best value: 0.970 mean AUC in 0.66 s per
   fit, with no `k` to choose. Mann-Whitney scores 0.969 in the same time
   per fit, plus 26 s to choose `k`. Mutual information, the best mean

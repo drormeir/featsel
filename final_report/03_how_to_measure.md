@@ -181,7 +181,10 @@ For every fit we record:
   selection takes minutes per fit, so it is fit once.
 - **Search time**: choosing `k`, or a method's own hyperparameter, on
   validation sets (section 3.11), recorded apart.
-- **Peak memory** of the selection.
+- **Peak memory** of the selection: what Python and NumPy allocate on
+  the CPU during the first timed fit, traced by `tracemalloc`. It does not
+  count GPU memory or memory that compiled libraries allocate outside
+  NumPy (section 7.12).
 - **The device**: CPU or GPU.
 - **Reproducibility**: whether every repeated fit chose the same genes.
 
