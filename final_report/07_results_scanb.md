@@ -26,9 +26,41 @@ genes). Configs: `configs/frontier_scanb70_*.yaml`.
 
 *Each point is one method at one `k`: median selection time per fit, and
 mean test AUC over tasks and splits. A point is on the frontier (blue) when
-no other point is both faster and better. Per-task plots:
-`figures/frontier_scanb70_roc_auc_ovr_<task>.png`. Table:
+no other point is both faster and better. The mean over tasks hides
+differences between tasks; the per-task plots follow. Table:
 [`figures/frontier_scanb70_roc_auc.csv`](figures/frontier_scanb70_roc_auc.csv).*
+
+### Each task's frontier
+
+The same plot for each task, mean over the 16 splits. Each task has its
+own table, `figures/frontier_scanb70_roc_auc_ovr_<task>.csv`.
+
+![Frontier on SCAN-B, Basal](figures/frontier_scanb70_roc_auc_ovr_Basal.png)
+
+![Frontier on SCAN-B, Her2](figures/frontier_scanb70_roc_auc_ovr_Her2.png)
+
+![Frontier on SCAN-B, LumA](figures/frontier_scanb70_roc_auc_ovr_LumA.png)
+
+![Frontier on SCAN-B, LumB](figures/frontier_scanb70_roc_auc_ovr_LumB.png)
+
+![Frontier on SCAN-B, Normal](figures/frontier_scanb70_roc_auc_ovr_Normal.png)
+
+What the five frontiers show:
+
+- **Random genes are the fast end of every frontier.** They take 0.02 to
+  0.07 s. On Basal, 50 random genes already reach 0.981.
+- **A different method tops each task.** Mann-Whitney 1000 then Lasso on
+  Basal (0.994), Mann-Whitney and correlation at 1,500 on Her2 (0.987),
+  Berk-Jones, HC2008 and tree importance on LumA (0.961), Mann-Whitney and
+  correlation at 1,000 on LumB (0.972), and mutual information at 2,000 on
+  Normal (0.948).
+- **Above random, the frontier climbs little,** except on LumB. There it
+  goes from 0.949 (random, 2,000 genes) to 0.972. On the other tasks the
+  climb is 0.007 or less.
+- **The first point above random takes 0.5 to 0.7 s.** It is Lasso on
+  Basal and LumB, Berk-Jones on Her2 and Normal, and Mann-Whitney on LumA.
+- **The slower methods add at most 0.001.** Correlation, mutual
+  information and tree importance take 3 to 17 s.
 
 Test AUC at the `k` each method chose on validation sets:
 
