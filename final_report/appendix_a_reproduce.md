@@ -5,7 +5,7 @@
 Every command runs from the repository root, inside its virtual
 environment.
 
-## Setup
+## A.1 Setup
 
 ```bash
 python3.13 -m venv .venv
@@ -23,7 +23,7 @@ Versions used: Python 3.13, scikit-learn 1.9, NumPy 2.5, SciPy 1.18,
 pandas 3.0, PyTorch with CUDA 13. Each run writes a JSON file beside its
 CSV with the exact versions, the machine and the git commit.
 
-## The experiments
+## A.2 The experiments
 
 Chapters 7 and 8 come from the current configs, run on 2026-11-14 and 15.
 Each result's JSON file records the commit, machine and settings.
@@ -66,7 +66,7 @@ each selection once. The runner now fits each selection 10 times by
 default (`selection_repeats`), and `benchmark_speed.py` does not set it
 to 1. So a rerun today would not match the table's runner times.
 
-## Determinism
+## A.3 Determinism
 
 One seed, 42; split `s` uses 42 + `s`. Selections are identical across
 runs. They are identical across devices too, except Lasso: on LumA and
@@ -76,7 +76,7 @@ its load.
 The frontier records whether repeated fits agreed (`selection_stable`)
 and where each ran (`selection_device`).
 
-## Tests
+## A.4 Tests
 
 ```bash
 .venv/bin/python -m pytest -v

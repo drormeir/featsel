@@ -1,0 +1,141 @@
+/* Style of the PDF report, for WeasyPrint (scripts/build_report_pdf.py).
+   A4, 2.5 cm margins, Times New Roman 12 pt, single spacing.
+   No page number before the abstract, Roman numerals on the abstract,
+   1, 2, 3 from chapter 1 on. */
+
+@page {
+  size: A4;
+  margin: 2.5cm;
+  @bottom-center {
+    content: counter(page);
+    font-family: "Times New Roman", "Liberation Serif", serif;
+    font-size: 10pt;
+  }
+}
+@page front {
+  @bottom-center { content: none; }
+}
+@page roman {
+  @bottom-center { content: counter(page, lower-roman); }
+}
+@page :nth(1 of roman) {
+  counter-reset: page 1;
+}
+/* Chapter 1 is the only element on the named page "start", so its first
+   page is the only one that resets the count. */
+@page :nth(1 of start) {
+  counter-reset: page 1;
+}
+
+html {
+  font-family: "Times New Roman", "Liberation Serif", serif;
+  font-size: 12pt;
+  line-height: 1.15;
+  text-align: justify;
+  hyphens: auto;
+}
+body { margin: 0; }
+
+/* Title and supervisor pages: written by hand in references/local/title.md.
+   A horizontal rule (* * *) starts the next page. */
+.title-page {
+  page: front;
+  text-align: center;
+}
+.title-page hr {
+  break-after: page;
+  visibility: hidden;
+  border: none;
+  margin: 0;
+}
+
+/* Contents */
+#TOC {
+  page: front;
+  break-before: page;
+  text-align: left;
+}
+#TOC h2 { font-size: 18pt; }
+#TOC ul { list-style: none; padding-left: 0; margin: 0; }
+#TOC ul ul { padding-left: 1.5em; }
+#TOC li { margin: 0.15em 0; }
+#TOC > ul > li { margin-top: 0.5em; font-weight: bold; }
+#TOC > ul > li li { font-weight: normal; }
+#TOC a { color: inherit; text-decoration: none; }
+#TOC a::after {
+  content: leader('.') target-counter(attr(href url), page);
+}
+#TOC a[href="#chap-abstract"]::after {
+  content: leader('.') target-counter(attr(href url), page, lower-roman);
+}
+
+/* Each chapter, appendix and the references start on a new page. */
+section.level1 { break-before: page; }
+#chap-abstract { page: roman; }
+#chap-01_the_problem { page: start; }
+
+h1, h2, h3, h4 {
+  text-align: left;
+  break-after: avoid;
+  hyphens: manual;
+}
+h1 { font-size: 18pt; margin: 0 0 0.8em; }
+h2 { font-size: 14pt; margin: 1.2em 0 0.5em; }
+h3 { font-size: 12pt; margin: 1em 0 0.4em; }
+h4 { font-size: 12pt; font-style: italic; font-weight: normal; }
+
+p { margin: 0 0 0.6em; orphans: 2; widows: 2; }
+ul, ol { margin: 0 0 0.6em; padding-left: 1.5em; }
+li { margin: 0.1em 0; }
+
+a { color: #1a3d7c; text-decoration: none; }
+
+code {
+  font-family: "Liberation Mono", "DejaVu Sans Mono", monospace;
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+pre {
+  font-size: 9pt;
+  line-height: 1.2;
+  white-space: pre-wrap;
+  background: #f4f4f4;
+  padding: 0.5em;
+  text-align: left;
+  break-inside: avoid;
+}
+pre code { font-size: inherit; }
+
+/* Tables: smaller, so that wide ones fit the page. */
+table {
+  border-collapse: collapse;
+  max-width: 100%;
+  font-size: 9pt;
+  line-height: 1.2;
+  margin: 0.4em 0 0.8em;
+  text-align: left;
+  hyphens: manual;
+}
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th, td {
+  border-bottom: 0.5pt solid #999;
+  padding: 0.2em 0.35em;
+  vertical-align: top;
+  overflow-wrap: break-word;
+}
+th { border-bottom: 1pt solid #333; }
+
+figure {
+  margin: 0.6em 0;
+  text-align: center;
+  break-inside: avoid;
+}
+figure img { max-width: 100%; max-height: 21cm; }
+figcaption { font-size: 10pt; font-style: italic; margin-top: 0.3em; }
+
+blockquote {
+  margin: 0.6em 1.5em;
+  font-size: 11pt;
+}
