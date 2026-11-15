@@ -86,7 +86,7 @@ embeddings computed once with PyTorch and cached) and `featsel_view.py`.
 installed: `pyproject.toml` excludes it from the `featsel` package. Run from
 the repo root.
 Design: `final_report/05_the_software.md`, section 5.3. Data findings:
-`final_report/02_the_data.md` and its Appendix C.
+`final_report/02_the_data.md` and its Appendix B.
 
 **CSV datasets: `featsel/data_loader.py`**
 

@@ -1,6 +1,6 @@
 # 10. Open work and next steps
 
-[Back to contents](README.md) · Previous: [9. Conclusions](09_conclusions.md) · Next: [Appendix A: glossary](appendix_a_glossary.md)
+[Back to contents](README.md) · Previous: [9. Conclusions](09_conclusions.md) · Next: [Appendix A: how to reproduce](appendix_a_reproduce.md)
 
 Section 10.1 lists unfinished work within the project's four tasks.
 Section 10.2 lists research beyond its scope.
@@ -15,7 +15,7 @@ Section 10.2 lists research beyond its scope.
 | **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The protocol uses one classifier and one train fraction. | About four days on this laptop. Skipped by decision. |
 | **A measured target on SCAN-B**, such as the pathologist's ER status. | Every SCAN-B task here predicts a computed label. A measured label would test the conclusions against clinical truth. | One config. The loader supports it. |
 | **The quantile transform with every classifier** (section 3.10). It did not help logistic regression. | Would show whether shrinkage LDA and k-NN gain from normal-shaped features. | One `k`, all classifiers. A run was started and cancelled. |
-| **How SCAN-B computed `pam50 subtype`.** | The GEO notes say only that it implements Parker's method, after centring to a reference set, with unpublished R scripts (section 2.1, Appendix C.2). | Reading other SCAN-B papers. |
+| **How SCAN-B computed `pam50 subtype`.** | The GEO notes say only that it implements Parker's method, after centring to a reference set, with unpublished R scripts (section 2.1, Appendix B.2). | Reading other SCAN-B papers. |
 
 ### Software
 
@@ -33,7 +33,7 @@ Planned, not done. Rebuild Brueffer et al.'s ER classifier from their
 published gene weights. Apply it to GSE96058. Compare its output with the
 stored `er prediction mgc` label. This would show how the ER label was
 made, instead of inferring it. The steps are in
-[Appendix C.1](appendix_c_data_details.md#c1-reproducing-the-er-label-planned-not-done).
+[Appendix B.1](appendix_b_data_details.md#b1-reproducing-the-er-label-planned-not-done).
 
 ## 10.2 Beyond this project
 

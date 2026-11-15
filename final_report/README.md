@@ -21,6 +21,31 @@ many on a GPU, and plotted cost against quality. The main finding: here, a
 simple test of one gene at a time is almost as good as the complex
 methods, and much faster.
 
+## What was built
+
+- **A library of 16 feature selectors** that plug into scikit-learn. The
+  ones that copy a scikit-learn method are tested to select the same
+  features. All of these but Lasso are also tested to be at most 5% slower
+  (chapter 5).
+- **GPU versions of ten selectors**, in PyTorch, with the same results as
+  on the CPU. The filters run 2.6 to 49 times faster on the GPU, and
+  sequential selection 34 times (chapter 6).
+- **Exact solvers** for RFE, RFECV and Lasso, which reach the solution
+  that scikit-learn's default solver stops short of. RFE became 8 times
+  faster (chapter 6).
+- **An experiment runner driven by one YAML file.** It selects inside
+  every split, runs a random control at every `k`, and chooses `k` on
+  validation sets. It runs jobs in parallel, survives running out of
+  memory, and resumes after a crash. The full SCAN-B comparison took
+  about 33 hours (chapter 5, section 7.11).
+- **Dataset loaders** that download the public data once, check it, and
+  record every choice made on it. Two of these checks changed the study:
+  repeated patients in SCAN-B, and copied images in BreastMNIST
+  (chapter 2).
+- **A statistical protocol** with a test corrected for overlapping splits,
+  which removed most of the claimed gains over all genes (chapter 3,
+  section 9.2).
+
 ## Key results at a glance
 
 | Question | Answer | Where |
@@ -28,7 +53,7 @@ methods, and much faster.
 | Does selection beat random genes? | Yes, most at small `k`: at 10 features by 0.10 to 0.20 AUC on SCAN-B (every method but RFE alone) and 0.10 to 0.16 on image data. The gain shrinks as `k` grows; on LumA and LumB it lasts to 2,000 genes. | [7.2](07_results_scanb.md#72-the-bar-random-genes-at-each-k), [8.2](08_results_images.md#82-the-bar-random-features-at-each-k) |
 | Which method selects best? | No single method. On SCAN-B eleven methods lie within 0.01 mean AUC, and none leads on every task. On image data RFE ties all features. Mann-Whitney is within 0.01 of the best everywhere and among the most stable. | [7.1](07_results_scanb.md#71-what-each-method-reaches), [7.4](07_results_scanb.md#74-stability), [8.1](08_results_images.md#81-breastmnist-what-each-method-reaches) |
 | Which is the best value for time? | A GPU filter. On SCAN-B, HC2008 and Berk-Jones reach 0.970 mean AUC in 0.66 s per fit; the best, mutual information, reaches 0.971 in 3.6 s. | [7.11](07_results_scanb.md#711-cost) |
-| Can the best method for a budget be known in advance? | No. RFE leads at large `k` on image data and trails on SCAN-B; at 10 features filters lead on image data, Mann-Whitney then RFE on SCAN-B. | [9.3](09_conclusions.md#93-across-the-datasets) |
+| Can the best method for a budget be known in advance? | No. RFE leads at large `k` on image data and trails on SCAN-B; at 10 features filters lead on image data, Mann-Whitney then RFE on SCAN-B. | [9.4](09_conclusions.md#94-across-the-datasets) |
 | Does Higher Criticism pick its own count? | No. On all three datasets HC2008 stopped at the edge of its search, 10% of the features: the signal is not rare. Berk-Jones, run on SCAN-B and BreastMNIST, stopped at or just before that edge. | [7.5](07_results_scanb.md#75-higher-criticism-and-berk-jones), [8.5](08_results_images.md#85-higher-criticism-and-berk-jones) |
 | Do methods find the genes that define the label? | Rarely at small `k`: at most 12% of the 50 PAM50 genes in the top 50, on average. Yet they predict the label well, because correlated genes stand in for them. | [7.6](07_results_scanb.md#76-does-selection-find-the-pam50-genes) |
 | How much faster did we make it? | The runner: 3.2 to 5.3 times faster than plain scikit-learn. GPU filters: 2.6 to 49 times. Sequential selection: 34 times. All select the same features as before. | [6](06_making_it_fast.md) |
@@ -48,21 +73,26 @@ methods, and much faster.
 | 6 | [Making it fast](06_making_it_fast.md) | Task 3: the runner against plain scikit-learn; faster methods on the CPU and GPU. |
 | 7 | [Results on SCAN-B](07_results_scanb.md) | AUC per task at the chosen `k`, gain over random, all genes, stability, Higher Criticism, RFECV, chains, Sequential, cost, side scores and memory. |
 | 8 | [Results on image data](08_results_images.md) | BreastMNIST and FGVC-Aircraft: AUC at the chosen `k`, gain over random, all features, stability, Higher Criticism, chains, side scores and memory. |
-| 9 | [Conclusions](09_conclusions.md) | What we learned, what the datasets share, the answer to the main question, and the limits. |
+| 9 | [Conclusions](09_conclusions.md) | What we built, the key decisions, what we learned, what the datasets share, the answer to the main question, and the limits. |
 | 10 | [Open work and next steps](10_open_work.md) | What is missing, and what is worth investigating next. |
-| A | [Glossary](appendix_a_glossary.md) | Short definitions of terms. |
-| B | [How to reproduce](appendix_b_reproduce.md) | The commands, configs and notebooks behind every number. |
-| C | [Data: plans and open questions](appendix_c_data_details.md) | Reproducing the ER label, the PAM50 recovery design, Higher Criticism's share of signal, a better model for floor-heavy genes. |
-| D | [Full tables](appendix_d_comparison_tables.md) | Test AUC at every `k` and at the chosen `k`, per task and dataset, with genes kept, times and stability. |
+| A | [How to reproduce](appendix_a_reproduce.md) | The commands, configs and notebooks behind every number. |
+| B | [Data: plans and open questions](appendix_b_data_details.md) | Reproducing the ER label, the PAM50 recovery design, Higher Criticism's share of signal, a better model for floor-heavy genes. |
+| C | [Full tables](appendix_c_comparison_tables.md) | Test AUC at every `k` and at the chosen `k`, per task and dataset, with genes kept, times and stability. |
+| D | [Engineering notes](appendix_d_engineering.md) | Solver details, timing checks and the GPU trials behind chapter 6. |
+| E | [Glossary](appendix_e_glossary.md) | Short definitions of terms. |
 | | [References](references.md) | The papers cited. |
 
 ## How to read the numbers
 
 Every number comes from a file in the repository, and each table names its
-source. Every experiment follows one protocol (chapter 3): 16 random
-splits, 70% of the samples in the training set, `k` chosen on validation
-sets, ROC AUC, and timing. Chapters 7 and 8 come from one rerun under
-this protocol, made on 2026-11-14 and 15.
+source. The method comparisons follow one protocol (chapter 3): 16
+random splits, 70% of the samples in the training set, `k` chosen on
+validation sets, ROC AUC, and timing. They come from one rerun under this
+protocol, made on 2026-11-14 and 15. A few side studies keep their own
+settings, stated where they appear: the PAM50 recovery (section 7.6), the
+classifier study (section 7.7), the preprocessing test (section 3.10) and
+the speed benchmarks (chapter 6). Section 9.7 gives the limits that
+follow.
 
 Times are from one laptop: Intel i7-9750H (6 cores, 12 threads), 16 GB
 RAM, NVIDIA GeForce GTX 1650 with 4 GB. A time is meaningful only on the

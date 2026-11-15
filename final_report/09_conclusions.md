@@ -2,10 +2,14 @@
 
 [Back to contents](README.md) · Previous: [8. Results on image data](08_results_images.md) · Next: [10. Open work](10_open_work.md)
 
-Each dataset is its own classification problem, with its own frontier of
-cost against AUC (chapters 7 and 8). This chapter asks what the frontiers
-share: does one method lead at every time budget on every dataset, or can
-the best method for a budget not be known in advance?
+Three datasets and sixteen methods lead to one practical message. On data
+like these, a simple test of one feature at a time, run on a GPU, is
+almost as good as anything else, and it costs far less.
+
+This chapter first sums up what was built and which decisions shaped the
+results. It then asks what the datasets share: does one method lead at
+every time budget, or can the best method for a budget not be known in
+advance? It ends with the limits of the answer.
 
 ## 9.1 What we built
 
@@ -34,7 +38,25 @@ the best method for a budget not be known in advance?
   embeddings. It needed a loader and a config, but no change to the
   package. It ran entirely on the GPU in 17 minutes. (Task 4.)
 
-## 9.2 What we learned
+## 9.2 Key decisions
+
+Ten decisions shaped the results. Each one is described in the section
+given.
+
+| Decision | Why | What it changed |
+|---|---|---|
+| Select features inside every split, never on all the data | Selection on all the data lets the test samples choose the features | On pure noise, selection on all the data gave AUC 0.96 instead of the true 0.5 (section 3.2) |
+| A random control at every `k` | A method has found something only if it beats random features of the same number | It showed that selection gains most at 10 features, and that random features catch up as `k` grows (sections 7.2, 8.2) |
+| A t-test corrected for overlapping splits | Random splits share most of their training samples, so a plain paired t-test is overconfident | Established gains over all genes fell from 52 to 20 of 70 comparisons (section 9.3, item 9) |
+| The public GSE96058 data, one sample per patient, not the course copies | The course copies keep 93 repeated patients and lack 11 of the 50 PAM50 genes | It removed a leak, and made the PAM50 recovery test possible (sections 2.1, 7.6) |
+| The U test, not the F-test, for every filter | Half the gene values sit at a floor, and only their order is meaningful | One valid test for all filters, so the comparison is between selection rules, not tests (section 4.3) |
+| Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | Scores fell by about 0.03 AUC without the copies; the order of methods held (section 8.8) |
+| Exact solvers, not liblinear, for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became 8 times faster and repeatable, at the same AUC (section 6.2) |
+| RFECV scored by AUC, not accuracy | Accuracy rewards the majority class on imbalanced tasks | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (section 7.8) |
+| Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | HC's behaviour on widespread signal is reported as it is (sections 4.4, 7.5) |
+| A third dataset, unseen during the design | Two datasets shaped the design, so they cannot test it | The pipeline ran unchanged on FGVC-Aircraft (section 8.9) |
+
+## 9.3 What we learned
 
 The numbers come from the runs of chapters 7 and 8, all under the protocol
 of chapter 3.
@@ -129,7 +151,7 @@ of chapter 3.
     On the other four tasks no gain is established. So decide first
     whether you want a smaller model or a better one.
 
-## 9.3 Across the datasets
+## 9.4 Across the datasets
 
 Each dataset has its own frontier. What do they share?
 
@@ -147,7 +169,7 @@ So the best method for a budget cannot be known in advance from these
 three datasets. What can be known is a safe default: Mann-Whitney on a GPU
 is never far from the best, and costs least.
 
-## 9.4 What this project adds
+## 9.5 What this project adds
 
 Section 1.7 lists the contributions. In short:
 
@@ -162,7 +184,7 @@ Section 1.7 lists the contributions. In short:
 - Data checks that changed how the data was used: repeated patients,
   computed labels, and copied images found in BreastMNIST itself.
 
-## 9.5 Answer to the main question
+## 9.6 Answer to the main question
 
 For a given number of features `k`, which method gives the best
 classifier, and by how much over random?
@@ -180,7 +202,7 @@ If time also counts, a GPU filter is the practical choice. On SCAN-B,
 HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
 per fit, 0.001 to 0.002 below the best.
 
-## 9.6 Limits
+## 9.7 Limits
 
 These conclusions hold under the conditions below. Each limit is
 described in the section given.
@@ -215,7 +237,7 @@ described in the section given.
 - Every time comes from one laptop with a 4 GB consumer GPU (chapter 6).
   A time is meaningful only on that machine.
 - The runner's speed-up over scikit-learn was measured before liblinear
-  was dropped. A rerun today would not match it (Appendix B).
+  was dropped. A rerun today would not match it (Appendix A).
 
 **Higher Criticism.** No dataset here has rare signal. So these results
 do not test HC in the setting it was built for (section 10.2).

@@ -84,7 +84,7 @@ Test AUC at the `k` each method chose on validation sets:
 | RFECV, scored by accuracy | 0.984 | 0.583 | 0.959 | 0.566 | 0.505 | 0.720 |
 
 Table: [`figures/summary_scanb70_chosen.csv`](figures/summary_scanb70_chosen.csv).
-For each task, Appendix D.1 gives the spread of test AUC (first and third
+For each task, Appendix C.1 gives the spread of test AUC (first and third
 quartiles), the genes kept, the times and the stability.
 
 What it shows:
@@ -99,6 +99,18 @@ What it shows:
 - **RFECV scored by accuracy failed on three tasks** (section 7.8).
 
 ## 7.2 The bar: random genes at each `k`
+
+![Test AUC against k on SCAN-B](figures/curves_scanb70.png)
+
+*Test AUC at each `k`, mean over the 16 splits: one method per family
+against random genes. The gap to the gray line is what selection adds at
+that `k`. The dotted line is all 28,541 genes. Plot:
+[`scripts/plot_curves.py`](../scripts/plot_curves.py).*
+
+The plot shows the chapter's main result. At 10 genes, the methods are far
+above random genes. As `k` grows, random genes catch up. RFE alone is the
+exception at small `k`: on LumB it is near random, and on LumA and Normal
+it is below.
 
 Mean test AUC at each `k`, for random genes and for Mann-Whitney:
 
@@ -207,7 +219,7 @@ by accuracy. Its statistic peaks at the single strongest p-value
 (section 4.4).
 
 Neither variant found the point where the signal ends. HC2008's score is
-still rising at the edge of its search (Appendix C.3): the signal is not
+still rising at the edge of its search (Appendix B.3): the signal is not
 rare. A rule built for rare signal has no edge to find there. Still,
 HC2008 as a "top 10%" filter is a good method here: it is 0.001 below
 mutual information, the best mean, at a fifth of its time per fit and with

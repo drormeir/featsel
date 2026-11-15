@@ -69,7 +69,18 @@ What it shows:
 ## 8.2 The bar: random features at each `k`
 
 At small `k`, selection matters. At large `k`, random features catch up.
-Mean test AUC at each `k`; random at 2,048 is all features, 0.924:
+
+![Test AUC against k on the image data](figures/curves_images70.png)
+
+*Test AUC at each `k`, mean over the 16 splits, on both image datasets.
+The dotted line is all 2,048 features. Tree importance did not run on
+FGVC-Aircraft. Plot: [`scripts/plot_curves.py`](../scripts/plot_curves.py).*
+
+The order turns with `k`. At 10 features the filter leads; from 250
+features on, RFE leads, and at 1,000 it reaches all features.
+
+Mean test AUC at each `k` on BreastMNIST; random at 2,048 is all
+features, 0.924:
 
 | Method | 10 | 50 | 250 | 500 | 1000 |
 |---|---|---|---|---|---|

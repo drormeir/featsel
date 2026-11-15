@@ -2,6 +2,11 @@
 
 [Back to contents](README.md) · Next: [2. The data](02_the_data.md)
 
+A breast tumour sample can be described by 30,000 gene measurements. A
+model, a lab test or a doctor can use only a few of them. Which few? This
+project builds tools that answer this question fast and honestly. It then
+tests them on breast cancer genes and on images.
+
 ## 1.1 What feature selection is
 
 A classifier learns to predict a label, such as a cancer subtype, from the
@@ -136,4 +141,5 @@ during the design, then tests the finished pipeline (section 8.9).
    patients, and its labels are computed from the features. BreastMNIST
    holds copies of its own images (chapter 2).
 
-Section 9.4 sums these up.
+Section 9.5 sums these up, and section 9.2 lists the decisions behind
+them.

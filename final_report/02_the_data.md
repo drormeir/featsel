@@ -290,6 +290,6 @@ Analysis: [`demos/research.ipynb`](../featsel_datasets/fgvc_aircraft/demos/resea
 | Signal | widespread, strongly correlated genes | widespread, weakly correlated features | widespread, weakly correlated features |
 
 Plans and open questions about the data are in
-[Appendix C](appendix_c_data_details.md).
+[Appendix B](appendix_b_data_details.md).
 
 Source: [`results/data_facts.csv`](../results/data_facts.csv).

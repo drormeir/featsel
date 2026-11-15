@@ -189,7 +189,7 @@ numbers: the two class sizes, and the share of each class at the floor.
 That gives an exact null distribution per gene. It separates "how often
 the gene is detected" from "how high it is when detected". But it needs a
 separate computation per floor count. It is left for future work
-([Appendix C.4](appendix_c_data_details.md#c4-a-better-model-for-floor-heavy-genes-not-built)).
+([Appendix B.4](appendix_b_data_details.md#b4-a-better-model-for-floor-heavy-genes-not-built)).
 
 ## 4.4 Higher Criticism
 

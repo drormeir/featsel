@@ -1,4 +1,4 @@
-# Appendix D. Full tables
+# Appendix C. Full tables
 
 [Back to contents](README.md)
 
@@ -6,7 +6,7 @@ The full output behind chapters 7 and 8. Every number is a mean over the 16
 splits. `scripts/summarize_frontier.py` wrote the CSVs these tables are
 built from, in [`figures/`](figures/): `summary_<run>_curve.csv` (test AUC
 at every `k`) and `summary_<run>_chosen.csv` (each method at the `k` it
-chose on validation sets). Appendix B gives the commands.
+chose on validation sets). Appendix A gives the commands.
 
 In the chosen-`k` tables, "Selection" is the median time of one fit.
 "Search or validation" is the median time per split to choose Lasso's C or
@@ -17,9 +17,9 @@ features, which every split keeps.
 Random selection at every feature is the all-features reference; in the
 curve tables it is the last column of the random row.
 
-## D.1 SCAN-B
+## C.1 SCAN-B
 
-### D.1.1 SCAN-B: Basal, test AUC at every `k`
+### C.1.1 SCAN-B: Basal, test AUC at every `k`
 
 | Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 1,500 | 2,000 | 28,541 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -33,7 +33,7 @@ curve tables it is the last column of the random row.
 | Sequential | 0.990 | 0.989 | — | — | — | — | — | — | — |
 | Tree importance | — | 0.992 | 0.992 | 0.992 | 0.993 | 0.994 | 0.993 | 0.992 | — |
 
-### D.1.2 SCAN-B: Basal, at the chosen `k`
+### C.1.2 SCAN-B: Basal, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|
@@ -53,7 +53,7 @@ curve tables it is the last column of the random row.
 | RFECV, by accuracy | 0.984 [0.989, 0.994] | 2,855 (1 to 2,855) | 6.88 | 38 | 0.47 |
 | HC2004 | 0.873 [0.864, 0.886] | 1 | 0.68 | — | 1.00 |
 
-### D.1.3 SCAN-B: Her2, test AUC at every `k`
+### C.1.3 SCAN-B: Her2, test AUC at every `k`
 
 | Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 1,500 | 2,000 | 28,541 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -67,7 +67,7 @@ curve tables it is the last column of the random row.
 | Sequential | 0.944 | 0.944 | — | — | — | — | — | — | — |
 | Tree importance | — | 0.944 | 0.970 | 0.978 | 0.982 | 0.983 | 0.984 | 0.984 | — |
 
-### D.1.4 SCAN-B: Her2, at the chosen `k`
+### C.1.4 SCAN-B: Her2, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|
@@ -87,7 +87,7 @@ curve tables it is the last column of the random row.
 | HC2004 | 0.865 [0.884, 0.905] | 1 (1 to 2) | 0.67 | — | 0.52 |
 | RFECV, by accuracy | 0.583 [0.501, 0.656] | 1 | 7.36 | 36 | 0.10 |
 
-### D.1.5 SCAN-B: LumA, test AUC at every `k`
+### C.1.5 SCAN-B: LumA, test AUC at every `k`
 
 | Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 1,500 | 2,000 | 28,541 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -101,7 +101,7 @@ curve tables it is the last column of the random row.
 | Sequential | 0.918 | 0.919 | — | — | — | — | — | — | — |
 | Tree importance | — | 0.892 | 0.926 | 0.952 | 0.956 | 0.960 | 0.961 | 0.961 | — |
 
-### D.1.6 SCAN-B: LumA, at the chosen `k`
+### C.1.6 SCAN-B: LumA, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|
@@ -121,7 +121,7 @@ curve tables it is the last column of the random row.
 | Mann-Whitney 1000, then tree importance | 0.951 [0.946, 0.954] | 250 (250 to 500) | 3.13 | 19 | 0.63 |
 | HC2004 | 0.874 [0.869, 0.878] | 1 (1 to 2) | 0.68 | — | 0.70 |
 
-### D.1.7 SCAN-B: LumB, test AUC at every `k`
+### C.1.7 SCAN-B: LumB, test AUC at every `k`
 
 | Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 1,500 | 2,000 | 28,541 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -135,7 +135,7 @@ curve tables it is the last column of the random row.
 | Sequential | 0.949 | 0.950 | — | — | — | — | — | — | — |
 | Tree importance | — | 0.945 | 0.966 | 0.967 | 0.969 | 0.971 | 0.970 | 0.970 | — |
 
-### D.1.8 SCAN-B: LumB, at the chosen `k`
+### C.1.8 SCAN-B: LumB, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|
@@ -155,7 +155,7 @@ curve tables it is the last column of the random row.
 | HC2004 | 0.869 [0.858, 0.875] | 1 (1 to 2) | 0.68 | — | 0.45 |
 | RFECV, by accuracy | 0.566 [0.500, 0.547] | 1 | 7.31 | 38 | 0.02 |
 
-### D.1.9 SCAN-B: Normal, test AUC at every `k`
+### C.1.9 SCAN-B: Normal, test AUC at every `k`
 
 | Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 1,500 | 2,000 | 28,541 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -169,7 +169,7 @@ curve tables it is the last column of the random row.
 | Sequential | 0.900 | 0.895 | — | — | — | — | — | — | — |
 | Tree importance | — | 0.912 | 0.923 | 0.927 | 0.931 | 0.939 | 0.941 | 0.940 | — |
 
-### D.1.10 SCAN-B: Normal, at the chosen `k`
+### C.1.10 SCAN-B: Normal, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|
@@ -189,9 +189,9 @@ curve tables it is the last column of the random row.
 | HC2004 | 0.889 [0.879, 0.900] | 1 (1 to 2) | 0.68 | — | 0.68 |
 | RFECV, by accuracy | 0.505 [0.501, 0.507] | 1 | 6.72 | 35 | 0.23 |
 
-## D.2 BreastMNIST
+## C.2 BreastMNIST
 
-### D.2.1 BreastMNIST, test AUC at every `k`
+### C.2.1 BreastMNIST, test AUC at every `k`
 
 | Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 2,048 |
 |---|---|---|---|---|---|---|---|
@@ -205,7 +205,7 @@ curve tables it is the last column of the random row.
 | Sequential | 0.798 | 0.803 | — | — | — | — | — |
 | Tree importance | — | 0.816 | 0.871 | 0.876 | 0.900 | 0.910 | — |
 
-### D.2.2 BreastMNIST, at the chosen `k`
+### C.2.2 BreastMNIST, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|
@@ -225,9 +225,9 @@ curve tables it is the last column of the random row.
 | Berk-Jones | 0.867 [0.857, 0.884] | 204 (189 to 204) | 0.01 | — | 0.76 |
 | HC2004 | 0.758 [0.739, 0.777] | 1 (1 to 3) | 0.01 | — | 0.60 |
 
-## D.3 BreastMNIST without the copied images
+## C.3 BreastMNIST without the copied images
 
-### D.3.1 BreastMNIST without copies, test AUC at every `k`
+### C.3.1 BreastMNIST without copies, test AUC at every `k`
 
 | Method | 10 | 50 | 250 | 500 | 1,000 | 2,048 |
 |---|---|---|---|---|---|---|
@@ -236,7 +236,7 @@ curve tables it is the last column of the random row.
 | Random | 0.675 | 0.772 | 0.808 | 0.853 | 0.876 | 0.895 |
 | Tree importance | 0.835 | 0.862 | 0.855 | 0.877 | 0.887 | — |
 
-### D.3.2 BreastMNIST without copies, at the chosen `k`
+### C.3.2 BreastMNIST without copies, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|
@@ -249,9 +249,9 @@ curve tables it is the last column of the random row.
 | Berk-Jones | 0.847 [0.839, 0.866] | 203 (175 to 204) | 0.01 | — | 0.77 |
 | HC2004 | 0.771 [0.752, 0.790] | 1 (1 to 2) | 0.01 | — | 0.85 |
 
-## D.4 FGVC-Aircraft
+## C.4 FGVC-Aircraft
 
-### D.4.1 FGVC-Aircraft, test AUC at every `k`
+### C.4.1 FGVC-Aircraft, test AUC at every `k`
 
 | Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 2,048 |
 |---|---|---|---|---|---|---|---|
@@ -262,7 +262,7 @@ curve tables it is the last column of the random row.
 | Random | — | 0.612 | 0.702 | 0.786 | 0.817 | 0.848 | 0.862 |
 | Sequential | 0.700 | 0.703 | — | — | — | — | — |
 
-### D.4.2 FGVC-Aircraft, at the chosen `k`
+### C.4.2 FGVC-Aircraft, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|

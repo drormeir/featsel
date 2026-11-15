@@ -1,4 +1,4 @@
-# Appendix A. Glossary
+# Appendix E. Glossary
 
 [Back to contents](README.md)
 

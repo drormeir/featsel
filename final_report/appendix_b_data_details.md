@@ -1,11 +1,11 @@
-# Appendix C. Data: plans, open questions and extra facts
+# Appendix B. Data: plans, open questions and extra facts
 
 [Back to contents](README.md)
 
 Chapter 2 describes the data. This appendix keeps the plans, the open
 questions and the finer facts.
 
-## C.1 Reproducing the ER label (planned, not done)
+## B.1 Reproducing the ER label (planned, not done)
 
 ER was planned as a target, but no experiment uses it. Chapter 2 gives
 the label's source. The plan to reproduce the published classifier
@@ -29,7 +29,7 @@ Known risks:
   genes of the 405 training patients. A rebuild from scratch with another
   shrinkage threshold would give a different list.
 
-## C.2 The source of PAM50, and recovering its genes
+## B.2 The source of PAM50, and recovering its genes
 
 Chapter 2 gives the source of the PAM50 label. Section 7.6 tests whether
 feature selection recovers its genes.
@@ -62,7 +62,7 @@ Known difficulties:
 The experiment needs a gene set with all 50 genes. GSE96058 has them.
 `scanb_small` did not (section 2.1).
 
-## C.3 Higher Criticism and the share of signal
+## B.3 Higher Criticism and the share of signal
 
 HC searches only the smallest 10% of p-values (alpha0 = 0.1). On SCAN-B,
 the HC score is still rising at that edge. HC2008 kept 2,854 or 2,855
@@ -80,10 +80,11 @@ the 11 flat genes were dropped, checked the switch to the U test:
 One split cannot tell these changes from noise.
 
 BreastMNIST gave a second check: its signal is not rare either
-(chapter 2). HC2008 again kept the edge, 204 features, on every split. So
-on both datasets the search limit, not the data, sets HC2008's count.
+(chapter 2). HC2008 again kept the edge, 204 features, on every split.
+FGVC-Aircraft gave the same, 204 features (section 8.9). So on all three
+datasets the search limit, not the data, sets HC2008's count.
 
-## C.4 A better model for floor-heavy genes (not built)
+## B.4 A better model for floor-heavy genes (not built)
 
 The U test merges two ways a gene can differ between classes: how often
 it is detected, and how high it is when detected.
@@ -102,7 +103,7 @@ each gene, and exact tail p-values where the normal approximation is
 weakest. The model needs a separate computation for each floor count. It
 is beyond the project's scope and was not built.
 
-## C.5 Gene counts
+## B.5 Gene counts
 
 - GSE96058 has 30,865 genes, including all 50 PAM50 genes.
 - 2,236 genes have a single value across all 3,409 GSE96058 samples, and
@@ -112,7 +113,7 @@ is beyond the project's scope and was not built.
   11 have at least 2,864 patients at their minimum. Dropping them leaves
   28,541.
 
-## C.6 Open questions
+## B.6 Open questions
 
 - Which target is primary. The specification asks for "the clinical
   class" and does not name PAM50. We chose PAM50. A measured target, such
