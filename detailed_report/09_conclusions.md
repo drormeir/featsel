@@ -110,9 +110,8 @@ settings stated in their sections.
    established differences from 52 to 20
    ([`scripts/correction_effect.py`](../scripts/correction_effect.py)).
 10. **Higher Criticism needs rare signal.** On all three datasets HC2008
-    stopped at the edge of its search, 10% of the features. Berk-Jones,
-    run on SCAN-B and BreastMNIST, stopped at or just before it (sections
-    7.5, 8.5). As a top-10% filter, both are among the best on SCAN-B and
+    stopped at the edge of its search, 10% of the features. Berk-Jones
+    stopped at or just before it (sections 7.5, 8.5, 8.9). As a top-10% filter, both are among the best on SCAN-B and
     the most stable. HC2004 keeps one to three features and is the
     weakest method.
 11. **Wrappers pay only in some places, and only with care.** RFE was the
@@ -128,8 +127,9 @@ settings stated in their sections.
 12. **The cheap corner wins.** On SCAN-B, HC2008 and Berk-Jones reach
     0.970 mean AUC in 0.66 to 0.68 s per fit on the GPU. The best mean, mutual
     information at 0.971, takes 3.6 s; tree importance takes 17.5 s for
-    0.969. On the image data every method except Sequential runs in under
-    a second, so cost does not decide the choice there.
+    0.969. On the image data every method except Sequential runs in about
+    a second per fit or less (tree importance 1.1 s on FGVC-Aircraft), so
+    cost does not decide the choice there.
 13. **Choosing `k` costs more than selecting.** Choosing `k` on 5
     validation sets took Mann-Whitney 28 s per split on SCAN-B, against
     0.67 s for one fit. A method that chooses its own count skips this.
@@ -161,7 +161,8 @@ Each dataset has its own frontier. What do they share?
   than accuracy.
 - **What changes.** The best method for a given budget. At large `k`, RFE
   leads on both image datasets but trails the filters on SCAN-B. At 10
-  features, the filters lead on the image data, and Mann-Whitney then RFE
+  features, the filters and tree importance, alone or chained, lead on the
+  image data, and Mann-Whitney then RFE
   leads on SCAN-B. Whether selection beats all features also changes:
   never on the image data, on one SCAN-B task of five.
 
@@ -177,7 +178,8 @@ classifier, and by how much over random?
 At small `k`, the answer depends on the dataset. At 10 genes on SCAN-B,
 Mann-Whitney then RFE is best on four tasks of five, and the filters and
 tree importance beat random genes by 0.12 to 0.19 AUC. At 10 features on the image data, the
-filters and tree importance lead, by 0.10 to 0.16 over random.
+filters and tree importance, alone or chained, lead, by 0.10 to 0.16 over
+random.
 
 At the `k` each method chose, the top methods cannot be told apart. On
 SCAN-B, eleven lie within 0.01 mean AUC; on the image data, RFE and

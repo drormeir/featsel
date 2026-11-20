@@ -605,7 +605,8 @@ by how much over random? At small `k`, the answer depends on the dataset.
 At 10 genes on SCAN-B, Mann-Whitney then RFE is best on four tasks of
 five, and the filters and tree importance beat random genes by 0.12 to
 0.19 AUC. At 10
-features on the image data, the filters and tree importance lead, by 0.10
+features on the image data, the filters and tree importance, alone or
+chained, lead, by 0.10
 to 0.16 over random. At the `k` each method chose, the top methods cannot
 be told apart. If time also counts, a GPU filter is the practical choice:
 on SCAN-B, HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under

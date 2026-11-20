@@ -64,7 +64,8 @@ are not redistributed.
 - `demos/research.ipynb` studies the data, runs one selection step by step
   on the GPU, analyses the full run and states the conclusions.
 
-Experiment config: `configs/aircraft70_gpu.yaml`, every selector on the GPU.
+Experiment config: `configs/aircraft70_gpu.yaml`, every method, on the GPU
+except tree importance.
 
 ## Retired datasets
 

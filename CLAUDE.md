@@ -138,7 +138,7 @@ config. A CSV dataset config specifies:
 - Features: 2,048 ResNet-50 embedding dimensions (ImageNet V1 weights: V2 gave 80% zeros and a worse AUC here)
 - Target `family`; the 2.75 GB archive is read in one pass, never unpacked; cached as `embeddings_resnet50_v1.npz`
 - Licence: non-commercial research only; photos are not stored in the repo or in notebook outputs
-- `configs/aircraft70_gpu.yaml` runs every selector on the GPU; `demos/research.ipynb` has the analysis and conclusions
+- `configs/aircraft70_gpu.yaml` runs every method of the final report's Table 5, on the GPU except tree importance; `demos/research.ipynb` has the analysis and conclusions
 
 The course copies `scanb_small` and `scanb_full` are retired; they are
 archived outside git.

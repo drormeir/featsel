@@ -13,7 +13,7 @@ to the file itself.
 | `frontier_*70_*.yaml` | experiment | The cost-quality frontier at 70% training: GPU, CPU and Sequential runs on the same splits; `_berkjones`, `_chains` (two-stage selection), `_nocopies`, `_rfecv_auc` and `_all_genes` add to it |
 | `experiment_classifiers.yaml` | experiment | Random vs Mann-Whitney across five classifiers, 12 splits |
 | `smoke_scanb.yaml` | experiment | Smoke test: every selector and classifier once on one SCAN-B split, about 3 minutes on 6 workers. A check, not a result |
-| `aircraft70_gpu.yaml` | experiment | FGVC-Aircraft, Boeing 737 vs A320 family: every selector on the GPU, k = 10 to 1000 and all features, 16 splits at 70% training |
+| `aircraft70_gpu.yaml` | experiment | FGVC-Aircraft, Boeing 737 vs A320 family: every method, on the GPU except tree importance, k = 10 to 1000 and all features, 16 splits at 70% training |
 
 ## Dataset
 
