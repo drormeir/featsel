@@ -64,10 +64,10 @@ Section 5.5 describes how runs are protected, and the limits. Git does
 not track `results/local/`. The frontier plots and tables used in this
 report are copied to [`figures/`](figures/).
 
-**Note on section 6.1.** Its table was measured when the runner fitted
-each selection once. The runner now fits each selection 10 times by
-default (`selection_repeats`), and `benchmark_speed.py` does not set it
-to 1. So a rerun today would not match the table's runner times.
+**Note on section 6.1.** Its table was measured before the solver change
+of section 6.2. The runner now fits each selection 10 times by default
+(`selection_repeats`); `benchmark_speed.py` sets it to 1, as
+scikit-learn fits once, and turns off the runner's memory cap.
 
 ## A.3 Determinism
 
