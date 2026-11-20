@@ -2,7 +2,7 @@
 Compute the data facts the report states, into results/data_facts.csv.
 
 Each fact has a name, such as scanb_patients. The final report
-(final_report/02_the_data.md) cites this file as the source of its
+(detailed_report/02_the_data.md) cites this file as the source of its
 data numbers.
 
 Facts about the course's archived copies of SCAN-B need those copies,

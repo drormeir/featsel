@@ -3,8 +3,7 @@
 M.Sc. final project, Machine Learning and Data Science, Reichman University.
 Supervisor: Dr. Ben Galili.
 
-The report is for a reader with a B.Sc.-level background in machine
-learning. Each chapter is short and can be read alone.
+Each chapter is short and can be read alone.
 
 ## In one paragraph
 
@@ -92,8 +91,7 @@ random splits, 70% of the samples in the training set, `k` chosen on
 validation sets, ROC AUC, and timing. They come from one rerun under this
 protocol, made on 2026-11-14 and 15. A few side studies keep their own
 settings, stated where they appear: the PAM50 recovery (section 7.6), the
-classifier study (section 7.7), the preprocessing test (section 3.10) and
-the speed benchmarks (chapter 6). Section 9.7 gives the limits that
+classifier study (section 7.7) and the speed benchmarks (chapter 6). Section 9.6 gives the limits that
 follow.
 
 Times are from one laptop: Intel i7-9750H (6 cores, 12 threads), 16 GB

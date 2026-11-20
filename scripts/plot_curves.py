@@ -10,11 +10,11 @@ features. The gap between a method and random at a given k is what selection
 adds there.
 
 Usage:
-    python scripts/plot_curves.py --out final_report/figures/curves_scanb70.png \
-        "SCAN-B=final_report/figures/summary_scanb70_curve.csv"
-    python scripts/plot_curves.py --out final_report/figures/curves_images70.png \
-        "BreastMNIST=final_report/figures/summary_breastmnist70_curve.csv" \
-        "FGVC-Aircraft=final_report/figures/summary_aircraft70_curve.csv"
+    python scripts/plot_curves.py --out detailed_report/figures/curves_scanb70.png \
+        "SCAN-B=detailed_report/figures/summary_scanb70_curve.csv"
+    python scripts/plot_curves.py --out detailed_report/figures/curves_images70.png \
+        "BreastMNIST=detailed_report/figures/summary_breastmnist70_curve.csv" \
+        "FGVC-Aircraft=detailed_report/figures/summary_aircraft70_curve.csv"
 """
 
 import argparse

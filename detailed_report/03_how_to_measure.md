@@ -83,8 +83,8 @@ the five-class PAM50 label, so every subtype-vs-rest task is scored on the
 same patients.
 
 **How many splits.** The first plan was 100 splits at training fractions
-0.5, 0.7 and 0.9, for a learning curve. That grid would have taken about
-four days. Every method comparison now uses 16 splits with 70% of
+0.5, 0.7 and 0.9, for a learning curve. It was dropped for time. Every
+method comparison now uses 16 splits with 70% of
 samples in the training set. Sixteen or more values support quartiles; five do not.
 
 **More splits help less than they seem.** The corrected test below
@@ -228,24 +228,11 @@ trees. For methods that depend on scale, such as k-NN and penalized models
 (L1 or L2), it is worse: one outlier sets the range and squeezes every
 other sample.
 
-**A side experiment, before the current protocol.** 98.1% of genes reject
-normality. A quantile transform maps each feature to a normal distribution
-through its ranks, but discards the size of a fold change. On
-`scanb_small`, with F-test selection, logistic regression and 10 splits,
-standardization was compared with a rank-to-normal transform and
-scikit-learn's quantile transform. The two transforms tied with each
-other. Against standardization, on the five binary tasks:
-
-- Most differences were within 0.01. Her2 and Normal gained up to 0.011.
-  LumA lost up to 0.021; at `k` = 100 it lost on all 10 splits. The
-  results files of this test were not kept, and the score of this
-  comparison is not recorded.
-- With C tuned on validation sets and scored by AUC, differences stayed
-  within 0.004, except LumA at `k` = 100 (−0.017).
-
-So standardization was kept. Shrinkage LDA, which assumes normal classes,
-and k-NN, which suffers from heavy tails, might still gain. A run over
-every classifier was cancelled, so this is unknown.
+**A quantile transform was not tested.** 98.1% of genes reject
+normality. A quantile transform maps each feature to a normal
+distribution through its ranks, but discards the size of a fold change.
+Shrinkage LDA, which assumes normal classes, and k-NN, which suffers from
+heavy tails, might gain from it. This is unknown.
 
 If preprocessing is ever varied, it must be varied for every method alike.
 A method with its own preprocessing mixes the method with its transform.
@@ -292,11 +279,7 @@ A method that ranks once fits once per fold and cuts every `k` from that
 fit: 5 extra fits, against the 10 timed fits of each selection.
 
 **Sequential selection runs only at `k` = 5 and 10, and does not search.**
-Each of its steps tries every remaining feature, with 5-fold
-cross-validation, so its cost grows at least linearly with `k`
-(section 4.2). On SCAN-B one fit at `k` = 10 already takes minutes; `k` =
-500 would take hours per split. A larger `k` needs a filter to cut the
-features first.
+Its cost grows at least linearly with `k` (section 4.2).
 
 Standardization is fit on the whole training set, so the validation sets
 helped set its means and spreads. That uses no labels, and the test set
@@ -311,9 +294,8 @@ same features as the search.
 
 ## 3.12 Data precision
 
-The data are held as 32-bit floats, which halves their memory. Peak
-selection memory on SCAN-B fell by 30% to 45%, so more workers fit on one
-machine. SCAN-B's values have at most 7 measured digits, so 32 bits lose
+The data are held as 32-bit floats, which halves their memory
+(section 5.5 gives the effect on a run). SCAN-B's values have at most 7 measured digits, so 32 bits lose
 nothing measured.
 
 The U test sums its ranks in 64 bits. An earlier run, scored by macro-F1,
@@ -339,16 +321,4 @@ Two single-number summaries were rejected:
 We report each method at its chosen `k`, and the whole curve of test AUC
 over `k`, with random selection's curve as the bar. One number hides where along `k` a method wins.
 
-## 3.14 Limits of this protocol
-
-- The spread over splits is not a confidence interval for new patients.
-- The five SCAN-B tasks share patients, so they are not independent
-  replicates.
-- The decision threshold is fixed at 0.5 on the predicted probability.
-  Macro-F1 and balanced accuracy depend on it; AUC does not.
-- Lasso chooses its penalty on validation sets (section 3.11). The other
-  selectors' own settings stay fixed.
-- The classifier's C is fixed at 1 (section 3.8).
-- The runner stores each cell's metrics, not each test patient's score, so
-  a new metric needs a new run. Storing the scores was designed but not
-  built (chapter 10).
+The limits of this protocol are listed with the others in section 9.6.

@@ -8,7 +8,7 @@ which worker counts they were.
 
 Usage:
     python scripts/plot_parallel_scaling.py results/local/parallel_scaling.csv \
-        --out final_report/figures/parallel_scaling.png
+        --out detailed_report/figures/parallel_scaling.png
 """
 
 import argparse

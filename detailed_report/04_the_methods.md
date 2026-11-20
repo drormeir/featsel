@@ -68,10 +68,9 @@ comparison, with C fixed at 1 and liblinear as the solver, showed this.
 Asked for 1,000 genes, Lasso kept 127 to 647 on four of the five tasks,
 and 883 to 1,000 on LumA.
 
-liblinear at its default tolerance stops before the solution. On all
-2,976 patients, at C = 1, the exact solution keeps 196 genes on Basal where liblinear
-keeps 330, and 907 on LumA where liblinear keeps 1,600 (section 6.2).
-LassoSelector now solves exactly, with PPDNA, and handles classification
+liblinear at its default tolerance stops before the solution, and keeps
+more genes than the exact solution (section 6.2). LassoSelector now
+solves exactly, with PPDNA, and handles classification
 only. In the experiments it takes no `k`. It chooses C by validation AUC
 (section 3.11), and that C sets the count.
 
@@ -125,11 +124,8 @@ time this saves.
 
 ## 4.3 Why we score genes with the U test, not the F-test
 
-**The data.** Chapter 2 showed two facts. Only the order of a gene's
-values is meaningful. And in the first 200 genes, about half the values
-sit tied at a floor. So
-within a class, a gene is a pile of identical floor values plus a spread
-of detected values, not a normal curve.
+**The data.** Only the order of a gene's values is meaningful, and about
+half the values sit tied at a floor (section 2.1).
 
 **The F-test** compares class means. It depends on the size of the values,
 so another, equally valid transform would change it. Its p-values assume
@@ -187,12 +183,9 @@ to 189 with the F-test. The logs keep all of them distinct. Against
 50-digit arithmetic (mpmath), the relative error of the log is at most
 5 × 10⁻¹⁶ for the U test and 7 × 10⁻¹² for the F-test.
 
-**A better model, not built.** Each gene could be described by four
-numbers: the two class sizes, and the share of each class at the floor.
-That gives an exact null distribution per gene. It separates "how often
-the gene is detected" from "how high it is when detected". But it needs a
-separate computation per floor count. It is left for future work
-([Appendix B.4](appendix_b_data_details.md#b4-a-better-model-for-floor-heavy-genes-not-built)).
+**A better model, not built.** An exact test that models the floor is
+described in
+[Appendix B.4](appendix_b_data_details.md#b4-a-better-model-for-floor-heavy-genes-not-built).
 
 ## 4.4 Higher Criticism
 
@@ -353,9 +346,7 @@ How the derivations go:
   (section 7.10). At so small a k, work that does not grow with j, such
   as the passes over the data, probably dominates.
 
-**Choosing `k` adds work.** A method that ranks once is fit 5 more times,
-once per validation set, and a classifier is fit for each `k` on each
-(section 3.11). Lasso searches 4 values of C on 5 validation sets.
+Choosing `k` or Lasso's C on validation sets adds work (section 3.11).
 
 **What the costs predict.** The filters grow as p · n log n or less, so
 they stay cheap at any p. RFE and RFECV grow with n² p and n³: they gain

@@ -271,10 +271,11 @@ datasets.
 **Features.** Each photo loses the copyright banner at its bottom, 20
 pixels high. It then goes through ResNet-50 with its last layer removed,
 as for BreastMNIST: 2,048 numbers per photo. The weights differ:
-torchvision's `IMAGENET1K_V1`, not V2. In a first test on this task, V2's
-features were 80% exact zeros and gave AUC 0.749 with all features. V1's
-were 0.1% zeros and gave 0.863. Features with a single value across the
-1,200 photos are dropped.
+torchvision's `IMAGENET1K_V1`, not V2. On this task, V2's features were
+80% exact zeros and gave AUC 0.742 with all features. V1's were 0.1%
+zeros and gave 0.862 (16 splits, as in chapter 8;
+[`results/aircraft_weights.csv`](../results/aircraft_weights.csv)).
+Features with a single value across the 1,200 photos are dropped.
 
 Loader: [`featsel_datasets/fgvc_aircraft/`](../featsel_datasets/fgvc_aircraft/).
 Analysis: [`demos/research.ipynb`](../featsel_datasets/fgvc_aircraft/demos/research.ipynb).

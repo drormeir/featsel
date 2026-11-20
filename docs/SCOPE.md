@@ -90,7 +90,7 @@ tabular UCI high-dimensional set, or ResNet embeddings extracted offline from
 a small image set, or the NIPS 2003 challenge sets on Hugging Face (Arcene,
 Gisette, Madelon; uploaded by one user, `mstz`). Whatever is chosen goes in
 `featsel_datasets/<name>/`, outside the `featsel` package, with a loader that
-downloads and caches it (see `final_report/05_the_software.md`,
+downloads and caches it (see `detailed_report/05_the_software.md`,
 section 5.3), and gets a section in the Data chapter.
 
 **Higher Criticism as a selector.** This is the one method that sets the

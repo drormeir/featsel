@@ -85,8 +85,8 @@ embeddings computed once with PyTorch and cached) and `featsel_view.py`.
 `featsel_datasets` is a regular package (with `__init__.py` files) but is not
 installed: `pyproject.toml` excludes it from the `featsel` package. Run from
 the repo root.
-Design: `final_report/05_the_software.md`, section 5.3. Data findings:
-`final_report/02_the_data.md` and its Appendix B.
+Design: `detailed_report/05_the_software.md`, section 5.3. Data findings:
+`detailed_report/02_the_data.md` and its Appendix B.
 
 **CSV datasets: `featsel/data_loader.py`**
 
@@ -124,7 +124,7 @@ config. A CSV dataset config specifies:
 - Default target `pam50 subtype` (Basal, LumA, LumB, Her2, Normal)
 - Every task is binary (`docs/SCOPE.md` 3a): PAM50 becomes five tasks, each subtype vs the rest. No five-class results
 - Other targets are GSE96058's own field names, e.g. `er status` (pathologist), `er prediction mgc` (computed from genes), `overall survival event`
-- PAM50 and the `prediction` fields are computed from gene expression, not measured. See `final_report/02_the_data.md`.
+- PAM50 and the `prediction` fields are computed from gene expression, not measured. See `detailed_report/02_the_data.md`.
 
 **Second dataset (task 4): BreastMNIST (`featsel_datasets/medmnist_breastmnist/`)**
 - 780 breast ultrasound images (MedMNIST v2, 224 x 224), malignant 210 vs benign or normal 570
@@ -191,14 +191,14 @@ array unless `set_output(transform='pandas')` is set.
 Selectors register themselves by class name. In Python, import the class.
 `FeatureSelector.create(name, **params)` is for names read as text, such as the
 runner's YAML configs, which name selectors by class name (case-insensitive).
-See `final_report/05_the_software.md`, section 5.2.
+See `detailed_report/05_the_software.md`, section 5.2.
 
 Built: VarianceThreshold, ANOVAFSelector, MutualInfoSelector,
 CorrelationSelector, FDRSelector, FWESelector, PercentileSelector,
 LassoSelector, TreeImportanceSelector, RFESelector, RFECVSelector,
 SequentialSelector, RandomSelector, HigherCriticismSelector,
 BerkJonesSelector, MannWhitneySelector. The experiment configs use MannWhitneySelector, not
-ANOVAFSelector (`final_report/04_the_methods.md`, section 4.3).
+ANOVAFSelector (`detailed_report/04_the_methods.md`, section 4.3).
 
 Every selector that wraps a scikit-learn method has two tests next to it:
 it selects the same features as that method, and `fit` plus `get_support` is
@@ -207,7 +207,7 @@ RFE, RFECV and Lasso solve exactly, so their features are checked against
 scikit-learn's liblinear run to a tight tolerance. RFE and RFECV are timed
 against liblinear at its defaults. Lasso has no speed test: no
 scikit-learn solver reaches the exact L1 solution
-(`final_report/06_making_it_fast.md`, section 6.2).
+(`detailed_report/06_making_it_fast.md`, section 6.2).
 
 ## Feature Selection Usage
 

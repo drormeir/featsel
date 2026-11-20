@@ -2,7 +2,7 @@
 
 A part of preparing the BreastMNIST dataset. The final report uses its
 result: section 2.2 of
-[`final_report/02_the_data.md`](../../final_report/02_the_data.md).
+[`detailed_report/02_the_data.md`](../../detailed_report/02_the_data.md).
 
 ## The problem
 

@@ -34,7 +34,7 @@ Works this project relies on.
 
 ## Evaluating selection methods
 
-Cited in `final_report/03_how_to_measure.md`, sections 3.4 and 3.13.
+Cited in `detailed_report/03_how_to_measure.md`, sections 3.4 and 3.13.
 
 | Work |
 |------|
@@ -71,7 +71,7 @@ Cited in the report, chapters 2, 4 and 7. Checked on Crossref or jmlr.org,
 
 ## Added with the final report
 
-Cited in `final_report/`. Beyer, Friedman and Ledoit-Wolf checked on
+Cited in `detailed_report/`. Beyer, Friedman and Ledoit-Wolf checked on
 Crossref, 2026-11-10; the rest against the papers themselves.
 Bellman (1957) is not checked.
 

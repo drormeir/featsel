@@ -16,7 +16,7 @@ from tests.sklearn_reference import assert_same_selection
 # No speed test against scikit-learn: none of its solvers reaches the exact
 # L1 solution. Its Newton solvers refuse the L1 penalty, and liblinear and
 # saga stop at a tolerance, so they do less work for a different answer.
-# Speed was compared on SCAN-B instead (final_report/06_making_it_fast.md).
+# Speed was compared on SCAN-B instead (detailed_report/06_making_it_fast.md).
 
 
 def _sklearn(n_features=20, C=0.1):

@@ -13,7 +13,7 @@ Sequential selection does not choose its k, so it has one row per k.
 
 Usage:
     python scripts/summarize_side_metrics.py --n-features 28541 \
-        --out final_report/figures/summary_scanb70_side results/local/frontier_scanb70_*.csv
+        --out detailed_report/figures/summary_scanb70_side results/local/frontier_scanb70_*.csv
 
 Writes <out>.csv.
 """

@@ -95,7 +95,7 @@ selectors:
 `selector_params` holds the list of steps.
 
 A model with a `grid` is tuned inside each split
-(`final_report/03_how_to_measure.md`, 3.8). Inner stratified Monte Carlo splits of the
+(`detailed_report/03_how_to_measure.md`, 3.8). Inner stratified Monte Carlo splits of the
 training half score every value in the grid. The model is refit on the whole
 training half with the best values and scored once on the test half. The CSV
 column `tuned_params` holds the chosen values, `{}` for an untuned model.
@@ -111,7 +111,7 @@ python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs 4 --
 rows already in the output CSV. For a long unattended run, give the same
 arguments to `scripts/run_until_done.py`: it restarts the runner with
 `--resume` after a crash and keeps the machine awake
-(`final_report/05_the_software.md`, section 5.5).
+(`detailed_report/05_the_software.md`, section 5.5).
 
 ## Creating a new dataset
 

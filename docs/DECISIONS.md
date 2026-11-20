@@ -8,7 +8,7 @@ git history, the project's working sessions, the working notes once in
 `docs/` and the drafts once in `docs/report/`. Git history keeps them.
 
 Until 2026-11-10 this log was Appendix A of the final report. In older
-rows, "this report" means the final report (`final_report/`), and appendix
+rows, "this report" means the report now in `detailed_report/`, and appendix
 letters and section numbers are those of that time. New decisions are
 added here.
 
@@ -104,7 +104,7 @@ added here.
 
 | Date | Problem | Decision | Rejected |
 |---|---|---|---|
-| 2026-11-09 | The earlier draft in `docs/report/` was dense and written for the author. | This report, for B.Sc.-level readers, in `docs/final_report/`. Figures copied in so links work on GitHub. | Rewriting `docs/report/` in place (it keeps generated tables). |
+| 2026-11-09 | The earlier draft in `docs/report/` was dense. | This report, in `docs/final_report/`. Figures copied in so links work on GitHub. | Rewriting `docs/report/` in place (it keeps generated tables). |
 | 2026-11-09 | Are differences between methods real? | Paired Wilcoxon signed-rank tests over splits, with a Bonferroni threshold. Replaced on 2026-11-11 by a corrected test (see "Statistics and protocol"). | Comparing medians by eye. |
 | 2026-11-10 | Content in `docs/report/` and `docs/*.md` was missing from this report. | Merge it in: related work into chapter 1, data plans into Appendix D, full comparison tables into Appendix E, design and protocol details into chapters 3 to 7. Then remove `docs/report/`. Its numbers came from finished runs, so the generated tables were not carried over. Then remove the working notes in `docs/` too. This report becomes the only design record, Appendix A the decision log, section 10.3 the parked ideas. | Linking to the working notes only (a reader would need both); keeping `docs/report/` for its generated tables; keeping the notes as a second record (two records drift apart). |
 | 2026-11-10 | The reference list held works cited only in passing. | Keep only works the report relies on. Twelve were removed, with their citations. | Keeping every work ever consulted. |
@@ -112,7 +112,8 @@ added here.
 | 2026-11-10 | `docs/` held only this report, so the extra folder level hid it. | Move it to the repository root as `final_report/`. | Keeping `docs/final_report/`; renaming it `report/` (loses "final"). |
 | 2026-11-10 | The final report goes to print, and a dated log of choices, including reversed ones, is a working record, not a finding. | Move the decision log out of the report to `DECISIONS.md`, with the parked ideas (once section 10.3). The appendices become A to D. | Keeping the log as Appendix A; dropping it from the repository. |
 | 2026-11-15 | Chapter 7 reported a retired comparison protocol, and `08_results_frontier.md` an earlier frontier run. | Chapter 7 (`07_results_scanb.md`) is rebuilt from the SCAN-B frontier runs, like chapter 8 for the image data. `08_results_frontier.md` and the figures only it used are deleted. `summarize_frontier.py` tests each method against random at the same `k` per task (`_bar.csv`), since every task is reported separately. Appendix D holds the full tables from the summary CSVs. | Keeping the old chapters beside the new ones (two sets of numbers). |
-| 2026-11-15 | The report should also read well for engineers in industry, and chapter 6 buried its results under solver and timing detail. | That detail moves to a new appendix of engineering notes. The appendices become A how to reproduce, B data, C full tables, D engineering notes, E glossary: the glossary goes last. Earlier entries in this log keep the old letters. | Keeping the detail in chapter 6; dropping it from the report. |
+| 2026-11-15 | Chapter 6 buried its results under solver and timing detail. | That detail moves to a new appendix of engineering notes. The appendices become A how to reproduce, B data, C full tables, D engineering notes, E glossary: the glossary goes last. Earlier entries in this log keep the old letters. | Keeping the detail in chapter 6; dropping it from the report. |
+| 2026-11-20 | The final report may have at most 20 pages, appendices included. The report had about 99 pages, and removing repeated text cut only 5%. | Rename `final_report/` to `detailed_report/`, the full record. A new short report, written from it, takes the name `final_report/` and links to it. | Cutting the report in place (detail would be lost); `technical_report/` (suggests engineering only). |
 
 ## Parked ideas
 

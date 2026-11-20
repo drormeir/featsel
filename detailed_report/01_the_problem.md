@@ -143,5 +143,4 @@ during the design, then tests the finished pipeline (section 8.9).
    patients, and its labels are computed from the features. BreastMNIST
    holds copies of its own images (chapter 2).
 
-Section 9.5 sums these up, and section 9.2 lists the decisions behind
-them.
+Section 9.2 lists the decisions behind them.

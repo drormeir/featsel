@@ -1,7 +1,7 @@
 """Build the final report as one PDF.
 
 Order: title pages, contents, abstract, chapters 1 to 10, references,
-appendices A to E. The style is in final_report/report.css.
+appendices A to E. The style is in detailed_report/report.css.
 
 The title page holds personal details, so it is read from
 references/local/title.md and the PDF is written there too. Git ignores
@@ -20,7 +20,7 @@ from pathlib import Path
 from weasyprint import CSS, HTML
 
 ROOT = Path(__file__).resolve().parent.parent
-REPORT = ROOT / 'final_report'
+REPORT = ROOT / 'detailed_report'
 LOCAL = ROOT / 'references' / 'local'
 REPO_URL = 'https://github.com/drormeir/featsel/blob/main/'
 TITLE = 'Choosing Few Genes from Many: Feature Selection for High-Dimensional Data'
@@ -61,7 +61,7 @@ def link_target(target: str) -> str:
     name, _, anchor = target.partition('#')
     if name in FILES:
         return '#' + (anchor or chapter_id(name))
-    return REPO_URL + 'final_report/' + target
+    return REPO_URL + 'detailed_report/' + target
 
 
 def chapter(name: str) -> str:

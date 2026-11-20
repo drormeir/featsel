@@ -6,8 +6,8 @@ more workers shows whether jobs slow down when they run side by side, as
 opposed to the speed-up being limited by the longest job or by serial work.
 
 Usage:
-    python scripts/parallel_job_times.py --n-jobs 1 --out final_report/figures/parallel_scaling_jobs_1_worker.csv
-    python scripts/parallel_job_times.py --n-jobs 3 --out final_report/figures/parallel_scaling_jobs_3_workers.csv
+    python scripts/parallel_job_times.py --n-jobs 1 --out detailed_report/figures/parallel_scaling_jobs_1_worker.csv
+    python scripts/parallel_job_times.py --n-jobs 3 --out detailed_report/figures/parallel_scaling_jobs_3_workers.csv
 """
 
 import argparse

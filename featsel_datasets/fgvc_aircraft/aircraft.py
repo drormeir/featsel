@@ -48,10 +48,15 @@ class FGVCAircraft:
         data.images(ids)  # some images, banner cropped, as PIL images
 
     Images are indexed by the archive's own image id, such as '1025794'.
+
+    weights names torchvision's ImageNet weights for ResNet-50: 'V1'
+    (IMAGENET1K_V1, the default) or 'V2'. Each has its own cache file.
+    scripts/aircraft_weights.py compares the two on this project's task.
     """
 
-    def __init__(self, cache_dir: str | Path = Path(__file__).parent):
+    def __init__(self, cache_dir: str | Path = Path(__file__).parent, weights: str = 'V1'):
         self.cache_dir = Path(cache_dir)
+        self.weights = weights
 
     def _file(self) -> Path:
         """Return the cached archive, downloading it first if missing."""
@@ -95,9 +100,9 @@ class FGVCAircraft:
     @cached_property
     def _embedded(self) -> dict[str, np.ndarray]:
         """Embeddings and hashes, computed in one pass over the archive, then cached."""
-        path = self.cache_dir / 'embeddings_resnet50_v1.npz'
+        path = self.cache_dir / f'embeddings_resnet50_{self.weights.lower()}.npz'
         if not path.exists():
-            ids, embeddings, hashes = _embed_archive(self._file())
+            ids, embeddings, hashes = _embed_archive(self._file(), self.weights)
             np.savez_compressed(path, ids=ids, embeddings=embeddings, hashes=hashes)
         with np.load(path) as npz:
             return {name: npz[name] for name in npz.files}
@@ -155,26 +160,22 @@ def _dhash(img, size: int = 8) -> np.uint64:
     return np.uint64(int(''.join('1' if b else '0' for b in bits), 2))
 
 
-def _embed_archive(path: Path, batch_size: int = 32):
+def _embed_archive(path: Path, weights: str, batch_size: int = 32):
     """
     Embed every image in the archive with ImageNet ResNet-50, without its last layer.
 
-    Each image is banner-cropped, then given the weights' own preprocessing:
-    resize to 256, centre crop to 224, ImageNet normalization. The output is
-    the 2,048-number average-pooled feature vector. Uses the GPU when one is
-    available, in 32-bit floats (16-bit is slower on a GTX 1650).
-
-    The weights are torchvision's IMAGENET1K_V1, not the V2 that BreastMNIST
-    uses. On the 737 vs A320 task, V2's features were 80% exact zeros and
-    gave AUC 0.749 with all features; V1's were 0.1% zeros and gave 0.863.
+    Each image is banner-cropped, then given the weights' own preprocessing.
+    The output is the 2,048-number average-pooled feature vector. Uses the
+    GPU when one is available, in 32-bit floats (16-bit is slower on a
+    GTX 1650).
     """
     import torch
     from torchvision.models import ResNet50_Weights, resnet50
 
-    weights = ResNet50_Weights.IMAGENET1K_V1
-    preprocess = weights.transforms()
+    resnet_weights = ResNet50_Weights[f'IMAGENET1K_{weights}']
+    preprocess = resnet_weights.transforms()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = resnet50(weights=weights)
+    model = resnet50(weights=resnet_weights)
     model.fc = torch.nn.Identity()
     model.eval().to(device)
 

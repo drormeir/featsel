@@ -113,7 +113,7 @@ at import.
 tree importance and RFE, the top `k` of the full ranking equals a fit at
 that `k` (section 4.2). They set the flag `rank_once` and return their
 order through `ranking()`. The runner fits each once per split and cuts
-the ranking at every `k`. Tests check each cut against a separate fit.
+the ranking at every `k`.
 
 **Scores keep their own names:** `scores_`, `log_pvalues_`, `coef_` or
 `variances_`. Only tree importance has `feature_importances_`, the
@@ -269,17 +269,10 @@ peak memory, device, and whether repeated fits agreed. A JSON file beside
 it records the machine, the library versions and the git commit, at the
 start of the run and again at the end.
 
-**Choosing on validation sets.** With `k_validation`, every method with a
-`k` list also gets a validation AUC per `k`. The runner cuts the training
-set into `cv` stratified folds, 5 in the experiments. In each fold it fits
-the selector on the other folds and scores the classifier on the
-validation fold. So `k` is chosen without the test set. Lasso has no `k`
-list. It chooses C from `Cs` by validation AUC the same way, and C sets
-its count.
-
-**A search runs once.** A searching selector, Lasso with `Cs` or RFECV,
-searches once per split; that time goes in `search_time_s`. The timed
-repeats then fit with the chosen value.
+**Choosing on validation sets.** With `k_validation`, the runner chooses
+`k` on `cv` stratified folds of the training set, and Lasso chooses C from
+`Cs` the same way (section 3.11). A search runs once per split; its time
+goes in `search_time_s`.
 
 Analysis is separate: `featsel.analysis`, `scripts/` and the notebooks
 read the CSV. A new plot never needs a new run.
@@ -301,8 +294,8 @@ rank-once selector covers all its `k` values in one job; any other gets
 one job per `k`. Jobs run on joblib worker processes. Parallel work lives
 in the runner only.
 
-One split, stratified on the five-class PAM50 label, serves all five
-tasks. Each split is prepared once and written to `/dev/shm`, and every
+One split serves all five SCAN-B tasks (section 3.3). Each split is
+prepared once and written to `/dev/shm`, and every
 worker maps it read-only. Otherwise each worker would prepare its own
 copy for each task, 2 to 3 GB each. Sharing saves that memory and
 preprocesses once instead of five times.
@@ -335,13 +328,11 @@ at a higher cap filled them in. Holding the data as 32-bit floats
 the one-sort U test needs about 1.25 times the memory, and the cap moved
 from address space to data memory.
 
-The last two mechanisms came from the scaling measurement of section 6.1,
-when RFE and Lasso still ran liblinear. With 6 workers on full SCAN-B,
-the default cap allowed 1.26 GB per worker, but liblinear needed about
-1.45 GB per fit. So it aborted, and the runner fell back to fewer workers, as designed. But
-many runs in one process left memory behind, and the process crashed
-even with one worker. The scaling script now runs each measurement in a
-fresh process, saves it as it ends, and can resume.
+The last two mechanisms came from the scaling measurement of section 6.1.
+There liblinear aborted workers, and the runner fell back to fewer, as
+designed. But many runs in one process left memory behind, and the
+process crashed even with one worker. The scaling script now runs each
+measurement in a fresh process, saves it as it ends, and can resume.
 
 **Limits.** Nothing restarts a run after a reboot or power loss; the same
 command continues from the saved rows. A cell that never fits in memory
@@ -393,5 +384,3 @@ the same results as a sequential one.
   imports every selector, so this holds in normal use.
 - Selector tests live inside the package. Packaging excludes them, and
   pytest searches both `tests/` and `featsel/`.
-- CorrelationSelector can drop a gene whose only redundant partner was
-  itself dropped (section 4.2). The frontier used it as it is.

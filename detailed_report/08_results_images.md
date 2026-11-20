@@ -6,14 +6,8 @@ This chapter reports the two image datasets. Each image is a ResNet-50
 embedding of 2,048 features (chapter 2). BreastMNIST is task 4. FGVC-Aircraft
 is a dataset the pipeline never saw during its design.
 
-Every run follows the protocol of chapter 3: 16 splits, 70% of the images
-in the training set, `k` chosen on validation sets, ROC AUC on the test set.
-`k` is 10, 50, 250, 500 or 1000; random selection also runs at 2,048, every
-feature. All numbers are means over the 16 splits.
-
-Random selection is the bar (section 3.4). A method has value at a given
-`k` only if it beats random features at that `k`. Random's curve ends at
-2,048, the all-features reference.
+Every run follows the protocol of chapter 3. All numbers are means over
+the 16 splits.
 
 Sources: [`scripts/summarize_frontier.py`](../scripts/summarize_frontier.py)
 wrote the `summary_*` tables in [`figures/`](figures/), and
@@ -77,19 +71,7 @@ At small `k`, selection matters. At large `k`, random features catch up.
 The dotted line is all 2,048 features. Tree importance did not run on
 FGVC-Aircraft. Plot: [`scripts/plot_curves.py`](../scripts/plot_curves.py).*
 
-The order turns with `k`. At 10 features the filter leads; from 250
-features on, RFE leads, and at 1,000 it reaches all features.
-
-Mean test AUC at each `k` on BreastMNIST; random at 2,048 is all
-features, 0.924:
-
-| Method | 10 | 50 | 250 | 500 | 1000 |
-|---|---|---|---|---|---|
-| Random | 0.674 | 0.764 | 0.842 | 0.877 | 0.908 |
-| Mann-Whitney | 0.829 | 0.846 | 0.874 | 0.894 | 0.918 |
-| Mutual information | 0.817 | 0.869 | 0.884 | 0.897 | 0.917 |
-| Tree importance | 0.816 | 0.872 | 0.876 | 0.900 | 0.910 |
-| RFE | 0.764 | 0.829 | 0.902 | 0.917 | 0.923 |
+Every method's test AUC at every `k` is in Appendix C.2.
 
 The corrected test (section 3.3) against random at the same `k`:
 
@@ -168,17 +150,15 @@ about 0.006, and to all features by 0.056.
 HC2004 kept 1 to 3 features. It scored 0.758, the lowest of all. Its
 statistic peaks at the single strongest p-value (section 4.5).
 
-Neither variant found the point where the signal ends. The signal is
-spread wide: 24% to 28% of the dimensions pass the Benjamini-Hochberg test
-(chapter 2). A rule built for rare signal has no edge to find there.
+As on SCAN-B (section 7.5), neither variant found the point where the
+signal ends: 24% to 28% of the dimensions pass the Benjamini-Hochberg test
+(chapter 2).
 
 ## 8.6 RFECV: accuracy against AUC
 
-RFECV chooses its count by an inner cross-validation. Scored by accuracy,
-its default, it kept 8 to 212 features and reached 0.889. Scored by AUC, it
-kept 212 to 1,844 and reached 0.912. Accuracy rewards the majority class
-and stops early; AUC does not. On these data, AUC is the better inner
-score.
+Scored by accuracy, RFECV kept 8 to 212 features and reached 0.889.
+Scored by AUC, it kept 212 to 1,844 and reached 0.912. As on SCAN-B
+(section 7.8), AUC is the better inner score.
 
 ## 8.7 Two-stage selection
 
@@ -267,7 +247,7 @@ The pattern of BreastMNIST holds:
 ## 8.10 Side scores and memory
 
 Macro-F1 and balanced accuracy at the `k` each method chose, with a
-threshold of 0.5 (section 3.14), on both image datasets:
+threshold of 0.5 (section 9.6), on both image datasets:
 
 | Method | BreastMNIST macro-F1 [Q1, Q3] | Balanced accuracy | FGVC-Aircraft macro-F1 [Q1, Q3] | Balanced accuracy |
 |---|---|---|---|---|
@@ -298,25 +278,3 @@ features by more than 0.001 macro-F1.
 **Memory.** By the measure of section 7.12, every fit took under 20 MB,
 in the median over splits. The largest single fit took 61 MB. With 2,048
 features, memory does not limit any method here.
-
-## 8.11 Summary
-
-- On both image datasets, no selection method beats all 2,048 features.
-  RFE ties them. Mann-Whitney comes within 0.01 on both. Mutual
-  information comes within 0.01 on BreastMNIST and 0.015 on
-  FGVC-Aircraft.
-- Selection helps at small budgets. At `k` = 10, the filters and tree
-  importance gain 0.10 to 0.16 AUC over random features. RFE gains 0.09
-  to 0.10, and Sequential 0.09 to 0.13.
-- Filters lead at small `k`; RFE leads from `k` = 250.
-- Most methods with a `k` list chose the largest `k` they were offered,
-  or close to it. Correlation kept fewer, because of its redundancy
-  filter. Methods that keep fewer features lose AUC: Lasso, Higher
-  Criticism and Berk-Jones by their own count, and the chains by their
-  cap of 250.
-- Mann-Whitney, correlation, HC2008 and Berk-Jones are the most stable.
-  RFE, mutual information, RFECV, Lasso and tree importance pick
-  different features on each split at about the same AUC.
-- Macro-F1 gives the same picture as AUC.
-- Every method runs in under a second per fit, except Sequential (1.4 to
-  3.5 s). On these data, cost does not decide the choice.

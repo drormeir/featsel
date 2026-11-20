@@ -5,14 +5,9 @@
 This chapter reports SCAN-B: 2,976 patients, 28,541 genes, five tasks, each
 PAM50 subtype against the rest (chapter 2).
 
-Every run follows the protocol of chapter 3: 16 splits, 70% of the patients
-in the training set (2,083), 893 in the test set, `k` chosen on validation
-sets, ROC AUC on the test set. `k` is 10, 50, 250, 500, 1000, 1500 or 2000.
-Random selection also runs at 28,541, every gene. All numbers are means
-over the 16 splits.
-
-Random selection is the bar (section 3.4). A method has value at a given
-`k` only if it beats random genes at that `k`.
+Every run follows the protocol of chapter 3, with 2,083 patients in the
+training set and 893 in the test set. All numbers are means over the 16
+splits.
 
 Sources: [`scripts/summarize_frontier.py`](../scripts/summarize_frontier.py)
 wrote the `summary_scanb70_*` tables in [`figures/`](figures/):
@@ -110,24 +105,7 @@ that `k`. The dotted line is all 28,541 genes. Plot:
 The plot shows the chapter's main result. At 10 genes, the methods are far
 above random genes. As `k` grows, random genes catch up. RFE alone is the
 exception at small `k`: on LumB it is near random, and on LumA and Normal
-it is below.
-
-Mean test AUC at each `k`, for random genes and for Mann-Whitney:
-
-| Task | Method | 10 | 50 | 250 | 500 | 1000 | 2000 | 28,541 |
-|---|---|---|---|---|---|---|---|---|
-| Basal | Random | 0.871 | 0.981 | 0.989 | 0.991 | 0.992 | 0.992 | 0.987 |
-| | Mann-Whitney | 0.993 | 0.992 | 0.992 | 0.993 | 0.993 | 0.992 | |
-| Her2 | Random | 0.790 | 0.902 | 0.938 | 0.963 | 0.973 | 0.978 | 0.981 |
-| | Mann-Whitney | 0.941 | 0.972 | 0.981 | 0.983 | 0.985 | 0.986 | |
-| LumA | Random | 0.750 | 0.870 | 0.920 | 0.911 | 0.927 | 0.939 | 0.958 |
-| | Mann-Whitney | 0.893 | 0.908 | 0.944 | 0.940 | 0.951 | 0.958 | |
-| LumB | Random | 0.753 | 0.879 | 0.922 | 0.917 | 0.937 | 0.949 | 0.948 |
-| | Mann-Whitney | 0.912 | 0.953 | 0.958 | 0.963 | 0.972 | 0.970 | |
-| Normal | Random | 0.790 | 0.877 | 0.891 | 0.909 | 0.927 | 0.930 | 0.941 |
-| | Mann-Whitney | 0.914 | 0.925 | 0.910 | 0.906 | 0.927 | 0.940 | |
-
-Every method's curve is in
+it is below. Every method's test AUC at every `k` is in Appendix C.1 and
 [`figures/summary_scanb70_curve.csv`](figures/summary_scanb70_curve.csv).
 
 The corrected test (section 3.3) against random at the same `k`. A method
@@ -390,7 +368,7 @@ one fit per split. The other methods use the median of 10 fits
 
 ## 7.11 Cost
 
-Median selection time per fit, on the laptop of the README:
+Median selection time per fit, on the laptop of chapter 6:
 
 | Method | Selection, s per fit | Search or validation, s per split |
 |---|---|---|
@@ -419,7 +397,7 @@ AUC.
 ## 7.12 Side scores and memory
 
 AUC is the main score (section 3.5). Macro-F1 and balanced accuracy are
-side scores. They use a decision threshold, fixed at 0.5 (section 3.14).
+side scores. They use a decision threshold, fixed at 0.5 (section 9.6).
 At the `k` each method chose, mean over the five tasks:
 
 | Method | Macro-F1 | Range over tasks | Balanced accuracy | Peak memory of a fit, MB |
@@ -458,40 +436,11 @@ What it shows:
   threshold of 0.5 suits the model less well. These differences were not
   tested.
 
-**What the memory measure counts.** The runner traces the first timed fit
-with Python's `tracemalloc` (section 3.7). It counts the memory that
-Python and NumPy allocate during the fit, on the CPU. It does not count
-the data already in memory, memory on the GPU, or memory that compiled
+**What the memory measure counts.** Section 3.7 defines it. It omits the
+data already in memory, memory on the GPU, and memory that compiled
 libraries allocate outside NumPy, such as scikit-learn's trees or
 PyTorch's tensors. So the numbers compare fits of one method, not methods
 on different devices. By this measure, every fit stayed under 1 GB. RFE
 and RFECV took the most, 633 MB: at 2,083 training patients and 28,541
 genes, one copy of the data in 64-bit floats takes 454 MB. (Here 1 MB
 is 2²⁰ bytes.)
-
-## 7.13 Summary
-
-- On SCAN-B, eleven methods score within 0.01 AUC of each other at their
-  chosen `k`. No method leads on every task.
-- At 10 genes, the filters, tree importance, the chains and Sequential
-  beat random genes by 0.10 to 0.20 AUC. On Basal the gain is gone by
-  250 genes. On LumA and LumB about 0.02 remains at 2,000 genes.
-- Against all 28,541 genes, selection gains 0.014 to 0.023 on LumB. On the
-  other tasks no gain is established, and no loss is established for the
-  filters and tree importance.
-- HC2008 and Berk-Jones stop at the edge of their search, 10% of the genes.
-  As a top-10% filter they are among the best, and the most stable.
-- For a small gene set, filter first: Mann-Whitney then RFE is the best at
-  10 genes on four tasks, and RFE alone is the worst.
-- RFECV needs AUC as its inner score on imbalanced tasks. With accuracy it
-  keeps one gene.
-- The methods find few of the 50 PAM50 genes in their top 50, at most 12%
-  on average, yet predict the subtypes well: correlated genes stand in.
-- Selection helps every classifier at small `k`. Logistic regression is the
-  best classifier at 1,000 genes; k-NN needs selection most.
-- By macro-F1 the order of methods is almost that of AUC. On Normal,
-  selection gains macro-F1 over all genes at the same AUC (not tested).
-- HC2008 and Berk-Jones are the best value: 0.970 mean AUC in 0.66 s per
-  fit, with no `k` to choose. Mann-Whitney scores 0.969 in the same time
-  per fit, plus 26 s to choose `k`. Mutual information, the best mean
-  (0.971), takes five times as long per fit.

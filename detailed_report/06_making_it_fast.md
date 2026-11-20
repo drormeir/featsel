@@ -107,19 +107,7 @@ times from [`scripts/parallel_job_times.py`](../scripts/parallel_job_times.py),
 [`figures/parallel_scaling_jobs_1_worker.csv`](figures/parallel_scaling_jobs_1_worker.csv)
 and [`figures/parallel_scaling_jobs_3_workers.csv`](figures/parallel_scaling_jobs_3_workers.csv).
 
-### Why the speed matters: the full grid
-
-The original design had 100 splits at three training fractions (300 in
-all), 6 selectors and nested tuning. We extrapolated its cost from the
-classifier study's 12-split run with the F-test
-(`results/experiment_classifiers_anova_12splits.csv`). Without
-the linear SVM classifier, it needed about 30 to 35 CPU-hours: a day and
-a half on one core, shorter in proportion with more cores. RFE removing
-one feature per round would take about 2,300 hours. Removing 10% per
-round and ranking once takes about 3 hours. This is the specification's
-point that some techniques are impractical in this setting. A linear SVM
-classifier with scikit-learn's default solver would have cost hundreds of
-hours more. We cut the grid instead (section 3.3).
+### Where the time goes
 
 An early SCAN-B run showed where the time goes. Selection took 82%, and
 tree importance alone half. The classifiers, with their tuning of C, took
@@ -178,7 +166,7 @@ its output in `results/local/benchmark_selectors/` is not tracked. At all
 
 | Method | What changed |
 |---|---|
-| U test | One sort per gene gives the ranks and the tie groups. On the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed there, exactly, in 64-bit floats. The p-value is finished on the CPU, so every device gives identical results. Before this work a U-test fit took about 10 s on SCAN-B. The NumPy version replaced two ranking passes by one sort, at about 1.25 times the peak memory. In the speed series it takes 1.27 s at 3,000 × 10,000 and 3.76 s at 3,000 × 30,000. |
+| U test | One sort per gene gives the ranks and the tie groups. On the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed there, exactly, in 64-bit floats. The p-value is finished on the CPU, so every device gives identical results. The NumPy version replaced two ranking passes by one sort, at about 1.25 times the peak memory. In the speed series it takes 1.27 s at 3,000 × 10,000 and 3.76 s at 3,000 × 30,000. |
 | F-test, variance | Class sums as one vector product per class, on the GPU. |
 | Correlation | The gene-gene correlations are computed in blocks, so the full 28,552 × 28,552 matrix is never held in memory. |
 | Mutual information | scikit-learn's estimate (Ross 2014) finds nearest neighbours with a KD-tree. For one feature, a sort per class finds the k-th neighbour, and a binary search counts the points within its radius. The random noise, the distances and the order of every mean are scikit-learn's, so the scores are identical, bit for bit. A class of 2 to 7 samples, and regression, go to scikit-learn, which uses brute-force distances there. The GPU path draws scikit-learn's noise on the CPU and sends it over. |
@@ -252,11 +240,8 @@ for RFE and RFECV, PPDNA for Lasso. The reasons:
   splits. For RFE: 0.811 and 0.807 at k = 10, 0.959 and 0.959 at
   k = 1000.
 
-For Lasso the speed argument is weaker. With C chosen by validation, the
-two solvers took the same total time on the CPU over the five SCAN-B
-tasks. A single PPDNA fit on the CPU was often slower. Only on a GPU,
-which liblinear cannot use, was PPDNA clearly faster. Lasso also has no test that it is at most 5% slower than
-scikit-learn, because no scikit-learn solver reaches its exact solution
+For Lasso the speed argument is weaker. On the CPU the two solvers took
+the same total time; only on a GPU was PPDNA clearly faster
 (Appendix D.4).
 
 The cost is the drop-in promise. These three selectors now select what
@@ -311,15 +296,3 @@ raises an error if the GPU cannot run. The frontier runs (chapters 7 and 8) set
 A file lock lets one fit at a time hold the GPU. Batch sizes come from
 the GPU's free memory. Fitted scores are NumPy arrays on every device.
 The device used is recorded with every result.
-
-## 6.4 Summary
-
-- The runner is 3.2 times faster than plain scikit-learn on one core and
-  5.3 times on twelve threads, with identical scores.
-- On the GPU, the filters run 2.6 to 49 times faster and Sequential
-  selection 34 times faster, with the same features.
-- Lasso, RFE and RFECV now run only exact solvers. RFE's is 8 times
-  faster on SCAN-B (23.1 s against 2.8 s, section 6.2). Because they are exact, they pick somewhat different
-  genes from scikit-learn's defaults, at the same AUC.
-- A cheap 4 GB GPU limits what can move to it. On it, 64-bit work and
-  large forests do not pay.

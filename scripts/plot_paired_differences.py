@@ -12,8 +12,8 @@ out; its gap is far larger than the gaps between methods.
 
 Usage:
     python scripts/plot_paired_differences.py \
-        final_report/figures/paired_tests_frontier_scanb70_16_splits.csv \
-        --reference MannWhitneySelector --out final_report/figures/frontier_scanb70_16_splits.png
+        detailed_report/figures/paired_tests_frontier_scanb70_16_splits.csv \
+        --reference MannWhitneySelector --out detailed_report/figures/frontier_scanb70_16_splits.png
 """
 
 import argparse

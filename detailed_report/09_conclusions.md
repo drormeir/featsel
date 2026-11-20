@@ -24,15 +24,12 @@ advance? It ends with the limits of the answer.
   set, so the test set is used once. It writes one results table. It
   survives memory exhaustion and can resume a stopped run. (Tasks 1
   and 2.)
-- **Speed**, in the runner and in the selectors. The runner is 3.2 to
-  5.3 times faster than plain scikit-learn, with identical scores. Ten
-  filters run on a GPU and pick the same features as on the CPU. They run
-  2.6 to 49 times faster there. Lasso, RFE, RFECV and Sequential selection
-  can also run on a GPU. Exact solvers make RFE, RFECV and Sequential
-  selection faster, and Lasso faster on a GPU. Running jobs in parallel gains at
-  most 1.8 times on full SCAN-B on this laptop. From 3 workers on, the jobs
-  slow each other down. This points to shared memory bandwidth
-  (section 6.1). (Task 3.)
+- **Speed**, in the runner and in the selectors (chapter 6). The runner
+  is 3.2 to 5.3 times faster than plain scikit-learn, with identical
+  scores. On a GPU, ten filters run 2.6 to 49 times faster and pick the
+  same features. Running jobs in parallel gains at most 1.8 times on full
+  SCAN-B on this laptop; shared memory bandwidth is the likely limit.
+  (Task 3.)
 - **A second dataset**, BreastMNIST image embeddings, run through the same
   pipeline unchanged. (Task 4.)
 - **A third dataset, unseen during the design**: FGVC-Aircraft photo
@@ -69,13 +66,10 @@ settings stated in their sections.
    derived from the same gene expression we select from. A study that
    treats them as clinical facts overstates what it shows.
 2. Check for repeated samples. 93 patients appear twice in SCAN-B's HiSeq
-   data. Random splits put them on both sides and leak. We kept one
-   sample per patient. In BreastMNIST, a quarter of the images repeat
-   another, as a 2023 letter reports. Even MedMNIST's fixed split puts
-   copies on both sides, in 57 groups. We found the copies in
-   BreastMNIST's own images and reran without them. All features and the
-   best methods lost about 0.03 AUC. The order of methods changed little
-   (section 8.8).
+   data (section 2.1). In BreastMNIST, a quarter of the images repeat
+   another; even MedMNIST's fixed split puts copies on both sides, in 57
+   groups. Without the copies, scores fell by about 0.03 AUC, and the
+   order of methods changed little (section 8.8).
 3. The gene values are on an arbitrary scale. In the first 200 genes,
    about half the values are tied at a floor. The F-test's assumptions do not hold for such values. A rank
    test (Mann-Whitney U) does not need them, so it fits this data.
@@ -113,20 +107,17 @@ settings stated in their sections.
    corrected resampled t-test passed 164. Against all genes, it cut the
    established differences from 52 to 20.
 10. **Higher Criticism needs rare signal.** On all three datasets HC2008
-    stopped at the edge of its search, 10% of the features. Berk-Jones ran
-    on SCAN-B and BreastMNIST only. There it stopped at or just before
-    that edge. The signal in these datasets is not rare. As a top-10%
-    filter, both are among the best on SCAN-B (0.970) and the most stable
-    (0.92). HC2004 keeps one or two features and is the weakest method.
+    stopped at the edge of its search, 10% of the features, and
+    Berk-Jones at or just before it (sections 7.5, 8.5). As a top-10%
+    filter, both are among the best on SCAN-B and the most stable. HC2004
+    keeps one or two features and is the weakest method.
 11. **Wrappers pay only in some places, and only with care.** RFE was the
     best method on both image datasets at large `k`, tied with all
-    features. On SCAN-B it was below the filters, and at 10 genes it scored
-    below random genes on two tasks (not established). A Mann-Whitney
-    filter first raised RFE's mean AUC at 10 genes from 0.78 to 0.95, and made it the best method at
-    10 genes on four SCAN-B tasks. RFECV's default inner score, accuracy,
-    made it keep one gene on three imbalanced tasks. Scored by AUC it
-    recovered (0.962 on SCAN-B). Sequential selection beat random but took
-    10 minutes per fit for 10 genes.
+    features. On SCAN-B it was below the filters, and weak at 10 genes. A
+    Mann-Whitney filter first raised RFE's mean AUC at 10 genes from 0.78
+    to 0.95 (section 7.9). RFECV needs AUC as its inner score
+    (section 7.8). Sequential selection beat random but took 10 minutes
+    per fit for 10 genes (section 7.10).
 
 **About cost.**
 
@@ -173,23 +164,7 @@ So the best method for a budget cannot be known in advance from these
 three datasets. What can be known is a safe default: Mann-Whitney on a GPU
 is never far from the best, and costs least.
 
-## 9.5 What this project adds
-
-Section 1.7 lists the contributions. In short:
-
-- A method comparison on a cohort of 2,976 patients, against a random
-  control at every `k`, with paired tests corrected for overlapping
-  splits. The correction removed most of the claimed differences from all
-  genes.
-- Evidence that Higher Criticism and Berk-Jones, used as selectors on
-  data with widespread signal, reduce to a fixed top-10% filter.
-- A cost-quality frontier per dataset, over every method and setting.
-- A package of 16 drop-in selectors, tested against scikit-learn, with
-  GPU paths and exact solvers.
-- Data checks that changed how the data was used: repeated patients,
-  computed labels, and copied images found in BreastMNIST itself.
-
-## 9.6 Answer to the main question
+## 9.5 Answer to the main question
 
 For a given number of features `k`, which method gives the best
 classifier, and by how much over random?
@@ -207,7 +182,7 @@ If time also counts, a GPU filter is the practical choice. On SCAN-B,
 HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
 per fit, 0.001 to 0.002 below the best.
 
-## 9.7 Limits
+## 9.6 Limits
 
 These conclusions hold under the conditions below. Each limit is
 described in the section given.
@@ -227,12 +202,16 @@ described in the section given.
 - One classifier, logistic regression, with C fixed at 1 (section 3.8).
   The classifier study used other settings (section 7.7).
 - One training fraction, 70%, and 16 splits. The spread over splits is not
-  a confidence interval for new patients (section 3.14).
+  a confidence interval for new patients (section 3.3).
 - The five SCAN-B tasks share patients, so they are not independent
-  replicates (section 3.14).
-- Each selector's own settings are fixed, except Lasso's C (section 3.14).
+  replicates.
+- Each selector's own settings are fixed, except Lasso's C (section 3.11).
   HC keeps alpha0 = 0.1 (section 4.4). The correlation selector has a
   known defect (section 4.2).
+- The decision threshold is fixed at 0.5 on the predicted probability.
+  Macro-F1 and balanced accuracy depend on it; AUC does not.
+- The runner stores each cell's metrics, not each test patient's score, so
+  a new metric needs a new run (section 10.1).
 - Side studies keep their own protocols: the PAM50 recovery uses 10
   splits (section 7.6), the classifier study 12 splits at 50% (section
   7.7). Some early results come from the course copy `scanb_small`, which

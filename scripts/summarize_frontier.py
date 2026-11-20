@@ -18,7 +18,7 @@ is left out of the chosen-k tables; its AUC at each k is in the curve table.
 
 Usage:
     python scripts/summarize_frontier.py --n-features 2048 \
-        --out final_report/figures/summary_breastmnist70 results/local/frontier_breastmnist70_*.csv
+        --out detailed_report/figures/summary_breastmnist70 results/local/frontier_breastmnist70_*.csv
 
 Writes <out>_chosen.csv, <out>_curve.csv and <out>_bar.csv, and
 <out>_tests.csv when the run has every feature.

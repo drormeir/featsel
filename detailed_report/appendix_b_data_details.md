@@ -31,13 +31,8 @@ Known risks:
 
 ## B.2 The source of PAM50, and recovering its genes
 
-Chapter 2 gives the source of the PAM50 label. Section 7.6 tests whether
-feature selection recovers its genes.
-
-**Still open.** How SCAN-B assigned `pam50 subtype`. The GEO notes say
-only that an implementation of Parker's method was used, after centring
-to a fixed reference set (section 2.1). They name neither the
-implementation nor the reference samples. Other SCAN-B papers may say.
+Chapter 2 gives the source of the PAM50 label, and what is not known
+about it. Section 7.6 tests whether feature selection recovers its genes.
 
 **The experiment's design.** The labels are not recomputed. Only the
 selected genes are compared with the 50 PAM50 genes. Each method ranks
@@ -65,8 +60,7 @@ The experiment needs a gene set with all 50 genes. GSE96058 has them.
 ## B.3 Higher Criticism and the share of signal
 
 HC searches only the smallest 10% of p-values (alpha0 = 0.1). On SCAN-B,
-the HC score is still rising at that edge. HC2008 kept 2,854 or 2,855
-of the 28,541 genes on every task and split (section 7.5). HC2004 kept 1
+the HC score is still rising at that edge (section 7.5). HC2004 kept 1
 or 2 genes, with a median of 1.
 
 HC first scored genes by the F-test. A one-split test on SCAN-B, before
@@ -79,10 +73,9 @@ the 11 flat genes were dropped, checked the switch to the U test:
 
 One split cannot tell these changes from noise.
 
-BreastMNIST gave a second check: its signal is not rare either
-(chapter 2). HC2008 again kept the edge, 204 features, on every split.
-FGVC-Aircraft gave the same, 204 features (section 8.9). So on all three
-datasets the search limit, not the data, sets HC2008's count.
+On BreastMNIST and FGVC-Aircraft, HC2008 also kept the edge, 204
+features (sections 8.5, 8.9). So on all three datasets the search limit,
+not the data, sets HC2008's count.
 
 ## B.4 A better model for floor-heavy genes (not built)
 
@@ -112,9 +105,3 @@ is beyond the project's scope and was not built.
   genes are at 0.057 or above, so the cutoff falls in a gap. Nine of the
   11 have at least 2,864 patients at their minimum. Dropping them leaves
   28,541.
-
-## B.6 Open questions
-
-- Which target is primary. The specification asks for "the clinical
-  class" and does not name PAM50. We chose PAM50. A measured target, such
-  as the pathologist's ER status, is open work (chapter 10).
