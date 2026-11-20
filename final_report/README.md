@@ -89,7 +89,7 @@ shape our protocol (Table 1):
 | Selecting genes on all the data, then cross-validating | Ambroise and McLachlan (2002) | Selection inside every split (section 3) |
 | No random control | Neekhra et al. (2025) | Random features at every `k` |
 | Trusting the spread of k-fold scores | Bengio and Grandvalet (2004) | Repeated random splits and a corrected test |
-| Reporting scores without stability | Kuncheva (2007) | Stability for every method |
+| Reporting scores without stability | Nogueira et al. (2018) | Stability for every method |
 
 ### 1.4 What this project adds
 
@@ -263,7 +263,7 @@ and allows sets of different sizes.
 ## 4. Methods
 
 Feature selection methods fall into three families (Guyon and Elisseeff
-2003; Saeys et al. 2007). We add two filters that choose their own count,
+2003). We add two filters that choose their own count,
 and the random control. Table 4 lists the methods the experiments used;
 `featsel` also holds the F-test selectors of scikit-learn and a variance
 filter (D 4.2).
@@ -372,8 +372,7 @@ runs 34 times faster.
 **Exact solvers.** scikit-learn's default solver for an L1 or linear-SVM
 model, liblinear, stops at a tolerance of 10⁻⁴, before the exact solution.
 With correlated genes, this changes which genes are kept. RFE and RFECV
-now solve each SVM exactly by Newton's method (Chapelle 2007; Keerthi and
-DeCoste 2005), and Lasso by PPDNA (Liu and Zhou 2023). With no
+now solve each SVM exactly by Newton's method (Chapelle 2007), and Lasso by PPDNA (Liu and Zhou 2023). With no
 randomness, a refit gives the same genes. Newton's method works through
 the samples' n × n kernel, so it pays when features outnumber samples.
 
@@ -631,8 +630,9 @@ safe default.
   chosen set. It would test a published gene signature against chance
   signatures of its size.
 - **Stable selection.** Many methods pick different but equivalent genes
-  on each split. Selecting groups of correlated genes, or stability
-  selection (Meinshausen and Bühlmann 2010), could give stable lists.
+  on each split. Selecting groups of correlated genes, or keeping the
+  genes chosen most often over repeated subsamples, could give stable
+  lists.
 - **A measured target**, such as the pathologist's estrogen receptor
   status, would test the conclusions against clinical truth. The loader
   already supports it.
@@ -692,14 +692,6 @@ under a receiver operating characteristic (ROC) curve. *Radiology* 143(1),
 He, K., Zhang, X., Ren, S. and Sun, J. (2016). Deep residual learning for
 image recognition. *CVPR*, 770-778. https://doi.org/10.1109/CVPR.2016.90
 
-Keerthi, S. S. and DeCoste, D. (2005). A modified finite Newton method for
-fast solution of large scale linear SVMs. *Journal of Machine Learning
-Research* 6, 341-361.
-
-Kuncheva, L. I. (2007). A stability index for feature selection.
-*Proceedings of the 25th IASTED International Multi-Conference: Artificial
-Intelligence and Applications*, 390-395.
-
 Liu, Y.-J. and Zhou, W. (2023). Dual Newton proximal point algorithm for
 solution paths of the ℓ1-regularized logistic regression. Preprint.
 https://arxiv.org/abs/2310.19353
@@ -712,10 +704,6 @@ Mann, H. B. and Whitney, D. R. (1947). On a test of whether one of two
 random variables is stochastically larger than the other. *Annals of
 Mathematical Statistics* 18(1), 50-60.
 https://doi.org/10.1214/aoms/1177730491
-
-Meinshausen, N. and Bühlmann, P. (2010). Stability selection. *Journal of
-the Royal Statistical Society, Series B* 72(4), 417-473.
-https://doi.org/10.1111/j.1467-9868.2010.00740.x
 
 Moscovich, A., Nadler, B. and Spiegelman, C. (2016). On the exact
 Berk-Jones statistics and their p-value calculation. *Electronic Journal of
@@ -739,10 +727,6 @@ Oncology* 27(8), 1160-1167. https://doi.org/10.1200/JCO.2008.18.1370
 Pawłowska, A., Karwat, P. and Żołek, N. (2023). Letter to the Editor. Re:
 "Dataset of breast ultrasound images". *Data in Brief* 48, 109247.
 https://doi.org/10.1016/j.dib.2023.109247
-
-Saeys, Y., Inza, I. and Larrañaga, P. (2007). A review of feature selection
-techniques in bioinformatics. *Bioinformatics* 23(19), 2507-2517.
-https://doi.org/10.1093/bioinformatics/btm344
 
 Statnikov, A., Aliferis, C. F., Tsamardinos, I., et al. (2005). A
 comprehensive evaluation of multicategory classification methods for
