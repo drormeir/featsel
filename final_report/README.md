@@ -1,41 +1,114 @@
 # Choosing Few Genes from Many: Feature Selection for High-Dimensional Data
 
-OUTLINE, not the report text. Each section gives its page budget and the
-claims it keeps. "D" means the detailed report
-([`detailed_report/`](../detailed_report/README.md)); "D 7.2" is its
-section 7.2. Every number in the report comes from a file named in D.
+## Summary
 
-Budget: 18 pages, appendices included. About 8,000 words, 2 figures,
-1 results table, a few short tables.
+**Problem.** Gene expression data describe each patient by tens of
+thousands of genes, but a study has only hundreds or a few thousand
+patients. A classifier trained on all the genes is slow and can learn
+noise. Feature selection keeps a small set of features that still
+predicts well. Many methods exist. It is not clear which one to use for a
+given number of features, or how much better it is than random features.
 
----
+**What we built.** `featsel`, a Python package of 16 selection methods
+that drop into scikit-learn pipelines, and a runner that compares them
+under one protocol from one configuration file: 16 random splits,
+selection inside each split, the number of features chosen on validation
+sets, a random control at every number of features, and paired tests
+corrected for the overlap between splits. Exact solvers and GPU paths make
+the slow methods faster.
 
-## Summary (1 page)
+**Data.** Breast cancer gene expression (SCAN-B: 2,976 patients, 28,541
+genes, five PAM50 subtype tasks), ResNet-50 embeddings of breast
+ultrasound images (BreastMNIST: 780 images, 2,048 features), and aircraft
+photos (FGVC-Aircraft: 1,200 photos), a dataset not seen during the
+design.
 
-- The question: for a budget of `k` features, which selection method gives
-  the best classifier, and by how much does it beat `k` random features?
-  (D 1.4)
-- What was built: `featsel`, 16 selectors that drop into scikit-learn,
-  and a runner driven by one config file (D 9.1).
-- The data: SCAN-B gene expression (2,976 patients, 28,541 genes, five
-  PAM50 tasks), BreastMNIST embeddings, and FGVC-Aircraft embeddings,
-  unseen during the design (D 2.4).
-- The answer: at 10 features, selection beats random by 0.10 to 0.20 AUC.
-  At the chosen `k`, the top methods cannot be told apart. Mann-Whitney is
-  within 0.01 of the best on all three datasets, in under a second on a
-  GPU (D 9.3 items 4, 7, 8).
-- Selection rarely beats all the features: never on the image data, on
-  one SCAN-B task of five (D 9.3 item 16).
-- Speed: the GPU filters run 2.6 to 49 times faster (D 6.2).
+**Results.** Selection helps most when few features are allowed: at 10
+features, the best methods beat random features by 0.11 to 0.20 AUC on
+SCAN-B and by 0.10 to 0.16 on the image data. As the number grows, random
+features catch up, because thousands of correlated features carry the
+signal. At the number each method chose, the top methods cannot be told
+apart: on SCAN-B, eleven lie within 0.01 mean AUC. The Mann-Whitney U
+test, which scores one feature at a time, is within 0.01 AUC of the best
+on all three datasets, in under a second per fit on a GPU. Selection
+rarely beats all the features: never on the image data, and on one SCAN-B
+task of five. Data checks found repeated patients in SCAN-B and copied
+images in BreastMNIST, which would leak between the training and the test
+set.
 
-## 1. Introduction (1.5 pages)
+**Conclusions.** On data like these, a simple test of one feature at a
+time is almost as good as the complex methods, at a fraction of the cost.
+The best method for a given budget cannot be known in advance, but
+Mann-Whitney is a safe default. Many different feature sets predict
+equally well, so stability must be reported next to accuracy.
 
-- The p ≫ n problem, in four sentences: overfitting, false discoveries,
-  correlated features, cost (D 1.2).
-- The four tasks of the specification (D 1.3).
-- The main question and the cost question (D 1.4).
-- Four known pitfalls and the answer to each, as a table (D 1.6).
-- What this project adds: five items (D 1.7).
+## 1. Introduction
+
+### 1.1 The problem
+
+A breast tumour sample can be described by about 30,000 gene
+measurements. A clinical study has a few thousand patients at most: our
+data has 2,976 patients and 28,541 genes. This setting, more features than
+samples (p ≫ n), also appears in text and in image embeddings. It is hard
+for four reasons. With more features than samples, a linear classifier can
+separate any labelling of the training set, even a random one. If no gene
+were related to the label, testing 28,541 genes at the 5% level would
+still flag about 1,400 by chance. Genes work in groups, so many different
+gene sets predict equally well. And methods that train a classifier for
+each candidate feature can take hours.
+
+Feature selection gives the classifier only the features that carry
+information about the label. The model can then predict better, cost
+less, and be read: a short gene list can be tested in a laboratory.
+
+### 1.2 Tasks and questions
+
+The project specification (`references/MLDS_Feature_Selection.pdf`) asks
+for four tasks: (1) a feature selection pipeline for high-dimensional
+data; (2) a comparison of selection techniques; (3) infrastructure that
+speeds up the process; and (4) a run on a second dataset, not necessarily
+gene expression.
+
+The main question: **for a budget of `k` features, which method gives the
+best classifier, and by how much does it beat `k` random features?** If
+random features do almost as well, a method has found little. The second
+question: **which methods give the best quality for their time?**
+
+### 1.3 Earlier work
+
+Comparative studies on gene expression found that simple methods often do
+as well as complex ones (Dudoit et al. 2002; Statnikov et al. 2005); most
+of their datasets had tens to a few hundred samples. Four known pitfalls
+shape our protocol:
+
+| Pitfall | Source | Our answer |
+|---|---|---|
+| Selecting genes on all the data, then cross-validating | Ambroise and McLachlan (2002) | Selection inside every split (section 3) |
+| No random control | Neekhra et al. (2025) | Random features at every `k` |
+| Trusting the spread of k-fold scores | Bengio and Grandvalet (2004) | Repeated random splits and a corrected test |
+| Reporting scores without stability | Kuncheva (2007) | Stability for every method |
+
+### 1.4 What this project adds
+
+1. **A comparison at a cohort size earlier studies lacked.** 2,976
+   patients give test sets of 893, and a paired test corrected for
+   overlapping splits checks every difference.
+2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
+   thresholds were built for rare signal. On widespread signal, both
+   stopped at the edge of their search and acted as top-10% filters.
+3. **A cost-quality frontier**: selection time against AUC for every
+   method and setting, on each dataset.
+4. **Drop-in selectors that are tested, fast and exact.** Those that copy
+   a scikit-learn method select the same features, on the CPU and on a
+   GPU. RFE, RFECV and Lasso reach the exact solution that scikit-learn's
+   default solver stops short of.
+5. **Checks of the data that change its use**: repeated patients and a
+   computed label in SCAN-B, and copied images in BreastMNIST.
+
+This report keeps the main claims and their evidence. A detailed report
+in the repository holds every task, every `k`, every test and every
+design decision. A reference such as "D 7.2" points to its section 7.2
+([`detailed_report/`](../detailed_report/README.md)).
 
 ## 2. Data
 
@@ -475,35 +548,278 @@ search on 5 validation sets takes about 27 s per split, against 0.67 s for
 one fit (D C.1). A method
 that chooses its own count, such as HC2008, skips this search.
 
-## 7. Discussion (2 pages)
+## 7. Discussion
 
-- The answer to the main question (D 9.5).
-- What holds on every dataset, and what changes (D 9.4).
-- Key decisions: one table, decision, reason, effect (D 9.2).
-- Limits (D 9.6).
-- Open research questions: a rare-signal dataset for Higher Criticism;
-  an exact test for floor-heavy genes; how often random sets beat a
-  chosen set; correlated genes as one unit; stability selection; a
-  measured target such as ER (D 10).
+### 7.1 The answer
 
-## References (1 page)
+For a budget of `k` features, which method gives the best classifier, and
+by how much over random? At small `k`, the answer depends on the dataset.
+At 10 genes on SCAN-B, Mann-Whitney then RFE is best on four tasks of
+five, and the filters beat random genes by 0.12 to 0.19 AUC. At 10
+features on the image data, the filters and tree importance lead, by 0.10
+to 0.16 over random. At the `k` each method chose, the top methods cannot
+be told apart. If time also counts, a GPU filter is the practical choice:
+on SCAN-B, HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under
+a second per fit, 0.001 to 0.002 below the best.
 
-- Only works cited in this report (from D references).
+### 7.2 What holds on every dataset, and what changes
 
-## Appendix A. How to reproduce (1 page)
+On all three datasets, selection beats random features most at small `k`;
+Mann-Whitney is within 0.01 AUC of the best, at the cheap end of the
+frontier; and HC2008 stops at the edge of its search. Wherever RFECV ran
+with both inner scores, AUC did better than accuracy. What changes is the best method for a given budget. At
+large `k`, RFE leads on both image datasets but trails the filters on
+SCAN-B. Whether selection beats all features also changes: never on the
+image data, on one SCAN-B task of five. So the best method for a budget
+cannot be known in advance from these datasets. What can be known is a
+safe default.
 
-- Setup, the experiment commands, determinism, tests (D A).
+### 7.3 Key decisions
 
-## Appendix B. Engineering notes (1 page)
+*Table 5. The decisions that shaped the results (D 9.2).*
 
-- Lasso's solver: why PPDNA, and its changes from the paper (D D.3).
-- How the timings were checked (D D.1).
-- The forest on a 4 GB GPU (D D.5).
+| Decision | Why | Effect |
+|---|---|---|
+| Select inside every split | Selection on all the data lets the test samples choose the features | With shuffled labels on BreastMNIST, the error raised AUC from 0.465 to 0.645 (section 3) |
+| A random control at every `k` | A method has found something only if it beats random features of the same number | It showed where selection pays: at small `k` (section 6.1) |
+| A test corrected for overlapping splits | Random splits share most of their training samples | 20 of 70 comparisons with all genes are established, not more (section 6.2) |
+| GSE96058, one sample per patient, not the course copies | The copies kept 93 repeated patients, and the smaller one lacked 11 of the 50 PAM50 genes | It removed a leak and made the PAM50 test possible (sections 2.1, 6.5) |
+| The U test for every filter | Only the order of gene values is meaningful, and half sit at a floor | One valid test, so filters differ only in their selection rule (section 4) |
+| Find the copied images | Copies fall on both sides of a split | Scores fell by about 0.03 AUC; the order held (section 6.7) |
+| Exact solvers for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded keeps different genes on each run | Repeatable selection, at the exact solution (section 5) |
+| RFECV scored by AUC | Accuracy rewards the larger class | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (section 6.6) |
+| Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | Its behaviour on widespread signal is reported as it is (section 6.4) |
+| A third dataset, unseen during the design | Two datasets shaped the design, so they cannot test it | The pipeline ran unchanged on FGVC-Aircraft (section 2.3) |
 
----
+### 7.4 Limits
 
-Left out, kept in D: the classifier study (D 7.7), side scores and
-memory (D 7.12, 8.10), Sequential selection in detail (D 7.10), the
-per-task plots (D 7.1), data precision (D 3.12), the cost formulas
-(D 4.7), the loader and rejected designs (D 5.2, 5.3), the full tables
-(D C), the data plans (D B) and the glossary (D E).
+- **Data.** Three datasets, two of them embeddings from the same network.
+  Every SCAN-B task predicts PAM50, a label computed from the genes; no
+  measured target was run. The main BreastMNIST results include the
+  copied images.
+- **Protocol.** One classifier, logistic regression with C fixed at 1.
+  One training fraction and 16 splits; the spread over splits is not a
+  confidence interval for new patients. The five SCAN-B tasks share
+  patients, so they are not independent. Each selector's own settings are
+  fixed, except Lasso's penalty. The correlation selector drops a gene
+  whose only redundant partner was itself dropped (D 4.2).
+- **Cost.** Every time comes from one laptop: Intel i7-9750H, 16 GB of
+  memory, and an NVIDIA GTX 1650 with 4 GB. A time is meaningful only on
+  that machine. The runner's speed-up was measured before the solver
+  change of section 5.
+- **Higher Criticism.** No dataset here has rare signal, so these results
+  do not test it in the setting it was built for.
+
+### 7.5 Open research questions
+
+- **A dataset with rare signal**, or a simulation with a known number of
+  useful features, would test whether Higher Criticism and Berk-Jones
+  choose a good count where their theory holds.
+- **An exact test for floor-heavy genes.** A test that separates how often
+  a gene is detected from how high it is when detected would fit these
+  data better than the U test, which merges both (D B.4).
+- **How often does a random set beat a chosen one?** For a set of `k`
+  genes chosen by a method, the share of random size-`k` sets that predict
+  at least as well on the same split is an empirical p-value for the
+  chosen set. It would test a published gene signature against chance
+  signatures of its size.
+- **Stable selection.** Many methods pick different but equivalent genes
+  on each split. Selecting groups of correlated genes, or stability
+  selection (Meinshausen and Bühlmann 2010), could give stable lists.
+- **A measured target**, such as the pathologist's estrogen receptor
+  status, would test the conclusions against clinical truth. The loader
+  already supports it.
+
+## References
+
+Al-Dhabyani, W., Gomaa, M., Khaled, H. and Fahmy, A. (2020). Dataset of
+breast ultrasound images. *Data in Brief* 28, 104863.
+https://doi.org/10.1016/j.dib.2019.104863
+
+Ambroise, C. and McLachlan, G. J. (2002). Selection bias in gene extraction
+on the basis of microarray gene-expression data. *PNAS* 99(10), 6562-6566.
+https://doi.org/10.1073/pnas.102102699
+
+Bengio, Y. and Grandvalet, Y. (2004). No unbiased estimator of the variance
+of K-fold cross-validation. *Journal of Machine Learning Research* 5,
+1089-1105.
+
+Berk, R. H. and Jones, D. H. (1979). Goodness-of-fit test statistics that
+dominate the Kolmogorov statistics. *Zeitschrift für
+Wahrscheinlichkeitstheorie und verwandte Gebiete* 47, 47-59.
+https://doi.org/10.1007/BF00533250
+
+Brueffer, C., Vallon-Christersson, J., Grabau, D., et al. (2018). Clinical
+value of RNA sequencing-based classifiers for prediction of the five
+conventional breast cancer biomarkers. *JCO Precision Oncology* 2, 1-18.
+https://doi.org/10.1200/PO.17.00135. Data: GEO accession GSE96058.
+
+Chapelle, O. (2007). Training a support vector machine in the primal.
+*Neural Computation* 19(5), 1155-1178.
+https://doi.org/10.1162/neco.2007.19.5.1155
+
+Donoho, D. and Jin, J. (2004). Higher criticism for detecting sparse
+heterogeneous mixtures. *Annals of Statistics* 32(3), 962-994.
+https://doi.org/10.1214/009053604000000265
+
+Donoho, D. and Jin, J. (2008). Higher criticism thresholding: optimal
+feature selection when useful features are rare and weak. *PNAS* 105(39),
+14790-14795. https://doi.org/10.1073/pnas.0807471105
+
+Dudoit, S., Fridlyand, J. and Speed, T. P. (2002). Comparison of
+discrimination methods for the classification of tumors using gene
+expression data. *Journal of the American Statistical Association*
+97(457), 77-87. https://doi.org/10.1198/016214502753479248
+
+Guyon, I. and Elisseeff, A. (2003). An introduction to variable and feature
+selection. *Journal of Machine Learning Research* 3, 1157-1182.
+
+Guyon, I., Weston, J., Barnhill, S. and Vapnik, V. (2002). Gene selection
+for cancer classification using support vector machines. *Machine Learning*
+46(1-3), 389-422. https://doi.org/10.1023/A:1012487302797
+
+Hanley, J. A. and McNeil, B. J. (1982). The meaning and use of the area
+under a receiver operating characteristic (ROC) curve. *Radiology* 143(1),
+29-36. https://doi.org/10.1148/radiology.143.1.7063747
+
+He, K., Zhang, X., Ren, S. and Sun, J. (2016). Deep residual learning for
+image recognition. *CVPR*, 770-778. https://doi.org/10.1109/CVPR.2016.90
+
+Keerthi, S. S. and DeCoste, D. (2005). A modified finite Newton method for
+fast solution of large scale linear SVMs. *Journal of Machine Learning
+Research* 6, 341-361.
+
+Kuncheva, L. I. (2007). A stability index for feature selection.
+*Proceedings of the 25th IASTED International Multi-Conference: Artificial
+Intelligence and Applications*, 390-395.
+
+Liu, Y.-J. and Zhou, W. (2023). Dual Newton proximal point algorithm for
+solution paths of the ℓ1-regularized logistic regression. Preprint.
+https://arxiv.org/abs/2310.19353
+
+Maji, S., Rahtu, E., Kannala, J., Blaschko, M. and Vedaldi, A. (2013).
+Fine-grained visual classification of aircraft. Preprint.
+https://arxiv.org/abs/1306.5151
+
+Mann, H. B. and Whitney, D. R. (1947). On a test of whether one of two
+random variables is stochastically larger than the other. *Annals of
+Mathematical Statistics* 18(1), 50-60.
+https://doi.org/10.1214/aoms/1177730491
+
+Meinshausen, N. and Bühlmann, P. (2010). Stability selection. *Journal of
+the Royal Statistical Society, Series B* 72(4), 417-473.
+https://doi.org/10.1111/j.1467-9868.2010.00740.x
+
+Moscovich, A., Nadler, B. and Spiegelman, C. (2016). On the exact
+Berk-Jones statistics and their p-value calculation. *Electronic Journal of
+Statistics* 10(2), 2329-2354. https://doi.org/10.1214/16-EJS1172
+
+Nadeau, C. and Bengio, Y. (2003). Inference for the generalization error.
+*Machine Learning* 52(3), 239-281. https://doi.org/10.1023/A:1024068626366
+
+Neekhra, B., Gupta, D. and Chakrabarti, P. P. (2025). On the
+(in)significance of feature selection in high-dimensional datasets.
+Preprint. https://arxiv.org/abs/2508.03593
+
+Nogueira, S., Sechidis, K. and Brown, G. (2018). On the stability of
+feature selection algorithms. *Journal of Machine Learning Research*
+18(174), 1-54.
+
+Parker, J. S., Mullins, M., Cheang, M. C. U., et al. (2009). Supervised risk
+predictor of breast cancer based on intrinsic subtypes. *Journal of Clinical
+Oncology* 27(8), 1160-1167. https://doi.org/10.1200/JCO.2008.18.1370
+
+Pawłowska, A., Karwat, P. and Żołek, N. (2023). Letter to the Editor. Re:
+"Dataset of breast ultrasound images". *Data in Brief* 48, 109247.
+https://doi.org/10.1016/j.dib.2023.109247
+
+Saeys, Y., Inza, I. and Larrañaga, P. (2007). A review of feature selection
+techniques in bioinformatics. *Bioinformatics* 23(19), 2507-2517.
+https://doi.org/10.1093/bioinformatics/btm344
+
+Statnikov, A., Aliferis, C. F., Tsamardinos, I., et al. (2005). A
+comprehensive evaluation of multicategory classification methods for
+microarray gene expression cancer diagnosis. *Bioinformatics* 21(5),
+631-643. https://doi.org/10.1093/bioinformatics/bti033
+
+Yang, J., Shi, R., Wei, D., et al. (2023). MedMNIST v2 - a large-scale
+lightweight benchmark for 2D and 3D biomedical image classification.
+*Scientific Data* 10. https://doi.org/10.1038/s41597-022-01721-8
+
+## Appendix A. How to reproduce
+
+Every command runs from the repository root. Setup:
+
+```bash
+python3.13 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -e ".[gpu,embeddings]"   # PyTorch: GPU paths and embeddings
+```
+
+Each loader downloads its data on first use and caches it: GSE96058
+(592 MB), BreastMNIST (31 MB), FGVC-Aircraft (2.75 GB). An experiment is
+one command:
+
+```bash
+.venv/bin/python -m featsel.run --config configs/frontier_scanb70_gpu.yaml --n-jobs 1
+```
+
+The configs for chapter 6 are `configs/frontier_scanb70_*.yaml`,
+`configs/frontier_breastmnist70_*.yaml` and `configs/aircraft70_gpu.yaml`.
+Add `--resume` to continue a stopped run. Each run writes a CSV and a JSON
+file with the machine, the library versions and the git commit. D A gives
+the command behind every table of the detailed report. This report's
+figures and table come from those summaries:
+
+```bash
+.venv/bin/python scripts/plot_final_frontier.py --out final_report/figures/frontier.png \
+    "SCAN-B, mean of 5 tasks=detailed_report/figures/frontier_scanb70_roc_auc.csv" \
+    "BreastMNIST=detailed_report/figures/frontier_breastmnist70_roc_auc.csv" \
+    "FGVC-Aircraft=detailed_report/figures/frontier_aircraft70_roc_auc.csv"
+.venv/bin/python scripts/plot_curves.py --mean --width 7.2 --out final_report/figures/curves.png \
+    "SCAN-B=detailed_report/figures/summary_scanb70_curve.csv" \
+    "BreastMNIST=detailed_report/figures/summary_breastmnist70_curve.csv" \
+    "FGVC-Aircraft=detailed_report/figures/summary_aircraft70_curve.csv"
+.venv/bin/python scripts/final_table.py --out final_report/figures/table1 \
+    --scanb detailed_report/figures/summary_scanb70_chosen.csv \
+    --breastmnist detailed_report/figures/summary_breastmnist70_chosen.csv \
+    --aircraft detailed_report/figures/summary_aircraft70_chosen.csv
+```
+
+One seed, 42, fixes every random step; split `s` uses 42 + `s`. A rerun
+gives the same features and scores, for any number of workers. The tests
+run with `.venv/bin/python -m pytest`; GPU tests are skipped without a
+GPU.
+
+## Appendix B. Engineering notes
+
+**Where a selector runs.** Ten selectors share one device rule. With
+`device='auto'`, the default, a fit uses the GPU when one is free and
+falls back to the CPU otherwise, so a parallel run never waits. With
+`'cuda'` it waits for the GPU; with `'cpu'` it never uses it. A file lock
+lets one fit at a time hold the GPU. The experiments set `'cuda'`, so
+every GPU time was taken on the GPU. Each result records the device it
+used.
+
+**The U test on a GPU.** One sort per gene gives its ranks and its groups
+of tied values. On the GPU, PyTorch sorts thousands of genes at once and
+sums the ranks exactly in 64-bit floats. The p-value is finished on the
+CPU, so every device gives identical results.
+
+**Mutual information, bit for bit.** scikit-learn estimates it from
+nearest neighbours with a tree. For one feature, a sort per class finds
+the k-th neighbour, and a binary search counts the points within its
+radius. With scikit-learn's own random noise and order of sums, the
+scores are identical to scikit-learn's.
+
+**Lasso's solver.** PPDNA (Liu and Zhou 2023), a semismooth Newton method,
+needed five changes from the paper on SCAN-B-shaped data: the intercept is
+penalized as liblinear penalizes it; the proximal step grows five-fold per
+outer step, up to a limit set by rounding; the Newton matrix is factored
+in 32-bit floats, where the GPU is fast, and the solution refined in 64
+bits; and the inner and the outer loops also stop when rounding, not the
+method, stops their progress (D D.3).
+
+**The forest on the GPU.** On the 4 GB GPU, XGBoost ran out of memory on
+data of SCAN-B's size, so tree importance runs on the CPU with all
+threads (D D.5).
