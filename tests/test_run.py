@@ -451,6 +451,31 @@ class GreedySelector(FeatureSelector):
         return self
 
 
+class TorchGreedySelector(FeatureSelector):
+    """A selector that asks PyTorch for 2 GB on the CPU, as Lasso's solver does."""
+
+    def __init__(self, check_input=True):
+        self.check_input = check_input
+
+    def _fit(self, X, y):
+        import torch
+
+        X, y = self._validate(X, y, check_input=self.check_input)
+        torch.ones(2 ** 28, dtype=torch.float64)  # 2 GB
+        self.support_ = self._mask([0])
+        return self
+
+
+class BrokenSelector(FeatureSelector):
+    """A selector that fails with a RuntimeError that is not about memory."""
+
+    def __init__(self, check_input=True):
+        self.check_input = check_input
+
+    def _fit(self, X, y):
+        raise RuntimeError('a defect, not memory')
+
+
 def _data_gb():
     """This process's current data memory, the size RLIMIT_DATA caps, from /proc."""
     for line in Path('/proc/self/status').read_text().splitlines():
@@ -474,6 +499,29 @@ class TestMemoryCap:
         out = capsys.readouterr().out
         assert 'Out of memory, skipped (9)' in out
         assert 'GreedySelector k=None' in out
+
+    def test_pytorch_cell_past_the_cap_is_skipped(self, experiment, capsys):
+        """Test that PyTorch's refused allocation, a RuntimeError, also skips the cell."""
+        pytest.importorskip('torch')
+        import torch  # noqa: F401  # loaded before the cap, as in a worker that ran a fit
+
+        experiment['selectors'] = [{'name': 'TorchGreedySelector'},
+                                   {'name': 'ANOVAFSelector', 'k': [5]}]
+        experiment['max_worker_memory_gb'] = _data_gb() + 0.5
+
+        df = pd.read_csv(run_config(experiment))
+
+        assert set(df.selector) == {'ANOVAFSelector'}
+        out = capsys.readouterr().out
+        assert 'Out of memory, skipped (9)' in out
+        assert 'TorchGreedySelector k=None' in out
+
+    def test_other_runtime_errors_still_stop_the_run(self, experiment):
+        """Test that only memory errors are skipped: a defect must not pass silently."""
+        experiment['selectors'] = [{'name': 'BrokenSelector'}]
+
+        with pytest.raises(RuntimeError, match='a defect, not memory'):
+            run_config(experiment)
 
     def test_cap_is_lifted_after_the_split(self, experiment):
         """Test that the process gets its old limit back, so later work is not capped."""

@@ -336,7 +336,9 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                         y_train, config, rank_once) if validates else
                         {'validation_time_s': float('nan')})
                     validation = selection.pop('validation_roc_auc', validation)
-            except MemoryError:
+            except (MemoryError, RuntimeError) as error:
+                if not _out_of_memory(error):
+                    raise
                 failures.append(f"{context['task']} split {context['split']} "
                                 f"train_size {context['train_size']}: {sel_name} k={k}")
                 continue
@@ -376,7 +378,9 @@ def _selection_rows(X_train, X_test, y_train, y_test, context, sel_spec, k_value
                 start = time.perf_counter()
                 y_pred = model.predict(X_test_sel)
                 predict_time = time.perf_counter() - start
-            except MemoryError:
+            except (MemoryError, RuntimeError) as error:
+                if not _out_of_memory(error):
+                    raise
                 failures.append(f"{context['task']} split {context['split']} "
                                 f"train_size {context['train_size']}: "
                                 f"{sel_name} k={k} {model_name}")
@@ -543,6 +547,17 @@ def _tuned(model, grid, tuning, seed):
     return GridSearchCV(model, grid, scoring=tuning['scoring'], cv=inner)
 
 
+def _out_of_memory(error):
+    """
+    True when error is a refused allocation: NumPy's MemoryError, or the
+    RuntimeError PyTorch raises instead, on the CPU ("can't allocate
+    memory", past the memory cap) or on a GPU ("out of memory"). Any other
+    RuntimeError is a defect, and the run must stop on it.
+    """
+    return isinstance(error, MemoryError) or (
+        "can't allocate memory" in str(error) or 'out of memory' in str(error))
+
+
 def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip, truth,
               journal=None, job=None):
     """
@@ -555,8 +570,8 @@ def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip
 
     With config['max_worker_memory_gb'] set, the process's data memory is
     capped at that size while the job runs. An allocation past the cap
-    raises MemoryError, which skips the cell instead of letting the kernel
-    kill a process. Data memory is what the process writes: arrays, thread
+    raises MemoryError, or a RuntimeError in PyTorch (_out_of_memory), which
+    skips the cell instead of letting the kernel kill a process. Data memory is what the process writes: arrays, thread
     buffers, its own copies. It leaves out the mapped split, which every
     worker shares, and the address space CUDA reserves without using, so a
     worker can use the GPU under a cap of a few GB. An address-space cap
