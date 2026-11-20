@@ -12,9 +12,9 @@ per setting. The few single timings in the text are marked as such. They
 explain a design choice and claim no speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM,
 and an NVIDIA GTX 1650 with 4 GB.
 
-The SCAN-B measurements here were made before the 11 flat genes were
-dropped (section 2.1). So they use 28,552 genes, not the 28,541 of
-chapter 7 (Appendix B.5).
+The SCAN-B measurements here, except the table of section 6.1, were made
+before the 11 flat genes were dropped (section 2.1). So they use 28,552
+genes, not the 28,541 of chapter 7 (Appendix B.5).
 
 ## 6.1 The runner against plain scikit-learn
 
@@ -30,7 +30,7 @@ equal on every run.
 
 The setting, chosen to see the whole flow in about a minute:
 
-- SCAN-B, Basal vs rest: 2,976 patients, 3,000 random genes of 28,552.
+- SCAN-B, Basal vs rest: 2,976 patients, 3,000 random genes of 28,541.
 - 5 splits at a training fraction of 0.5.
 - Lasso and RFE (step 0.5) at `k` = 10, 50 and 250.
 - Logistic regression with a fixed C, as in the experiments.
@@ -38,16 +38,19 @@ The setting, chosen to see the whole flow in about a minute:
   same models. The experiments seed each split differently.
 - Data in 32-bit floats on both sides.
 
-These timings predate dropping liblinear (section 6.2). Both sides ran
-Lasso and RFE with liblinear at its defaults. The script now compares
-with liblinear run to a tight tolerance. It has not been re-run since.
+- One fit per selection on both sides.
+
+The runner solves Lasso by PPDNA and RFE by Newton's method (section
+6.2). scikit-learn runs liblinear to a tight tolerance, so that both
+sides reach the same solution. The timings come from one run, on
+2026-11-20, while other programs ran on the laptop.
 
 | Run | Seconds | Speed-up over scikit-learn on 1 core |
 |---|---|---|
-| scikit-learn, 1 core | 33.6 | 1.0 |
-| runner, 1 core | 10.4 | 3.2 |
-| scikit-learn, 12 threads | 22.3 | 1.5 |
-| runner, 12 threads | 6.3 | 5.3 |
+| scikit-learn, 1 core | 52.9 | 1.0 |
+| runner, 1 core | 12.4 | 4.3 |
+| scikit-learn, 12 threads | 35.9 | 1.5 |
+| runner, 12 threads | 5.2 | 10.1 |
 
 Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
 [`results/speed_benchmark.csv`](../results/speed_benchmark.csv).
@@ -62,10 +65,10 @@ Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
   39 s per split (single timings), with identical genes.
 - It runs jobs in parallel, with the data in shared memory.
 
-Parallel work added little on this grid. scikit-learn spreads only the 5
-splits of one call, and gains 1.5 times. The runner's 10 jobs (2
-selectors × 5 splits) gain 1.7 times over its own one-core run. Starting
-the worker processes took about 4.5 of its 6.3 seconds (a single timing).
+Parallel work added less than the 12 threads suggest. scikit-learn
+spreads only the 5 splits of one call, and gains 1.5 times. The runner's
+10 jobs (2 selectors × 5 splits) gain 2.4 times over its own one-core
+run.
 
 ### Parallel work at full size
 
