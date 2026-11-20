@@ -160,16 +160,16 @@ Pooling scores from different models into one AUC would mix scales.
 ## 3.6 Stability
 
 A method can score well and still pick different genes on every split.
-Its gene list is then an accident of the split, not a finding. We measure stability by Kuncheva's (2007)
-consistency index, averaged over all pairs of splits: 1 for identical gene
-sets, 0 for chance overlap, so the random control scores about 0. 5 splits
-give 10 pairs, 16 give 120, 20 give 190.
+Its gene list is then an accident of the split, not a finding. We measure
+stability by the measure of Nogueira, Sechidis and Brown (2018) over all
+splits: 1 for identical gene sets, 0 for chance overlap, so the random
+control scores about 0. It is built from how often each feature is
+selected, so it needs no equal sizes. That matters for the methods that
+choose their own count.
 
-The index assumes sets of equal size. For methods that choose their own
-count, we use the mean size of each pair, an approximation. So we also
-compute the measure of Nogueira, Sechidis and Brown (2018). It is built
-from how often each feature is selected and needs no equal sizes. With
-equal sizes it equals the mean pairwise Kuncheva index.
+`featsel.analysis` also has Kuncheva's (2007) consistency index, averaged
+over all pairs of splits. It assumes sets of equal size, so the results
+do not use it. With equal sizes the two measures agree.
 
 A random method needs a different seed on each split. With one seed, its
 stability would be a meaningless 1.0.

@@ -89,7 +89,7 @@ shape our protocol (Table 1):
 | Selecting genes on all the data, then cross-validating | Ambroise and McLachlan (2002) | Selection inside every split (section 3) |
 | No random control | Neekhra et al. (2025) | Random features at every `k` |
 | Trusting the spread of k-fold scores | Bengio and Grandvalet (2004) | Repeated random splits and a corrected test |
-| Reporting scores without stability | Nogueira et al. (2018) | Stability for every method |
+| Ignoring which features are chosen | Nogueira et al. (2018) | Stability for every method |
 
 ### 1.4 What this project adds
 

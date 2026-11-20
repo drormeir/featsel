@@ -113,7 +113,7 @@ those datasets have tens to a few hundred samples.
 | Selecting genes on all the data, then cross-validating | Ambroise and McLachlan (2002) | Selection inside every split (3.2) |
 | No random control | Neekhra et al. (2025) | A random selector at every `k` (3.4) |
 | Trusting the spread of k-fold scores | Bengio and Grandvalet (2004) | Repeated random splits (3.3) |
-| Reporting scores without stability | Kuncheva (2007) | Kuncheva's index for every method (3.6) |
+| Ignoring which features are chosen | Nogueira et al. (2018) | Nogueira's stability measure for every method (3.6) |
 
 **Where this project stands.** It compares filters, embedded methods,
 wrappers and Higher Criticism under one protocol. Running on a gene
