@@ -171,8 +171,9 @@ signal, and different gene sets can predict equally well. Sections 6.1,
 
 ### 2.2 BreastMNIST
 
-BreastMNIST (Yang et al. 2023) holds 780 breast ultrasound images at 224
-× 224 pixels (Al-Dhabyani et al. 2020). Each image goes through ResNet-50
+BreastMNIST (Yang et al. 2023) holds 780 breast ultrasound images
+(Al-Dhabyani et al. 2020); we use its 224 × 224 release, MedMNIST+ (Yang
+et al. 2024). Each image goes through ResNet-50
 (He et al. 2016), trained on ImageNet, with its last layer removed. The
 result is 2,048 numbers per image: more features than images. The signal
 is again widespread: 24% to 28% of the features pass the U test at a 5%
@@ -180,7 +181,8 @@ false discovery rate. Unlike genes, pairs of features are only weakly
 correlated (median absolute correlation 0.056).
 
 **Copied images.** A published letter found copies in the source images
-(Pawłowska et al. 2023): the same scan, shifted, scaled or cropped. Like
+(Pawłowska et al. 2023): the same scan under a small geometric change (an
+affine transform). Like
 SCAN-B's repeated patients, a copy can fall in the training set and its
 twin in the test set. Our loader finds them among BreastMNIST's own
 images, by the letter's method: 150 groups of 339 images. A run without
@@ -280,7 +282,7 @@ filter (D 4.2).
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
 | Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
 | Tree importance | embedded | Rank by a random forest's impurity importance. |
-| RFE | wrapper | Train a linear SVM, remove the 10% of features with the smallest weights, repeat (Guyon et al. 2002). |
+| RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step. |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation. |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy; repeat. Run at `k` = 5 and 10 only. |
 | Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on BreastMNIST); Lasso, tree importance or RFE picks from them. |
@@ -297,13 +299,13 @@ rounds to zero. We compute the logarithm of the p-value directly, so
 Higher Criticism can still tell them apart (D 4.3).
 
 **Higher Criticism.** Sort the N p-values. If no feature carried signal,
-the i-th smallest would sit near i/(N + 1). Higher Criticism measures, at
-each i, how far the sorted p-values fall below that line, in standard
-deviations, and keeps every feature up to the largest gap (Donoho and Jin
-2004, 2008). HC2004 is the published form. HC2008 changes one detail: it
-centres the i-th p-value at its exact mean, i/(N + 1), where the papers
-use i/N. Both search the smallest 10% of p-values, the limit of the 2008
-paper. We kept this limit, though the signal here is widespread: widening it to fit
+the i-th smallest would sit near its mean, i/(N + 1) (Moscovich et al.
+2016). Higher Criticism measures, at each i, how far the sorted p-values
+fall below that line, in standard deviations, and keeps every feature up
+to the largest gap (Donoho and Jin 2004, 2008). HC2004 is the 2004
+paper's form. HC2008 is the 2008 paper's form with one change: it centres
+the i-th p-value at i/(N + 1), not i/N. Both search the smallest 10% of
+p-values, the example value of the 2008 paper. We kept this limit, though the signal here is widespread: widening it to fit
 the data would tune the method to the answer.
 
 **Berk-Jones.** Under the null, the i-th smallest of N uniform p-values
@@ -514,8 +516,8 @@ well (Figure 2). A likely reason is that genes which move with the PAM50
 genes carry the same signal. So a low share of PAM50 genes is not poor
 selection. It shows again that a
 gene list is one of many equally good answers. Mann-Whitney's lead here is
-partly built in: Parker et al. (2009) chose the 50 genes by testing each
-gene alone.
+partly built in: Parker et al. (2009) chose the 50 genes by ranking each
+gene alone, by a t-test for each subtype.
 
 ### 6.6 Wrappers need care
 
@@ -735,7 +737,12 @@ microarray gene expression cancer diagnosis. *Bioinformatics* 21(5),
 
 Yang, J., Shi, R., Wei, D., et al. (2023). MedMNIST v2 - a large-scale
 lightweight benchmark for 2D and 3D biomedical image classification.
-*Scientific Data* 10. https://doi.org/10.1038/s41597-022-01721-8
+*Scientific Data* 10, 41. https://doi.org/10.1038/s41597-022-01721-8
+
+Yang, J., Shi, R., Wei, D., et al. (2024). MedMNIST+: 18x standardized
+datasets for 2D and 3D biomedical image classification with multiple size
+options: 28 (MNIST-like), 64, 128, and 224. Zenodo, version 3.0.
+https://doi.org/10.5281/zenodo.10519652
 
 ## Appendix A. How to reproduce
 
