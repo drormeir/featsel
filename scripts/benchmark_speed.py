@@ -90,6 +90,11 @@ def run_runner(X, y, n_jobs, folder):
         'train_sizes': [0.5],
         'metrics': ['macro_f1'],
         'n_jobs': n_jobs,
+        # One fit per selection, as scikit-learn does; the default is 10.
+        'selection_repeats': 1,
+        # No memory cap: it does not change the speed, and at 12 workers the
+        # automatic cap is below what PyTorch, in the Lasso solver, needs.
+        'max_worker_memory_gb': None,
         'selectors': [{'name': 'LassoSelector', 'k': K_VALUES, 'params': LASSO},
                       {'name': 'RFESelector', 'k': K_VALUES, 'params': RFE_PARAMS}],
         'models': [{'name': 'logistic_regression', 'params': MODEL}],
