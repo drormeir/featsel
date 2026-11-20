@@ -1,13 +1,15 @@
-"""Build the detailed report as one PDF.
+"""Build the final or the detailed report as one PDF.
 
-Order: title pages, contents, abstract, chapters 1 to 10, references,
-appendices A to E. The style is in detailed_report/report.css.
+The final report is one file, final_report/README.md. The detailed report
+is, in order: abstract, chapters 1 to 10, references, appendices A to E.
+Title pages and contents come first. Both use detailed_report/report.css.
 
 The title page holds personal details, so it is read from
 references/local/title.md and the PDF is written there too. Git ignores
 that folder. In title.md, a line `* * *` starts the next page.
 
-    .venv/bin/python scripts/build_report_pdf.py
+    .venv/bin/python scripts/build_report_pdf.py                     # the final report
+    .venv/bin/python scripts/build_report_pdf.py --report detailed
 """
 
 import argparse
@@ -20,12 +22,12 @@ from pathlib import Path
 from weasyprint import CSS, HTML
 
 ROOT = Path(__file__).resolve().parent.parent
-REPORT = ROOT / 'detailed_report'
 LOCAL = ROOT / 'references' / 'local'
+CSS_FILE = ROOT / 'detailed_report' / 'report.css'
 REPO_URL = 'https://github.com/drormeir/featsel/blob/main/'
 TITLE = 'Choosing Few Genes from Many: Feature Selection for High-Dimensional Data'
 
-FILES = [
+DETAILED = [
     'abstract.md',
     '01_the_problem.md',
     '02_the_data.md',
@@ -44,6 +46,11 @@ FILES = [
     'appendix_d_engineering.md',
     'appendix_e_glossary.md',
 ]
+# Each report: its folder and its files, in order.
+REPORTS = {
+    'final': ('final_report', ['README.md']),
+    'detailed': ('detailed_report', DETAILED),
+}
 
 LINK = re.compile(r'\]\(([^)\s]+)\)')
 
@@ -52,22 +59,22 @@ def chapter_id(name: str) -> str:
     return 'chap-' + Path(name).stem
 
 
-def link_target(target: str) -> str:
+def link_target(target: str, folder: str, files: list[str]) -> str:
     """Point links inside the PDF, and links to the repo at GitHub."""
     if target.startswith(('http', '#')) or target.endswith('.png'):
         return target
     if target.startswith('../'):
         return REPO_URL + target[3:]
     name, _, anchor = target.partition('#')
-    if name in FILES:
+    if name in files:
         return '#' + (anchor or chapter_id(name))
-    return REPO_URL + 'detailed_report/' + target
+    return f'{REPO_URL}{folder}/{target}'
 
 
-def chapter(name: str) -> str:
+def chapter(folder: str, name: str, files: list[str]) -> str:
     lines = []
     titled = False
-    for line in (REPORT / name).read_text().splitlines():
+    for line in (ROOT / folder / name).read_text().splitlines():
         if line.startswith('[Back to contents]('):
             continue
         if not titled and line.startswith('# '):
@@ -75,7 +82,7 @@ def chapter(name: str) -> str:
             titled = True
         lines.append(line)
     text = '\n'.join(lines)
-    return LINK.sub(lambda m: f']({link_target(m.group(1))})', text)
+    return LINK.sub(lambda m: f']({link_target(m.group(1), folder, files)})', text)
 
 
 def pandoc(args: list[str], text: str) -> str:
@@ -87,17 +94,21 @@ def pandoc(args: list[str], text: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument('--report', choices=REPORTS, default='final',
+                        help='which report (default: %(default)s)')
     parser.add_argument('--title', type=Path, default=LOCAL / 'title.md',
                         help='title and supervisor pages (default: %(default)s)')
-    parser.add_argument('--out', type=Path, default=LOCAL / 'report.pdf',
-                        help='the PDF (default: %(default)s)')
+    parser.add_argument('--out', type=Path,
+                        help='the PDF (default: references/local/<report>_report.pdf)')
     args = parser.parse_args()
     if not args.title.is_file():
         sys.exit(f'Title page not found: {args.title}\n'
                  'Write it there. Keep it out of git: references/local/ is ignored.')
+    folder, files = REPORTS[args.report]
+    out = args.out or LOCAL / f'{args.report}_report.pdf'
 
     title_html = pandoc(['-t', 'html5'], args.title.read_text())
-    body = '\n\n'.join(chapter(name) for name in FILES)
+    body = '\n\n'.join(chapter(folder, name, files) for name in files)
     with tempfile.TemporaryDirectory() as tmp:
         before = Path(tmp) / 'title.html'
         before.write_text(f'<div class="title-page">\n{title_html}</div>\n')
@@ -111,10 +122,10 @@ def main() -> None:
             '--include-before-body', str(before),
         ], body)
 
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    HTML(string=html, base_url=str(REPORT)).write_pdf(
-        args.out, stylesheets=[CSS(filename=REPORT / 'report.css')])
-    print(f'Wrote {args.out}')
+    out.parent.mkdir(parents=True, exist_ok=True)
+    HTML(string=html, base_url=str(ROOT / folder)).write_pdf(
+        out, stylesheets=[CSS(filename=CSS_FILE)])
+    print(f'Wrote {out}')
 
 
 if __name__ == '__main__':
