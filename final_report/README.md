@@ -80,7 +80,9 @@ Comparative studies on gene expression found that simple classifiers did
 as well as complex ones (Dudoit et al. 2002), or that multiclass SVMs
 were the most accurate (Statnikov et al. 2005). Most of their datasets
 had tens to a few hundred samples. Four known pitfalls
-shape our protocol:
+shape our protocol (Table 1):
+
+*Table 1. Known pitfalls and our answers.*
 
 | Pitfall | Source | Our answer |
 |---|---|---|
@@ -95,8 +97,9 @@ shape our protocol:
    patients give test sets of 893, and a paired test corrected for
    overlapping splits checks every difference.
 2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
-   thresholds were built for rare signal. On widespread signal, both
-   stopped at the edge of their search and acted as top-10% filters.
+   thresholds were built for rare signal. On widespread signal, HC2008
+   and Berk-Jones stopped at the edge of their search and acted as
+   top-10% filters; HC2004 kept one to three features.
 3. **A cost-quality frontier**: selection time against AUC for every
    method and setting, on each dataset.
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
@@ -140,7 +143,7 @@ technical reasons alone. We keep one sample per patient: 93 patients have
 a tumour sequenced twice, and split between the training and the test
 set, such a pair tests a model on a patient it has seen. We drop genes
 with a single value and 11 nearly flat genes. This leaves 2,976 patients
-and 28,541 genes. The course's copy of the data kept the repeated
+and 28,541 genes. The course's copies of the data kept the repeated
 patients, so we load GSE96058 directly.
 
 **The values.** Each value is log2(FPKM + 0.1), a transform of a read
@@ -401,11 +404,11 @@ of each family and for random features. The gap to the gray dashed line
 is what selection adds at that `k`. The dotted line is all the features.
 Sources: D 7.2, 8.2.*
 
-*Table 1. Each method at the `k` it chose on validation sets. SCAN-B
+*Table 5. Each method at the `k` it chose on validation sets. SCAN-B
 values are means over its five tasks; the time is the mean of each task's
 median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
 as the second step of a chain; every other method ran on the GPU. "—":
-not run on that dataset. Source: `figures/table1.csv`.*
+not run on that dataset. Source: `final_report/figures/table1.csv`.*
 
 | Method | SCAN-B AUC | BreastMNIST AUC | FGVC-Aircraft AUC | SCAN-B selection, s per fit | SCAN-B stability |
 |---|---|---|---|---|---|
@@ -448,15 +451,16 @@ established (p = 0.30 and 0.06).
 ### 6.2 Selection against all features
 
 On the image data, no method beats all 2,048 features. RFE ties them:
-−0.001 AUC on BreastMNIST (p = 0.85) and −0.000 on FGVC-Aircraft
+−0.001 AUC on BreastMNIST (p = 0.85) and −0.0003 on FGVC-Aircraft
 (p = 0.92). Lasso, correlation, HC2008, Berk-Jones and HC2004 lose to all
 features (D 8.3, 8.9).
 
 On SCAN-B, 20 of the 70 comparisons with all 28,541 genes are
-established. All 10 gains are on one task, LumB: ten methods gain 0.014 to
-0.023 AUC, each on all 16 splits. On the other four tasks no gain is
-established, and the filters and tree importance show no established loss
-(D 7.3).
+established: 10 gains and 10 losses. All 10 gains are on one task, LumB:
+ten methods gain 0.014 to 0.023 AUC, each on all 16 splits. On the other
+four tasks no gain is established. HC2004 loses on four tasks and RFECV
+scored by accuracy on three. Lasso and two chains lose on one task each.
+The other filters and tree importance show no established loss (D 7.3).
 
 So on these datasets, selection buys a smaller model more often than a
 better one.
@@ -465,7 +469,7 @@ better one.
 
 At the `k` each method chose, the top methods cannot be told apart. On
 SCAN-B, eleven methods lie within 0.01 of each other in mean AUC
-(Table 1), and a different method leads on each task (D 7.1). On the
+(Table 5), and a different method leads on each task (D 7.1). On the
 image data, RFE ties all features, and Mann-Whitney is within 0.01 of them
 on both datasets.
 
@@ -541,7 +545,7 @@ conclusions.
 The cheap end of Figure 1 wins. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
-importance takes 17 s for 0.969 (Table 1). On the image data, every method
+importance takes 17 s for 0.969 (Table 5). On the image data, every method
 except Sequential selection runs in under a second per fit, so cost does
 not decide the choice there.
 
@@ -579,7 +583,7 @@ safe default.
 
 ### 7.3 Key decisions
 
-*Table 5. The decisions that shaped the results (D 9.2).*
+*Table 6. The decisions that shaped the results (D 9.2).*
 
 | Decision | Why | Effect |
 |---|---|---|
@@ -774,7 +778,7 @@ The configs behind section 6 are `configs/frontier_scanb70_*.yaml`,
 Adding `--resume` continues a stopped run. Each run writes a CSV, and a
 JSON file with the machine, the library versions and the git commit. D A
 gives the command behind every summary table. This report's figures and
-Table 1 come from three scripts, each with its exact command in its
+Table 5 come from three scripts, each with its exact command in its
 docstring: `scripts/plot_final_frontier.py`, `scripts/plot_curves.py` and
 `scripts/final_table.py`.
 

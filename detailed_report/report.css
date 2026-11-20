@@ -120,6 +120,8 @@ table {
   text-align: left;
   hyphens: manual;
 }
+/* A caption above a table stays on the table's page. */
+p:has(+ table) { break-after: avoid; }
 thead { display: table-header-group; }
 tr { break-inside: avoid; }
 th, td {

@@ -1,6 +1,6 @@
 """
 Each method at the k it chose on validation sets, on all three datasets: the
-final report's Table 1.
+final report's Table 5.
 
 Reads the _chosen.csv tables that summarize_frontier.py writes and runs
 nothing. SCAN-B's five tasks are averaged: test AUC, selection time per fit

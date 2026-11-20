@@ -159,7 +159,8 @@ established.
 - **On the other four tasks, no gain is established.** On Basal the
   methods gained 0.003 to 0.007 and won 11 to 14 of 16 splits, but the
   corrected test cannot tell this from noise.
-- No loss is established for the filters and tree importance. On one
+- No loss is established for the filters other than HC2004, or for tree
+  importance. On one
   task of five they are clearly better.
 
 ## 7.4 Stability
