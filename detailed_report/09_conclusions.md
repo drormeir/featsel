@@ -49,7 +49,7 @@ given.
 | A t-test corrected for overlapping splits | Random splits share most of their training samples, so a plain paired t-test is overconfident | Established differences from all genes fell from 52 to 20 of 70 comparisons; 10 of the 20 are gains (sections 3.3, 9.3 item 9) |
 | The public GSE96058 data, one sample per patient, not the course copies | The course copies keep 93 repeated patients, and `scanb_small` lacks 11 of the 50 PAM50 genes | It removed a leak, and made the PAM50 recovery test possible (sections 2.1, 7.6) |
 | The U test, not the F-test, for every filter | About half the gene values sit at a floor (in the first 200 genes), and only their order is meaningful | One valid test for all filters, so the comparison is between selection rules, not tests (section 4.3) |
-| Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | Scores fell by about 0.03 AUC without the copies; the order of methods held (section 8.8) |
+| Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | Scores fell by 0.016 to 0.042 AUC without the copies; the conclusions held (section 8.8) |
 | Exact solvers, not liblinear, for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became faster and repeatable, at the same AUC (section 6.2) |
 | RFECV scored by AUC, not accuracy | Accuracy rewards the majority class on imbalanced tasks | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (section 7.8) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | HC's behaviour on widespread signal is reported as it is (sections 4.4, 7.5) |
@@ -69,8 +69,8 @@ settings stated in their sections.
 2. Check for repeated samples. 93 patients appear twice in SCAN-B's HiSeq
    data (section 2.1). In BreastMNIST, a quarter of the images repeat
    another; even MedMNIST's fixed split puts copies on both sides, in 57
-   groups. Without the copies, scores fell by about 0.03 AUC, and the
-   order of methods changed little (section 8.8).
+   groups. Without the copies, all features fell by 0.029 AUC and the
+   methods by 0.016 to 0.042; the conclusions held (section 8.8).
 3. The gene values are on an arbitrary scale. In the first 200 genes,
    about half the values are tied at a floor. The F-test's assumptions do not hold for such values. A rank
    test (Mann-Whitney U) does not need them, so it fits this data.
@@ -199,7 +199,8 @@ described in the section given.
   measured (section 2.1). No measured target was run (section 10.1).
 - The BreastMNIST results in sections 8.1 to 8.7 and 8.10 include copied
   images.
-  Without them, the scores fall by about 0.03 AUC (section 8.8).
+  Without them, the scores fall by 0.016 to 0.042 AUC, and the
+  conclusions hold (section 8.8).
 
 **The protocol.**
 

@@ -569,9 +569,11 @@ five tasks, in 3 s per fit instead of 10 minutes (D 7.9, 7.10).
 ### 6.7 Without the copied images
 
 BreastMNIST holds 150 groups of copied images (section 2). Without them,
-585 images remain. All features and the best methods lose about 0.03 AUC:
-all features fall from 0.924 to 0.895. The order of methods changes
-little (D 8.8). So the copies inflate the scores but do not change the
+585 images remain, and every method of Table 5 ran again. All features
+fall from 0.924 to 0.895 AUC, and the methods by 0.016 to 0.042. The
+leading methods change places within 0.009 AUC. RFE still ties all
+features, and the chains, HC2008, Berk-Jones and HC2004 still lose to
+them (D 8.8). So the copies inflate the scores but do not change the
 conclusions.
 
 ### 6.8 Cost
@@ -627,7 +629,7 @@ safe default.
 | A test corrected for overlapping splits | Random splits share most of their training samples | 20 of 70 comparisons with all genes are established, not more (section 6.2) |
 | GSE96058, one sample per patient, not the course copies | The copies kept 93 repeated patients, and the smaller one lacked 11 of the 50 PAM50 genes | It removed a leak and made the PAM50 test possible (sections 2.1, 6.5) |
 | The U test for every filter | Only the order of gene values is meaningful, and half sit at a floor | One valid test, so filters differ only in their selection rule (section 4) |
-| Find the copied images | Copies fall on both sides of a split | Scores fell by about 0.03 AUC; the order held (section 6.7) |
+| Find the copied images | Copies fall on both sides of a split | Scores fell by 0.016 to 0.042 AUC; the conclusions held (section 6.7) |
 | Exact solvers for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded keeps different genes on each run | Repeatable selection, at the exact solution (section 5) |
 | RFECV scored by AUC | Accuracy rewards the larger class | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (section 6.6) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | Its behaviour on widespread signal is reported as it is (section 6.4) |
@@ -638,7 +640,8 @@ safe default.
 - **Data.** Three datasets, two of them embeddings from the same network.
   Every SCAN-B task predicts PAM50, a label computed from the genes; no
   measured target was run. The main BreastMNIST results include the
-  copied images.
+  copied images; a run without them gives the same conclusions (section
+  6.7).
 - **Protocol.** One classifier in the main runs, logistic regression with
   C fixed at 1. A side study with older settings (12 splits, half the
   patients in the training set, macro-F1) added a linear SVM, a random

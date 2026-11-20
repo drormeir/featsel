@@ -196,17 +196,30 @@ are faster and better than every method. The best method, RFE, reaches
 |---|---|---|---|
 | All features | **0.895** | 2,048 | — |
 | RFE | 0.891 | 500 to 1,000 | −0.003 (0.59) |
+| Mutual information | 0.887 | 500 to 1,000 | −0.007 (0.45) |
 | Tree importance | 0.885 | 500 to 1,000 | −0.009 (0.30) |
+| RFECV, by AUC | 0.884 | 212 to 1,232 | −0.011 (0.31) |
 | Mann-Whitney | 0.883 | 500 to 1,000 | −0.012 (0.09) |
 | Lasso | 0.882 | 73 to 182 | −0.013 (0.28) |
+| Correlation (Spearman) | 0.866 | 10 to 813 | −0.028 (0.07) |
+| Mann-Whitney 500, then RFE | 0.860 | 50 to 250 | −0.035 (0.009) |
+| Mann-Whitney 500, then Lasso | 0.858 | 57 to 138 | −0.037 (0.002) |
+| Mann-Whitney 500, then tree importance | 0.855 | 10 to 250 | −0.040 (0.02) |
 | HC2008 | 0.848 | 204 | −0.047 (0.02) |
+| RFECV, by accuracy | 0.847 | 8 to 416 | −0.048 (0.19) |
 | Berk-Jones | 0.847 | 175 to 204 | −0.048 (0.02) |
 | HC2004 | 0.771 | 1 to 2 | −0.123 (< 0.001) |
 
-Without the copies, all features and the best
-methods lost about 0.03 AUC; Lasso lost 0.016, and HC2004 gained 0.013.
-The order changed little: tree importance moved above Mann-Whitney. So the
-copies inflate the scores but do not change the conclusions. Table:
+Correlation, mutual information, the chains and both RFECV were added
+after the first run without copies, on the same splits.
+
+Without the copies, all features lost 0.029 AUC, and the methods lost
+0.016 to 0.042; HC2004 gained 0.013. The top of the order changed within
+0.009 AUC: mutual information, tree importance and RFECV by AUC moved
+above Mann-Whitney. RFE still ties all features. The chains, HC2008,
+Berk-Jones and HC2004 still lose to all features (p < 0.05); correlation
+and Lasso no longer do (p = 0.07 and 0.28). So the copies inflate the
+scores, but the conclusions of sections 8.3 to 8.7 hold. Table:
 [`figures/summary_breastmnist70_nocopies_chosen.csv`](figures/summary_breastmnist70_nocopies_chosen.csv).
 
 ## 8.9 An unseen dataset: FGVC-Aircraft
