@@ -381,7 +381,7 @@ scores, for any number of workers.
 scikit-learn's `cross_validate` and with the runner: SCAN-B's Basal task
 on 3,000 random genes, 5 splits, and Lasso and RFE at three values of
 `k`. The
-runner was 4.3 times faster on one core and 10.1 times on 12 threads, with
+runner was 4.4 times faster on one core and 10.7 times on 12 threads, with
 identical test scores (`results/speed_benchmark.csv`, one run). It does
 less work: it prepares each split once and ranks once per split. On this
 grid, 12 workers gained 2.4 times over one. On all the genes and all five
@@ -649,8 +649,7 @@ safe default.
   whose only redundant partner was itself dropped (D 4.2).
 - **Cost.** Every time comes from one laptop: Intel i7-9750H, 16 GB of
   memory, and an NVIDIA GTX 1650 with 4 GB. A time is meaningful only on
-  that machine. The runner's speed-up comes from one run, made while
-  other programs ran on the laptop.
+  that machine. The runner's speed-up comes from one run.
 - **Higher Criticism.** No dataset here has rare signal, so these results
   do not test it in the setting it was built for.
 

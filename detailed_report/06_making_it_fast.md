@@ -43,14 +43,15 @@ The setting, chosen to see the whole flow in about a minute:
 The runner solves Lasso by PPDNA and RFE by Newton's method (section
 6.2). scikit-learn runs liblinear to a tight tolerance, so that both
 sides reach the same solution. The timings come from one run, on
-2026-11-20, while other programs ran on the laptop.
+2026-11-20, with the laptop otherwise idle. An earlier run that day,
+with other programs running, gave 4.3 and 10.1 times.
 
 | Run | Seconds | Speed-up over scikit-learn on 1 core |
 |---|---|---|
-| scikit-learn, 1 core | 52.9 | 1.0 |
-| runner, 1 core | 12.4 | 4.3 |
-| scikit-learn, 12 threads | 35.9 | 1.5 |
-| runner, 12 threads | 5.2 | 10.1 |
+| scikit-learn, 1 core | 53.0 | 1.0 |
+| runner, 1 core | 11.9 | 4.4 |
+| scikit-learn, 12 threads | 33.3 | 1.6 |
+| runner, 12 threads | 5.0 | 10.7 |
 
 Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
 [`results/speed_benchmark.csv`](../results/speed_benchmark.csv).
@@ -66,7 +67,7 @@ Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
 - It runs jobs in parallel, with the data in shared memory.
 
 Parallel work added less than the 12 threads suggest. scikit-learn
-spreads only the 5 splits of one call, and gains 1.5 times. The runner's
+spreads only the 5 splits of one call, and gains 1.6 times. The runner's
 10 jobs (2 selectors × 5 splits) gain 2.4 times over its own one-core
 run.
 
