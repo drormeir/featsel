@@ -261,7 +261,8 @@ with a non-zero weight, so it never reaches half.
   (Mann-Whitney on LumA). Yet these methods predict the label well at 50
   genes (section 7.2).
 - Mann-Whitney's lead is partly built in. Parker et al. chose the 50 genes
-  by testing each gene alone (chapter 2), as Mann-Whitney ranks them.
+  by ranking each gene alone, by a t-test per subtype (chapter 2), as
+  Mann-Whitney ranks them.
 
 **Good prediction does not need the genes that define the label.** Each
 PAM50 gene moves with hundreds of others, and these predict just as well.

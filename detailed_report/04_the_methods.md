@@ -195,13 +195,14 @@ and Jin 2004, 2008).
 
 **The idea.** Sort the N p-values: p₍₁₎ ≤ p₍₂₎ ≤ … ≤ p₍N₎. If no gene
 carried signal, the p-values would be uniform, and p₍ᵢ₎ would sit near
-i/(N+1). HC measures, at each i, how far the sorted p-values fall below
+i/(N+1), its mean (Moscovich et al. 2016, Eq. 2.8). HC measures, at each i, how far the sorted p-values fall below
 that line, in units of their standard deviation. Where this gap is
 largest, the signal stands out most. HC keeps every feature up to that
 point.
 
-We implement two forms. The first is exactly as published. The second
-changes one detail:
+We implement two forms. HC2004 is the 2004 paper's form, exactly as
+published. HC2008 is the 2008 paper's form with one change. The two papers
+also divide by different terms:
 
 | Variant | Statistic | Reference |
 |---|---|---|
@@ -225,7 +226,9 @@ was not used. On `scanb_small`, the earlier course copy, every p-value
 inside the search lay below 1/N, so HC⁺ would have had nothing to search.
 
 The maximum is searched over the smallest alpha0 · N p-values. The 2008
-and 2009 papers use alpha0 = 0.1. The 2004 paper leaves alpha0 open. We
+paper gives alpha0 = 0.1 as an example ("e.g., α0 = 1/10", p. 14791); the
+2009 paper "always use[s] α0 = .10" (just after Definition 1.2). The 2004 paper leaves
+alpha0 open. We
 use 0.1 for both forms.
 
 **When HC is expected to work.** Its guarantees hold when the useful

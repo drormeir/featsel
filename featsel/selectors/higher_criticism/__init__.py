@@ -53,8 +53,9 @@ class HigherCriticismSelector(FeatureSelector):
     variant : {'2008', '2004'}, default='2008'
         Which HC objective to maximize.
     alpha0 : float, default=0.1
-        Fraction of the smallest p-values the maximum searches. The 2008 and
-        2009 papers use 0.1; the 2004 paper leaves it open.
+        Fraction of the smallest p-values the maximum searches. The 2008
+        paper gives 0.1 as an example, the 2009 paper always uses it, and
+        the 2004 paper leaves it open.
     device : str, default='auto'
         Where the U test ranks: 'auto' uses a CUDA GPU when one can be used
         (the `gpu` extra), else NumPy; 'cpu' always NumPy; 'cuda' always the

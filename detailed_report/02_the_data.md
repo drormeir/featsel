@@ -221,7 +221,7 @@ all 780 source images (Yang et al. 2023), so all of these are in our data.
 | Defect | Extent | Effect |
 |---|---|---|
 | "+" calipers | some images | not measured |
-| Copies: the same scan, shifted, scaled or cropped | The letter's text gives 155 copies, 19% of the set. Its own list holds 153 groups of 346 images, so 193 images repeat another. Some copies carry a different label: in the letter's numbering, image 42 is benign and its copy 488 malignant. | compared in section 8.8 |
+| Copies: the same scan under a small geometric change (an affine transform) | The letter's text gives 155 copies, 19% of the set. Its own list holds 153 groups of 346 images, so 193 images repeat another. Some copies carry a different label: in the letter's numbering, image 42 is benign and its copy 488 malignant. | compared in section 8.8 |
 | The axilla rather than the breast | 70 images, more than 8% | not measured |
 | A biopsy needle | at least 7 images | not measured |
 

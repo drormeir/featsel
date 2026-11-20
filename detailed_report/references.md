@@ -156,4 +156,9 @@ https://doi.org/10.1111/j.2517-6161.1996.tb02080.x
 
 Yang, J., Shi, R., Wei, D., et al. (2023). MedMNIST v2 - a large-scale
 lightweight benchmark for 2D and 3D biomedical image classification.
-*Scientific Data* 10. https://doi.org/10.1038/s41597-022-01721-8
+*Scientific Data* 10, 41. https://doi.org/10.1038/s41597-022-01721-8
+
+Yang, J., Shi, R., Wei, D., et al. (2024). MedMNIST+: 18x standardized
+datasets for 2D and 3D biomedical image classification with multiple size
+options: 28 (MNIST-like), 64, 128, and 224. Zenodo, version 3.0.
+https://doi.org/10.5281/zenodo.10519652
