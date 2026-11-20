@@ -87,7 +87,7 @@ def chapter(folder: str, name: str, files: list[str]) -> str:
 
 def pandoc(args: list[str], text: str) -> str:
     return subprocess.run(
-        ['pandoc', '-f', 'markdown+gfm_auto_identifiers', *args],
+        ['pandoc', '-f', 'markdown+gfm_auto_identifiers-implicit_figures', *args],
         input=text, stdout=subprocess.PIPE, text=True, check=True,
     ).stdout
 

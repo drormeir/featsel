@@ -95,21 +95,33 @@ Budget: 18 pages, appendices included. About 8,000 words, 2 figures,
   faster and repeatable, at the same AUC (D 6.2).
 - Why the GPU does not always win: 64-bit speed, copying, 4 GB (D 6.2).
 
-## 6. Results (4 pages)
+## 6. Results
 
-- Figure 1: cost against quality, one panel per dataset
-  (`scripts/plot_final_frontier.py`, from D 7.1, 8.1, 8.9).
+Every result follows the protocol of section 3: 16 splits, 70% of the
+samples in the training set, `k` chosen on validation sets, and ROC AUC on
+the test set, as a mean over the splits. A difference is called
+*established* when the corrected test gives p < 0.05. The detailed report
+gives every task, every `k` and every test (D 7, D 8, D C).
 
 ![Figure 1](figures/frontier.png)
 
-- Figure 2: test AUC against `k`, one panel per dataset; SCAN-B as the
-  mean of its five tasks (`scripts/plot_curves.py --mean --width 7.2`, from D 7.2, 8.2).
+*Figure 1. Cost against quality. Each point is one method at one `k`:
+its median selection time per fit and its mean test AUC. The dark line is
+the frontier: no point is both faster and better than a point on it.
+SCAN-B is the mean of its five tasks. Sources: D 7.1, 8.1, 8.9.*
 
 ![Figure 2](figures/curves.png)
 
-- Table 1: each method at its chosen `k`. SCAN-B values are the mean of
-  its five tasks; time is the mean of each task's median
-  (`scripts/final_table.py`, `figures/table1.csv`).
+*Figure 2. Test AUC against the number of features kept, for one method
+of each family and for random features. The gap to the gray dashed line
+is what selection adds at that `k`. The dotted line is all the features.
+Sources: D 7.2, 8.2.*
+
+*Table 1. Each method at the `k` it chose on validation sets. SCAN-B
+values are means over its five tasks; the time is the mean of each task's
+median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
+as the second step of a chain; every other method ran on the GPU. "—":
+not run on that dataset. Source: `figures/table1.csv`.*
 
 | Method | SCAN-B AUC | BreastMNIST AUC | FGVC-Aircraft AUC | SCAN-B selection, s per fit | SCAN-B stability |
 |---|---|---|---|---|---|
@@ -129,21 +141,129 @@ Budget: 18 pages, appendices included. About 8,000 words, 2 figures,
 | HC2004 | 0.874 | 0.758 | 0.674 | 0.68 | 0.67 |
 | RFECV, scored by accuracy | 0.720 | 0.889 | — | 6.3 | 0.20 |
 
-- 6.1 Selection against random: large gain at 10 features, small at
-  2,000; LumA and LumB keep about 0.02 (D 7.2, 8.2).
-- 6.2 Selection against all features: a gain only on LumB; none on the
-  image data (D 7.3, 8.3).
-- 6.3 No single best method; stability separates them (D 7.1, 7.4, 8.4).
-- 6.4 Higher Criticism and Berk-Jones stop at the edge of their search
-  (D 7.5, 8.5).
-- 6.5 The PAM50 genes: few found in the top 50, yet good prediction
-  (D 7.6).
-- 6.6 Wrappers: RFECV needs AUC as its inner score; a filter first
-  rescues RFE at 10 genes (D 7.8, 7.9).
-- 6.7 Without the copied images: about 0.03 AUC lower, same order
-  (D 8.8).
-- 6.8 Cost: a GPU filter is the best value; choosing `k` costs more than
-  one fit (D 7.11).
+### 6.1 Selection against random features
+
+Selection matters most when few features are allowed (Figure 2). At 10
+genes on SCAN-B, every filter and tree importance beat random genes by
+0.12 to 0.19 AUC, on every task. With the two-stage chains and Sequential
+selection, the range is 0.11 to 0.20. At 10 features on the image data,
+the filters and tree importance beat random features by 0.10 to 0.16. Each
+of these gains is established and holds on all 16 splits (D 7.2, 8.2,
+8.9).
+
+As `k` grows, random features catch up. On Basal, no method beats random
+genes from 250 genes on. On BreastMNIST, no gain is established at 1,000
+features. On LumA and LumB, a gain of about 0.02 remains at 2,000 genes.
+The reason is in the data: thousands of genes carry the signal, and they
+move together (section 2). A large random set holds enough of them.
+
+RFE alone is the exception at small `k` on SCAN-B. At 10 genes it scored
+below random genes on LumA and Normal, though neither loss is
+established (p = 0.30 and 0.06).
+
+### 6.2 Selection against all features
+
+On the image data, no method beats all 2,048 features. RFE ties them:
+−0.001 AUC on BreastMNIST (p = 0.85) and −0.000 on FGVC-Aircraft
+(p = 0.92). Lasso, correlation, HC2008, Berk-Jones and HC2004 lose to all
+features (D 8.3, 8.9).
+
+On SCAN-B, 20 of the 70 comparisons with all 28,541 genes are
+established. All 10 gains are on one task, LumB: ten methods gain 0.014 to
+0.023 AUC, each on all 16 splits. On the other four tasks no gain is
+established, and the filters and tree importance show no established loss
+(D 7.3).
+
+So on these datasets, selection buys a smaller model more often than a
+better one.
+
+### 6.3 No single best method
+
+At the `k` each method chose, the top methods cannot be told apart. On
+SCAN-B, eleven methods lie within 0.01 of each other in mean AUC
+(Table 1), and a different method leads on each task (D 7.1). On the
+image data, RFE ties all features, and Mann-Whitney is within 0.01 of them
+on both datasets.
+
+The best method also changes with `k`. On BreastMNIST, Mann-Whitney beats
+RFE by 0.066 at 10 features (p = 0.04), and RFE beats Mann-Whitney from
+250 features on (p = 0.049 at 250, p = 0.006 at 500). FGVC-Aircraft shows
+the same turn (D 8.2, 8.9). A filter scores each feature alone; RFE looks
+at the features together, and that pays only once many are kept.
+
+Stability separates methods that AUC does not. Tree importance reaches
+the same mean AUC as Mann-Whitney on SCAN-B, 0.969, but its stability is
+0.27 against 0.76: it picks a different gene set on each split. So many
+different gene sets predict equally well, and a gene list from one split
+is not a finding by itself.
+
+### 6.4 Higher Criticism and Berk-Jones
+
+HC2008 kept 2,854 or 2,855 genes on every split and task of SCAN-B. That
+is the edge of its search: 10% of 28,541 genes. On both image datasets it
+kept 204 features, again the edge. Berk-Jones stopped at or just before
+the same edge (D 7.5, 8.5). These thresholds were built for rare signal.
+Here the signal is widespread, so they find no point where it ends, and
+they act as a top-10% filter.
+
+As such a filter, HC2008 is good on SCAN-B: 0.970 mean AUC, 0.001 below
+the best, with the highest stability (0.92) and no `k` to choose. On
+BreastMNIST, 204 features are too few: HC2008 loses 0.056 AUC to all
+features (p < 0.001). HC2004 keeps one to three features. It is the
+weakest method on both image datasets, and on SCAN-B only RFECV scored
+by accuracy is weaker.
+
+### 6.5 Does selection find the PAM50 genes?
+
+The PAM50 label is computed from 50 known genes (section 2). A side study
+measured where these genes lie in each method's ranking, over 10 splits
+(`results/pam50_recovery.md`). In their top 50 genes, the methods found on
+average 12% of them (Mann-Whitney), 11% (tree importance), 9% (Lasso) and
+3% (RFE). Mann-Whitney found half of the 50 by rank 1,031; random ranking
+would need rank 14,271.
+
+Yet at 50 genes these methods predict the subtypes well (Figure 2). Each
+PAM50 gene moves with hundreds of others, and these predict just as well.
+So a low share of PAM50 genes is not poor selection. It shows again that a
+gene list is one of many equally good answers. Mann-Whitney's lead here is
+partly built in: Parker et al. (2009) chose the 50 genes by testing each
+gene alone.
+
+### 6.6 Wrappers need care
+
+RFECV chooses its count by an inner cross-validation. With its default
+inner score, accuracy, it kept a single gene on every split of Her2, LumB
+and Normal, and scored 0.51 to 0.58 AUC. These tasks are imbalanced, and
+accuracy rewards predicting the larger class. Scored by AUC, RFECV reached
+0.962 mean AUC (D 7.8).
+
+RFE alone is weak at 10 genes on SCAN-B: 0.78 mean AUC. A Mann-Whitney
+filter first, keeping 1,000 genes, raised it to 0.95, the best of all
+methods at 10 genes on four tasks of five. Sequential selection beat
+random genes on every task at 10 genes, but this chain beat it on all
+five tasks, in 3 s per fit instead of 10 minutes (D 7.9, 7.10).
+
+### 6.7 Without the copied images
+
+BreastMNIST holds 150 groups of copied images (section 2). Without them,
+585 images remain. All features and the best methods lose about 0.03 AUC:
+all features fall from 0.924 to 0.895. The order of methods changes
+little (D 8.8). So the copies inflate the scores but do not change the
+conclusions.
+
+### 6.8 Cost
+
+The cheap end of Figure 1 wins. On SCAN-B, HC2008, Berk-Jones and
+Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
+GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
+importance takes 17 s for 0.969 (Table 1). On the image data, every method
+except Sequential selection runs in under a second per fit, so cost does
+not decide the choice there.
+
+Choosing `k` costs more than selecting. For Mann-Whitney on SCAN-B, the
+search on 5 validation sets takes about 27 s per split, against 0.67 s for
+one fit (D C.1). A method
+that chooses its own count, such as HC2008, skips this search.
 
 ## 7. Discussion (2 pages)
 
