@@ -25,10 +25,29 @@ from pathlib import Path
 _LOCK_FILE = Path(tempfile.gettempdir()) / 'featsel_gpu.lock'
 
 
+def _import_torch():
+    """
+    import torch, leaving no part of it behind when the import fails.
+
+    Under the runner's memory cap the import can fail half-way. The
+    submodules already loaded would stay in sys.modules, bound to the failed
+    torch module, and break every later import in the process ("module
+    'torch' has no attribute 'device'"). Removing them lets a later import,
+    with more memory, start clean.
+    """
+    try:
+        import torch
+    except BaseException:
+        for name in [m for m in sys.modules if m == 'torch' or m.startswith('torch.')]:
+            del sys.modules[name]
+        raise
+    return torch
+
+
 def import_torch(device):
     """PyTorch, or an ImportError that names the device that needed it."""
     try:
-        import torch
+        torch = _import_torch()
     except ImportError as error:
         # Under a tight address-space cap PyTorch is installed but cannot
         # map its libraries, so the message does not claim it is missing.
@@ -38,10 +57,14 @@ def import_torch(device):
 
 
 def cuda_usable():
-    """True when PyTorch imports and a CUDA GPU is present."""
+    """
+    True when PyTorch imports and a CUDA GPU is present. Under a memory cap
+    the import can fail with MemoryError instead of ImportError; PyTorch is
+    then unusable here too.
+    """
     try:
-        import torch
-    except ImportError:
+        torch = _import_torch()
+    except (ImportError, MemoryError):
         return False
     return torch.cuda.is_available()
 

@@ -20,6 +20,7 @@ Usage:
 
 import argparse
 import csv
+import functools
 import importlib
 import json
 import resource
@@ -33,6 +34,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import scipy.linalg
 import yaml
 from joblib import Parallel, delayed, effective_n_jobs
 from joblib.externals.loky.process_executor import TerminatedWorkerError
@@ -558,6 +560,23 @@ def _out_of_memory(error):
         "can't allocate memory" in str(error) or 'out of memory' in str(error))
 
 
+@functools.cache
+def _warm_blas():
+    """
+    Allocate OpenBLAS's work buffers before the memory cap is set.
+
+    OpenBLAS allocates them on its first matrix products, one per thread.
+    If the cap refuses one, OpenBLAS ends the process ("Memory allocation
+    still failed after 10 retries") instead of raising MemoryError, so the
+    cell cannot be skipped. A product large enough to use every thread
+    allocates them all. NumPy and SciPy each load their own OpenBLAS, so
+    both are warmed. Once per process: the buffers are kept.
+    """
+    a = np.ones((1024, 1024))
+    a @ a
+    scipy.linalg.blas.dgemm(1.0, a, a)
+
+
 def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip, truth,
               journal=None, job=None):
     """
@@ -586,6 +605,7 @@ def _job_rows(folder, y_train, y_test, context, sel_spec, k_values, config, skip
     limit_gb = config['max_worker_memory_gb']
     previous = resource.getrlimit(resource.RLIMIT_DATA)
     if limit_gb is not None:
+        _warm_blas()
         resource.setrlimit(resource.RLIMIT_DATA, (int(limit_gb * 1024 ** 3), previous[1]))
 
     rows, failures = [], []
