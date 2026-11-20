@@ -7,8 +7,8 @@ at two levels: the whole experiment (the runner) and each method (faster
 algorithms, and a GPU).
 
 The speed-ups of section 6.2 come from series of measurements on several
-sizes. The comparison of section 6.1 is one grid at one size, run once
-per setting. The few single timings in the text are marked as such. They
+sizes. The comparison of section 6.1 is one grid at one size, run three
+times. The few single timings in the text are marked as such. They
 explain a design choice and claim no speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM,
 and an NVIDIA GTX 1650 with 4 GB.
 
@@ -37,21 +37,22 @@ The setting, chosen to see the whole flow in about a minute:
 - Every seed fixed and the same on every split, so both sides fit the
   same models. The experiments seed each split differently.
 - Data in 32-bit floats on both sides.
-
 - One fit per selection on both sides.
 
 The runner solves Lasso by PPDNA and RFE by Newton's method (section
 6.2). scikit-learn runs liblinear to a tight tolerance, so that both
-sides reach the same solution. The timings come from one run, on
-2026-11-20, with the laptop otherwise idle. An earlier run that day,
-with other programs running, gave 4.3 and 10.1 times.
+sides reach the same solution. The script ran three times, on 2026-11-20
+and 21, with the laptop otherwise idle. The table gives the median
+seconds and the speed-up of the medians. Over the three runs, the
+runner's speed-up was 3.9 to 4.5 on one core and 10.1 to 10.8 on 12
+threads. An earlier run, with other programs running, gave 4.3 and 10.1.
 
-| Run | Seconds | Speed-up over scikit-learn on 1 core |
+| Run | Seconds (median of 3) | Speed-up over scikit-learn on 1 core |
 |---|---|---|
-| scikit-learn, 1 core | 53.0 | 1.0 |
-| runner, 1 core | 11.9 | 4.4 |
-| scikit-learn, 12 threads | 33.3 | 1.6 |
-| runner, 12 threads | 5.0 | 10.7 |
+| scikit-learn, 1 core | 50.9 | 1.0 |
+| runner, 1 core | 11.9 | 4.3 |
+| scikit-learn, 12 threads | 32.8 | 1.6 |
+| runner, 12 threads | 4.8 | 10.6 |
 
 Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
 [`results/speed_benchmark.csv`](../results/speed_benchmark.csv).
@@ -68,7 +69,7 @@ Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
 
 Parallel work added less than the 12 threads suggest. scikit-learn
 spreads only the 5 splits of one call, and gains 1.6 times. The runner's
-10 jobs (2 selectors × 5 splits) gain 2.4 times over its own one-core
+10 jobs (2 selectors × 5 splits) gain 2.5 times over its own one-core
 run.
 
 ### Parallel work at full size

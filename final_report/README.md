@@ -380,11 +380,11 @@ scores, for any number of workers.
 **Faster than plain scikit-learn (task 3).** One small grid ran with
 scikit-learn's `cross_validate` and with the runner: SCAN-B's Basal task
 on 3,000 random genes, 5 splits, and Lasso and RFE at three values of
-`k`. The
-runner was 4.4 times faster on one core and 10.7 times on 12 threads, with
-identical test scores (`results/speed_benchmark.csv`, one run). It does
-less work: it prepares each split once and ranks once per split. On this
-grid, 12 workers gained 2.4 times over one. On all the genes and all five
+`k`. In the median of three runs, the runner was 4.3 times faster on one
+core and 10.6 times on 12 threads (3.9 to 4.5 and 10.1 to 10.8 over the
+runs), with identical test scores (`results/speed_benchmark.csv`). It
+does less work: it prepares each split once and ranks once per split. On
+this grid, 12 workers gained 2.5 times over one. On all the genes and all five
 tasks, an older run gained at most 1.8 times, from 3 workers on. There,
 each selection fit ran 1.75 times slower beside others. A fit reads the
 whole training set, so this points to the memory bandwidth that all cores
@@ -659,7 +659,8 @@ safe default.
   whose only redundant partner was itself dropped (D 4.2).
 - **Cost.** Every time comes from one laptop: Intel i7-9750H, 16 GB of
   memory, and an NVIDIA GTX 1650 with 4 GB. A time is meaningful only on
-  that machine. The runner's speed-up comes from one run.
+  that machine. The runner's speed-up comes from three runs of one small
+  grid.
 - **Higher Criticism.** No dataset here has rare signal, so these results
   do not test it in the setting it was built for.
 
