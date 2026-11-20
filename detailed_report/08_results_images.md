@@ -213,8 +213,8 @@ are faster and better than every method. The best method, RFE, reaches
 Correlation, mutual information, the chains and both RFECV were added
 after the first run without copies, on the same splits.
 
-Without the copies, all features lost 0.029 AUC, and the methods lost
-0.016 to 0.042; HC2004 gained 0.013. The top of the order changed within
+Without the copies, all features lost 0.029 AUC, and every method but
+HC2004 lost 0.016 to 0.042; HC2004 gained 0.013. The top of the order changed within
 0.009 AUC: mutual information, tree importance and RFECV by AUC moved
 above Mann-Whitney. RFE still ties all features. The chains, HC2008,
 Berk-Jones and HC2004 still lose to all features (p < 0.05); correlation
