@@ -14,8 +14,8 @@ that drop into scikit-learn pipelines, and a runner that compares them
 under one protocol from one configuration file: 16 random splits,
 selection inside each split, the number of features chosen on validation
 sets, a random control at every number of features, and paired tests
-corrected for the overlap between splits. Exact solvers and GPU paths make
-the slow methods faster.
+corrected for the overlap between splits. GPU paths make the slow methods
+faster; exact solvers make them repeatable.
 
 **Data.** Breast cancer gene expression (SCAN-B: 2,976 patients, 28,541
 genes, five PAM50 subtype tasks), ResNet-50 embeddings of breast

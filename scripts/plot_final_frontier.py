@@ -3,7 +3,7 @@ Cost against quality, one panel per dataset: the final report's Figure 1.
 
 Reads the frontier tables that plot_frontier.py writes (one row per method
 and k: mean test ROC AUC and median selection time per fit) and runs
-nothing. Five methods have their own color, in the reference palette's
+nothing. Seven methods have their own color, in the reference palette's
 fixed order; random selection is gray diamonds; every other method is a
 small gray dot. The dark step line is the frontier: no point is both faster
 and better than a point on it.
@@ -23,7 +23,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# The reference palette's first five categorical hues, in fixed order. The
+# The reference palette's first seven categorical hues, in fixed order. The
 # first three match plot_curves.py, so a method keeps its color across figures.
 SERIES = [
     ('MannWhitneySelector', 'Mann-Whitney', '#2a78d6', 'o'),
@@ -31,6 +31,8 @@ SERIES = [
     ('TreeImportanceSelector', 'Tree importance', '#1baf7a', 's'),
     ('MutualInfoSelector', 'Mutual information', '#eda100', 'v'),
     ('Lasso_ppdna', 'Lasso', '#e87ba4', 'P'),
+    ('HC2008', 'HC2008', '#008300', 'h'),
+    ('BerkJones', 'Berk-Jones', '#6250d6', 'd'),
 ]
 RANDOM = ('RandomSelector', 'Random', '#898781', 'D')
 INK = '#0b0b0b'
@@ -55,8 +57,9 @@ def draw(ax, title, table):
         rows = table[table.selector == selector]
         if rows.empty:
             continue
-        ax.scatter(rows.selection_time_s, rows.roc_auc, s=22, color=color, marker=marker,
-                   edgecolors='white', linewidths=0.8, label=name, zorder=4)
+        # A thin ring: a thick one hides the thin crossed markers (Lasso).
+        ax.scatter(rows.selection_time_s, rows.roc_auc, s=30, color=color, marker=marker,
+                   edgecolors='white', linewidths=0.4, label=name, zorder=4)
     front = table[table.on_frontier].sort_values('selection_time_s')
     ax.step(front.selection_time_s, front.roc_auc, where='post', color=INK,
             linewidth=1.2, label='Frontier', zorder=5)
@@ -86,7 +89,7 @@ def main():
     axes[0, 0].set_ylabel('Test AUC, mean over splits', fontsize=7, color=MUTED)
     # The first panel has every series; aircraft lacks tree importance.
     handles, labels = axes[0, 0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper center', ncol=4, frameon=False,
+    fig.legend(handles, labels, loc='upper center', ncol=5, frameon=False,
                fontsize=7, bbox_to_anchor=(0.5, 1.0))
     fig.tight_layout(rect=(0, 0, 1, 0.86), w_pad=0.6)
     fig.savefig(args.out, dpi=200, facecolor='#fcfcfb')
