@@ -47,8 +47,8 @@ equally well, so stability must be reported next to accuracy.
 ### 1.1 The problem
 
 A breast tumour sample can be described by about 30,000 gene
-measurements. A clinical study has a few thousand patients at most: our
-data has 2,976 patients and 28,541 genes. This setting, more features than
+measurements. A clinical study usually has hundreds to a few thousand
+patients: our data has 2,976 patients and 28,541 genes. This setting, more features than
 samples (p ≫ n), also appears in text and in image embeddings. It is hard
 for four reasons. With more features than samples, a linear classifier can
 separate any labelling of the training set, even a random one. If no gene
@@ -76,9 +76,10 @@ question: **which methods give the best quality for their time?**
 
 ### 1.3 Earlier work
 
-Comparative studies on gene expression found that simple methods often do
-as well as complex ones (Dudoit et al. 2002; Statnikov et al. 2005); most
-of their datasets had tens to a few hundred samples. Four known pitfalls
+Comparative studies on gene expression found that simple classifiers did
+as well as complex ones (Dudoit et al. 2002), or that multiclass SVMs
+were the most accurate (Statnikov et al. 2005). Most of their datasets
+had tens to a few hundred samples. Four known pitfalls
 shape our protocol:
 
 | Pitfall | Source | Our answer |
@@ -161,10 +162,9 @@ other four. The tasks are imbalanced. On Normal against the rest (200
 against 2,776 patients), a model that always answers "rest" is right 93%
 of the time, so plain accuracy is not the main score (section 3).
 
-**The signal.** Genes work in groups: each PAM50 gene rises and falls with
-hundreds of others. So many genes carry the signal, and many different
-gene sets predict equally well. Sections 6.1, 6.4 and 6.5 show the
-effects.
+**The signal.** Genes work in groups, so many genes can carry the same
+signal, and different gene sets can predict equally well. Sections 6.1,
+6.4 and 6.5 show the effects.
 
 ### 2.2 BreastMNIST
 
@@ -212,7 +212,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Classifier | logistic regression, L2 penalty, C fixed at 1 |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
-| Timing | each selection fit 10 times; the median is recorded |
+| Timing | each selection fit 10 times (3 on FGVC-Aircraft, once for Sequential); the median is recorded |
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
@@ -220,8 +220,7 @@ the classifier, all on the training set. The test set is scored once.
 Selecting features on all the data first is a known error (Ambroise and
 McLachlan 2002): the test samples then help choose the features. On
 BreastMNIST with shuffled labels, where nothing can be learned, the error
-raises the median AUC over 20 splits from 0.465 to 0.645
-(`featsel_datasets/medmnist_breastmnist/demos/selection.ipynb`).
+raises the median AUC over 20 splits from 0.465 to 0.645 (D 3.2).
 
 **Random splits, not k-fold.** In 5-fold cross-validation, any two
 training sets share three quarters of their samples, so the five scores
@@ -247,9 +246,10 @@ threshold. Macro-F1 and balanced accuracy were also recorded; they give
 almost the same order of methods (D 7.12, 8.10).
 
 **Choosing `k`.** Choosing `k` by test AUC would use the test set twice.
-So the training set is cut into 5 folds; for each `k`, the classifier is
-scored on each fold in turn; the `k` with the best mean validation AUC
-wins. Lasso chooses its penalty the same way. Higher Criticism and
+So the training set is cut into 5 folds. Each fold in turn is the
+validation set: the selector is fit on the other four folds, and for each
+`k` the classifier is scored on the held-out fold. The `k` with the best
+mean validation AUC wins. Lasso chooses its penalty the same way. Higher Criticism and
 Berk-Jones choose their own count.
 
 **Stability.** A method can score well and pick different features on
@@ -299,8 +299,8 @@ each i, how far the sorted p-values fall below that line, in standard
 deviations, and keeps every feature up to the largest gap (Donoho and Jin
 2004, 2008). HC2004 is the published form. HC2008 changes one detail: it
 centres the i-th p-value at its exact mean, i/(N + 1), where the papers
-use i/N. Both search the smallest 10% of p-values, as the papers do. We
-kept this limit, though the signal here is widespread: widening it to fit
+use i/N. Both search the smallest 10% of p-values, the limit of the 2008
+paper. We kept this limit, though the signal here is widespread: widening it to fit
 the data would tune the method to the answer.
 
 **Berk-Jones.** Under the null, the i-th smallest of N uniform p-values
@@ -312,8 +312,8 @@ signal exists; using its minimum as a threshold is our step, and its
 guarantees are not proved.
 
 **Rare signal.** Both thresholds were built for signal that is rare, weak
-and independent. Section 2 showed that none of the three datasets meets
-these conditions. Section 6.4 shows what the thresholds do then.
+and independent. In none of the three datasets is the signal rare
+(section 2). Section 6.4 shows what the thresholds do then.
 
 ## 5. Software and speed
 
@@ -326,9 +326,9 @@ these conditions. Section 6.4 shows what the thresholds do then.
    same features and, except Lasso, to be at most 5% slower. Each GPU path
    is tested to select the same features as the CPU path.
 2. **A config-driven runner.** One YAML file names the dataset, the
-   selectors, the values of `k` and the classifier. `python -m featsel.run
-   --config <file>` runs the whole protocol of section 3 and writes one CSV
-   row per task, split, method and `k`, with a JSON record of the machine,
+   selectors, the values of `k` and the classifier. One command runs the
+   whole protocol of section 3 (Appendix A) and writes one CSV row per
+   task, split, method and `k`, with a JSON record of the machine,
    the library versions and the git commit.
 
 ```python
@@ -361,7 +361,8 @@ all cores share (D 6.1).
 against the scikit-learn original on synthetic data shaped like SCAN-B,
 and checks that both pick the same features (D 6.2). On a GTX 1650 GPU,
 the filters run 2.6 to 49 times faster than the original, with the same
-features: the U test 7.7 times, mutual information 49 times, bit for bit.
+features: mutual information 49 times, bit for bit, and the U test 7.7
+times faster than our own NumPy version.
 Sequential selection solves all candidate features of a step at once and
 runs 34 times faster.
 
@@ -375,8 +376,8 @@ the samples' n × n kernel, so it pays when features outnumber samples.
 
 **Where a GPU does not help.** The GTX 1650 runs 64-bit arithmetic at
 1/32 of its 32-bit speed, and RFE needs 64 bits. Copying the data takes
-about half the time of a fast filter. A forest at full SCAN-B size did not
-fit in its 4 GB, so tree importance stays on the CPU (Appendix B).
+about half the time of a fast filter. Tree importance runs on the CPU,
+with all threads.
 
 ## 6. Results
 
@@ -505,9 +506,10 @@ average 12% of them (Mann-Whitney), 11% (tree importance), 9% (Lasso) and
 3% (RFE). Mann-Whitney found half of the 50 by rank 1,031; random ranking
 would need rank 14,271.
 
-Yet at 50 genes these methods predict the subtypes well (Figure 2). Each
-PAM50 gene moves with hundreds of others, and these predict just as well.
-So a low share of PAM50 genes is not poor selection. It shows again that a
+Yet at 50 genes, Mann-Whitney and tree importance predict the subtypes
+well (Figure 2). A likely reason is that genes which move with the PAM50
+genes carry the same signal. So a low share of PAM50 genes is not poor
+selection. It shows again that a
 gene list is one of many equally good answers. Mann-Whitney's lead here is
 partly built in: Parker et al. (2009) chose the 50 genes by testing each
 gene alone.
@@ -555,7 +557,8 @@ that chooses its own count, such as HC2008, skips this search.
 For a budget of `k` features, which method gives the best classifier, and
 by how much over random? At small `k`, the answer depends on the dataset.
 At 10 genes on SCAN-B, Mann-Whitney then RFE is best on four tasks of
-five, and the filters beat random genes by 0.12 to 0.19 AUC. At 10
+five, and the filters and tree importance beat random genes by 0.12 to
+0.19 AUC. At 10
 features on the image data, the filters and tree importance lead, by 0.10
 to 0.16 over random. At the `k` each method chose, the top methods cannot
 be told apart. If time also counts, a GPU filter is the practical choice:
@@ -748,12 +751,13 @@ lightweight benchmark for 2D and 3D biomedical image classification.
 
 ## Appendix A. How to reproduce
 
-Every command runs from the repository root. Setup:
+Every command runs from the repository root. Setup, with PyTorch for the
+GPU paths and the image embeddings:
 
 ```bash
 python3.13 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e ".[gpu,embeddings]"   # PyTorch: GPU paths and embeddings
+.venv/bin/pip install -e ".[gpu,embeddings]"
 ```
 
 Each loader downloads its data on first use and caches it: GSE96058
@@ -761,30 +765,18 @@ Each loader downloads its data on first use and caches it: GSE96058
 one command:
 
 ```bash
-.venv/bin/python -m featsel.run --config configs/frontier_scanb70_gpu.yaml --n-jobs 1
+.venv/bin/python -m featsel.run \
+    --config configs/frontier_scanb70_gpu.yaml --n-jobs 1
 ```
 
-The configs for chapter 6 are `configs/frontier_scanb70_*.yaml`,
+The configs behind section 6 are `configs/frontier_scanb70_*.yaml`,
 `configs/frontier_breastmnist70_*.yaml` and `configs/aircraft70_gpu.yaml`.
-Add `--resume` to continue a stopped run. Each run writes a CSV and a JSON
-file with the machine, the library versions and the git commit. D A gives
-the command behind every table of the detailed report. This report's
-figures and table come from those summaries:
-
-```bash
-.venv/bin/python scripts/plot_final_frontier.py --out final_report/figures/frontier.png \
-    "SCAN-B, mean of 5 tasks=detailed_report/figures/frontier_scanb70_roc_auc.csv" \
-    "BreastMNIST=detailed_report/figures/frontier_breastmnist70_roc_auc.csv" \
-    "FGVC-Aircraft=detailed_report/figures/frontier_aircraft70_roc_auc.csv"
-.venv/bin/python scripts/plot_curves.py --mean --width 7.2 --out final_report/figures/curves.png \
-    "SCAN-B=detailed_report/figures/summary_scanb70_curve.csv" \
-    "BreastMNIST=detailed_report/figures/summary_breastmnist70_curve.csv" \
-    "FGVC-Aircraft=detailed_report/figures/summary_aircraft70_curve.csv"
-.venv/bin/python scripts/final_table.py --out final_report/figures/table1 \
-    --scanb detailed_report/figures/summary_scanb70_chosen.csv \
-    --breastmnist detailed_report/figures/summary_breastmnist70_chosen.csv \
-    --aircraft detailed_report/figures/summary_aircraft70_chosen.csv
-```
+Adding `--resume` continues a stopped run. Each run writes a CSV, and a
+JSON file with the machine, the library versions and the git commit. D A
+gives the command behind every summary table. This report's figures and
+Table 1 come from three scripts, each with its exact command in its
+docstring: `scripts/plot_final_frontier.py`, `scripts/plot_curves.py` and
+`scripts/final_table.py`.
 
 One seed, 42, fixes every random step; split `s` uses 42 + `s`. A rerun
 gives the same features and scores, for any number of workers. The tests
@@ -813,13 +805,14 @@ radius. With scikit-learn's own random noise and order of sums, the
 scores are identical to scikit-learn's.
 
 **Lasso's solver.** PPDNA (Liu and Zhou 2023), a semismooth Newton method,
-needed five changes from the paper on SCAN-B-shaped data: the intercept is
-penalized as liblinear penalizes it; the proximal step grows five-fold per
-outer step, up to a limit set by rounding; the Newton matrix is factored
-in 32-bit floats, where the GPU is fast, and the solution refined in 64
-bits; and the inner and the outer loops also stop when rounding, not the
-method, stops their progress (D D.3).
+needed five changes from the paper on SCAN-B-shaped data (D D.3):
 
-**The forest on the GPU.** On the 4 GB GPU, XGBoost ran out of memory on
-data of SCAN-B's size, so tree importance runs on the CPU with all
-threads (D D.5).
+1. the intercept is penalized, as liblinear penalizes it;
+2. the proximal step grows five-fold per outer step, up to a limit set by
+   rounding;
+3. the Newton matrix is factored in 32-bit floats, where the GPU is fast,
+   and the solution is refined in 64 bits;
+4. the inner loop also stops when full Newton steps no longer shrink the
+   gradient;
+5. the outer loop also stops when three outer steps fail to halve the best
+   residual.

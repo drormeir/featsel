@@ -71,6 +71,9 @@ body { margin: 0; }
 
 /* Each chapter, appendix and the references start on a new page. */
 section.level1 { break-before: page; }
+/* The final report is one file of level-2 sections: only its summary
+   starts a new page, after the contents. */
+#summary { break-before: page; }
 #chap-abstract { page: roman; }
 #chap-01_the_problem { page: start; }
 

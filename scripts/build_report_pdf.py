@@ -75,7 +75,8 @@ def chapter(folder: str, name: str, files: list[str]) -> str:
     lines = []
     titled = False
     for line in (ROOT / folder / name).read_text().splitlines():
-        if line.startswith('[Back to contents]('):
+        # The title page already holds the title; the Markdown keeps it for GitHub.
+        if line.startswith('[Back to contents](') or line == f'# {TITLE}':
             continue
         if not titled and line.startswith('# '):
             line += f' {{#{chapter_id(name)}}}'
