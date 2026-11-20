@@ -391,6 +391,26 @@ the test set, as a mean over the splits. A difference is called
 *established* when the corrected test gives p < 0.05. The detailed report
 gives every task, every `k` and every test (D 7, D 8, D C).
 
+### 6.1 Selection against random features
+
+Selection matters most when few features are allowed (Figure 2). At 10
+genes on SCAN-B, every filter and tree importance beat random genes by
+0.12 to 0.19 AUC, on every task. With the two-stage chains and Sequential
+selection, the range is 0.11 to 0.20. At 10 features on the image data,
+the filters and tree importance beat random features by 0.10 to 0.16. Each
+of these gains is established and holds on all 16 splits (D 7.2, 8.2,
+8.9).
+
+As `k` grows, random features catch up. On Basal, no method beats random
+genes from 250 genes on. On BreastMNIST, no gain is established at 1,000
+features. On LumA and LumB, a gain of about 0.02 remains at 2,000 genes.
+The reason is in the data: thousands of genes carry the signal, and they
+move together (section 2). A large random set holds enough of them.
+
+RFE alone is the exception at small `k` on SCAN-B. At 10 genes it scored
+below random genes on LumA and Normal, though neither loss is
+established (p = 0.30 and 0.06).
+
 ![Figure 1](figures/frontier.png)
 
 *Figure 1. Cost against quality. Each point is one method at one `k`:
@@ -404,6 +424,23 @@ point on it. SCAN-B is the mean of its five tasks. Sources: D 7.1, 8.1, 8.9.*
 of each family and for random features. The gap to the gray dashed line
 is what selection adds at that `k`. The dotted line is all the features.
 Sources: D 7.2, 8.2.*
+
+### 6.2 Selection against all features
+
+On the image data, no method beats all 2,048 features. RFE ties them:
+−0.001 AUC on BreastMNIST (p = 0.85) and −0.0003 on FGVC-Aircraft
+(p = 0.92). Lasso, correlation, HC2008, Berk-Jones and HC2004 lose to all
+features (D 8.3, 8.9).
+
+On SCAN-B, 20 of the 70 comparisons with all 28,541 genes are
+established: 10 gains and 10 losses. All 10 gains are on one task, LumB:
+ten methods gain 0.014 to 0.023 AUC, each on all 16 splits. On the other
+four tasks no gain is established. HC2004 loses on four tasks and RFECV
+scored by accuracy on three. Lasso and two chains lose on one task each.
+The other filters and tree importance show no established loss (D 7.3).
+
+So on these datasets, selection buys a smaller model more often than a
+better one.
 
 *Table 5. Each method at the `k` it chose on validation sets. SCAN-B
 values are means over its five tasks; the time is the mean of each task's
@@ -428,43 +465,6 @@ not run on that dataset. Source: `final_report/figures/table1.csv`.*
 | RFE | 0.961 | 0.923 | 0.862 | 6.9 | 0.33 |
 | HC2004 | 0.874 | 0.758 | 0.674 | 0.68 | 0.67 |
 | RFECV, scored by accuracy | 0.720 | 0.889 | — | 6.3 | 0.20 |
-
-### 6.1 Selection against random features
-
-Selection matters most when few features are allowed (Figure 2). At 10
-genes on SCAN-B, every filter and tree importance beat random genes by
-0.12 to 0.19 AUC, on every task. With the two-stage chains and Sequential
-selection, the range is 0.11 to 0.20. At 10 features on the image data,
-the filters and tree importance beat random features by 0.10 to 0.16. Each
-of these gains is established and holds on all 16 splits (D 7.2, 8.2,
-8.9).
-
-As `k` grows, random features catch up. On Basal, no method beats random
-genes from 250 genes on. On BreastMNIST, no gain is established at 1,000
-features. On LumA and LumB, a gain of about 0.02 remains at 2,000 genes.
-The reason is in the data: thousands of genes carry the signal, and they
-move together (section 2). A large random set holds enough of them.
-
-RFE alone is the exception at small `k` on SCAN-B. At 10 genes it scored
-below random genes on LumA and Normal, though neither loss is
-established (p = 0.30 and 0.06).
-
-### 6.2 Selection against all features
-
-On the image data, no method beats all 2,048 features. RFE ties them:
-−0.001 AUC on BreastMNIST (p = 0.85) and −0.0003 on FGVC-Aircraft
-(p = 0.92). Lasso, correlation, HC2008, Berk-Jones and HC2004 lose to all
-features (D 8.3, 8.9).
-
-On SCAN-B, 20 of the 70 comparisons with all 28,541 genes are
-established: 10 gains and 10 losses. All 10 gains are on one task, LumB:
-ten methods gain 0.014 to 0.023 AUC, each on all 16 splits. On the other
-four tasks no gain is established. HC2004 loses on four tasks and RFECV
-scored by accuracy on three. Lasso and two chains lose on one task each.
-The other filters and tree importance show no established loss (D 7.3).
-
-So on these datasets, selection buys a smaller model more often than a
-better one.
 
 ### 6.3 No single best method
 
