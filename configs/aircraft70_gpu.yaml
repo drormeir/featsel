@@ -1,7 +1,10 @@
 # FGVC-Aircraft, Boeing 737 against the Airbus A320 family: an unseen
 # dataset run end to end on the GPU. 1,200 photos, each a 2,048-number
 # ResNet-50 embedding (featsel_datasets/fgvc_aircraft/). Every selector
-# runs with device='cuda'; the embeddings are computed on the GPU too.
+# runs with device='cuda', except tree importance, which has no GPU path;
+# the embeddings are computed on the GPU too.
+# Berk-Jones, tree importance, the chains and RFECV scored by accuracy
+# were added later, with --resume: the same splits, the earlier rows kept.
 # The classifier is scikit-learn's logistic regression, on the CPU.
 # Run with: python -m featsel.run --config configs/aircraft70_gpu.yaml --n-jobs 1
 #
@@ -58,6 +61,37 @@ selectors:
   - name: RFECVSelector
     label: RFECV_newton_auc
     params: {C: 0.01, cv: 5, scoring: "roc_auc", device: "cuda"}
+  - name: RFECVSelector
+    label: RFECV_newton
+    params: {C: 0.01, cv: 5, device: "cuda"}
+  - name: BerkJonesSelector
+    label: BerkJones
+    params: {device: "cuda"}
+  - name: TreeImportanceSelector
+    k: [10, 50, 250, 500, 1000]
+    params: {n_estimators: 200, n_jobs: 4}
+  # Mann-Whitney keeps 500 features, as on BreastMNIST, then a slower
+  # method picks from them. The selection time covers both steps.
+  - label: MW500+Lasso_ppdna
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 500, device: "cuda"}
+      - name: LassoSelector
+        params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
+  - label: MW500+TreeImportance
+    k: [10, 50, 250]
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 500, device: "cuda"}
+      - name: TreeImportanceSelector
+        params: {n_estimators: 200, n_jobs: 4}
+  - label: MW500+RFE_newton
+    k: [10, 50, 250]
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 500, device: "cuda"}
+      - name: RFESelector
+        params: {C: 0.01, device: "cuda"}
   - name: SequentialSelector
     label: Sequential_newton
     k: [5, 10]

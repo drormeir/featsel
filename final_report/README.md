@@ -298,7 +298,7 @@ filter (D 4.2).
 | RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step. |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation. |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy; repeat. Run at `k` = 5 and 10 only. |
-| Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on BreastMNIST); Lasso, tree importance or RFE picks from them. |
+| Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. |
 
 **Why the U test.** The F-test compares class means and assumes normal
 values. Gene values are not normal, and only their order is meaningful
@@ -457,7 +457,8 @@ Sources: D 7.2, 8.2.*
 
 On the image data, no method beats all 2,048 features. RFE ties them:
 −0.001 AUC on BreastMNIST (p = 0.85) and −0.0003 on FGVC-Aircraft
-(p = 0.92). Lasso, correlation, HC2008, Berk-Jones and HC2004 lose to all
+(p = 0.92). On both, Lasso, correlation, the three chains, HC2008,
+Berk-Jones and HC2004 lose to all
 features (D 8.3, 8.9).
 
 On SCAN-B, 20 of the 70 comparisons with all 28,541 genes are
@@ -473,30 +474,30 @@ better one.
 *Table 5. Each method at the `k` it chose on validation sets. SCAN-B
 values are means over its five tasks; the time is the mean of each task's
 median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
-as the second step of a chain; every other method ran on the GPU. "—":
-not run on that dataset. Over the 16 splits, the interquartile range of a
-method's AUC is 0.006 to 0.010 on a SCAN-B task (HC2004 0.018, RFECV
-scored by accuracy 0.044) and 0.018 to 0.038 on the image data. The tests
-are paired, so a smaller difference can still be established. Source:
+as the second step of a chain; every other method ran on the GPU. Over
+the 16 splits, the interquartile range of a method's AUC is 0.006 to
+0.010 on a SCAN-B task (HC2004 0.018, RFECV scored by accuracy 0.044)
+and 0.017 to 0.038 on the image data. The tests are paired, so a smaller
+difference can still be established. Source:
 `final_report/figures/table5.csv`.*
 
 | Method | SCAN-B AUC | BreastMNIST AUC | FGVC-Aircraft AUC | SCAN-B selection, s per fit | SCAN-B stability |
 |---|---|---|---|---|---|
 | Mutual information | 0.971 | 0.916 | 0.847 | 3.6 | 0.70 |
-| Berk-Jones | 0.970 | 0.867 | — | 0.66 | 0.92 |
+| Berk-Jones | 0.970 | 0.867 | 0.815 | 0.66 | 0.92 |
 | HC2008 | 0.970 | 0.868 | 0.817 | 0.68 | 0.92 |
 | Correlation (Spearman) | 0.969 | 0.905 | 0.824 | 3.6 | 0.78 |
 | Mann-Whitney | 0.969 | 0.918 | 0.854 | 0.67 | 0.76 |
-| Tree importance | 0.969 | 0.906 | — | 17 | 0.27 |
-| Mann-Whitney, then Lasso | 0.968 | 0.878 | — | 0.79 | 0.46 |
-| Mann-Whitney, then tree importance | 0.965 | 0.879 | — | 2.8 | 0.51 |
+| Tree importance | 0.969 | 0.906 | 0.851 | 17 | 0.27 |
+| Mann-Whitney, then Lasso | 0.968 | 0.878 | 0.828 | 0.79 | 0.46 |
+| Mann-Whitney, then tree importance | 0.965 | 0.879 | 0.814 | 2.8 | 0.51 |
 | Lasso | 0.964 | 0.898 | 0.846 | 0.59 | 0.36 |
 | All features (no selection) | 0.963 | 0.924 | 0.862 | — | — |
-| Mann-Whitney, then RFE | 0.962 | 0.889 | — | 3.0 | 0.42 |
+| Mann-Whitney, then RFE | 0.962 | 0.889 | 0.829 | 3.0 | 0.42 |
 | RFECV, scored by AUC | 0.962 | 0.912 | 0.858 | 5.7 | 0.23 |
 | RFE | 0.961 | 0.923 | 0.862 | 6.9 | 0.33 |
 | HC2004 | 0.874 | 0.758 | 0.674 | 0.68 | 0.67 |
-| RFECV, scored by accuracy | 0.720 | 0.889 | — | 6.3 | 0.20 |
+| RFECV, scored by accuracy | 0.720 | 0.889 | 0.854 | 6.3 | 0.20 |
 
 ### 6.3 No single best method
 
@@ -579,8 +580,9 @@ The cheap end of Figure 1 wins. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
 importance takes 17 s for 0.969 (Table 5). On the image data, every method
-except Sequential selection runs in under a second per fit, so cost does
-not decide the choice there.
+except Sequential selection runs in about a second per fit or less (tree
+importance 1.1 s on FGVC-Aircraft), so cost does not decide the choice
+there.
 
 Choosing `k` costs more than selecting. For Mann-Whitney on SCAN-B, the
 search on 5 validation sets takes about 28 s per split, against 0.67 s for

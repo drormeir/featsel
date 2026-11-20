@@ -68,8 +68,7 @@ At small `k`, selection matters. At large `k`, random features catch up.
 ![Test AUC against k on the image data](figures/curves_images70.png)
 
 *Test AUC at each `k`, mean over the 16 splits, on both image datasets.
-The dotted line is all 2,048 features. Tree importance did not run on
-FGVC-Aircraft. Plot: [`scripts/plot_curves.py`](../scripts/plot_curves.py).*
+The dotted line is all 2,048 features. Plot: [`scripts/plot_curves.py`](../scripts/plot_curves.py).*
 
 Every method's test AUC at every `k` is in Appendix C.2.
 
@@ -213,7 +212,10 @@ copies inflate the scores but do not change the conclusions. Table:
 ## 8.9 An unseen dataset: FGVC-Aircraft
 
 1,200 photos, Boeing 737 against the Airbus A320 family (800 against 400).
-840 in the training set, 360 in the test set. Every selector ran on the GPU.
+840 in the training set, 360 in the test set. Every selector ran on the
+GPU, except tree importance, which has no GPU path. Berk-Jones, tree
+importance, the chains and RFECV scored by accuracy were added after the
+first run, on the same splits.
 
 ![Frontier on FGVC-Aircraft](figures/frontier_aircraft70_roc_auc.png)
 
@@ -223,10 +225,16 @@ copies inflate the scores but do not change the conclusions. Table:
 | RFE | **0.862** | 500 to 1,000 | −0.000 (0.92) |
 | RFECV, by AUC | 0.858 | 620 to 2,048 | −0.004 (0.36) |
 | Mann-Whitney | 0.854 | 500 to 1,000 | −0.008 (0.34) |
+| RFECV, by accuracy | 0.854 | 212 to 1,844 | −0.009 (0.37) |
+| Tree importance | 0.851 | 1,000 | −0.011 (0.11) |
 | Mutual information | 0.847 | 500 to 1,000 | −0.015 (0.13) |
 | Lasso | 0.846 | 132 to 336 | −0.016 (0.03) |
+| Mann-Whitney 500, then RFE | 0.829 | 50 to 250 | −0.033 (0.01) |
+| Mann-Whitney 500, then Lasso | 0.828 | 91 to 266 | −0.034 (0.004) |
 | Correlation | 0.824 | 250 to 465 | −0.038 (0.009) |
 | HC2008 | 0.817 | 204 | −0.045 (< 0.001) |
+| Berk-Jones | 0.815 | 183 to 204 | −0.047 (< 0.001) |
+| Mann-Whitney 500, then tree importance | 0.814 | 250 | −0.049 (< 0.001) |
 | Sequential, `k` = 10 | 0.703 | 10 | — |
 | HC2004 | 0.674 | 1 to 2 | −0.188 (< 0.001) |
 
@@ -238,13 +246,19 @@ Tables:
 The pattern of BreastMNIST holds:
 
 - All features score best; RFE ties them.
-- At small `k`, selection beats random clearly: at `k` = 10, Mann-Whitney
-  by 0.124 and RFE by 0.103, on all 16 splits.
+- At small `k`, selection beats random clearly: at `k` = 10, tree
+  importance by 0.127, Mann-Whitney by 0.124 and RFE by 0.103, on all 16
+  splits.
 - From `k` = 250, RFE leads the filters (by 0.029 over Mann-Whitney at
   250, p = 0.047).
 - Correlation's redundancy filter costs AUC: it kept at most 465 features
   and lost 0.038.
-- HC2008 stops at the edge of its search; HC2004 keeps one or two features.
+- HC2008 stops at the edge of its search, and Berk-Jones at or just before
+  it; HC2004 keeps one or two features.
+- Every chain loses to all features (p ≤ 0.013) and scores below its
+  second method run alone.
+- RFECV scores a little higher with AUC as its inner score than with
+  accuracy (0.858 against 0.854).
 
 ## 8.10 Side scores and memory
 
@@ -257,17 +271,16 @@ threshold of 0.5 (section 9.6), on both image datasets:
 | RFE | **0.856** [0.844, 0.866] | 0.846 | 0.793 [0.783, 0.809] | 0.788 |
 | Mann-Whitney | 0.849 [0.834, 0.865] | 0.839 | 0.783 [0.777, 0.799] | 0.779 |
 | Mutual information | 0.845 [0.836, 0.852] | 0.834 | 0.786 [0.776, 0.797] | 0.781 |
-| Tree importance | 0.845 [0.832, 0.861] | 0.837 | — | — |
+| Tree importance | 0.845 [0.832, 0.861] | 0.837 | 0.781 [0.774, 0.793] | 0.776 |
 | Correlation (Spearman) | 0.837 [0.825, 0.852] | 0.828 | 0.755 [0.739, 0.773] | 0.753 |
 | RFECV, scored by AUC | 0.831 [0.805, 0.847] | 0.823 | 0.789 [0.779, 0.802] | 0.785 |
 | Lasso | 0.824 [0.803, 0.847] | 0.816 | 0.782 [0.765, 0.796] | 0.777 |
 | HC2008 | 0.788 [0.777, 0.804] | 0.789 | 0.741 [0.732, 0.757] | 0.738 |
-| Berk-Jones | 0.788 [0.772, 0.804] | 0.790 | — | — |
+| Berk-Jones | 0.788 [0.772, 0.804] | 0.790 | 0.744 [0.732, 0.764] | 0.741 |
 | Sequential, `k` = 10 | 0.708 [0.686, 0.726] | 0.690 | 0.620 [0.601, 0.638] | 0.617 |
 | HC2004 | 0.625 [0.601, 0.642] | 0.614 | 0.553 [0.542, 0.563] | 0.564 |
 
-"—": not run on that dataset. The chains and RFECV scored by accuracy are
-in the tables only:
+The chains and RFECV scored by accuracy are in the tables only:
 [`figures/summary_breastmnist70_side.csv`](figures/summary_breastmnist70_side.csv),
 [`figures/summary_aircraft70_side.csv`](figures/summary_aircraft70_side.csv),
 from [`scripts/summarize_side_metrics.py`](../scripts/summarize_side_metrics.py).

@@ -34,7 +34,8 @@ advance? It ends with the limits of the answer.
   pipeline unchanged. (Task 4.)
 - **A third dataset, unseen during the design**: FGVC-Aircraft photo
   embeddings. It needed a loader and a config, but no change to the
-  package. It ran entirely on the GPU. (Task 4.)
+  package. Every method ran on the GPU except tree importance, which has
+  no GPU path. (Task 4.)
 
 ## 9.2 Key decisions
 
