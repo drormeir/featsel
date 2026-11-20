@@ -240,8 +240,8 @@ behavior of the sorted p-values from independent p-values. Correlated
 genes give correlated p-values. Chapter 2 showed that none of our three
 datasets meets these conditions. Sections 7.5 and 8.5 show what HC does then.
 
-**Decision: alpha0 stays 0.1.** On SCAN-B the HC score is still rising at
-the edge of its search. We could raise alpha0, since we know the signal is
+**Decision: alpha0 stays 0.1.** On SCAN-B, HC2008 stops at the edge of
+its search on every split (section 7.5). We could raise alpha0, since we know the signal is
 widespread. But that would tune the method to the answer. A selector must
 not assume what it is meant to find.
 

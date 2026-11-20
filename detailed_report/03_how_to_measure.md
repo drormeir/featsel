@@ -40,22 +40,15 @@ list.
 ## 3.2 The most common mistake: selecting on all the data
 
 It is tempting to select genes once on all patients, then cross-validate
-only the classifier. The error is large. On pure noise (100 patients,
-5,000 random genes, random labels, 20 genes, 5-fold cross-validation) the
-true AUC is 0.5:
-
-| Where the 20 genes were chosen | Test AUC |
-|---|---|
-| On all patients, before splitting | 0.96 |
-| On the training patients only | 0.44 |
-| The truth | 0.50 |
-
-Selecting on all patients picks genes that fit the test patients by
-chance. Ambroise and McLachlan (2002) showed the same on real microarray
-data. On BreastMNIST with shuffled labels, the F-test picking 50 embedding
-dimensions gives a median AUC over 20 splits of 0.465 inside each split,
-and 0.645 when selected on all 780 images first
+only the classifier. The error is large. Ambroise and McLachlan (2002)
+showed it on real microarray data. On BreastMNIST with shuffled labels,
+where nothing can be learned and the true AUC is 0.5, the F-test picking
+50 embedding dimensions gives a median AUC over 20 splits of 0.465 inside
+each split, and 0.645 when selected on all 780 images first
 ([`selection.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb)).
+
+Selecting on all the samples picks features that fit the test samples by
+chance.
 
 ## 3.3 Random splits instead of k-fold
 

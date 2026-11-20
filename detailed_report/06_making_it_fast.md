@@ -65,7 +65,7 @@ Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
 Parallel work added little on this grid. scikit-learn spreads only the 5
 splits of one call, and gains 1.5 times. The runner's 10 jobs (2
 selectors × 5 splits) gain 1.7 times over its own one-core run. Starting
-the worker processes took about 4.5 of its 6.3 seconds.
+the worker processes took about 4.5 of its 6.3 seconds (a single timing).
 
 ### Parallel work at full size
 
@@ -97,8 +97,8 @@ shared by all cores, as the limit. We did not measure the bandwidth
 itself.
 
 This run also predates dropping liblinear. With 6 workers, the memory cap
-gave each worker 1.26 GB. liblinear needed about 1.45 GB for one fit, so
-it aborted. Every 6-worker run fell back to 3 workers (section 5.5). So
+gave each worker 1.26 GB. liblinear needed about 1.45 GB for one fit (a
+single measurement), so it aborted. Every 6-worker run fell back to 3 workers (section 5.5). So
 on this 16 GB laptop, 3 workers were the useful maximum for this grid.
 
 Sources: [`scripts/parallel_scaling.py`](../scripts/parallel_scaling.py),
@@ -173,13 +173,13 @@ its output in `results/local/benchmark_selectors/` is not tracked. At all
 | Lasso | PPDNA (Liu and Zhou 2023), a semismooth Newton method, solves the same L1 problem to a tight tolerance on the GPU. |
 | RFE, RFECV | An exact Newton solver for the linear SVM (Chapelle 2007). With fewer samples than genes, it works through the samples' n × n kernel matrix (3,000 × 3,000, not 30,000 genes wide). The matrix is kept between rounds. |
 | Sequential | Each step solves all candidate features at once: one batched Newton problem on the logistic regressions, in PyTorch, in 64 bits. The candidates share the features already chosen, so every Hessian block is one product over all candidates and no design matrix is built. Each fit starts from that candidate's solution at the previous step. It selects what scikit-learn does with a converged logistic regression. It covers two classes, forward search and accuracy, and raises an error otherwise. The GPU wins here: the work is wide elementwise passes and large products. |
-| Tree importance | scikit-learn's own forest on all threads (`n_jobs=-1`). scikit-learn's default is one thread. On synthetic SCAN-B-shaped data (1,488 samples × 28,552 features), one fit took 21.5 s on one thread and 4.2 s on 12. In the runner, threads per worker times workers should not exceed the 12 hardware threads. |
+| Tree importance | scikit-learn's own forest on all threads (`n_jobs=-1`). scikit-learn's default is one thread. On real SCAN-B (1,488 samples × 28,552 genes, the series above), one fit took 17.4 s on one thread and 3.0 s on 12. In the runner, threads per worker times workers should not exceed the 12 hardware threads. |
 
 **RFE's step.** RFE removes a fixed share of the starting genes each
 round. A
-retired comparison used step 0.5 for speed. On SCAN-B, one fit took about
-35 s at step 0.1 and 2.4 s at step 0.5 (single timings). Every run now
-uses step 0.1.
+retired comparison used step 0.5 for speed, with liblinear. Every run now
+uses step 0.1. With the exact Newton solver, one fit at step 0.1 on
+SCAN-B takes 2.8 s on the CPU (the series above).
 
 ### Why some methods do not pick the same features
 
@@ -273,7 +273,7 @@ used.
 - **Copying.** For the fast filters, copying the data to the GPU takes
   about half the time.
 - **Memory.** 4 GB is small. XGBoost ran out of memory on SCAN-B-sized
-  data. cuML fit smaller data but was 3 times slower than scikit-learn on
+  data. cuML fit smaller data but was slower than scikit-learn on
   12 threads. So tree importance stays on the CPU (Appendix D.5).
 
 Appendix D.6 lists the GPU libraries we considered and did not use.

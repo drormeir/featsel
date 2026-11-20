@@ -89,29 +89,26 @@ Unlike every other wrapped selector, Lasso has no test that it is at most
 5% slower than scikit-learn. No scikit-learn solver reaches Lasso's exact
 solution. scikit-learn's Newton solvers refuse the L1 penalty. liblinear and saga
 accept it but stop at a tolerance: less work, a different answer. On
-small synthetic data, PPDNA on the CPU was 3 to 4 times slower than
-liblinear at its defaults. So Lasso's speed comparison is the SCAN-B one
+synthetic data of 3,000 samples, PPDNA on the CPU was 1.6 to 7.1 times
+slower than liblinear at its defaults, at 1,000 to 30,000 features
+(`results/local/speed/LassoSelector.csv`). So Lasso's speed comparison is the SCAN-B one
 of Appendix D.2.
 
 ## D.5 The random forest on a GPU
 
-A 4 GB GPU is small. The forest trials:
+A 4 GB GPU is small. Two GPU forests were tried, as single trials whose
+times were not saved, so only their outcomes are given here:
 
-| Forest | Data (samples × features) | Result |
-|---|---|---|
-| XGBoost, GPU | 1,488 × 28,552 (synthetic, SCAN-B-shaped) | out of memory even with 64 bins, needing 3.4 GB |
-| XGBoost, CPU | 1,488 × 28,552 | 339 s per fit |
-| scikit-learn, 12 threads | 1,488 × 28,552 | 4.2 s per fit |
-| XGBoost, GPU, depth 6 | 3,000 × 3,000 | 6.5 s, a tie with scikit-learn's 6.7 s |
-| XGBoost, GPU, depth 6 | 3,000 × 30,000 | out of memory twice, asking for 3.5 GB in one block |
-| cuML, GPU | 3,000 × 3,000 | 21.5 s, 3 times slower than scikit-learn's 6.7 s |
+- **XGBoost on the GPU** ran out of memory on SCAN-B-shaped data (1,488
+  samples × 28,552 features), even with 64 bins. On a 3,000 × 30,000 set
+  it also ran out of memory. Only on small data (3,000 × 3,000) did it
+  run, and there it tied scikit-learn.
+- **cuML** ran, but was slower than scikit-learn on the CPU. Its time went
+  mostly to the middle levels of the trees, where nodes are many, not to
+  memory.
 
-Only 21 of XGBoost's top 50 genes were scikit-learn's. That does not show
-a different method. scikit-learn under another seed shares only about 20
-of its own top 50 at full size (Jaccard 0.25). cuML's slowness was not
-memory. In a second set of single fits, capping its trees at depth 8 took
-4.5 s, at depth 16 15.1 s, and with no cap 21.1 s. So most of the time goes to the middle levels, where
-nodes are many. Tree importance therefore stays on the CPU.
+Tree importance therefore stays on the CPU, with scikit-learn on all
+threads. A larger GPU is the next test for XGBoost (section 10.1).
 
 ## D.6 Libraries we did not use
 

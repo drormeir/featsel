@@ -131,7 +131,7 @@ def breastmnist_facts():
     explained = np.cumsum(variance) / variance.sum()
     _, p = f_classif(X, labels)
 
-    # Per training half of the comparison's splits: the share of features
+    # Per training half of 5 random splits, half the images in each: the share of features
     # passing the U test at a 5% false discovery rate, and at p < 0.05.
     bh, raw = [], []
     for train, _ in StratifiedShuffleSplit(5, train_size=0.5, random_state=SEED).split(X, labels):
@@ -167,25 +167,12 @@ def breastmnist_facts():
     }
 
 
-def comparison_facts():
-    """Feature counts Higher Criticism chose in the selector comparisons."""
-    facts = {}
-    for dataset in ('scanb', 'breastmnist'):
-        df = pd.read_csv(ROOT / 'results' / f'comparison_{dataset}.csv')
-        for variant in ('HC2004', 'HC2008'):
-            n = df.loc[df.selector == variant, 'n_selected']
-            facts[f'{dataset}_{variant.lower()}_min'] = count(n.min())
-            facts[f'{dataset}_{variant.lower()}_max'] = count(n.max())
-    return facts
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument('--course', type=Path, help="folder holding the course's scanb_full and scanb_small")
     args = parser.parse_args()
     data = GSE96058()
-    facts = {**scanb_facts(data), **course_facts(data, args.course), **breastmnist_facts(),
-             **comparison_facts()}
+    facts = {**scanb_facts(data), **course_facts(data, args.course), **breastmnist_facts()}
     if OUT.exists():  # keep committed facts this machine cannot recompute
         facts = {**pd.read_csv(OUT, index_col='name', keep_default_na=False).value.to_dict(),
                  **facts}

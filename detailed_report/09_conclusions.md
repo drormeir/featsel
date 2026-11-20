@@ -43,13 +43,13 @@ given.
 
 | Decision | Why | What it changed |
 |---|---|---|
-| Select features inside every split, never on all the data | Selection on all the data lets the test samples choose the features | On pure noise, selection on all the data gave AUC 0.96 instead of the true 0.5 (section 3.2) |
+| Select features inside every split, never on all the data | Selection on all the data lets the test samples choose the features | On BreastMNIST with shuffled labels, selection on all the data raised the median AUC from 0.465 to 0.645 (section 3.2) |
 | A random control at every `k` | A method has found something only if it beats random features of the same number | It showed that selection gains most at 10 features, and that random features catch up as `k` grows (sections 7.2, 8.2) |
 | A t-test corrected for overlapping splits | Random splits share most of their training samples, so a plain paired t-test is overconfident | Established differences from all genes fell from 52 to 20 of 70 comparisons; 10 of the 20 are gains (sections 3.3, 9.3 item 9) |
 | The public GSE96058 data, one sample per patient, not the course copies | The course copies keep 93 repeated patients, and `scanb_small` lacks 11 of the 50 PAM50 genes | It removed a leak, and made the PAM50 recovery test possible (sections 2.1, 7.6) |
 | The U test, not the F-test, for every filter | About half the gene values sit at a floor (in the first 200 genes), and only their order is meaningful | One valid test for all filters, so the comparison is between selection rules, not tests (section 4.3) |
 | Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | Scores fell by about 0.03 AUC without the copies; the order of methods held (section 8.8) |
-| Exact solvers, not liblinear, for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became 8 times faster and repeatable, at the same AUC (section 6.2) |
+| Exact solvers, not liblinear, for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became faster and repeatable, at the same AUC (section 6.2) |
 | RFECV scored by AUC, not accuracy | Accuracy rewards the majority class on imbalanced tasks | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (section 7.8) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | HC's behaviour on widespread signal is reported as it is (sections 4.4, 7.5) |
 | A third dataset, unseen during the design | Two datasets shaped the design, so they cannot test it | The pipeline ran unchanged on FGVC-Aircraft (section 8.9) |
@@ -105,7 +105,8 @@ settings stated in their sections.
    their training patients, so their results are not independent. On
    SCAN-B, an uncorrected paired t-test passed 233 of 290 comparisons; the
    corrected resampled t-test passed 164. Against all genes, it cut the
-   established differences from 52 to 20.
+   established differences from 52 to 20
+   ([`scripts/correction_effect.py`](../scripts/correction_effect.py)).
 10. **Higher Criticism needs rare signal.** On all three datasets HC2008
     stopped at the edge of its search, 10% of the features. Berk-Jones,
     run on SCAN-B and BreastMNIST, stopped at or just before it (sections

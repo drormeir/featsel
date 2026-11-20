@@ -63,18 +63,9 @@ The experiment needs a gene set with all 50 genes. GSE96058 has them.
 ## B.3 Higher Criticism and the share of signal
 
 HC searches only the smallest 10% of p-values (alpha0 = 0.1). On SCAN-B,
-the HC score is still rising at that edge (section 7.5). HC2004 kept 1
-or 2 genes, with a median of 1.
-
-HC first scored genes by the F-test. A one-split test on SCAN-B, before
-the 11 flat genes were dropped, checked the switch to the U test:
-
-| | Genes kept with the U test | Macro-F1, F-test → U test |
-|---|---|---|
-| HC2008 | 2,855 on every task, as before; 9% to 14% of them changed | 0.871 → 0.873 |
-| HC2004 | 1 on every task, as before, except 4 on LumA | 0.744 → 0.707 |
-
-One split cannot tell these changes from noise.
+HC2008 stopped at that edge on every split (section 7.5). HC2004 kept 1
+or 2 genes, with a median of 1. HC first scored genes by the F-test; it
+uses the U test since the switch of section 4.3.
 
 On BreastMNIST and FGVC-Aircraft, HC2008 also kept the edge, 204
 features (sections 8.5, 8.9). So on all three datasets the search limit,

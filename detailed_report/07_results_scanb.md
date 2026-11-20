@@ -200,9 +200,8 @@ HC2004 kept one or two genes. It scored 0.874, the lowest of all but RFECV
 by accuracy. Its statistic peaks at the single strongest p-value
 (section 4.4).
 
-Neither variant found the point where the signal ends. HC2008's score is
-still rising at the edge of its search (Appendix B.3): the signal is not
-rare. A rule built for rare signal has no edge to find there. Still,
+Neither variant found the point where the signal ends. HC2008 stopped at
+the edge of its search on every split: the signal is not rare. A rule built for rare signal has no edge to find there. Still,
 HC2008 as a "top 10%" filter is a good method here: it is 0.001 below
 mutual information, the best mean, at a fifth of its time per fit and with
 no `k` to choose.
@@ -393,8 +392,10 @@ Choosing `k` costs more than one selection: 5 fits on validation sets, and
 a classifier for each `k` on each. For a filter, that dominates.
 
 The whole SCAN-B run took about 33 hours: 18 for Sequential, 6 for the GPU
-methods, 5 for the CPU methods, 2.4 for the chains, and 1.1 for RFECV by
-AUC.
+methods, 5 for the CPU methods, 2.4 for the chains, 1.1 for RFECV by
+AUC, and 0.3 for Berk-Jones and all genes. Each run's start and finish
+time, from the JSON beside its CSV:
+[`results/scanb70_run_times.csv`](../results/scanb70_run_times.csv).
 
 ## 7.12 Side scores and memory
 

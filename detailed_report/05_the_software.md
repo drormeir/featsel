@@ -325,9 +325,10 @@ On the 16 GB laptop, six workers ran out of memory; the run resumed with
 fewer. Under a 3 GB cap the U-test selectors were skipped, and a resume
 at a higher cap filled them in. Holding the data as 32-bit floats
 (section 3.12) cut peak selection memory by 30% to 45%: under a 3 GB cap,
-4 workers fit instead of 2. Two later changes were not measured again:
-the one-sort U test needs about 1.25 times the memory, and the cap moved
-from address space to data memory.
+4 workers fit instead of 2. These are single measurements, not saved. Two
+later changes were not measured again: the one-sort U test needs about
+1.25 times the memory (a single measurement), and the cap moved from
+address space to data memory.
 
 The last two mechanisms came from the scaling measurement of section 6.1.
 There liblinear aborted workers, and the runner fell back to fewer, as
