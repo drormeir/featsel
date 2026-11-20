@@ -124,12 +124,12 @@ settings stated in their sections.
 **About cost.**
 
 12. **The cheap corner wins.** On SCAN-B, HC2008 and Berk-Jones reach
-    0.970 mean AUC in 0.66 to 0.67 s per fit on the GPU. The best mean, mutual
-    information at 0.971, takes 3.6 s; tree importance takes 16.6 s for
+    0.970 mean AUC in 0.66 to 0.68 s per fit on the GPU. The best mean, mutual
+    information at 0.971, takes 3.6 s; tree importance takes 17.5 s for
     0.969. On the image data every method except Sequential runs in under
     a second, so cost does not decide the choice there.
 13. **Choosing `k` costs more than selecting.** Choosing `k` on 5
-    validation sets took Mann-Whitney 26 s per split on SCAN-B, against
+    validation sets took Mann-Whitney 28 s per split on SCAN-B, against
     0.67 s for one fit. A method that chooses its own count skips this.
 14. **A GPU helps sorting and matrix products, not everything.** A cheap
     GPU is slow in 64-bit arithmetic and has little memory. The data must

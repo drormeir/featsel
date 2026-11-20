@@ -2,11 +2,12 @@
 The cost-quality frontier: selection time against ROC AUC, one point per
 selector and k, from one or more runner CSVs of the same splits.
 
-Each point is the mean over every task and split of one (selector label, k)
-cell: its median selection time on the x axis, log scale, and its mean
-test ROC AUC on the y axis, with a bar of one standard deviation over the
-splits. A point is on the frontier when no other point is both faster and
-better. Frontier points are drawn in color and labelled; the rest are gray.
+Each point is one (selector label, k): its selection time on the x axis,
+log scale, and its mean test ROC AUC over every task and split on the y
+axis, with a bar of one standard deviation over the
+splits. The time is each task's median over its splits, then the mean
+over the tasks, as in the reports' tables. A point is on the frontier when
+no other point is both faster and better. Frontier points are drawn in color and labelled; the rest are gray.
 
 The machine and the code version come from the JSON the runner writes
 beside each CSV, and go into the figure's caption: a time means something
@@ -42,10 +43,11 @@ MUTED = '#5f6368'
 
 
 def cells(results, metric):
-    """One row per (selector, k): median time, mean and spread of the metric."""
+    """One row per (selector, k): time, mean and spread of the metric."""
     # Time is a property of one fit: the same for every classifier of a cell.
     fits = results.drop_duplicates(['task', 'split', 'selector', 'k'])
-    time = fits.groupby(['selector', 'k'], dropna=False)['selection_time_s'].median()
+    per_task = fits.groupby(['selector', 'k', 'task'], dropna=False)['selection_time_s'].median()
+    time = per_task.groupby(['selector', 'k'], dropna=False).mean()
     per_split = results.groupby(['selector', 'k', 'split'], dropna=False)[metric].mean()
     quality = per_split.groupby(['selector', 'k'], dropna=False).agg(['mean', 'std'])
     table = quality.join(time).reset_index()
@@ -130,7 +132,7 @@ def plot(table, on, metric, caption, out, title, over):
     ax.set_xscale('log')
     times = table['selection_time_s']
     ax.set_xlim(times.min() / 1.5, times.max() * 4)   # room for the rightmost label
-    ax.set_xlabel('Selection time per fit, seconds (median, log scale)', color=INK)
+    ax.set_xlabel('Selection time per fit, seconds (log scale)', color=INK)
     ax.set_ylabel(f'Test {metric.replace("_", " ").upper()} (mean over {over})', color=INK)
     ax.grid(True, which='major', color='#e3e5e8', linewidth=0.8)
     ax.set_axisbelow(True)

@@ -68,7 +68,15 @@ def scanb_facts(data):
     kept = expression.loc[X.index]
     floor = expression.loc[hiseq.index].iloc[:, :200]
     normal_p = normaltest(X.values, axis=0).pvalue
-    normal = y.value_counts()['Normal']
+    subtypes = y.value_counts()
+    normal = subtypes['Normal']
+
+    # Flat genes: spread under 1% of the largest absolute value, among the
+    # genes with more than one value across the kept patients.
+    varied = kept.loc[:, kept.nunique() > 1]
+    ratio = ((varied.max() - varied.min()) / varied.abs().max()).sort_values()
+    flat = varied[ratio.index[ratio < 1e-2]]
+    at_minimum = (flat == flat.min()).sum().sort_values(ascending=False)
 
     return {
         'scanb_patients': count(samples['specimen'].nunique()),
@@ -78,6 +86,7 @@ def scanb_facts(data):
         'scanb_nextseq_samples': count(len(nextseq)),
         'scanb_nextseq_only_patients': count(len(set(nextseq['specimen']) - set(hiseq['specimen']))),
         'scanb_hiseq_patients': count(hiseq['specimen'].nunique()),
+        'scanb_hiseq_repeats': count(hiseq.index.str.endswith('repl').sum()),
         'scanb_repeat_patients': count(repeated['specimen'].nunique()),
         'scanb_repeat_r_median': number(np.median(same)),
         'scanb_repeat_r_min': number(np.min(same)),
@@ -88,13 +97,18 @@ def scanb_facts(data):
         'scanb_er_disagree': count((er.loc[known, 'er status'] != er.loc[known, 'er prediction mgc']).sum()),
         'scanb_er_missing': count((~known).sum()),
         'scanb_single_value_genes': count((expression.nunique() == 1).sum()),
-        'scanb_flat_genes': count(((kept.max() - kept.min()) / kept.abs().max() < 1e-2)
-                                  .loc[kept.nunique() > 1].sum()),
+        'scanb_kept_single_value_genes': count((kept.nunique() == 1).sum()),
+        'scanb_flat_genes': count(flat.shape[1]),
+        'scanb_flat_largest_change': number((flat.max() - flat.min()).max()),
+        'scanb_first_unflat_ratio': number(ratio.iloc[flat.shape[1]]),
+        'scanb_flat_ninth_at_minimum': count(at_minimum.iloc[8]),
         'scanb_floor_share_200': share((floor.values == floor.values.min()).mean()),
         'scanb_non_normal_share': share((normal_p < 0.05).mean(), 1),
         'scanb_median_excess_kurtosis': number(np.median(kurtosis(X.values, axis=0)), 2),
         'scanb_loaded_patients': count(len(y)),
         'scanb_loaded_genes': count(X.shape[1]),
+        **{f'scanb_{name.lower()}_patients': count(subtypes[name])
+           for name in ('Basal', 'Her2', 'LumA', 'LumB')},
         'scanb_normal_patients': count(normal),
         'scanb_rest_of_normal': count(len(y) - normal),
         'scanb_all_rest_accuracy': number(1 - normal / len(y), 2),

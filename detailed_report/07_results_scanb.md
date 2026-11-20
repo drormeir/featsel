@@ -19,8 +19,9 @@ genes). Configs: `configs/frontier_scanb70_*.yaml`.
 
 ![Frontier on SCAN-B](figures/frontier_scanb70_roc_auc.png)
 
-*Each point is one method at one `k`: median selection time per fit, and
-mean test AUC over tasks and splits, with a bar of one standard deviation.
+*Each point is one method at one `k`: selection time per fit (each task's
+median over its splits, then the mean over tasks), and mean test AUC over
+tasks and splits, with a bar of one standard deviation.
 A point is on the frontier (blue) when no other point is both faster and
 better. The mean over tasks hides
 differences between tasks; the per-task plots follow. Table:
@@ -328,7 +329,7 @@ Scored by AUC, RFECV kept 2,855 to 28,541 genes and reached 0.962 mean
 AUC, level with RFE. AUC does not reward the majority class, so it is the
 right inner score for imbalanced tasks. It is still slower and no better
 than a filter: about 40 s of search per split and 6 s per fit, against
-Mann-Whitney's 26 s to choose `k` and 0.67 s per fit.
+Mann-Whitney's 28 s to choose `k` and 0.67 s per fit.
 
 ## 7.9 RFE at small `k`, and two-stage selection
 
@@ -359,8 +360,9 @@ The chains keep at most 500 genes, by design. Their selection is faster:
 
 ## 7.10 Sequential selection
 
-Sequential selection ran at `k` = 5 and 10 only (section 3.11). Its median
-time per fit was 276 s at `k` = 5 and 582 s at `k` = 10: the cost grows in
+Sequential selection ran at `k` = 5 and 10 only (section 3.11). Its time
+per fit (by the rule of section 7.11) was 274 s at `k` = 5 and 588 s at
+`k` = 10: the cost grows in
 step with `k`. At 10 genes it beat random on every task, and scored above
 Mann-Whitney on Her2, LumA and LumB. But Mann-Whitney then RFE scored above
 it on all five tasks, in 3 s instead of 10 minutes. Sequential was timed on
@@ -369,21 +371,23 @@ one fit per split. The other methods use the median of 10 fits
 
 ## 7.11 Cost
 
-Median selection time per fit, on the laptop of chapter 6:
+Time per fit and per split: each task's median over its 16 splits, then
+the mean over the five tasks, as in the final report. On the laptop of
+chapter 6:
 
 | Method | Selection, s per fit | Search or validation, s per split |
 |---|---|---|
 | Random | 0.02 | — |
-| Lasso | 0.58 | 10 (choosing C) |
+| Lasso | 0.59 | 11 (choosing C) |
 | HC2008, Berk-Jones, HC2004 | 0.66 to 0.68 | none |
-| Mann-Whitney | 0.67 | 26 (choosing `k`) |
-| Mann-Whitney 1000, then Lasso | 0.78 | 4 |
-| Mann-Whitney 1000, then tree importance or RFE | 2.8 to 3.1 | 13 to 16 |
-| Correlation, mutual information | 3.5 to 3.6 | 38 to 40 |
-| RFECV | 5.8 to 6.9 | 36 to 41 (choosing its count) |
-| RFE | 7.1 | 27 |
-| Tree importance | 16.6 | 70 |
-| Sequential, `k` = 10 | 582 | none |
+| Mann-Whitney | 0.67 | 28 (choosing `k`) |
+| Mann-Whitney 1000, then Lasso | 0.79 | 4 |
+| Mann-Whitney 1000, then tree importance or RFE | 2.8 to 3.0 | 12 to 16 |
+| Correlation, mutual information | 3.6 | 41 |
+| RFECV | 5.7 to 6.3 | 35 to 40 (choosing its count) |
+| RFE | 6.9 | 27 |
+| Tree importance | 17.5 | 68 |
+| Sequential, `k` = 10 | 588 | none |
 
 The GPU methods ran one fit at a time; the CPU methods (tree importance,
 RFE, RFECV) ran two workers at once, which slows each a little.

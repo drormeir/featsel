@@ -49,3 +49,12 @@ bm_bh_share_max,28%
 bm_p05_share_min,36%
 bm_p05_share_max,39%
 scanb_flat_genes,11
+scanb_hiseq_repeats,100
+scanb_kept_single_value_genes,"2,313"
+scanb_flat_largest_change,0.007
+scanb_first_unflat_ratio,0.057
+scanb_flat_ninth_at_minimum,"2,864"
+scanb_basal_patients,308
+scanb_her2_patients,297
+scanb_luma_patients,"1,502"
+scanb_lumb_patients,669

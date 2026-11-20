@@ -166,7 +166,7 @@ samples, Madelon only 500 features, and Arcene only 200 samples.
 **Source.** BreastMNIST is part of the MedMNIST v2 benchmark collection
 (Yang et al. 2023). It holds 780 breast ultrasound images from
 Al-Dhabyani et al. (2020). We use the 224 × 224 version (MedMNIST+,
-Zenodo record 10519652, licence CC BY 4.0). The loader checks the
+Yang et al. 2024, licence CC BY 4.0). The loader checks the
 download against its published MD5 checksum. The source has three
 classes: normal (133 images), benign (437) and malignant (210). MedMNIST
 merged normal and benign. So the task is malignant (210) against benign

@@ -394,9 +394,9 @@ gives every task, every `k` and every test (D 7, D 8, D C).
 ![Figure 1](figures/frontier.png)
 
 *Figure 1. Cost against quality. Each point is one method at one `k`:
-its median selection time per fit and its mean test AUC. The dark line is
-the frontier: no point is both faster and better than a point on it.
-SCAN-B is the mean of its five tasks. Sources: D 7.1, 8.1, 8.9.*
+its selection time per fit, timed as in Table 5, and its mean test AUC.
+The dark line is the frontier: no point is both faster and better than a
+point on it. SCAN-B is the mean of its five tasks. Sources: D 7.1, 8.1, 8.9.*
 
 ![Figure 2](figures/curves.png)
 
