@@ -383,10 +383,12 @@ on 3,000 random genes, 5 splits, and Lasso and RFE at three values of
 `k`. The
 runner was 4.3 times faster on one core and 10.1 times on 12 threads, with
 identical test scores (`results/speed_benchmark.csv`, one run). It does
-less work: it prepares each split once and ranks once per split. Running jobs in parallel gained at most
-1.8 times on full SCAN-B, from 3 workers on. Each selection fit then ran
-1.75 times slower beside others, which points to the memory bandwidth that
-all cores share (D 6.1).
+less work: it prepares each split once and ranks once per split. On this
+grid, 12 workers gained 2.4 times over one. On all the genes and all five
+tasks, an older run gained at most 1.8 times, from 3 workers on. There,
+each selection fit ran 1.75 times slower beside others. A fit reads the
+whole training set, so this points to the memory bandwidth that all cores
+share (D 6.1).
 
 **Each method, faster.** Each selector has a speed notebook that times it
 against the scikit-learn original on synthetic data shaped like SCAN-B,
@@ -819,7 +821,8 @@ docstring: `scripts/plot_final_frontier.py`, `scripts/plot_curves.py` and
 One seed, 42, fixes every random step; split `s` uses 42 + `s`. A rerun
 gives the same features and scores, for any number of workers. The tests
 run with `.venv/bin/python -m pytest`; GPU tests are skipped without a
-GPU.
+GPU. On 2026-11-20, on the laptop of section 7.4 with its GPU, all 410
+tests passed in 23 minutes (`results/test_run.md`).
 
 ## Appendix B. Engineering notes
 
