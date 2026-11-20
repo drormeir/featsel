@@ -120,7 +120,7 @@ each split.
 
 **Rank once.** Fitting a method once per split and taking every `k` from
 its single ranking, as Mann-Whitney, mutual information, correlation,
-tree importance and RFE do (section 4.2).
+tree importance, Lasso and RFE do (section 4.2).
 
 **RFE (recursive feature elimination).** A wrapper that trains a model,
 removes the features with the smallest weights, and repeats.
@@ -156,7 +156,7 @@ tasks, each subtype against the rest. BreastMNIST and FGVC-Aircraft give
 one each.
 
 **Test set.** The samples of a split kept apart from all fitting,
-selection and tuning. It is used once, to score the final model.
+selection and tuning. It only scores the fitted models.
 
 **Training set.** The samples of a split used to select features and fit
 the classifier.

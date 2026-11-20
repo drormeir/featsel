@@ -24,10 +24,9 @@ liblinear was dropped, against liblinear at its defaults. They ran as a
 plain script,
 [`scripts/benchmark_speed_selectors.py`](../scripts/benchmark_speed_selectors.py),
 with nothing else running. Inside Jupyter, the same call ran Newton
-slower on the CPU: 61 s against 41 s for RFECV at 3,000 features. The
+slower on the CPU: 59 s against 38 s for RFECV at 3,000 features. The
 cause was not found. It was not heat: ten fits in a row held their time,
-clock and temperature. The script's RFECV times match the notebooks'
-first run within 2%.
+clock and temperature.
 
 ## D.2 Lasso on real SCAN-B
 

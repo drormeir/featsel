@@ -217,7 +217,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Classifier | logistic regression, L2 penalty, C fixed at 1 |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
-| Timing | each selection fit 10 times (3 on FGVC-Aircraft, once for Sequential); the median is recorded |
+| Timing | each selection fit 10 times (3 on FGVC-Aircraft; Sequential once on the other two); the median is recorded |
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
@@ -475,9 +475,9 @@ image data, RFE ties all features, and Mann-Whitney is within 0.01 of them
 on both datasets.
 
 The best method also changes with `k`. On BreastMNIST, Mann-Whitney beats
-RFE by 0.066 at 10 features (p = 0.04), and RFE beats Mann-Whitney from
-250 features on (p = 0.049 at 250, p = 0.006 at 500). FGVC-Aircraft shows
-the same turn (D 8.2, 8.9). A filter scores each feature alone; RFE looks
+RFE by 0.066 at 10 features (p = 0.04), and RFE beats Mann-Whitney at 250
+and 500 features (p = 0.049 and 0.006); at 1,000 they tie (p = 0.39).
+FGVC-Aircraft shows the same turn (D 8.2, 8.9). A filter scores each feature alone; RFE looks
 at the features together, and that pays only once many are kept.
 
 Stability separates methods that AUC does not. Tree importance reaches
@@ -551,7 +551,7 @@ except Sequential selection runs in under a second per fit, so cost does
 not decide the choice there.
 
 Choosing `k` costs more than selecting. For Mann-Whitney on SCAN-B, the
-search on 5 validation sets takes about 27 s per split, against 0.67 s for
+search on 5 validation sets takes about 28 s per split, against 0.67 s for
 one fit (D C.1). A method
 that chooses its own count, such as HC2008, skips this search.
 

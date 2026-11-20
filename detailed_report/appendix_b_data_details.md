@@ -35,8 +35,10 @@ Chapter 2 gives the source of the PAM50 label, and what is not known
 about it. Section 7.6 tests whether feature selection recovers its genes.
 
 **The experiment's design.** The labels are not recomputed. Only the
-selected genes are compared with the 50 PAM50 genes. Each method ranks
-all genes once per split. Counting the PAM50 genes down the ranking gives
+selected genes are compared with the 50 PAM50 genes. Four methods ran, on
+10 splits: Mann-Whitney, tree importance, RFE and Lasso. Each ranks the
+genes once per split (Lasso only those with a non-zero weight). Counting
+the PAM50 genes down the ranking gives
 a recall curve over `k`. For the random control, the expected recall is
 the line `k` / number of genes. A strong method reaches the full list at
 a small `k`. The results are in
@@ -48,8 +50,9 @@ Known difficulties:
   gene. It may rank thousands deep for every method. So we report the
   whole curve, and the ranks at which 50% and 90% of the genes are found.
 - **Methods without a full ranking.** Lasso ranks only the genes with a
-  non-zero weight, so its curve stops early (section 7.6). FDR, FWE and
-  Higher Criticism return a set, not a ranking, so they were not run.
+  non-zero weight, so its curve stops early (section 7.6). FDR, FWE,
+  Higher Criticism and Berk-Jones return a set, not a ranking, so they
+  were not run.
 - **Correlated substitutes.** A gene highly correlated with a PAM50 gene
   carries the same signal, but does not count toward recall. Section 2.1
   ("Signal is everywhere") explains why this is common here.

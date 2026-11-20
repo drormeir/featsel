@@ -157,7 +157,6 @@ the same. This explains three later results:
 
 Loader: [`featsel_datasets/scanb_gse96058/`](../featsel_datasets/scanb_gse96058/).
 Tutorial: [`featsel_datasets/scanb_gse96058/demos/tutorial.ipynb`](../featsel_datasets/scanb_gse96058/demos/tutorial.ipynb).
-Data exploration: [`notebooks/01_data_exploration.ipynb`](../notebooks/01_data_exploration.ipynb).
 
 ## 2.2 BreastMNIST image embeddings (task 4)
 
@@ -197,8 +196,8 @@ and cached. Two GPU runs gave identical values.
 | Pairs of features with correlation above 0.5 | 0.17% |
 | Principal components for 50% / 90% / 99% of the variance | 12 / 150 / 462 |
 
-The U-test ranges are over the training sets of the comparison's first 5
-splits of an earlier run, with half the images in the training set.
+The U-test ranges are over the training sets of 5 random splits with half
+the images in the training set, drawn by `scripts/data_facts.py`.
 
 As in SCAN-B, the signal is widespread: about a quarter of the features
 separate the classes. Unlike SCAN-B, pairs of features are only weakly

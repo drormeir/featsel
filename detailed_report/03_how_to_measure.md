@@ -16,7 +16,7 @@ where they appear.
 | `k` | Chosen on validation sets: 5 folds of the training set, best mean AUC, tie to the smaller `k` | 3.11 |
 | Classifier | Logistic regression, C fixed at 1 | 3.8 |
 | Lasso's C | Chosen on validation sets | 3.11 |
-| Timing | Each selection fit 10 times; a searching method searches once, then is timed 10 times | 3.7, 3.11 |
+| Timing | Each selection fit 10 times (3 on FGVC-Aircraft; Sequential once on SCAN-B and BreastMNIST); a searching method searches once, then is timed | 3.7, 3.11 |
 
 ## 3.1 The basic flow
 
@@ -31,8 +31,9 @@ On each split, on the training set only, the runner:
 4. fits the classifier on those features, on the whole training set
    (section 3.8).
 
-The test set is then scored once. Nothing about it reaches the choice of
-features or of `k`. Scores are summarized over the splits. They judge the
+Nothing about the test set reaches the choice of features or of `k`. The
+runner scores it at every `k` in the list, to draw the full curve
+(section 3.13); a method's result is the score at its chosen `k`. Scores are summarized over the splits. They judge the
 whole procedure, not one gene list: each split may choose a different
 list.
 
@@ -179,8 +180,10 @@ stability would be a meaningless 1.0.
 For every fit we record:
 
 - **Selection time**: the selector's `fit` alone. Each selection is fit 10
-  times by a fresh selector, and the median is recorded. Sequential
-  selection takes minutes per fit, so it is fit once.
+  times by a fresh selector (3 times on FGVC-Aircraft), and the median is
+  recorded. Sequential selection takes minutes per fit on SCAN-B, so there
+  and on BreastMNIST it is fit once; on FGVC-Aircraft it is fit 3 times,
+  like every method there.
 - **Search time**: choosing `k`, or a method's own hyperparameter, on
   validation sets (section 3.11), recorded apart.
 - **Peak memory** of the selection: what Python and NumPy allocate on
@@ -210,8 +213,9 @@ and chosen on validation sets (section 3.11).
 ## 3.9 Reproducibility
 
 There is one global seed, 42. Split `s` uses seed 42 + `s` for every random
-step in it: the random selector, the forest, the solvers and the validation
-splits. Every selector that uses randomness seeds its own generators in its
+step in it: the random selector, the forest, the solvers and the
+validation folds for `k`. Lasso's search for C and RFECV's search for its
+count use their own 5 folds, not shuffled, so they need no seed. Every selector that uses randomness seeds its own generators in its
 `fit`. Re-running a configuration gives the same genes and scores, for any
 number of workers. Only the times change.
 
@@ -272,11 +276,12 @@ sets:
    scored by AUC on the validation set.
 4. The `k` with the best mean validation AUC wins; a tie goes to the
    smaller `k`.
-5. That `k`'s classifier, fit on the whole training set, is scored once on
-   the test set.
+5. That `k`'s classifier, fit on the whole training set, gives the
+   method's test score. (The test set is scored at every `k`, for the
+   curves, but only the chosen `k`'s score is the method's result.)
 
 A method that ranks once fits once per fold and cuts every `k` from that
-fit: 5 extra fits, against the 10 timed fits of each selection.
+fit: 5 extra fits, against the 10 timed fits of each selection (3 on FGVC-Aircraft).
 
 **Sequential selection runs only at `k` = 5 and 10, and does not search.**
 Its cost grows at least linearly with `k` (section 4.2).

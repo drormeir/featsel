@@ -30,8 +30,8 @@ Config validation and other known limits are in section 5.8.
 ## 10.2 Beyond this project
 
 **A dataset where Higher Criticism should work.** HC is built for rare,
-weak, independent signal. All three datasets have widespread, correlated
-signal, so HC acted as a top-10% filter. A dataset with rare signal, or a
+weak, independent signal. All three datasets have widespread signal (on
+SCAN-B also strongly correlated), so HC acted as a top-10% filter. A dataset with rare signal, or a
 simulation with a known number of useful features, would test whether HC
 picks its own count well.
 

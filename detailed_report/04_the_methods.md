@@ -341,7 +341,8 @@ How the derivations go:
   share of the removed features. Over all rounds this also costs O(n² p).
   Each Newton step solves an n × n system, in O(n³).
 - **Lasso** solves its Newton system through the r active genes: an r × r
-  system when r < n, else an n × n one (section 6.2).
+  system when r < n, else an n × n one, by the Woodbury identity
+  ([`ppdna.py`](../featsel/selectors/lasso/ppdna.py)).
 - **Sequential** at step j scores every remaining feature with j features
   on F folds. Each fit needs a j × j Hessian, in O(n j²) per Newton step.
   Summed over the k steps, this gives the k³. This is a bound for large

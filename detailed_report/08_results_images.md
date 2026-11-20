@@ -77,7 +77,7 @@ The corrected test (section 3.3) against random at the same `k`:
 
 | `k` | Established gains (p < 0.05) |
 |---|---|
-| 10 | Mann-Whitney +0.156, mutual information +0.144, tree importance +0.142 |
+| 10 | Mann-Whitney +0.156, correlation +0.156, mutual information +0.144, tree importance +0.142 |
 | 50 | Mutual information +0.105, tree importance +0.108 |
 | 250 | RFE +0.060 |
 | 500 | RFE +0.040 |
@@ -88,9 +88,11 @@ of 16). At `k` = 1000 no gain is established. Table:
 [`figures/paired_tests_breastmnist70.csv`](figures/paired_tests_breastmnist70.csv).
 
 The order between methods turns with `k`. At `k` = 10 the filters beat RFE
-(Mann-Whitney by 0.066, p = 0.04). From `k` = 250 on, RFE beats the
-filters (Mann-Whitney by 0.029 at 250, p = 0.049; by 0.023 at 500,
-p = 0.006). A filter scores each feature alone. RFE removes features while
+(Mann-Whitney by 0.066, p = 0.04). At `k` = 250 and 500, RFE beats
+Mann-Whitney and correlation (by 0.029 at 250, p = 0.049; by 0.023 at
+500, p = 0.006). At 1,000 it still beats correlation (p = 0.015) but ties
+Mann-Whitney (p = 0.39). Its lead over mutual information is not
+established at any of these `k`. A filter scores each feature alone. RFE removes features while
 it looks at all of them together, and that pays only once many are kept.
 
 ## 8.3 Selection against all features
@@ -148,7 +150,7 @@ the same AUC and stability. Both lose to Mann-Whitney at 250 features by
 about 0.006, and to all features by 0.056.
 
 HC2004 kept 1 to 3 features. It scored 0.758, the lowest of all. Its
-statistic peaks at the single strongest p-value (section 4.5).
+statistic peaks at the single strongest p-value (section 4.4).
 
 As on SCAN-B (section 7.5), neither variant found the point where the
 signal ends: 24% to 28% of the dimensions pass the Benjamini-Hochberg test
@@ -171,8 +173,8 @@ picks `k` of them, for `k` up to 250.
 | Mann-Whitney 500, then tree importance | 0.879 | tree importance 0.906 |
 | Mann-Whitney 500, then Lasso | 0.878 | Lasso 0.898 |
 
-Every chain lost to all features (p < 0.004). Every chain also lost to its
-second method run alone. The chains save little time here: every method
+Every chain lost to all features (p < 0.004). Every chain also scored below
+its second method run alone. The chains save little time here: every method
 already runs in under a second on 2,048 features. The cap of 250 also
 matters, since every method preferred larger `k`.
 

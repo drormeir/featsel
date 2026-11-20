@@ -22,7 +22,7 @@ tasks). The second is ResNet-50 embeddings of breast ultrasound images
 pipeline.
 
 **Results.** Selection helps most when few features are allowed. At 10
-features, the best methods beat random features by 0.10 to 0.20 AUC on
+features, the best methods beat random features by 0.11 to 0.20 AUC on
 SCAN-B, and by 0.10 to 0.16 on the image data. As the number of features
 grows, random features catch up, because thousands of correlated genes
 carry the signal. At the number of features that each method chose, the
@@ -31,7 +31,7 @@ AUC. The Mann-Whitney U test, which scores one feature at a time, is
 within 0.01 AUC of the best on all three datasets, and on a GPU it takes
 less than a second per fit. Selection rarely beats all the features: never
 on the image data, and on one SCAN-B task of five. The GPU filters ran 2.6
-to 49 times faster than on the CPU. Data checks found repeated patients in
+to 49 times faster than the originals they replace. Data checks found repeated patients in
 SCAN-B and copied images in BreastMNIST, which would leak between the
 training set and the test set.
 

@@ -71,7 +71,7 @@ the worker processes took about 4.5 of its 6.3 seconds.
 
 The same grid ran on all 28,552 genes and all five tasks: 50 jobs. Each
 worker count ran 3 times, each in a fresh process. The runs varied by
-less than 2%.
+about 2%.
 
 | Workers | Seconds (median) | Speed-up | Efficiency (speed-up per worker) |
 |---|---|---|---|
@@ -130,7 +130,7 @@ Results at the largest size both sides reached (30,000 features unless
 noted). Every fit of every variant was reproducible. For the U-test rows,
 the "Original" column is our own NumPy U test, the CPU version.
 
-| Method | Original | Ours, CPU | Ours, GPU | Same features? | Notebook |
+| Method | Original | Ours, CPU | Ours, GPU | Same features? | Source |
 |---|---|---|---|---|---|
 | ANOVA, FDR, FWE, Percentile (F-test) | 0.36 s | 0.36 s | 0.14 s (2.6×) | yes | [anova_f](../featsel/selectors/anova_f/demos/speed.ipynb) |
 | Variance threshold | 0.83 s | 0.86 s | 0.13 s (6.4×) | yes | [variance_threshold](../featsel/selectors/variance_threshold/demos/speed.ipynb) |
@@ -138,10 +138,10 @@ the "Original" column is our own NumPy U test, the CPU version.
 | Mann-Whitney and Higher Criticism (our NumPy U test) | 3.76 s | — | 0.49 s (7.7×) | yes | [mann_whitney](../featsel/selectors/mann_whitney/demos/speed.ipynb) |
 | Berk-Jones (our NumPy U test) | 3.88 s | — | 0.46 s (8.4×) | yes | [berk_jones](../featsel/selectors/berk_jones/demos/speed.ipynb) |
 | Mutual information, 10,000 features | 78.3 s | 18.4 s (4.2×) | 1.60 s (49×) | yes, bit for bit | [mutual_info](../featsel/selectors/mutual_info/demos/speed.ipynb) |
-| Lasso (liblinear → PPDNA solver) | 5.78 s | 25.4 s (4.4× slower) | 1.01 s (5.7×) | 91% overlap (see below) | [lasso](../featsel/selectors/lasso/demos/speed.ipynb) |
+| Lasso (liblinear → PPDNA solver) | 5.78 s | 25.4 s (4.4× slower) | 1.01 s (5.7×) | 91% overlap (see below) | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
 | Tree importance, 10,000 features (1 thread → 12) | 103.7 s | 18.8 s (5.5×) | no GPU path | yes | [tree_importance](../featsel/selectors/tree_importance/demos/speed.ipynb) |
-| RFE (liblinear → exact Newton solver) | 26.2 s | 12.9 s (2.0×) | 15.6 s (1.7×) | not at every size (see below) | [rfe](../featsel/selectors/rfe/demos/speed.ipynb) |
-| RFECV, 10,000 features | 70.1 s | 49.9 s (1.4×) | 42.2 s (1.7×) | not at every size | [rfecv](../featsel/selectors/rfecv/demos/speed.ipynb) |
+| RFE (liblinear → exact Newton solver) | 26.2 s | 12.9 s (2.0×) | 15.6 s (1.7×) | not at every size (see below) | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
+| RFECV, 10,000 features | 70.1 s | 49.9 s (1.4×) | 42.2 s (1.7×) | not at every size | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
 | Sequential forward, 1,000 features | 163.8 s | 22.5 s (7.3×) | 4.9 s (34×) | yes | [sequential](../featsel/selectors/sequential/demos/speed.ipynb) |
 | Random | — | 0.02 s | — | — | [random_selection](../featsel/selectors/random_selection/demos/speed.ipynb) |
 
@@ -235,10 +235,12 @@ for RFE and RFECV, PPDNA for Lasso. The reasons:
 - **Repeatability.** Unless its seed is fixed, liblinear shuffles the
   data differently on each fit and keeps different genes. Newton and
   PPDNA use no randomness, so the selectors lost `random_state` too.
-- **No loss in AUC.** On that first frontier run, the two RFE solvers and the two
-  Lasso solvers scored the same AUC at every `k`, within the spread over
-  splits. For RFE: 0.811 and 0.807 at k = 10, 0.959 and 0.959 at
-  k = 1000.
+- **No loss in AUC.** On that first frontier run, the two RFE solvers
+  scored the same AUC at every `k`, within the spread over splits: 0.811
+  and 0.807 at k = 10, 0.959 and 0.959 at k = 1000. The two Lasso solvers
+  differed a little. At k = 10, PPDNA scored higher on all 5 splits
+  (0.948 against 0.934); at k = 1000, liblinear scored higher on all 5
+  (0.964 against 0.962).
 
 For Lasso the speed argument is weaker. On the CPU the two solvers took
 the same total time; only on a GPU was PPDNA clearly faster

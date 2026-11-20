@@ -78,7 +78,7 @@ settings stated in their sections.
 
 4. **Selection matters most when few features are allowed.** At 10
    features, the filters, tree importance, the chains and Sequential beat
-   random ones by 0.10 to 0.20 AUC on SCAN-B. On the image data, the
+   random ones by 0.11 to 0.20 AUC on SCAN-B. On the image data, the
    filters and tree importance beat them by 0.10 to 0.16. The gain shrinks
    as `k` grows. On Basal it is gone by 250 genes, and on BreastMNIST by
    1,000 features. On LumA and LumB about 0.02 remains at 2,000 genes
@@ -107,10 +107,11 @@ settings stated in their sections.
    corrected resampled t-test passed 164. Against all genes, it cut the
    established differences from 52 to 20.
 10. **Higher Criticism needs rare signal.** On all three datasets HC2008
-    stopped at the edge of its search, 10% of the features, and
-    Berk-Jones at or just before it (sections 7.5, 8.5). As a top-10%
-    filter, both are among the best on SCAN-B and the most stable. HC2004
-    keeps one or two features and is the weakest method.
+    stopped at the edge of its search, 10% of the features. Berk-Jones,
+    run on SCAN-B and BreastMNIST, stopped at or just before it (sections
+    7.5, 8.5). As a top-10% filter, both are among the best on SCAN-B and
+    the most stable. HC2004 keeps one to three features and is the
+    weakest method.
 11. **Wrappers pay only in some places, and only with care.** RFE was the
     best method on both image datasets at large `k`, tied with all
     features. On SCAN-B it was below the filters, and weak at 10 genes. A
@@ -122,7 +123,7 @@ settings stated in their sections.
 **About cost.**
 
 12. **The cheap corner wins.** On SCAN-B, HC2008 and Berk-Jones reach
-    0.970 mean AUC in 0.66 s per fit on the GPU. The best mean, mutual
+    0.970 mean AUC in 0.66 to 0.67 s per fit on the GPU. The best mean, mutual
     information at 0.971, takes 3.6 s; tree importance takes 16.6 s for
     0.969. On the image data every method except Sequential runs in under
     a second, so cost does not decide the choice there.
@@ -153,7 +154,8 @@ Each dataset has its own frontier. What do they share?
 - **What holds everywhere.** Selection beats random most at small `k`.
   Mann-Whitney on a GPU is within 0.01 AUC of the best, at the cheap end
   of the cost axis. HC2008 stops at the edge
-  of its search. RFECV needs AUC as its inner score.
+  of its search. Wherever RFECV ran with both inner scores, AUC did better
+  than accuracy.
 - **What changes.** The best method for a given budget. At large `k`, RFE
   leads on both image datasets but trails the filters on SCAN-B. At 10
   features, the filters lead on the image data, and Mann-Whitney then RFE

@@ -45,7 +45,7 @@ What the five frontiers show:
 
 - **Random genes are the fast end of every frontier.** They take 0.02 to
   0.07 s. On Basal, 50 random genes already reach 0.981.
-- **A different method tops each task.** Mann-Whitney 1000 then Lasso on
+- **No one method tops every task.** Mann-Whitney 1000 then Lasso on
   Basal (0.994), Mann-Whitney and correlation at 1,500 on Her2 (0.987),
   Berk-Jones, HC2008 and tree importance on LumA (0.961), Mann-Whitney and
   correlation at 1,000 on LumB (0.972), and mutual information at 2,000 on
@@ -128,7 +128,7 @@ What it shows:
 
 - **At 10 genes, selection matters a lot.** Every filter and tree
   importance beat random by 0.12 to 0.19 AUC, on every task. With the
-  chains and Sequential, the range is 0.10 to 0.20.
+  chains and Sequential, the range is 0.11 to 0.20.
 - **Basal is easy.** Random genes reach 0.98 at 50 genes. After that no
   method beats them.
 - **On LumA and LumB the gain lasts.** At 2,000 genes, the filters and
@@ -198,7 +198,7 @@ the most stable methods (0.92).
 
 HC2004 kept one or two genes. It scored 0.874, the lowest of all but RFECV
 by accuracy. Its statistic peaks at the single strongest p-value
-(section 4.5).
+(section 4.4).
 
 Neither variant found the point where the signal ends. HC2008's score is
 still rising at the edge of its search (Appendix B.3): the signal is not
@@ -356,7 +356,7 @@ At the chosen `k`, in mean AUC over tasks, Mann-Whitney then Lasso beats
 Lasso alone by 0.005, and Mann-Whitney then RFE beats RFE alone by 0.002.
 Mann-Whitney then tree importance loses 0.004 to tree importance alone.
 The chains keep at most 500 genes, by design. Their selection is faster:
-6 times for tree importance, about 2.4 times for RFE.
+6 times for tree importance, about 2.3 times for RFE.
 
 ## 7.10 Sequential selection
 
@@ -379,7 +379,7 @@ Median selection time per fit, on the laptop of chapter 6:
 | HC2008, Berk-Jones, HC2004 | 0.66 to 0.68 | none |
 | Mann-Whitney | 0.67 | 26 (choosing `k`) |
 | Mann-Whitney 1000, then Lasso | 0.78 | 4 |
-| Mann-Whitney 1000, then tree importance or RFE | 2.8 to 3.0 | 12 to 16 |
+| Mann-Whitney 1000, then tree importance or RFE | 2.8 to 3.1 | 13 to 16 |
 | Correlation, mutual information | 3.5 to 3.6 | 38 to 40 |
 | RFECV | 5.8 to 6.9 | 36 to 41 (choosing its count) |
 | RFE | 7.1 | 27 |

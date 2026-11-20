@@ -10,24 +10,25 @@ import pandas as pd
 
 from .metrics import KEY_COLUMNS, METRICS, SCORE_METRICS
 
-# One experiment cell: every key except the split, which varies inside it.
-CELL_COLUMNS = [c for c in KEY_COLUMNS if c != 'split']
+# One setting: every key except the split, which varies inside it. A cell
+# of the results CSV is one setting on one split.
+SETTING_COLUMNS = [c for c in KEY_COLUMNS if c != 'split']
 
 # One selection: the model does not affect which features were chosen.
-SELECTION_COLUMNS = [c for c in CELL_COLUMNS if c != 'model']
+SELECTION_COLUMNS = [c for c in SETTING_COLUMNS if c != 'model']
 
 COST_COLUMNS = ['n_selected', 'selection_time_s', 'selection_peak_mb', 'fit_time_s']
 
 
 def summarize(results):
     """
-    Median, first and third quartile over splits, one row per cell.
+    Median, first and third quartile over splits, one row per setting.
 
     The median and interquartile range describe split-to-split variation
     without assuming it is symmetric.
     """
     columns = [c for c in [*METRICS, *SCORE_METRICS, *COST_COLUMNS] if c in results.columns]
-    grouped = results.groupby(CELL_COLUMNS, dropna=False)[columns]
+    grouped = results.groupby(SETTING_COLUMNS, dropna=False)[columns]
 
     summary = pd.concat({
         'median': grouped.median(),
@@ -81,7 +82,7 @@ def kuncheva_index(results, n_total_features):
     Returns
     -------
     stability : pd.DataFrame
-        One row per selection cell with the mean pairwise consistency index.
+        One row per selection with the mean pairwise consistency index.
     """
     selections = results.drop_duplicates([*SELECTION_COLUMNS, 'split'])
     rows = []
@@ -140,7 +141,7 @@ def nogueira_stability(results, n_total_features):
     Returns
     -------
     stability : pd.DataFrame
-        One row per selection cell with the stability over its splits.
+        One row per selection with the stability over its splits.
     """
     selections = results.drop_duplicates([*SELECTION_COLUMNS, 'split'])
     rows = []

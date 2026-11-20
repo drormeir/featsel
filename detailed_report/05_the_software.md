@@ -196,7 +196,8 @@ package, with two parts:
   exposes everything in them unchanged: `GSE96058`, `BreastMNIST`,
   `FGVCAircraft`;
 - `featsel_view.py`, with this project's choices for that dataset (for
-  SCAN-B: HiSeq only, one sample per patient, the target), `NAME`, `TARGET` and `load_xy()`, which
+  SCAN-B: HiSeq only, one sample per patient, no flat genes, the target),
+  `NAME`, `TARGET` and `load_xy()`, which
   returns `X` and `y`.
 
 A config names the view module. A new dataset needs only a new folder;
@@ -348,7 +349,9 @@ scikit-learn method:
 - its `fit` plus `get_support` is at most 5% slower. Both are timed,
   because scikit-learn builds its mask only in `get_support`. Each side's
   time is the median of 50 fits. The fast filters are timed on larger
-  data (1,000 × 4,000), so timing noise stays below 5%;
+  data (1,000 × 4,000), so timing noise stays below 5%. ANOVA is timed on
+  1,000 × 10,000: on 1,000 × 4,000 it was about 16% slower than
+  scikit-learn in every run, for a reason not found;
 - its GPU path selects the same features as its CPU path.
 
 RFE, RFECV and Lasso reach the exact solution (section 6.2), so their
