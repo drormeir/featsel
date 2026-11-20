@@ -636,8 +636,12 @@ safe default.
   Every SCAN-B task predicts PAM50, a label computed from the genes; no
   measured target was run. The main BreastMNIST results include the
   copied images.
-- **Protocol.** One classifier, logistic regression with C fixed at 1.
-  One training fraction and 16 splits; the spread over splits is not a
+- **Protocol.** One classifier in the main runs, logistic regression with
+  C fixed at 1. A side study with older settings (12 splits, half the
+  patients in the training set, macro-F1) added a linear SVM, a random
+  forest, k-nearest neighbours and shrinkage LDA. With each of the five,
+  Mann-Whitney beat random genes at 10 genes by 0.20 to 0.23 macro-F1, on
+  every SCAN-B task and split (D 7.7). One training fraction and 16 splits; the spread over splits is not a
   confidence interval for new patients. The five SCAN-B tasks share
   patients, so they are not independent. Each selector's own settings are
   fixed, except Lasso's penalty. The correlation selector drops a gene
