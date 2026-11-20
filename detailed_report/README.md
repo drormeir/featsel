@@ -3,22 +3,9 @@
 M.Sc. final project, Machine Learning and Data Science, Reichman University.
 Supervisor: Dr. Ben Galili.
 
-Each chapter is short and can be read alone.
-
-## In one paragraph
-
-A gene expression dataset describes each patient by about 30,000 numbers,
-one per gene, but holds only a few thousand patients. A classifier trained
-on all the genes is slow and can learn noise. Feature selection picks a
-small set of genes that still predicts well. We built `featsel`, a Python
-package of 16 selection methods that plug into scikit-learn. We compared
-them, against a control that picks features at random, on breast cancer
-data (SCAN-B, 2,976 patients, 28,541 genes) and image data (BreastMNIST,
-780 images, 2,048 features). Aircraft photos then tested the finished
-pipeline on data it was not designed for. We made the slow methods faster,
-many on a GPU, and plotted cost against quality. The main finding: here, a
-simple test of one gene at a time is almost as good as the complex
-methods, and much faster.
+Each chapter is short and can be read alone. For the question, the
+methods and the main results in one page, read the
+[abstract](abstract.md).
 
 ## What was built
 
@@ -66,6 +53,7 @@ methods, and much faster.
 
 | # | Chapter | Contents |
 |---|---|---|
+| | [Abstract](abstract.md) | The question, the methods, the results and the conclusions, in one page. |
 | 1 | [The problem](01_the_problem.md) | Feature selection, why few samples and many features make it hard, the four tasks, earlier studies. |
 | 2 | [The data](02_the_data.md) | SCAN-B, BreastMNIST and FGVC-Aircraft: where the labels come from, and the traps we found. |
 | 3 | [How to measure a selection method](03_how_to_measure.md) | Testing a method without fooling yourself: leakage, splits, the random control, metrics, stability. |

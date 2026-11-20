@@ -4,8 +4,8 @@ from a table written by scripts/paired_tests.py.
 
 One panel per k. Each row is a method: a dot at its mean difference from
 the reference over the splits, and a bar for its corrected interval. The
-interval is Bonferroni-adjusted for every test in the table, as chapter 7
-of the final report requires: confidence 1 - 0.05 / m for m tests. A bar
+interval is Bonferroni-adjusted for every test in the table: confidence
+1 - 0.05 / m for m tests. A bar
 that does not cross zero is drawn in color: the difference passes
 p < 0.05 / m. A bar that crosses zero is gray. The random control is left
 out; its gap is far larger than the gaps between methods.

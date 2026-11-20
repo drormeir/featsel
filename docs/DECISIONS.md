@@ -66,7 +66,7 @@ added here.
 | 2026-11-14 | The image frontiers stopped k at 250 (BreastMNIST) or 500 (aircraft), and a separate config ran BreastMNIST at larger k. The SCAN-B chains lacked k = 500. | On BreastMNIST and aircraft, every method with a k list uses 10, 50, 250, 500 and 1000; Random also runs at 2,048, every feature. The goal is the best AUC, and validation picks k. `frontier_breastmnist70_large_k.yaml` is merged into the main configs. A chain uses the common list cut below its first step: 10 to 500 on SCAN-B, 10 to 250 on BreastMNIST. `frontier_scanb70_tree.yaml` (a copy of the CPU run's tree importance) and `frontier_scanb.yaml` (unused by the report) are deleted. | Keeping k below the number of training images. |
 | 2026-11-14 | The random control chose its own k on validation sets, and each method was tested against it at that k. More random features almost always score better, so random chose its largest k, and the test asked whether selection beats many features. | Random selection is the bar: its test AUC at each k is a curve, and a method has value at a k only if it beats random there. Its curve ends at every feature, the all-features reference. Methods at their chosen k are tested against all features only. | Testing against random at its own chosen k (duplicates the all-features test). |
 | 2026-11-13 | On the SCAN-B frontier, AUC still rose at k = 1000, the largest k, for every method with a k list. | Every method with a k list on SCAN-B uses k = 10, 50, 250, 500, 1000, 1500 and 2000. The same list for all, so they compare at equal sizes. Sequential keeps k = 5 and 10. | A separate list per method. |
-| 2026-08-02, 2026-10-05 | Whether to vary preprocessing. | Standardization only, fit inside the split. A rank-to-normal transform was compared on 2026-10-05 and did not help (section 3.10). | Min-max scaling (one outlier squeezes the rest); preprocessing as a full axis (doubles the grid). |
+| 2026-08-02, 2026-10-05 | Whether to vary preprocessing. | Standardization only, fit inside the split. A rank-to-normal transform was compared on 2026-10-05; its results were not kept, so the report does not use them. | Min-max scaling (one outlier squeezes the rest); preprocessing as a full axis (doubles the grid). |
 | 2026-08-02 | k-fold scores are correlated and too few. | Stratified Monte Carlo splits. Median with quartiles. | k-fold; leave-one-out (no AUC per split, one refit per patient). |
 | 2026-09-26 | Tuning C on the test part would leak. | Nested tuning inside each training part. Built 2026-10-31. | Fixed C (kept only for the frontier, to save time). |
 | 2026-09-26 | A new metric means a new run. | Store each test patient's label and score, and derive every metric afterwards. Designed, not built. | Storing only the metrics (what the runner does today). |
@@ -132,7 +132,7 @@ Format: the date, the idea, and why it was parked.
   p-value at i/(N+1) and scale by √(N+2), from Beta(i, N−i+1), with a
   proof. Parked: no publication was found. `SCOPE.md` then allowed
   published HC only. That rule was dropped on 2026-11-10. HC2008 here
-  already uses the exact centre, i/(N+1) (final report, section 4.4). The
+  already uses the exact centre, i/(N+1) (detailed report, section 4.4). The
   √(N+2) scale multiplies every score by the same constant, so it would
   select the same genes as HC2008.
 - 2026-10-18 - Recombine the five PAM50 class-vs-rest classifiers into a

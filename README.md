@@ -34,6 +34,12 @@ scikit-learn `Pipeline`, `cross_val_score` or `GridSearchCV`.
 
 The primary use case is predicting breast cancer molecular subtypes from gene expression data, but the pipeline generalizes to other high-dimensional classification problems.
 
+## Report
+
+The findings, the methods and every design decision are in the
+[detailed report](detailed_report/README.md). Start with its
+[abstract](detailed_report/abstract.md).
+
 ## Project Structure
 
 ```
@@ -41,13 +47,13 @@ The primary use case is predicting breast cancer molecular subtypes from gene ex
 │   └── selectors/      # One subpackage per selector, with its tests and a tutorial notebook
 ├── configs/            # Dataset and experiment configuration files (YAML)
 ├── featsel_datasets/   # One folder per dataset: loader code in git, data files not
-├── results/            # Experiment output CSVs (not in git)
+├── results/            # Experiment output CSVs; results/local/ is not in git
 ├── figures/            # Generated plots
 ├── notebooks/          # Analysis and usage notebooks
 ├── scripts/            # One-off runs and examples
 ├── tests/              # Package-level tests
-├── detailed_report/       # The final report
-├── docs/               # Scope, decision log, open gaps, methods guide
+├── detailed_report/    # The detailed report: the full record
+├── docs/               # Scope, decision log, methods guide
 └── references/         # Project proposal and papers
 ```
 
@@ -64,11 +70,6 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-```
-
-Future PyPI installation (not yet available):
-```bash
-pip install featsel
 ```
 
 ## Usage
@@ -136,6 +137,16 @@ course copies are in `detailed_report/02_the_data.md`.
 
 Config: `configs/frontier_breastmnist70_gpu.yaml`. Notebooks in
 `featsel_datasets/medmnist_breastmnist/demos/`.
+
+### FGVC-Aircraft, ResNet-50 embeddings (unseen during the design)
+
+- 1,200 aircraft photos: Boeing 737 (800) vs the Airbus A320 family (400)
+- Each photo is 2,048 ResNet-50 embedding dimensions
+- The archive is downloaded on first use (2.75 GB) and read without unpacking
+- Licence: non-commercial research only; the photos are not stored in the repository
+
+Config: `configs/aircraft70_gpu.yaml`. Analysis in
+`featsel_datasets/fgvc_aircraft/demos/research.ipynb`.
 
 ## Status
 

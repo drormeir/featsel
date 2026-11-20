@@ -1,4 +1,4 @@
-"""Build the final report as one PDF.
+"""Build the detailed report as one PDF.
 
 Order: title pages, contents, abstract, chapters 1 to 10, references,
 appendices A to E. The style is in detailed_report/report.css.

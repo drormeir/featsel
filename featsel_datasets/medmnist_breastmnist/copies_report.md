@@ -1,6 +1,6 @@
 # Finding the copied images in BreastMNIST
 
-A part of preparing the BreastMNIST dataset. The final report uses its
+A part of preparing the BreastMNIST dataset. The detailed report uses its
 result: section 2.2 of
 [`detailed_report/02_the_data.md`](../../detailed_report/02_the_data.md).
 
