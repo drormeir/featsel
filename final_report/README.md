@@ -471,34 +471,6 @@ The other filters and tree importance show no established loss (D 7.3).
 So on these datasets, selection buys a smaller model more often than a
 better one.
 
-*Table 5. Each method at the `k` it chose on validation sets. SCAN-B
-values are means over its five tasks; the time is the mean of each task's
-median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
-as the second step of a chain; every other method ran on the GPU. Over
-the 16 splits, the interquartile range of a method's AUC is 0.006 to
-0.010 on a SCAN-B task (HC2004 0.018, RFECV scored by accuracy 0.044)
-and 0.017 to 0.038 on the image data. The tests are paired, so a smaller
-difference can still be established. Source:
-`final_report/figures/table5.csv`.*
-
-| Method | SCAN-B AUC | BreastMNIST AUC | FGVC-Aircraft AUC | SCAN-B selection, s per fit | SCAN-B stability |
-|---|---|---|---|---|---|
-| Mutual information | 0.971 | 0.916 | 0.847 | 3.6 | 0.70 |
-| Berk-Jones | 0.970 | 0.867 | 0.815 | 0.66 | 0.92 |
-| HC2008 | 0.970 | 0.868 | 0.817 | 0.68 | 0.92 |
-| Correlation (Spearman) | 0.969 | 0.905 | 0.824 | 3.6 | 0.78 |
-| Mann-Whitney | 0.969 | 0.918 | 0.854 | 0.67 | 0.76 |
-| Tree importance | 0.969 | 0.906 | 0.851 | 17 | 0.27 |
-| Mann-Whitney, then Lasso | 0.968 | 0.878 | 0.828 | 0.79 | 0.46 |
-| Mann-Whitney, then tree importance | 0.965 | 0.879 | 0.814 | 2.8 | 0.51 |
-| Lasso | 0.964 | 0.898 | 0.846 | 0.59 | 0.36 |
-| All features (no selection) | 0.963 | 0.924 | 0.862 | — | — |
-| Mann-Whitney, then RFE | 0.962 | 0.889 | 0.829 | 3.0 | 0.42 |
-| RFECV, scored by AUC | 0.962 | 0.912 | 0.858 | 5.7 | 0.23 |
-| RFE | 0.961 | 0.923 | 0.862 | 6.9 | 0.33 |
-| HC2004 | 0.874 | 0.758 | 0.674 | 0.68 | 0.67 |
-| RFECV, scored by accuracy | 0.720 | 0.889 | 0.854 | 6.3 | 0.20 |
-
 ### 6.3 No single best method
 
 At the `k` each method chose, the top methods cannot be told apart. On
@@ -518,6 +490,35 @@ the same mean AUC as Mann-Whitney on SCAN-B, 0.969, but its stability is
 0.27 against 0.76: it picks a different gene set on each split. So many
 different gene sets predict equally well, and a gene list from one split
 is not a finding by itself.
+
+*Table 5. Each method at the `k` it chose on validation sets: test AUC on
+each dataset, then SCAN-B's selection time and stability. SCAN-B
+values are means over its five tasks; the time is the mean of each task's
+median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
+as the second step of a chain; every other method ran on the GPU. Over
+the 16 splits, the interquartile range of a method's AUC is 0.006 to
+0.010 on a SCAN-B task (HC2004 0.018, RFECV scored by accuracy 0.044)
+and 0.017 to 0.069 on the image data. The tests are paired, so a smaller
+difference can still be established. Without copies: section 6.7.
+Source: `final_report/figures/table5.csv`.*
+
+| Method | SCAN-B | BreastMNIST | BreastMNIST,<br>no copies | FGVC-<br>Aircraft | SCAN-B,<br>s per fit | SCAN-B<br>stability |
+|---|---|---|---|---|---|---|
+| Mutual information | 0.971 | 0.916 | 0.887 | 0.847 | 3.6 | 0.70 |
+| Berk-Jones | 0.970 | 0.867 | 0.847 | 0.815 | 0.66 | 0.92 |
+| HC2008 | 0.970 | 0.868 | 0.848 | 0.817 | 0.68 | 0.92 |
+| Correlation (Spearman) | 0.969 | 0.905 | 0.866 | 0.824 | 3.6 | 0.78 |
+| Mann-Whitney | 0.969 | 0.918 | 0.883 | 0.854 | 0.67 | 0.76 |
+| Tree importance | 0.969 | 0.906 | 0.885 | 0.851 | 17 | 0.27 |
+| Mann-Whitney, then Lasso | 0.968 | 0.878 | 0.858 | 0.828 | 0.79 | 0.46 |
+| Mann-Whitney, then tree importance | 0.965 | 0.879 | 0.855 | 0.814 | 2.8 | 0.51 |
+| Lasso | 0.964 | 0.898 | 0.882 | 0.846 | 0.59 | 0.36 |
+| All features (no selection) | 0.963 | 0.924 | 0.895 | 0.862 | — | — |
+| Mann-Whitney, then RFE | 0.962 | 0.889 | 0.860 | 0.829 | 3.0 | 0.42 |
+| RFECV, scored by AUC | 0.962 | 0.912 | 0.884 | 0.858 | 5.7 | 0.23 |
+| RFE | 0.961 | 0.923 | 0.891 | 0.862 | 6.9 | 0.33 |
+| HC2004 | 0.874 | 0.758 | 0.771 | 0.674 | 0.68 | 0.67 |
+| RFECV, scored by accuracy | 0.720 | 0.889 | 0.847 | 0.854 | 6.3 | 0.20 |
 
 ### 6.4 Higher Criticism and Berk-Jones
 
