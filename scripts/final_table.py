@@ -5,10 +5,12 @@ final report's Table 5.
 Reads the _chosen.csv tables that summarize_frontier.py writes and runs
 nothing. SCAN-B's five tasks are averaged: test AUC, selection time per fit
 (each task's median) and stability (Nogueira's measure). Writes the table as
-CSV and as Markdown, ready to include.
+CSV and as Markdown, ready to include. The CSV also holds each method's
+interquartile range of test AUC over the splits (on SCAN-B, the mean over
+its tasks), for the caption.
 
 Usage:
-    python scripts/final_table.py --out final_report/figures/table1 \
+    python scripts/final_table.py --out final_report/figures/table5 \
         --scanb detailed_report/figures/summary_scanb70_chosen.csv \
         --breastmnist detailed_report/figures/summary_breastmnist70_chosen.csv \
         --aircraft detailed_report/figures/summary_aircraft70_chosen.csv
@@ -53,7 +55,9 @@ def per_method(path):
     """Mean over the tasks of one dataset, per method."""
     table = pd.read_csv(path)
     table['method'] = table.selector.map(name)
-    return table.groupby('method')[['roc_auc', 'selection_time_s', 'stability']].mean()
+    table['roc_auc_iqr'] = table.roc_auc_q3 - table.roc_auc_q1
+    return table.groupby('method')[
+        ['roc_auc', 'roc_auc_iqr', 'selection_time_s', 'stability']].mean()
 
 
 def main():
@@ -67,12 +71,17 @@ def main():
     args = parser.parse_args()
 
     scanb = per_method(args.scanb)
+    breastmnist = per_method(args.breastmnist)
+    aircraft = per_method(args.aircraft)
     table = pd.DataFrame({
         'SCAN-B AUC': scanb.roc_auc,
-        'BreastMNIST AUC': per_method(args.breastmnist).roc_auc,
-        'FGVC-Aircraft AUC': per_method(args.aircraft).roc_auc,
+        'BreastMNIST AUC': breastmnist.roc_auc,
+        'FGVC-Aircraft AUC': aircraft.roc_auc,
         'SCAN-B selection, s per fit': scanb.selection_time_s,
         'SCAN-B stability': scanb.stability,
+        'SCAN-B AUC IQR': scanb.roc_auc_iqr,
+        'BreastMNIST AUC IQR': breastmnist.roc_auc_iqr,
+        'FGVC-Aircraft AUC IQR': aircraft.roc_auc_iqr,
     }).sort_values('SCAN-B AUC', ascending=False)
     # All features selects nothing: no selection time, no stability.
     table.loc[NAMES['all features'], 'SCAN-B selection, s per fit'] = None
@@ -80,7 +89,7 @@ def main():
     args.out.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(args.out.with_suffix('.csv'))
 
-    shown = table.copy()
+    shown = table.drop(columns=[c for c in table if c.endswith('IQR')])
     for column in shown:
         digits = 2 if 'stability' in column else 3
         if 'per fit' in column:

@@ -78,7 +78,9 @@ question: **which methods give the best quality for their time?**
 
 Comparative studies on gene expression found that simple classifiers did
 as well as complex ones (Dudoit et al. 2002), or that multiclass SVMs
-were the most accurate (Statnikov et al. 2005). Most of their datasets
+were the most accurate (Statnikov et al. 2005). Two reviews survey the
+selection methods used in bioinformatics (Saeys et al. 2007) and on
+microarray data (Bolón-Canedo et al. 2014). Most of their datasets
 had tens to a few hundred samples. Four known pitfalls
 shape our protocol (Table 1):
 
@@ -111,8 +113,9 @@ shape our protocol (Table 1):
 
 This report keeps the main claims and their evidence. A detailed report
 in the repository holds every task, every `k`, every test and every
-design decision. A reference such as "D 7.2" points to its section 7.2
-([`detailed_report/`](../detailed_report/README.md)).
+design decision. A reference such as "D 7.2" points to its section 7.2,
+in the folder `detailed_report/` of the public repository
+[github.com/drormeir/featsel](https://github.com/drormeir/featsel).
 
 ## 2. Data
 
@@ -233,9 +236,15 @@ understate the real variation (Bengio and Grandvalet 2004). Each of our
 splits draws a fresh stratified training set. On SCAN-B one split serves
 all five tasks, so they are scored on the same patients.
 
-**Why 16 splits.** Random splits still overlap, so the corrected test of
-Nadeau and Bengio (2003) multiplies the variance by 1/J + n_test/n_train
-for J splits. The second term does not shrink with J. From 5 to 16 splits,
+**Why 16 splits.** Random splits still overlap, so we use the corrected
+resampled t-test of Nadeau and Bengio (2003). Let d be the mean of the
+differences in test AUC between two methods over J splits, and s² their
+sample variance. Then
+
+t = d / √((1/J + n~test~/n~train~) s²), with J − 1 degrees of freedom.
+
+The plain paired t-test has 1/J alone. The second term does not shrink
+with J. From 5 to 16 splits,
 the 95% interval narrows by about a third; beyond 16 it can narrow by at
 most 14% more. A difference not established at 16 splits needs more
 samples, not more splits.
@@ -260,7 +269,11 @@ Berk-Jones choose their own count.
 **Stability.** A method can score well and pick different features on
 each split; its list is then an accident of the split. Nogueira's measure
 (Nogueira et al. 2018) is 1 for identical sets and 0 for chance overlap,
-and allows sets of different sizes.
+and allows sets of different sizes. Over M splits, let p~f~ be the share
+of splits that keep feature f, k the mean number of features kept, and N
+the number of features:
+
+Φ = 1 − [(1/N) Σ~f~ M/(M − 1) p~f~(1 − p~f~)] / [(k/N)(1 − k/N)].
 
 ## 4. Methods
 
@@ -298,20 +311,32 @@ not tests. Many genes have p-values below 10⁻³⁰⁸, where a 64-bit float
 rounds to zero. We compute the logarithm of the p-value directly, so
 Higher Criticism can still tell them apart (D 4.3).
 
-**Higher Criticism.** Sort the N p-values. If no feature carried signal,
-the i-th smallest would sit near its mean, i/(N + 1) (Moscovich et al.
-2016). Higher Criticism measures, at each i, how far the sorted p-values
-fall below that line, in standard deviations, and keeps every feature up
-to the largest gap (Donoho and Jin 2004, 2008). HC2004 is the 2004
-paper's form. HC2008 is the 2008 paper's form with one change: it centres
-the i-th p-value at i/(N + 1), not i/N. Both search the smallest 10% of
+**Higher Criticism.** Sort the N p-values, p~(1)~ ≤ … ≤ p~(N)~. If no
+feature carried signal, p~(i)~ would sit near its mean, i/(N + 1)
+(Moscovich et al. 2016). Higher Criticism measures, at each i, how far
+p~(i)~ falls below that line, in standard deviations, and keeps every
+feature up to the largest gap (Donoho and Jin 2004, 2008). HC2004 is the
+2004 paper's form:
+
+HC(i) = √N (i/N − p~(i)~) / √(p~(i)~ (1 − p~(i)~)).
+
+HC2008 is the 2008 paper's form with one change: with μ~i~ = i/(N + 1)
+in place of i/N,
+
+HC(i) = √N (μ~i~ − p~(i)~) / √(μ~i~ (1 − μ~i~)).
+
+Both search the smallest 10% of
 p-values, the example value of the 2008 paper. We kept this limit, though the signal here is widespread: widening it to fit
 the data would tune the method to the answer.
 
 **Berk-Jones.** Under the null, the i-th smallest of N uniform p-values
 follows a Beta(i, N − i + 1) distribution. Berk-Jones scores each rank by
-the chance of a p-value at least this small at that rank, and keeps the
-features up to the rank where that chance is smallest (Berk and Jones
+the chance of a p-value at least this small at that rank,
+
+BJ(i) = P(Beta(i, N − i + 1) ≤ p~(i)~),
+
+and keeps the features up to the rank, in the same smallest 10%, where
+that chance is smallest (Berk and Jones
 1979; Moscovich et al. 2016). The papers use it as a test of whether any
 signal exists; using its minimum as a threshold is our step, and its
 guarantees are not proved.
@@ -352,8 +377,10 @@ workers when one dies, writes each row as it finishes, and resumes a
 stopped run. Every seed is fixed, so a rerun gives the same features and
 scores, for any number of workers.
 
-**Faster than plain scikit-learn (task 3).** The same small grid ran on
-SCAN-B with scikit-learn's `cross_validate` and with the runner. The
+**Faster than plain scikit-learn (task 3).** One small grid ran with
+scikit-learn's `cross_validate` and with the runner: SCAN-B's Basal task
+on 3,000 random genes, 5 splits, and Lasso and RFE at three values of
+`k`. The
 runner was 3.2 times faster on one core and 5.3 times on 12 threads, with
 identical test scores (`results/speed_benchmark.csv`). It does less work:
 it prepares each split once and ranks once per split. This measurement
@@ -446,7 +473,11 @@ better one.
 values are means over its five tasks; the time is the mean of each task's
 median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
 as the second step of a chain; every other method ran on the GPU. "—":
-not run on that dataset. Source: `final_report/figures/table1.csv`.*
+not run on that dataset. Over the 16 splits, the interquartile range of a
+method's AUC is 0.006 to 0.010 on a SCAN-B task (HC2004 0.018, RFECV
+scored by accuracy 0.044) and 0.018 to 0.038 on the image data. The tests
+are paired, so a smaller difference can still be established. Source:
+`final_report/figures/table5.csv`.*
 
 | Method | SCAN-B AUC | BreastMNIST AUC | FGVC-Aircraft AUC | SCAN-B selection, s per fit | SCAN-B stability |
 |---|---|---|---|---|---|
@@ -658,6 +689,11 @@ dominate the Kolmogorov statistics. *Zeitschrift für
 Wahrscheinlichkeitstheorie und verwandte Gebiete* 47, 47-59.
 https://doi.org/10.1007/BF00533250
 
+Bolón-Canedo, V., Sánchez-Maroño, N., Alonso-Betanzos, A., et al. (2014). A
+review of microarray datasets and applied feature selection methods.
+*Information Sciences* 282, 111-135.
+https://doi.org/10.1016/j.ins.2014.05.042
+
 Brueffer, C., Vallon-Christersson, J., Grabau, D., et al. (2018). Clinical
 value of RNA sequencing-based classifiers for prediction of the five
 conventional breast cancer biomarkers. *JCO Precision Oncology* 2, 1-18.
@@ -729,6 +765,10 @@ Oncology* 27(8), 1160-1167. https://doi.org/10.1200/JCO.2008.18.1370
 Pawłowska, A., Karwat, P. and Żołek, N. (2023). Letter to the Editor. Re:
 "Dataset of breast ultrasound images". *Data in Brief* 48, 109247.
 https://doi.org/10.1016/j.dib.2023.109247
+
+Saeys, Y., Inza, I. and Larrañaga, P. (2007). A review of feature selection
+techniques in bioinformatics. *Bioinformatics* 23(19), 2507-2517.
+https://doi.org/10.1093/bioinformatics/btm344
 
 Statnikov, A., Aliferis, C. F., Tsamardinos, I., et al. (2005). A
 comprehensive evaluation of multicategory classification methods for
