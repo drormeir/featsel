@@ -299,9 +299,9 @@ filter (D 4.2).
 | Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
 | Tree importance | embedded | Rank by a random forest's impurity importance. |
 | RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step. |
-| RFECV | wrapper | RFE, with the count chosen by inner cross-validation. |
-| Sequential | wrapper | Add the feature that most improves cross-validated accuracy; repeat. Run at `k` = 5 and 10 only. |
-| Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. |
+| RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
+| Sequential | wrapper | Add the feature that most improves cross-validated accuracy; repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
+| Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`, and the filter first helps it (section 6.6). |
 
 **Why the U test.** The F-test compares class means and assumes normal
 values. Gene values are not normal, and only their order is meaningful
@@ -313,6 +313,11 @@ runs a test uses the U test, so the experiments compare selection rules,
 not tests. Many genes have p-values below 10⁻³⁰⁸, where a 64-bit float
 rounds to zero. We compute the logarithm of the p-value directly, so
 Higher Criticism can still tell them apart (D 4.3).
+
+**Why Higher Criticism and Berk-Jones.** Most filters need `k` from the
+user, and choosing `k` on validation sets costs more than the selection
+itself (section 6.8). Higher Criticism and Berk-Jones choose their own
+count from the p-values of all the features, so they skip that search.
 
 **Higher Criticism.** Sort the N p-values, p~(1)~ ≤ … ≤ p~(N)~. If no
 feature carried signal, p~(i)~ would sit near its mean, i/(N + 1)
