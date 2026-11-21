@@ -6,16 +6,16 @@
 thousands of genes, but a study has only hundreds or a few thousand
 patients. A classifier trained on all the genes is slow and can learn
 noise. Feature selection keeps a small set of features that still
-predicts well. Many methods exist. It is not clear which one to use for a
-given number of features, or how much better it is than random features.
+predicts well. It is not clear which of the many methods to use for a
+given number of features, or how much it beats random ones.
 
 **What we built.** `featsel`, a Python package of 16 selection methods
 that drop into scikit-learn pipelines, and a runner that compares them
 under one protocol from one configuration file: 16 random splits,
 selection inside each split, the number of features chosen on validation
 sets, a random control at every number of features, and paired tests
-corrected for the overlap between splits. GPU paths make the slow methods
-faster; exact solvers make them repeatable.
+corrected for overlapping splits. GPU paths speed up the slow methods;
+exact solvers make them repeatable.
 
 **Data.** Breast cancer gene expression (SCAN-B: 2,976 patients, 28,541
 genes, five PAM50 subtype tasks), ResNet-50 embeddings of breast
@@ -54,8 +54,8 @@ for four reasons. With more features than samples, a linear classifier can
 separate any labelling of the training set, even a random one. If no gene
 were related to the label, testing 28,541 genes at the 5% level would
 still flag about 1,400 by chance. Genes work in groups, so many different
-gene sets predict equally well. And methods that train a classifier for
-each candidate feature can take hours.
+gene sets predict equally well. And methods that train a classifier per
+candidate feature can take hours.
 
 Feature selection gives the classifier only the features that carry
 information about the label. The model can then predict better, cost
@@ -111,7 +111,7 @@ shape our protocol (Table 1):
    RFECV and Lasso reach the exact solution that scikit-learn's
    default solver stops short of (sections 4, 5).
 5. **Checks of the data that change its use**: repeated patients and a
-   computed label in SCAN-B, and copied images in BreastMNIST (sections
+   computed label in SCAN-B, copied images in BreastMNIST (sections
    2.1, 2.2).
 
 This report keeps the main claims and their evidence. A detailed report
@@ -175,8 +175,8 @@ against 2,776 patients), a model that always answers "rest" is right 93%
 of the time, so plain accuracy is not the main score (section 3).
 
 **The signal.** Genes work in groups, so many genes can carry the same
-signal, and different gene sets can predict equally well. Sections 6.1,
-6.3, 6.4 and 6.5 show the effects.
+signal, and different gene sets can predict equally well (sections 6.1,
+6.3 to 6.5).
 
 ### 2.2 BreastMNIST
 
@@ -187,7 +187,7 @@ et al. 2024). Each image goes through ResNet-50
 result is 2,048 numbers per image: more features than images. The signal
 is again widespread: 27% to 35% of the features pass the U test (section
 4) at a 5% false discovery rate: the expected share of false features
-among those that pass is at most 5%. Unlike genes, pairs of features are only weakly
+among those that pass is at most 5%. Unlike genes, features are only weakly
 correlated (median absolute correlation 0.056).
 
 **Copied images.** A published letter found copies in the source images
@@ -209,7 +209,7 @@ and all the features reached only 0.742 AUC (the score of section 3); V1 gave 0.
 (`results/aircraft_weights.csv`). As on BreastMNIST, the signal is
 widespread: 25% to 31% of the features pass the U test at a 5% false
 discovery rate (D 2.3). The photos are for non-commercial
-research only and are not stored in the repository.
+research only, so the repository holds none.
 
 ## 3. Protocol
 
@@ -237,8 +237,8 @@ the classifier, all on the training set. The test set reaches none of
 these choices; a method's result is its test score at the chosen `k` (D 3.1).
 Selecting features on all the data first is a known error (Ambroise and
 McLachlan 2002): the test samples then help choose the features. On
-BreastMNIST with shuffled labels, where nothing can be learned, the error
-raises the median AUC over 20 splits from 0.465 to 0.645 (D 3.2).
+BreastMNIST with shuffled labels, where nothing can be learned, it raises
+the median AUC over 20 splits from 0.465 to 0.645 (D 3.2).
 
 **Random splits, not k-fold.** In 5-fold cross-validation, any two
 training sets share three quarters of their samples, so the five scores
@@ -258,13 +258,13 @@ The plain paired t-test has 1/J alone. The second term does not shrink
 with J. From 5 to 16 splits,
 the 95% interval narrows by about a third; beyond 16 it can narrow by at
 most 14% more. A difference not established at 16 splits needs more
-samples, not more splits.
+samples.
 
 **The random control.** At every `k`, a selector that picks `k` features
 at random gets the same splits and classifier as every method. A method
 has value at `k` only if it beats random features at that `k`. Small
 random subsets have matched selected ones on many high-dimensional
-datasets (Neekhra et al. 2025), so the control is needed.
+datasets (Neekhra et al. 2025).
 
 **ROC AUC.** The tasks are imbalanced, and AUC needs no decision
 threshold. Macro-F1 and balanced accuracy were also recorded; they give
@@ -302,7 +302,7 @@ filter (D 4.2).
 | Random | control | Pick `k` features at random. |
 | Mann-Whitney | filter | Rank features by the U test (below). |
 | Correlation | filter | Rank by Spearman correlation with the label; drop one of each highly correlated pair. |
-| Mutual information | filter | Rank by mutual information, which catches any dependence. |
+| Mutual information | filter | Rank by mutual information, which sees any dependence. |
 | HC2004, HC2008 | filter, own count | Keep the features below the Higher Criticism threshold. |
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
 | Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
@@ -310,7 +310,7 @@ filter (D 4.2).
 | RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step. |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy; repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
-| Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`, and the filter first helps it. The first count is fixed, not tuned (section 6.6). |
+| Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`; the filter helps it. The first count is fixed (section 6.6). |
 
 **Why the U test.** The F-test compares class means and assumes normal
 values. Gene values are not normal, and only their order is meaningful
@@ -320,8 +320,8 @@ used alone (Hanley and McNeil 1982), so ranking by the U test ranks
 features by how well each alone separates the classes. Every filter of
 Table 4 that runs a test uses the U test, so the experiments compare selection rules,
 not tests. Many genes have p-values below 10⁻³⁰⁸, where a 64-bit float
-rounds to zero. We compute the logarithm of the p-value directly, so
-Higher Criticism can still tell them apart (D 4.3).
+rounds to zero. We compute the p-value's logarithm directly, so Higher
+Criticism can still tell them apart (D 4.3).
 
 **Why Higher Criticism and Berk-Jones.** Most filters need `k` from the
 user, and choosing `k` on validation sets costs more than the selection
@@ -378,8 +378,8 @@ simulated rare signal.
 2. **A config-driven runner.** One YAML file names the dataset, the
    selectors, the values of `k` and the classifier. One command runs the
    whole protocol of section 3 (Appendix A) and writes one CSV row per
-   task, split, method and `k`, with a JSON record of the machine,
-   the library versions and the git commit.
+   task, split, method and `k`, and a JSON record of machine, versions
+   and commit.
 
 ```python
 pipe = make_pipeline(StandardScaler(),
@@ -440,8 +440,8 @@ with 4 threads per fit in the experiments.
 Every result follows the protocol of section 3: 16 splits, 70% of the
 samples in the training set, `k` chosen on validation sets, and ROC AUC on
 the test set, as a mean over the splits. A difference is established
-when the corrected test gives p < 0.05. The detailed report
-gives every task, every `k` and every test (D 7, D 8, D C).
+when the corrected test gives p < 0.05. D 7, D 8 and D C give
+every task, every `k` and every test.
 
 ### 6.1 Selection against random features
 
@@ -460,8 +460,8 @@ The reason is in the data: thousands of genes carry the signal, and they
 move together (section 2). A large random set holds enough of them.
 
 RFE alone is the exception at small `k` on SCAN-B. At 10 genes it scored
-below random genes on LumA and Normal, though neither loss is
-established (p = 0.30 and 0.06).
+below random on LumA and Normal, neither loss established (p = 0.30
+and 0.06).
 
 ![Figure 1](figures/curves.png)
 
@@ -485,8 +485,7 @@ four tasks no gain is established. HC2004 loses on four tasks and RFECV
 scored by accuracy on three. Lasso and two chains lose on one task each.
 The other filters and tree importance show no established loss (D 7.3).
 
-So on these datasets, selection buys a smaller model more often than a
-better one.
+So here, selection buys a smaller model more often than a better one.
 
 ### 6.3 No single best method
 
@@ -506,8 +505,8 @@ at the features together, and that pays only once many are kept.
 Stability separates methods that AUC does not. Tree importance reaches
 the same mean AUC as Mann-Whitney on SCAN-B, 0.969, but its stability is
 0.27 against 0.76: it picks a different gene set on each split. So many
-different gene sets predict equally well, and a gene list from one split
-is not a finding by itself.
+different gene sets predict equally well, and one split's gene list is
+not a finding by itself.
 
 *Table 5. Each method at the `k` it chose on validation sets: test AUC on
 each dataset, then SCAN-B's selection time and stability. SCAN-B
@@ -515,10 +514,9 @@ values are means over its five tasks; the time is the mean of each task's
 median time per fit. On SCAN-B, tree importance, RFE and RFECV ran on
 the CPU, also as the second step of a chain; every other method ran on
 the GPU. On the
-CPU alone, on synthetic data shaped like SCAN-B, the U-test methods
-(Mann-Whitney, HC, Berk-Jones) take 3.8 to 3.9 s per fit, correlation
-6.9 s, Lasso 25 s at one penalty, and mutual information 18 s on 10,000 of the
-features (D 6.2). Over
+CPU, on SCAN-B-shaped synthetic data, a fit takes 3.8 to 3.9 s for the U-test
+methods, 6.9 s for correlation, 25 s for Lasso at one penalty and 18 s
+for mutual information at 10,000 features (D 6.2). Over
 the 16 splits, the interquartile range of a method's AUC is 0.006 to
 0.010 on SCAN-B, as a mean over its tasks (HC2004 0.018, RFECV scored by accuracy 0.044)
 and 0.017 to 0.069 on the image data. The tests are paired, so a smaller
@@ -549,23 +547,22 @@ HC2008 kept 2,854 or 2,855 genes on every split and task of SCAN-B. That
 is the edge of its search: 10% of 28,541 genes. On both image datasets it
 kept 204 features, again the edge. Berk-Jones stopped at or just before
 the same edge (D 7.5, 8.5, 8.9). These thresholds were built for rare signal.
-Here the signal is widespread, so they find no point where it ends, and
-they act as a top-10% filter.
+Here the signal is widespread, so they find no end to it and act as a
+top-10% filter.
 
 As such a filter, HC2008 is good on SCAN-B: 0.970 mean AUC, 0.001 below
 the best, with the highest stability (0.92) and no `k` to choose. On
 BreastMNIST, 204 features are too few: HC2008 loses 0.056 AUC to all
 features (p < 0.001). HC2004 keeps one to three features. It is the
-weakest method on both image datasets, and on SCAN-B only RFECV scored
-by accuracy is weaker.
+weakest on both image datasets; on SCAN-B only RFECV by accuracy is
+weaker.
 
 **Simulated rare signal** (D 8.11): 10,000 independent normal features, 40
 of them moved by 0.4 standard deviations in the positive class. HC2008
 kept a median of 33.5 features and had the best mean AUC, 0.858. Mann-Whitney
 with a validated `k` reached 0.843; the difference is not established
-(p = 0.62). Berk-Jones (0.813, 12 features) and an FDR filter, run only
-here (the features that pass the F-test at a 5% false discovery rate,
-section 2.2), were stricter, and
+(p = 0.62). Berk-Jones (0.813, 12 features) and an F-test filter at a
+5% false discovery rate, run only here (section 2.2), were stricter;
 HC2004 kept 1 to 9 (median 1.5). All features gave 0.629.
 
 ### 6.5 Does selection find the PAM50 genes?
@@ -580,8 +577,7 @@ would need rank 14,271.
 Yet at 50 genes, Mann-Whitney and tree importance predict the subtypes
 well (Figure 1). A likely reason is that genes which move with the PAM50
 genes carry the same signal. So a low share of PAM50 genes is not poor
-selection. It shows again that a
-gene list is one of many equally good answers. Mann-Whitney's lead here is
+selection. Mann-Whitney's lead here is
 partly built in: Parker et al. (2009) chose the 50 genes by ranking each
 gene alone, by a t-test for each subtype.
 
@@ -590,8 +586,8 @@ gene alone, by a t-test for each subtype.
 RFECV chooses its count by an inner cross-validation. With its default
 inner score, accuracy, it kept a single gene on every split of Her2, LumB
 and Normal, and scored 0.51 to 0.58 AUC. These tasks are imbalanced, and
-accuracy rewards predicting the larger class. Scored by AUC, RFECV reached
-0.962 mean AUC (D 7.8).
+accuracy rewards the larger class. Scored by AUC, RFECV reached 0.962
+(D 7.8).
 
 RFE alone is weak at 10 genes on SCAN-B: 0.78 mean AUC. A Mann-Whitney
 filter first, keeping 1,000 genes, raised it to 0.95, the best of all
@@ -617,8 +613,7 @@ fall from 0.924 to 0.895 AUC, and every method but HC2004 by 0.016 to
 0.042; HC2004 rises by 0.013. The
 leading methods change places within 0.009 AUC. RFE still ties all
 features, and the chains, HC2008, Berk-Jones and HC2004 still lose to
-them (D 8.8). So the copies inflate the scores but do not change the
-conclusions.
+them (D 8.8). So the copies inflate the scores, not the conclusions.
 
 ### 6.8 Cost
 
@@ -626,14 +621,13 @@ The cheap end of Figure 2 wins. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
 importance takes 17 s for 0.969 (Table 5). On the image data, every method
-except Sequential selection runs in about a second per fit or less (tree
-importance 1.1 s on FGVC-Aircraft), so cost does not decide the choice
-there.
+except Sequential selection runs in about a second per fit or less, so
+cost does not decide the choice there.
 
 Choosing `k` costs more than selecting. For Mann-Whitney on SCAN-B, the
 search on 5 validation sets takes about 28 s per split, against 0.67 s for
-one fit (D 7.11). A method
-that chooses its own count, such as HC2008, skips this search.
+one fit (D 7.11). A method that picks its own count, as HC2008 does,
+skips it.
 
 ![Figure 2](figures/frontier.png)
 
@@ -650,10 +644,8 @@ For a budget of `k` features, which method gives the best classifier, and
 by how much over random? At small `k`, the answer depends on the dataset.
 At 10 genes on SCAN-B, Mann-Whitney then RFE is best on four tasks of
 five, and the filters and tree importance beat random genes by 0.12 to
-0.19 AUC. At 10
-features on the image data, the filters and tree importance, alone or
-chained, lead, by 0.10
-to 0.16 over random. At the `k` each method chose, the top methods cannot
+0.19 AUC. On the image data they lead at 10 features, alone or chained,
+by 0.10 to 0.16. At the `k` each method chose, the top methods cannot
 be told apart. If time also counts, a GPU filter is the practical choice:
 on SCAN-B, HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under
 a second per fit, 0.001 to 0.002 below the best.
@@ -667,8 +659,7 @@ with both inner scores, AUC did better than accuracy. What changes is the best m
 large `k`, RFE leads on both image datasets but trails the filters on
 SCAN-B (Figure 1). Whether selection beats all features also changes: never on the
 image data, on one SCAN-B task of five. So the best method for a budget
-cannot be known in advance from these datasets. What can be known is a
-safe default.
+cannot be known in advance from these datasets; a safe default can.
 
 ### 7.3 Key decisions
 
@@ -695,11 +686,10 @@ safe default.
   copied images; a run without them gives the same conclusions (section
   6.7).
 - **Protocol.** One classifier in the main runs, logistic regression with
-  C fixed at 1. A side study with older settings (12 splits, half the
-  patients in the training set, macro-F1) added a linear SVM, a random
-  forest, k-nearest neighbours and shrinkage LDA. With each of the five,
-  Mann-Whitney beat random genes at 10 genes by 0.20 to 0.23 macro-F1, on
-  every SCAN-B task and split (D 7.7). One training fraction and 16 splits; the spread over splits is not a
+  C fixed at 1. In a side study with four more classifiers and older
+  settings (12 splits, 50% training, macro-F1), Mann-Whitney beat random
+  genes at 10 genes with each of the five, by 0.20 to 0.23, on every
+  SCAN-B task and split (D 7.7). One training fraction and 16 splits; the spread over splits is not a
   confidence interval for new patients. The five SCAN-B tasks share
   patients, so they are not independent. Each selector's own settings are
   fixed, except Lasso's penalty; so is a chain's first count (section
@@ -720,18 +710,16 @@ safe default.
 - **An exact test for floor-heavy genes.** A test that separates how often
   a gene is detected from how high it is when detected would fit these
   data better than the U test, which merges both (D B.4).
-- **How often does a random set beat a chosen one?** For a set of `k`
-  genes chosen by a method, the share of random size-`k` sets that predict
-  at least as well on the same split is an empirical p-value for the
-  chosen set. It would test a published gene signature against chance
-  signatures of its size.
+- **How often does a random set beat a chosen one?** The share of
+  random size-`k` sets that predict at least as well on the same split is
+  an empirical p-value for a chosen set, or for a published signature.
 - **Stable selection.** Many methods pick different but equivalent genes
   on each split. Selecting groups of correlated genes, or keeping the
   genes chosen most often over repeated subsamples, could give stable
   lists.
 - **A measured target**, such as the pathologist's estrogen receptor
-  status, would test the conclusions against clinical truth. The loader
-  already supports it.
+  status, would test the conclusions against clinical truth; the loader
+  supports it.
 
 ## References
 
@@ -849,33 +837,24 @@ https://doi.org/10.5281/zenodo.10519652
 
 ## Appendix A. How to reproduce
 
-Every command runs from the repository root. Setup, with PyTorch for the
-GPU paths and the image embeddings:
+From the repository root: setup, with PyTorch for the GPU paths and the
+image embeddings, then one experiment. Each loader downloads its data on
+first use and caches it: GSE96058 (592 MB), BreastMNIST (31 MB),
+FGVC-Aircraft (2.75 GB).
 
 ```bash
 python3.13 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/pip install -e ".[gpu,embeddings]"
-```
-
-Each loader downloads its data on first use and caches it: GSE96058
-(592 MB), BreastMNIST (31 MB), FGVC-Aircraft (2.75 GB). An experiment is
-one command:
-
-```bash
 .venv/bin/python -m featsel.run \
     --config configs/frontier_scanb70_gpu.yaml --n-jobs 1
 ```
 
-The configs behind section 6 are `configs/frontier_scanb70_*.yaml`,
-`configs/frontier_breastmnist70_*.yaml`, `configs/aircraft70_gpu.yaml`, `configs/rare_signal70.yaml`
-and, for the chains' first count, `configs/chain_size_*.yaml`.
-Adding `--resume` continues a stopped run. Each run writes a CSV, and a
-JSON file with the machine, the library versions and the git commit. D A
-gives the command behind every summary table. This report's figures and
-Table 5 come from three scripts, each with its exact command in its
-docstring: `scripts/plot_final_frontier.py`, `scripts/plot_curves.py` and
-`scripts/final_table.py`.
+`--resume` continues a stopped run. Each run writes a CSV, and a JSON
+file with the machine, library versions and git commit. D A lists every
+config and the command behind every table. This report's figures and
+Table 5 come from `scripts/plot_final_frontier.py`, `plot_curves.py` and
+`final_table.py`, each with its command in its docstring.
 
 One seed, 42, fixes every random step; split `s` uses 42 + `s`. A rerun
 gives the same features and scores, for any number of workers. The tests
@@ -885,34 +864,19 @@ tests passed in 23 minutes (`results/test_run.md`).
 
 ## Appendix B. Engineering notes
 
-**Where a selector runs.** Ten selectors share one device rule. With
-`device='auto'`, the default, a fit uses the GPU when one is free and
-falls back to the CPU otherwise, so a parallel run never waits. With
-`'cuda'` it waits for the GPU; with `'cpu'` it never uses it. A file lock
-lets one fit at a time hold the GPU. The experiments set `'cuda'`, so
-every GPU time was taken on the GPU. Each result records the device it
-used.
+**Where a selector runs.** Ten selectors share one device rule:
+`'auto'`, the default, uses the GPU when it is free and else the CPU;
+`'cuda'` waits for the GPU; `'cpu'` never uses it. A file lock gives the
+GPU to one fit at a time. The experiments set `'cuda'`, and each result
+records its device.
 
-**The U test on a GPU.** One sort per gene gives its ranks and its groups
-of tied values. On the GPU, PyTorch sorts thousands of genes at once and
-sums the ranks exactly in 64-bit floats. The p-value is finished on the
-CPU, so every device gives identical results.
-
-**Mutual information, bit for bit.** scikit-learn estimates it from
-nearest neighbours with a tree. For one feature, a sort per class finds
-the k-th neighbour, and a binary search counts the points within its
-radius. With scikit-learn's own random noise and order of sums, the
-scores are identical to scikit-learn's.
+**Identical scores on any device.** For the U test, one sort per gene
+gives its ranks and ties; PyTorch sorts thousands of genes at once and sums
+the ranks exactly in 64 bits, and the p-value is finished on the CPU. For
+mutual information, a sort per class replaces scikit-learn's
+nearest-neighbour tree, with its own random noise and order of sums.
 
 **Lasso's solver.** PPDNA (Liu and Zhou 2023), a semismooth Newton method,
-needed five changes from the paper on SCAN-B-shaped data (D D.3):
-
-1. the intercept is penalized, as liblinear penalizes it;
-2. the proximal step grows five-fold per outer step, up to a limit set by
-   rounding;
-3. the Newton matrix is factored in 32-bit floats, where the GPU is fast,
-   and the solution is refined in 64 bits;
-4. the inner loop also stops when full Newton steps no longer shrink the
-   gradient;
-5. the outer loop also stops when three outer steps fail to halve the best
-   residual.
+needed five changes from the paper on SCAN-B-shaped data, among them a
+penalized intercept, as in liblinear, and a Newton matrix factored in
+32 bits and refined in 64 (D D.3).
