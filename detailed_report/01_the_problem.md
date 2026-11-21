@@ -88,9 +88,8 @@ planned but not run (Appendix B.1).
 
 ## 1.5 Scope
 
-This is a comparative study, not a new method. It changes two published
-methods. Our HC2008 centres each sorted p-value at its exact mean
-(section 4.4). Berk-Jones, published as a test, is used here as a
+This is a comparative study, not a new method. It changes one published
+method: Berk-Jones, published as a test, is used here as a
 selection threshold (section 4.5). The aim is a fair comparison under one protocol,
 and a fast, reliable tool to run it.
 

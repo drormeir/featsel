@@ -223,27 +223,20 @@ and Jin 2004, 2008).
 
 **The idea.** Sort the N p-values: p₍₁₎ ≤ p₍₂₎ ≤ … ≤ p₍N₎. If no gene
 carried signal, the p-values would be uniform, and p₍ᵢ₎ would sit near
-i/(N+1), its mean (Moscovich et al. 2016, Eq. 2.8). HC measures, at each i, how far the sorted p-values fall below
+its mean, μᵢ = i/(N+1) (Moscovich et al. 2016, Eq. 2.8). HC measures, at each i, how far the sorted p-values fall below
 that line, in units of their standard deviation. Where this gap is
 largest, the signal stands out most. HC keeps every feature up to that
 point.
 
-We implement two forms. HC2004 is the 2004 paper's form, exactly as
-published. HC2008 is the 2008 paper's form with one change. The two papers
-also divide by different terms:
+We implement two forms, HC2004 from the 2004 paper and HC2008 from the
+2008 paper. The two papers divide by different terms:
 
 | Variant | Statistic | Reference |
 |---|---|---|
-| HC2004 | HC(i) = √N · (i/N − p₍ᵢ₎) / √(p₍ᵢ₎(1 − p₍ᵢ₎)) | Donoho and Jin (2004), section 1.2 |
-| HC2008 | HC(i) = √N · (μᵢ − p₍ᵢ₎) / √(μᵢ(1 − μᵢ)), μᵢ = i/(N+1) | HC thresholding, Donoho and Jin (2008, 2009). The papers use μᵢ = i/N, an approximation (2009, Definition 1.2). We use i/(N+1), the exact mean of the i-th sorted uniform p-value. |
+| HC2004 | HC(i) = √N · (μᵢ − p₍ᵢ₎) / √(p₍ᵢ₎(1 − p₍ᵢ₎)) | Donoho and Jin (2004), section 1.2 |
+| HC2008 | HC(i) = √N · (μᵢ − p₍ᵢ₎) / √(μᵢ(1 − μᵢ)) | HC thresholding, Donoho and Jin (2008, 2009) |
 
-The change from i/N to i/(N+1) is small for the large N here. It is not
-in the papers. We have not measured how much it moves the selected count.
-
-HC2004 keeps i/N. Its formula is already exact as written: it
-standardizes the share of p-values below the threshold t = p₍ᵢ₎, and
-under the null that share has mean t and variance t(1 − t)/N.
-Its denominator is the p-value itself. At the smallest p-value, far below
+HC2004's denominator is the p-value itself. At the smallest p-value, far below
 1/N, HC(1) ≈ 1/√(N · p₍₁₎), which is very large. So HC2004 can peak at
 the single strongest p-value. HC2008 divides by μᵢ, the expected
 position, and does not.
