@@ -474,7 +474,7 @@ On the image data, no method beats all 2,048 features. RFE ties them:
 −0.001 AUC on BreastMNIST (p = 0.85) and −0.0003 on FGVC-Aircraft
 (p = 0.92). On both, Lasso, correlation, the three chains, HC2008,
 Berk-Jones and HC2004 lose to all
-features (D 8.3, 8.9).
+features (D 8.3, 8.7, 8.9).
 
 On SCAN-B, 20 of the 70 comparisons with all 28,541 genes are
 established: 10 gains and 10 losses. All 10 gains are on one task, LumB:
@@ -497,7 +497,8 @@ on both datasets.
 The best method also changes with `k`. On BreastMNIST, Mann-Whitney beats
 RFE by 0.066 at 10 features (p = 0.04), and RFE beats Mann-Whitney at 250
 and 500 features (p = 0.049 and 0.006); at 1,000 they tie (p = 0.39).
-FGVC-Aircraft shows the same turn (D 8.2, 8.9). A filter scores each feature alone; RFE looks
+On FGVC-Aircraft only the second half is established: RFE leads at 250
+and 500 (p = 0.047 and 0.041; D 8.9). A filter scores each feature alone; RFE looks
 at the features together, and that pays only once many are kept.
 
 Stability separates methods that AUC does not. Tree importance reaches
@@ -509,14 +510,15 @@ is not a finding by itself.
 *Table 5. Each method at the `k` it chose on validation sets: test AUC on
 each dataset, then SCAN-B's selection time and stability. SCAN-B
 values are means over its five tasks; the time is the mean of each task's
-median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
-as the second step of a chain; every other method ran on the GPU. On the
+median time per fit. On SCAN-B, tree importance, RFE and RFECV ran on
+the CPU, also as the second step of a chain; every other method ran on
+the GPU. On the
 CPU alone, on synthetic data shaped like SCAN-B, the U-test methods
 (Mann-Whitney, HC, Berk-Jones) take 3.8 to 3.9 s per fit, correlation
 6.9 s, Lasso 25 s at one penalty, and mutual information 18 s on 10,000 of the
 features (D 6.2). Over
 the 16 splits, the interquartile range of a method's AUC is 0.006 to
-0.010 on a SCAN-B task (HC2004 0.018, RFECV scored by accuracy 0.044)
+0.010 on SCAN-B, as a mean over its tasks (HC2004 0.018, RFECV scored by accuracy 0.044)
 and 0.017 to 0.069 on the image data. The tests are paired, so a smaller
 difference can still be established. Without copies: section 6.7.
 Source: `final_report/figures/table5.csv`.*
@@ -544,7 +546,7 @@ Source: `final_report/figures/table5.csv`.*
 HC2008 kept 2,854 or 2,855 genes on every split and task of SCAN-B. That
 is the edge of its search: 10% of 28,541 genes. On both image datasets it
 kept 204 features, again the edge. Berk-Jones stopped at or just before
-the same edge (D 7.5, 8.5). These thresholds were built for rare signal.
+the same edge (D 7.5, 8.5, 8.9). These thresholds were built for rare signal.
 Here the signal is widespread, so they find no point where it ends, and
 they act as a top-10% filter.
 
@@ -562,7 +564,7 @@ with a validated `k` reached 0.843; the difference is not established
 (p = 0.62). Berk-Jones (0.813, 12 features) and an FDR filter, run only
 here (the features that pass the F-test at a 5% false discovery rate,
 section 2.2), were stricter, and
-HC2004 kept one or two. All features gave 0.629.
+HC2004 kept 1 to 9 (median 1.5). All features gave 0.629.
 
 ### 6.5 Does selection find the PAM50 genes?
 
@@ -628,7 +630,7 @@ there.
 
 Choosing `k` costs more than selecting. For Mann-Whitney on SCAN-B, the
 search on 5 validation sets takes about 28 s per split, against 0.67 s for
-one fit (D C.1). A method
+one fit (D 7.11). A method
 that chooses its own count, such as HC2008, skips this search.
 
 ![Figure 2](figures/frontier.png)

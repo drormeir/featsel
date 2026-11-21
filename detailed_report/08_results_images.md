@@ -302,7 +302,8 @@ The pattern of BreastMNIST holds:
   0.103 and mutual information by 0.102, on all 16 splits
   ([`figures/paired_tests_aircraft70.csv`](figures/paired_tests_aircraft70.csv)).
 - From `k` = 250, RFE leads the filters (by 0.029 over Mann-Whitney at
-  250, p = 0.047).
+  250, p = 0.047, and by 0.021 at 500, p = 0.041). At `k` = 10,
+  Mann-Whitney leads RFE by 0.021, not established (p = 0.43).
 - Correlation's redundancy filter costs AUC: it kept at most 465 features
   and lost 0.038.
 - HC2008 stops at the edge of its search, and Berk-Jones at or just before
@@ -405,8 +406,8 @@ What the run shows:
   0.864 at `k` = 20 and 0.862 at 40, then falls: 0.810 at 80, 0.695 at
   500. HC2008 finds this region without validation folds.
 - **The thresholds differ in strictness.** Berk-Jones and FDR keep fewer
-  features, with high precision and low recall. HC2004 again keeps one or
-  two. Lasso keeps the most and finds the most, at low precision.
+  features, with high precision and low recall. HC2004 keeps 1 to 9
+  (median 1.5). Lasso keeps the most and finds the most, at low precision.
 - **Here selection is needed.** All features give 0.629: 9,960 null
   features drown the signal. On the three real datasets, all features
   were at most 0.008 below the best method (sections 7.1, 8.1 and 8.9).
