@@ -11,6 +11,8 @@ Section 10.2 lists research beyond its scope.
 
 | Item | Why it matters | Effort |
 |---|---|---|
+| **Tree importance with more trees.** At 200 trees the ranking depends on the forest's seed (section 7.4). | Would show whether the noise costs AUC, and how much of tree importance's low stability it explains. | AUC at 1,000 trees on the main splits: minutes on the image data; on SCAN-B about 5 times the forest's cost, or one fit per split without the `k` search. |
+| **The classifier's C on SCAN-B.** C = 0.01 to 100 changed no AUC on the image data (section 3.8). | SCAN-B, the main dataset, was not tested. | `configs/clf_c_*.yaml` with the SCAN-B dataset. |
 | **Tuned classifier.** C is fixed at 1 (section 3.8). | Absolute AUCs may be a little low. A method that needs a different C is at a disadvantage. | The config supports it. About 21 times the classifier fits: 4 values of C on 5 validation sets, plus a refit. Repeated inside each fold of the `k` search. |
 | **The full SCAN-B grid**: every selector × classifier × `k` × train fraction. | The protocol uses one classifier and one train fraction. | Skipped by decision: too slow for this laptop. |
 | **A measured target on SCAN-B**, such as the pathologist's ER status. | Every SCAN-B task here predicts a computed label. A measured label would test the conclusions against clinical truth. | One config. The loader supports it. |

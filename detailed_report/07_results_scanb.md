@@ -192,6 +192,17 @@ each split. Part of the filters' range comes from `k`: a method whose
 chosen `k` varies between splits is less stable. On Basal, Mann-Whitney's
 `k` ran from 10 to 2,000, and its stability fell to 0.46.
 
+**Part of tree importance's instability is the forest's own randomness.**
+Each split seeds its forest differently (section 3.9). On one training
+set, two forests of 200 trees that differ only in their seed share 12%
+of their top 10 genes and 33% of their top 250 (mean Jaccard index over
+5 tasks and 3 training sets). The overlap grows with the trees, to 34%
+and 61% at 1,000, and is still rising there. On the image data, 200 trees
+share 28% to 52%. So the 200 trees, set by hand (section 4.2), leave the
+ranking noisy. Whether more trees would change tree importance's AUC was
+not tested. Source: [`results/tree_count_stability.csv`](../results/tree_count_stability.csv),
+from [`scripts/tree_count_stability.py`](../scripts/tree_count_stability.py).
+
 ## 7.5 Higher Criticism and Berk-Jones
 
 HC2008 kept 2,854 or 2,855 genes on every split and task. That is the edge

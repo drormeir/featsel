@@ -216,6 +216,15 @@ method gets the same classifier, so the ranking stays fair, but absolute
 scores may be slightly lower than with tuning. Lasso's own C is separate
 and chosen on validation sets (section 3.11).
 
+**What a different C would change, so far.** A side study scored the same
+selections with C = 0.01, 0.1, 10 and 100, on the main splits, for
+Mann-Whitney and all features, each C choosing its own `k`
+(`configs/clf_c_*.yaml`). On BreastMNIST and FGVC-Aircraft no difference
+from C = 1 is established: the largest gain is 0.005 AUC (p = 0.29), and
+C = 100 loses 0.011 to 0.014 on BreastMNIST (p = 0.055 and 0.057). SCAN-B
+was not tested. Tables: `clf_c_breastmnist70.csv` and
+`clf_c_aircraft70.csv` in [`figures/`](figures/).
+
 ## 3.9 Reproducibility
 
 There is one global seed, 42. Split `s` uses seed 42 + `s` for every random

@@ -509,7 +509,9 @@ at the features together, and that pays only once many are kept.
 
 Stability separates methods that AUC does not. Tree importance reaches
 the same mean AUC as Mann-Whitney on SCAN-B, 0.969, but its stability is
-0.27 against 0.76: it picks a different gene set on each split. So many
+0.27 against 0.76: it picks a different gene set on each split. Part of
+this is the forest's own randomness: at 200 trees, two seeds share only
+12% to 33% of their top genes on one training set (D 7.4). So many
 different gene sets predict equally well, and one split's gene list is
 not a finding by itself.
 
@@ -692,14 +694,16 @@ cannot be known in advance from these datasets; a safe default can.
   copied images; a run without them gives the same conclusions (section
   6.7).
 - **Protocol.** One classifier in the main runs, logistic regression with
-  C fixed at 1. In a side study with four more classifiers and older
+  C fixed at 1; C = 0.01 to 100 changed no AUC on the image data, and
+  SCAN-B was not tested (D 3.8). In a side study with four more classifiers and older
   settings (12 splits, 50% training, macro-F1), Mann-Whitney beat random
   genes at 10 genes with each of the five, by 0.20 to 0.23, on every
   SCAN-B task and split (D 7.7). One training fraction and 16 splits; the spread over splits is not a
   confidence interval for new patients. The five SCAN-B tasks share
   patients, so they are not independent. Each selector's own settings are
   fixed, except Lasso's penalty; so is a chain's first count (section
-  6.6). The correlation selector drops a gene
+  6.6). Whether more trees would change tree importance's AUC was not
+  tested (D 7.4). The correlation selector drops a gene
   whose only redundant partner was itself dropped (D 4.2).
 - **Cost.** Every time comes from one laptop: Intel i7-9750H, 16 GB of
   memory, and an NVIDIA GTX 1650 with 4 GB. A time is meaningful only on

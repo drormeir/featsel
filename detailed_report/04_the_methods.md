@@ -63,7 +63,8 @@ dataset. They were set by hand and not tuned:
 
 - RFE and RFECV: the SVM's C = 0.01 (section 7.9 tests 0.001 to 1), a
   step of 0.1.
-- Tree importance: 200 trees.
+- Tree importance: 200 trees (section 7.4: its ranking still depends on
+  the forest's seed at this count).
 - Correlation: Spearman (the selector's default is Pearson; section 4.6
   gives the reason), and the
   default thresholds. A feature must have a target correlation of at
