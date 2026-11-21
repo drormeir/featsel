@@ -216,6 +216,13 @@ described in the section given.
   conclusions hold (section 8.8). About half of the fall comes from that
   run's smaller training set, 409 images against 546, not from the
   copies (section 8.8).
+- The project's rule is now to use only data without duplicates. The
+  main BreastMNIST tables, Sequential selection, and the side studies on
+  the image data (RFE's C, the classifier's C, the tree count) still use
+  the copies (section 10.1).
+- FGVC-Aircraft holds one group of three near-identical photos, one
+  aircraft shot seconds apart, with the same label (section 2.3). All its
+  runs include them.
 
 **The protocol.**
 

@@ -716,7 +716,12 @@ cannot be known in advance from these datasets; a safe default can.
   copied images; a run without them gives the same conclusions, except
   that Mann-Whitney falls 0.012 below all features (section 6.7). About
   half of the fall in scores comes from that run's smaller training set,
-  not from the copies.
+  not from the copies. The rule is now to use only data without
+  duplicates; the main BreastMNIST tables, Sequential selection and the
+  side studies on the image data have not yet been run that way (D 10).
+  FGVC-Aircraft was checked the same way: no copied photos, but one group
+  of three near-identical shots of one aircraft, with the same label,
+  still in all its runs (D 2.3).
 - **Protocol.** One classifier in the main runs, logistic regression with
   C fixed at 1; for Mann-Whitney and all features, C = 0.01 to 100 gave
   no established AUC difference on the image data, and

@@ -288,6 +288,18 @@ both comparisons are in
 [`demos/weights.ipynb`](../featsel_datasets/fgvc_aircraft/demos/weights.ipynb)).
 Features with a single value across the 1,200 photos are dropped.
 
+**Copies.** The photos were searched for copies with BreastMNIST's method
+(section 2.2):
+[`demos/duplicates.ipynb`](../featsel_datasets/fgvc_aircraft/demos/duplicates.ipynb).
+No photo is a copied file. One group of three photos, `0221294`,
+`0223783` and `0227126`, shows one Boeing 737-900 shot seconds apart: once
+aligned, they correlate at 0.90 to 0.94. All three have the same label.
+The search found all 20 made copies of a control, so it works on these
+photos. Other photos of the same type, or of the same airframe, are not
+duplicates: aircraft of one series are identical by design, and telling
+the type from any photo is the task. The three photos are still in every
+FGVC-Aircraft run; dropping two of them is open work (section 10.1).
+
 **The signal.** As in BreastMNIST, the signal is widespread: 25% to 31%
 of the features pass the U test at a 5% false discovery rate, and 36% to
 41% have p < 0.05. The ranges come from 16 random splits, as for
