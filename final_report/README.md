@@ -154,8 +154,9 @@ patients, so we load GSE96058 directly.
 count. Any other increasing transform would be equally valid, so only the
 order of a gene's values is meaningful. An undetected gene sits at a
 floor, log2(0.1): in the first 200 genes, 51% of the values are at it,
-and 98.1% of all genes fail a test of normality. Section 4 shows why this
-decides the test that scores genes.
+and 98.1% of all genes fail a test of normality. So we score genes with
+the Mann-Whitney U test, which uses only the order, not with the F-test
+(section 4).
 
 **The label.** PAM50 (Parker et al. 2009) assigns each tumour one of five
 subtypes: Basal, Her2, LumA, LumB or Normal. It gives the subtype of the
@@ -180,8 +181,9 @@ BreastMNIST (Yang et al. 2023) holds 780 breast ultrasound images
 et al. 2024). Each image goes through ResNet-50
 (He et al. 2016), trained on ImageNet, with its last layer removed. The
 result is 2,048 numbers per image: more features than images. The signal
-is again widespread: 24% to 28% of the features pass the U test at a 5%
-false discovery rate. Unlike genes, pairs of features are only weakly
+is again widespread: 24% to 28% of the features pass the U test (section
+4) at a 5% false discovery rate: the expected share of false features
+among those that pass is at most 5%. Unlike genes, pairs of features are only weakly
 correlated (median absolute correlation 0.056).
 
 **Copied images.** A published letter found copies in the source images
@@ -199,7 +201,7 @@ is Boeing 737 against the Airbus A320 family, two families of airliners
 that look alike. Each photo becomes 2,048 numbers through ResNet-50, as
 for BreastMNIST, but with torchvision's older ImageNet weights, V1. With
 the V2 weights used for BreastMNIST, 80% of the features were exactly zero
-and all the features reached only 0.742 AUC; V1 gave 0.1% zeros and 0.862
+and all the features reached only 0.742 AUC (the score of section 3); V1 gave 0.1% zeros and 0.862
 (`results/aircraft_weights.csv`). The photos are for non-commercial
 research only and are not stored in the repository.
 
