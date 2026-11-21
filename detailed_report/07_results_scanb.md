@@ -340,8 +340,9 @@ per round, with a strongly penalized SVM (C = 0.01). A likely reason: the
 last 10 genes are what is left after a long chain of removals, and small
 changes early in the chain change the end.
 
-A filter first fixes this. Mann-Whitney keeps 1,000 genes; RFE then picks
-`k` of them. At 10 genes this chain is the best method on four tasks of
+A filter first fixes this. Mann-Whitney keeps 1,000 genes, a count set by
+hand and not tuned (on the image data, section 8.7 tests other counts);
+RFE then picks `k` of them. At 10 genes this chain is the best method on four tasks of
 five:
 
 | Method at `k` = 10 | Basal | Her2 | LumA | LumB | Normal |
