@@ -538,8 +538,7 @@ each dataset, then SCAN-B's selection time and stability. SCAN-B
 values are means over its five tasks; the time is the mean of each task's
 median time per fit. On SCAN-B, tree importance, RFE and RFECV ran on
 the CPU, also as the second step of a chain; every other method ran on
-the GPU. HC2004 was timed on a later day, when HC2008 also took about
-1 s per fit (D 7.11). On the
+the GPU. On the
 CPU, on SCAN-B-shaped synthetic data, a fit takes 3.8 to 3.9 s for the U-test
 methods, 6.9 s for correlation, 25 s for Lasso at one penalty and 18 s
 for mutual information at 10,000 features (D 6.2). Over

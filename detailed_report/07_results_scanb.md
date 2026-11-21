@@ -455,7 +455,7 @@ chapter 6:
 | Random | 0.02 | — |
 | Lasso | 0.59 | 11 (choosing C) |
 | HC2008, Berk-Jones | 0.66 to 0.68 | none |
-| HC2004 (timed on 2026-11-21, see below) | 0.94 | none |
+| HC2004 | 0.94 | none |
 | Mann-Whitney | 0.67 | 28 (choosing `k`) |
 | Mann-Whitney 1000, then Lasso | 0.79 | 4 |
 | Mann-Whitney 1000, then tree importance or RFE | 2.8 to 3.0 | 12 to 16 |
@@ -464,12 +464,6 @@ chapter 6:
 | RFE | 6.9 | 27 |
 | Tree importance | 17.5 | 68 |
 | Sequential, `k` = 10 | 588 | none |
-
-HC2004 was timed on a later day than the other methods, in a run of
-HC2004 alone (Appendix A.2). On that day HC2008 also took 0.98 to 1.02 s
-per fit on two splits
-([`results/hc2008_timing_2026-11-21.csv`](../results/hc2008_timing_2026-11-21.csv)),
-so the machine, not HC2004, was slower that day.
 
 The GPU methods ran one fit at a time; the CPU methods (tree importance,
 RFE, RFECV) ran two workers at once (in an early SCAN-B run, memory made

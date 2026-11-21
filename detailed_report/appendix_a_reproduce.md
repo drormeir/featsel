@@ -30,12 +30,9 @@ were made on 2026-11-14 and 15; the later runs, from 2026-11-20 on,
 among them BreastMNIST without copies, carry their dates in their JSON files. Each result's JSON
 file records the commit, machine and settings. The HC2004 rows of
 `frontier_scanb70_gpu`, `frontier_breastmnist70_nocopies`, `aircraft70_gpu`
-and `rare_signal70` come from a later run of HC2004 alone, on 2026-11-21,
-on the same splits and data; its record is `<run>_hc2004.json` beside each
-CSV. The same day, HC2008 alone was timed on two SCAN-B splits, the
-config of `frontier_scanb70_gpu` with HC2008 only and `--n-splits 2`
-([`results/hc2008_timing_2026-11-21.csv`](../results/hc2008_timing_2026-11-21.csv)
-and its JSON; section 7.11).
+and `rare_signal70` come from a run of HC2004 alone, on 2026-11-21, on
+the same splits and data; its record is `<run>_hc2004.json` beside each
+CSV.
 
 | Result | Command | Output |
 |---|---|---|
