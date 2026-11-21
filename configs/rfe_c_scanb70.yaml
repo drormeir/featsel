@@ -1,11 +1,13 @@
 # RFE's SVM penalty: C = 0.001, 0.1 and 1 against the 0.01 of the main
 # runs (frontier_scanb70_cpu.yaml, label RFE_newton, in results/local/frontier_scanb70_cpu.csv).
 # C = 0.01 was set by hand and not tuned; this run tests whether another
-# value would have scored differently. Same seed, splits, training fraction,
-# k list and k_validation as the main run, so each C is compared with 0.01
-# split by split (scripts/rfe_c_tests.py). The main results keep 0.01:
-# choosing C now by test AUC would use the test set twice.
-# One fit per selection: time is not the question here.
+# value would have scored differently. Same seed, splits, training fraction
+# and k list as the main run, so each C is compared with 0.01 at the same k,
+# split by split (scripts/rfe_c_tests.py --every-k). No k_validation: on
+# SCAN-B the k search took 27 of 34 s per task and split, and RFE ranks once
+# for every k, so one fit gives the whole curve. The image runs did choose k.
+# The main results keep 0.01: choosing C now by test AUC would use the test
+# set twice. One fit per selection: time is not the question here.
 # Run with: python -m featsel.run --config configs/rfe_c_scanb70.yaml --n-jobs 2
 #
 # Output goes to results/local/, which git ignores.
@@ -19,8 +21,6 @@ seed: 42
 n_splits: 16
 train_sizes: [0.7]
 preprocess: ["standard"]
-k_validation:
-  cv: 5
 selection_repeats: 1
 
 metrics:
