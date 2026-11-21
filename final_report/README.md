@@ -104,13 +104,14 @@ shape our protocol (Table 1):
    top-10% filters; HC2004 kept one to three features. On simulated rare
    signal, HC2008 chose a good count (sections 4, 6.4).
 3. **A cost-quality frontier**: selection time against AUC for every
-   method and setting, on each dataset.
+   method and setting, on each dataset (Figure 2, section 6.8).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method select the same features, on the CPU and on a
    GPU. RFE, RFECV and Lasso reach the exact solution that scikit-learn's
    default solver stops short of (section 5).
 5. **Checks of the data that change its use**: repeated patients and a
-   computed label in SCAN-B, and copied images in BreastMNIST.
+   computed label in SCAN-B, and copied images in BreastMNIST (sections
+   2.1, 2.2).
 
 This report keeps the main claims and their evidence. A detailed report
 in the repository holds every task, every `k`, every test and every
@@ -124,8 +125,8 @@ Three datasets have more features than samples (Table 2). SCAN-B is the
 main dataset. BreastMNIST answers task 4 with another domain. FGVC-Aircraft
 was added after the design was fixed, to test the pipeline on data it was
 not built for. Each dataset has a loader that downloads the published
-files once, checks them, and records every choice made on them (section
-5). The facts below are in `results/data_facts.csv` (D 2).
+files once, checks them, and records every choice made on them (D 5.3).
+The facts below are in `results/data_facts.csv` (D 2).
 
 *Table 2. The three datasets.*
 
@@ -148,7 +149,8 @@ a tumour sequenced twice, and split between the training and the test
 set, such a pair tests a model on a patient it has seen. We drop genes
 with a single value and 11 nearly flat genes. This leaves 2,976 patients
 and 28,541 genes. The course's copies of the data kept the repeated
-patients, so we load GSE96058 directly.
+patients, and the smaller copy lacked 11 of the 50 PAM50 genes (D 2.1), so
+we load GSE96058 directly.
 
 **The values.** Each value is log2(FPKM + 0.1), a transform of a read
 count. Any other increasing transform would be equally valid, so only the
@@ -501,7 +503,7 @@ median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
 as the second step of a chain; every other method ran on the GPU. On the
 CPU alone, on synthetic data shaped like SCAN-B, the U-test methods
 (Mann-Whitney, HC, Berk-Jones) take 3.8 to 3.9 s per fit, correlation
-6.9 s, Lasso 25 s at one C, and mutual information 18 s on 10,000 of the
+6.9 s, Lasso 25 s at one penalty, and mutual information 18 s on 10,000 of the
 features (D 6.2). Over
 the 16 splits, the interquartile range of a method's AUC is 0.006 to
 0.010 on a SCAN-B task (HC2004 0.018, RFECV scored by accuracy 0.044)
