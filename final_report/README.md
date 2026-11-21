@@ -559,8 +559,8 @@ weaker.
 
 **Simulated rare signal** (D 8.11): 10,000 independent normal features, 40
 of them moved by 0.4 standard deviations in the positive class. HC2008
-kept a median of 33.5 features and had the best mean AUC, 0.858. Mann-Whitney
-with a validated `k` reached 0.843; the difference is not established
+kept a median of 33.5 features and the best mean AUC, 0.858. Mann-Whitney
+reached 0.843; the difference is not established
 (p = 0.62). Berk-Jones (0.813, 12 features) and an F-test filter at a
 5% false discovery rate, run only here (section 2.2), were stricter;
 HC2004 kept 1 to 9 (median 1.5). All features gave 0.629.
@@ -583,9 +583,9 @@ gene alone, by a t-test for each subtype.
 
 ### 6.6 Wrappers need care
 
-RFECV chooses its count by an inner cross-validation. With its default
+RFECV chooses its count by inner cross-validation. With its default
 inner score, accuracy, it kept a single gene on every split of Her2, LumB
-and Normal, and scored 0.51 to 0.58 AUC. These tasks are imbalanced, and
+and Normal, and scored 0.51 to 0.58 AUC. On these imbalanced tasks,
 accuracy rewards the larger class. Scored by AUC, RFECV reached 0.962
 (D 7.8).
 
@@ -611,18 +611,18 @@ BreastMNIST holds 150 groups of copied images (section 2). Without them,
 585 images remain, and every method of Table 5 ran again. All features
 fall from 0.924 to 0.895 AUC, and every method but HC2004 by 0.016 to
 0.042; HC2004 rises by 0.013. The
-leading methods change places within 0.009 AUC. RFE still ties all
-features, and the chains, HC2008, Berk-Jones and HC2004 still lose to
-them (D 8.8). So the copies inflate the scores, not the conclusions.
+leaders change places within 0.009 AUC. RFE still ties all
+features, and the chains, HC2008, Berk-Jones and HC2004 still lose
+(D 8.8). So the copies inflate the scores, not the conclusions.
 
 ### 6.8 Cost
 
 The cheap end of Figure 2 wins. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
-importance takes 17 s for 0.969 (Table 5). On the image data, every method
-except Sequential selection runs in about a second per fit or less, so
-cost does not decide the choice there.
+importance takes 17 s for 0.969 (Table 5). On the image data, all methods
+but Sequential selection take about a second per fit or less, so cost
+decides nothing there.
 
 Choosing `k` costs more than selecting. For Mann-Whitney on SCAN-B, the
 search on 5 validation sets takes about 28 s per split, against 0.67 s for
@@ -646,9 +646,9 @@ At 10 genes on SCAN-B, Mann-Whitney then RFE is best on four tasks of
 five, and the filters and tree importance beat random genes by 0.12 to
 0.19 AUC. On the image data they lead at 10 features, alone or chained,
 by 0.10 to 0.16. At the `k` each method chose, the top methods cannot
-be told apart. If time also counts, a GPU filter is the practical choice:
-on SCAN-B, HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under
-a second per fit, 0.001 to 0.002 below the best.
+be told apart. If time counts, a GPU filter is practical: on SCAN-B,
+HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
+per fit, 0.001 to 0.002 below the best.
 
 ### 7.2 What holds on every dataset, and what changes
 
@@ -837,10 +837,9 @@ https://doi.org/10.5281/zenodo.10519652
 
 ## Appendix A. How to reproduce
 
-From the repository root: setup, with PyTorch for the GPU paths and the
-image embeddings, then one experiment. Each loader downloads its data on
-first use and caches it: GSE96058 (592 MB), BreastMNIST (31 MB),
-FGVC-Aircraft (2.75 GB).
+From the repository root: setup, then one experiment. Each loader
+downloads its data once and caches it: GSE96058 (592 MB), BreastMNIST
+(31 MB), FGVC-Aircraft (2.75 GB).
 
 ```bash
 python3.13 -m venv .venv
@@ -877,6 +876,6 @@ mutual information, a sort per class replaces scikit-learn's
 nearest-neighbour tree, with its own random noise and order of sums.
 
 **Lasso's solver.** PPDNA (Liu and Zhou 2023), a semismooth Newton method,
-needed five changes from the paper on SCAN-B-shaped data, among them a
+needed five changes on SCAN-B-shaped data (D D.3), among them a
 penalized intercept, as in liblinear, and a Newton matrix factored in
-32 bits and refined in 64 (D D.3).
+32 bits, refined in 64.
