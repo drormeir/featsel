@@ -140,9 +140,9 @@ during the design, then tests the finished pipeline (section 8.9).
    LumB (chapter 2; section 6.2).
    Exact solvers make RFE, RFECV and Sequential selection (section 4.2)
    faster, and
-   Lasso faster on a GPU. For
-   Lasso, RFE and RFECV they also reach the solution that scikit-learn's default
-   solver stops short of (chapters 5 and 6).
+   Lasso faster on a GPU. For RFE and RFECV they also reach the solution
+   that scikit-learn's default solver stops short of, and for Lasso they
+   come far closer to it (chapters 5 and 6).
 5. **Checks of the data that change its use.** SCAN-B repeats some
    patients, and its labels are computed from the features. BreastMNIST
    holds copies of its own images (chapter 2).

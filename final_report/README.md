@@ -116,9 +116,9 @@ in the folder `detailed_report/` of the public repository
    method and setting, on each dataset (section 6.8).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method select the same features, on the CPU and on a
-   GPU; Lasso alone differs by 1 to 3 genes on two tasks (D 6.2). RFE,
-   RFECV and Lasso reach the exact solution that scikit-learn's
-   default solver stops short of (section 5).
+   GPU; Lasso alone differs by 1 to 3 genes on two tasks (D 6.2). RFE and
+   RFECV reach the exact solution that scikit-learn's default solver
+   stops short of, and Lasso comes far closer to it (section 5).
 5. **Checks of the data that change its use**: repeated patients and a
    computed label in SCAN-B, copied images in BreastMNIST (sections
    2.1, 2.2).
@@ -150,7 +150,7 @@ data is public as GEO accession GSE96058 (Brueffer et al. 2018): 3,273
 patients, 3,409 samples and 30,865 genes. We keep the 3,069 samples from
 one sequencer, the HiSeq 2000, because two sequencers can differ for
 technical reasons alone. We keep one sample per patient: 93 patients have
-a tumour sequenced twice, and split between the training and the test
+two HiSeq samples, and split between the training and the test
 set, such a pair tests a model on a patient it has seen. We drop genes
 with a single value and 11 nearly flat genes (D 2.1). This leaves 2,976 patients
 and 28,541 genes. The two copies of SCAN-B handed out in the course kept
@@ -318,7 +318,7 @@ filter (D 4.2).
 | HC2004, HC2008 | filter, own count | Keep the features below the Higher Criticism threshold. |
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
 | Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
-| Tree importance | embedded | Rank by a random forest's impurity importance: how much a feature's splits separate the classes, summed over the trees; 200 trees, set by hand (D 7.4). |
+| Tree importance | embedded | Rank by a random forest's impurity importance: how much a feature's splits separate the classes, averaged over the trees; 200 trees, set by hand (D 7.4). |
 | RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step and use C = 0.01, both set by hand; C = 0.001 to 1 gave no established AUC difference (D 7.9). |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy (the only score its solver computes; it fits all candidates of a step at once, section 5; D 4.2); repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
@@ -438,7 +438,7 @@ model, liblinear, stops at a tolerance of 10⁻⁴, before the exact solution.
 With correlated genes, this changes which genes are kept. Unless its seed
 is fixed, liblinear also shuffles the data differently on each fit and
 keeps different genes (D 6.2). RFE and RFECV
-now solve each SVM exactly by Newton's method (Chapelle 2007), and Lasso by PPDNA (Liu and Zhou 2023; Appendix B). With no
+now solve each SVM exactly by Newton's method (Chapelle 2007). Lasso uses PPDNA (Liu and Zhou 2023; Appendix B), which stops at a residual of 10⁻¹⁰, not proven exact but far tighter than 10⁻⁴. With no
 randomness, a refit gives the same genes. Newton's method works through
 the samples' n × n kernel (the inner products of every pair of samples),
 so it pays when features outnumber samples.
