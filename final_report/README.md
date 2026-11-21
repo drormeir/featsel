@@ -505,7 +505,8 @@ So here, selection buys a smaller model more often than a better one.
 ### 6.3 No single best method
 
 At the `k` each method chose, the top methods are close. On SCAN-B,
-eleven methods lie within 0.01 of each other in mean AUC (Table 5), and
+eleven methods lie within 0.01 of each other in mean AUC (Table 5; RFE,
+0.0102 below the best, falls just outside), and
 no one method leads on every task (D 7.1). Tested pair by pair on each
 task, 51 of the 275 comparisons give p < 0.05; in 49 of them the loser is
 Lasso, a chain or RFECV, mostly on LumA and LumB. Among the top six, the
@@ -721,8 +722,8 @@ test near 0.05; a safe default can still be named.
   fixed, except Lasso's penalty; so is a chain's first count, and other
   counts were tested only on the image data (section 6.6). Whether more trees would change tree importance's AUC was not
   tested (D 7.4). The correlation results come from a
-  version that dropped a gene whose only redundant partner was itself
-  dropped; the code is fixed, but not yet rerun (D 4.2).
+  version with a defect, fixed later; the fix changes at most one gene
+  of a selection (D 4.2).
 - **Many tests.** Each test is judged at p < 0.05, with no correction for
   the number of tests, more than a hundred per dataset. So some
   established differences may be chance, most likely those with p between

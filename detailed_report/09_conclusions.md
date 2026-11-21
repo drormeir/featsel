@@ -246,8 +246,8 @@ described in the section given.
   replicates.
 - Each selector's own settings are fixed, except Lasso's C (section 3.11).
   HC keeps alpha0 = 0.1 (section 4.4). The correlation results come
-  from a version with a defect, fixed after the runs and not yet rerun
-  (section 4.2).
+  from a version with a defect, fixed after the runs; the fix changes at
+  most one gene of a selection (section 4.2).
 - A chain's first count is fixed: 1,000 genes on SCAN-B, 500 features on
   the image data. Other counts were tested only on the image data
   (section 8.7).

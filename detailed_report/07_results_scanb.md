@@ -87,7 +87,8 @@ quartiles), the genes kept, the times and the stability.
 What it shows:
 
 - **The top is flat.** Eleven methods lie within 0.01 of each other in
-  mean AUC. No method leads on every task. Tested pair by pair on each
+  mean AUC; RFE, 0.0102 below the best, falls just outside, though the
+  table rounds it to 0.010. No method leads on every task. Tested pair by pair on each
   task (the corrected test, section 3.3), 51 of their 275 pairs give
   p < 0.05, and 7 pass a Bonferroni correction over the 275. In 49 of the
   51 the loser is Lasso, a chain or RFECV scored by AUC; 36 are on LumA

@@ -132,7 +132,12 @@ correlation with the label down, and drops a gene only when it is
 redundant with a gene already kept, so A and C stay. A test checks this
 example. Every correlation result in this report comes from the old
 version: the frontier, the main comparison of chapters 7 and 8 (section
-4.6), ran before the fix, and its rerun is open work (section 10.1).
+4.6), ran before the fix. On the frontier's own splits, the old version
+reproduces every saved selection, and the new one changes none on the
+image data and 47 of 560 on SCAN-B, each by one gene of 1,000 to 2,000
+([`figures/correlation_fix_check.csv`](figures/correlation_fix_check.csv),
+from [`scripts/correlation_fix_check.py`](../scripts/correlation_fix_check.py)).
+So the frontier was not rerun.
 
 ### One ranking for every `k`
 
