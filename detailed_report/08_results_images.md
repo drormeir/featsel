@@ -205,8 +205,8 @@ in the main runs.
 and `chain_size_aircraft70.csv` in [`figures/`](figures/) (Appendix A.2).*
 
 At 1,000, every chain gains on every dataset, by 0.012 to 0.025 AUC, for
-at most 0.32 s more per fit. Three gains are established: RFE on
-BreastMNIST and on FGVC-Aircraft, and none without the copies. RFE and
+at most 0.32 s more per fit. Two gains are established: RFE on
+BreastMNIST and on FGVC-Aircraft. Without the copies, none is. RFE and
 tree importance chose the largest `k` they were allowed, 250 after 500
 and 500 after 1,000. So most of the gain is likely the larger `k` that a
 larger first step allows. Lasso has no such cap and still gained. The
