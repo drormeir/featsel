@@ -192,8 +192,8 @@ test. With one test for all filters, the experiments compare selection
 rules, not tests. The F-test selectors stay in the package as drop-in
 replacements for scikit-learn's, but the experiments do not use them.
 
-**Its cost.** Before the speed work of chapter 6, a U-test fit took about
-10 s on SCAN-B, against about 1 s for the F-test. Mann-Whitney ranks once
+**Its cost.** On the CPU, at 3,000 samples × 30,000 features, our U test
+takes 3.76 s against 0.36 s for the F-test (section 6.2). Mann-Whitney ranks once
 per split, so the cost is paid once per split, not once per `k`.
 
 **Its limit.** The normal approximation is not exact in the extreme tail,

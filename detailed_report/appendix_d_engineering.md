@@ -32,14 +32,9 @@ SCAN-B (2,976 patients, 28,552 genes;
 | PPDNA, CPU | 4.5 to 31.3 | faster on Basal and Normal, up to 5.9 times slower on LumB |
 
 The script standardizes the data in 32-bit floats, as the runner holds
-it. A few genes are nearly constant: their spread is 10⁻⁶ to 10⁻⁹ around
-the expression floor. 32-bit floats cannot hold so small a spread.
-Standardizing them gives values up to 0.06 apart from the 64-bit result.
-Only 0.02% of the values move by more than 0.001. PPDNA on the CPU is
-sensitive to this. In a separate pair of single fits on LumB, it took
-35 s on data standardized in 32 bits and 7.3 s in 64 bits, and kept 730
-genes against 735. This is why the 11
-flat genes were later dropped (section 2.1).
+it. The 11 flat genes of section 2.1 are nearly constant, with a spread
+too small for 32-bit floats to hold, so standardizing them in 32 bits
+turns them into noise. `load_xy` drops them (section 2.1).
 
 ## D.3 Why PPDNA, and how ours departs from the paper
 
@@ -60,10 +55,9 @@ SSNAL handles only the squared loss. Our PPDNA departs from the paper
   noise.
 - The outer loop also stops when three outer steps (a count set by
   hand) fail to halve the best residual.
-  On 28,552 genes, rounding sets a floor near 10⁻⁹, above the target of
-  10⁻¹⁰. Without this rule, Basal ran all 1,000 outer steps in 43 s.
-  With it, 0.73 s (single timings), and every task stopped within 7 to
-  10 outer steps.
+  On 28,552 genes, rounding can set a floor near 10⁻⁹, above the target
+  of 10⁻¹⁰; without this rule the solver would then run all 1,000 outer
+  steps.
 
 ## D.4 Lasso: speed against liblinear
 
