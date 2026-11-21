@@ -435,7 +435,7 @@ model, liblinear, stops at a tolerance of 10⁻⁴, before the exact solution.
 With correlated genes, this changes which genes are kept. Unless its seed
 is fixed, liblinear also shuffles the data differently on each fit and
 keeps different genes (D 6.2). RFE and RFECV
-now solve each SVM exactly by Newton's method (Chapelle 2007). Lasso uses PPDNA (Liu and Zhou 2023; Appendix B), which stops at a residual of 10⁻¹⁰, not proven exact but far tighter than 10⁻⁴. With no
+solve each SVM exactly by Newton's method (Chapelle 2007). Lasso uses PPDNA (Liu and Zhou 2023; Appendix B), which stops at a residual of 10⁻¹⁰, not proven exact but far tighter than 10⁻⁴. With no
 randomness, a refit gives the same genes. Newton's method works through
 the samples' n × n kernel (the inner products of every pair of samples),
 so it pays when features outnumber samples.
@@ -631,7 +631,7 @@ it, so on the image data the 500 also caps `k` at 250, and RFE and tree
 importance chose that cap as a median over splits. A side
 study kept 250 or 1,000 instead, on the same splits. At 1,000, every
 chain gained 0.012 to 0.025 AUC on BreastMNIST and FGVC-Aircraft. Only
-RFE's gain on FGVC-Aircraft is established (p = 0.025; D 8.7). The main results keep 500: choosing the count now by
+RFE's gain on FGVC-Aircraft is established (p = 0.025; D 8.7). The main results keep 500: choosing the count by
 test AUC would reuse the test set.
 
 ### 6.7 The copied images
