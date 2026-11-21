@@ -310,7 +310,7 @@ filter (D 4.2).
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
 | Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
 | Tree importance | embedded | Rank by a random forest's impurity importance. |
-| RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step, set by hand. |
+| RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step and use C = 0.01, both set by hand; C = 0.001 to 1 changed no AUC (D 7.9). |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy (the only score its batched solver computes; D 4.2); repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
 | Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`; the filter helps it. The first count is fixed (section 6.6). |

@@ -5,7 +5,9 @@ split by split.
 Each setting is taken at the k it chose on validation sets
 (featsel.analysis.chosen_k). With --every-k, the sweep ran without a k
 search, and each C is compared with 0.01 at every k of the list instead:
-the k is then fixed, so the test set chooses nothing. The test is the corrected resampled t-test of
+the k is then fixed, so the test set chooses nothing, and each row also
+gives the mean Jaccard index of the selected features against 0.01 (shared
+features over all features in either set), per split. The test is the corrected resampled t-test of
 Nadeau and Bengio (2003), as in scripts/summarize_frontier.py. Both CSVs
 come from configs with the same seed and splits; on SCAN-B each of the
 five tasks is tested on its own.
@@ -56,6 +58,12 @@ def main():
             at_c = group[group['C'] == c]
             row = {**dict(zip(by, key)), 'C': c, 'mean_auc': per_split[c].mean(),
                    'median_k': at_c['n_selected'].median()}
+            if c != REFERENCE and args.every_k:
+                sets = group.set_index(['split', 'C'])['selected_indices'].map(
+                    lambda text: set(str(text).split()))
+                row['jaccard_vs_0.01'] = sum(
+                    len(sets[s, c] & sets[s, REFERENCE]) / len(sets[s, c] | sets[s, REFERENCE])
+                    for s in per_split.index) / len(per_split.index)
             if c != REFERENCE:
                 diff = (per_split[c] - per_split[REFERENCE]).dropna()
                 mean, low, high, p = corrected_test(diff, n_test, n_train)

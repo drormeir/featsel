@@ -61,7 +61,8 @@ Each method has a tutorial notebook:
 **Settings in the experiments.** The configs fix these values for every
 dataset. They were set by hand and not tuned:
 
-- RFE and RFECV: the SVM's C = 0.01, a step of 0.1.
+- RFE and RFECV: the SVM's C = 0.01 (section 7.9 tests 0.001 to 1), a
+  step of 0.1.
 - Tree importance: 200 trees.
 - Correlation: Spearman (the selector's default is Pearson; section 4.6
   gives the reason), and the
