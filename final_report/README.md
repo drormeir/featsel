@@ -236,7 +236,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Classifier | logistic regression, L2 penalty, C (the inverse of the penalty's strength) fixed at 1, scikit-learn's default: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
-| Timing | each selection fit 10 times, set by hand since one fit is noisy (3 on FGVC-Aircraft, also set by hand, once in the simulation of section 6.4; Sequential selection, section 4, once on SCAN-B and BreastMNIST); the median is recorded |
+| Timing | each selection fit 10 times, set by hand since one fit is noisy (3 on FGVC-Aircraft, also set by hand, once in the simulation of section 6.4, which reports no times; Sequential selection, section 4, once on SCAN-B and BreastMNIST, since 10 fits would take about a week); the median is recorded |
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
@@ -245,7 +245,7 @@ these choices; a method's result is its test score at the chosen `k` (D 3.1).
 Selecting features on all the data first is a known error (Ambroise and
 McLachlan 2002): the test samples then help choose the features. On
 BreastMNIST with shuffled labels, where nothing can be learned, it raises
-the median AUC over 20 splits from 0.465 to 0.645 (D 3.2).
+the median AUC over 20 splits, a count set by hand, from 0.465 to 0.645 (D 3.2).
 
 **Random splits, not k-fold.** In 5-fold cross-validation, any two
 training sets share three quarters of their samples, so the five scores
@@ -587,7 +587,9 @@ weaker.
 **Simulated rare signal** (D 8.11): 10,000 independent normal features, 40
 of them moved by 0.4 standard deviations in the positive class, each too
 weak alone for a Bonferroni test (each feature tested at 5% divided by
-10,000). HC2008
+10,000). The 40 features and the shift come from the rare, weak setting of
+our Higher Criticism tutorial, with 10,000 features in place of 2,000 for
+rarer signal; 500 samples and 30% positive were set by hand. HC2008
 kept a median of 33.5 features and the best mean AUC, 0.858. Mann-Whitney
 reached 0.843; the difference is not established
 (p = 0.62). Berk-Jones (0.813, 12 features) and an F-test filter at a
