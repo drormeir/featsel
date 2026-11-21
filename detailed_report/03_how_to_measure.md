@@ -337,6 +337,14 @@ a near-constant gene, the tie term Σ(t³ − t) reaches about 10¹⁰ on
 2,083 training patients, far above 2²⁴, the largest range in which a
 32-bit float holds every whole number exactly.
 
+The other selectors also compute in 64 bits: the F-test, variance,
+correlation, mutual information, RFE, Sequential and Lasso convert the
+data first. Lasso factors its Newton matrix in 32 bits for speed, then
+refines the solution in 64 (Appendix D.3). The U test sorts the 32-bit
+values, which is exact. Two steps stay in 32 bits: tree importance,
+because scikit-learn's forest converts its input to 32 bits, and the
+classifier, logistic regression, which fits in the data's own 32 bits.
+
 ## 3.13 Scores we considered and did not use
 
 Two single-number summaries were rejected:
