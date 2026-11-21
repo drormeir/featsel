@@ -1,0 +1,36 @@
+{
+  "written": "2026-11-21T16:39:34+02:00",
+  "seed": 42,
+  "splits": 3,
+  "trees": [
+    50,
+    100,
+    200,
+    500,
+    1000
+  ],
+  "forest_seeds": [
+    0,
+    1
+  ],
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.39",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "cpu_count": 12,
+    "ram_gb": 15.5,
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "torch": "2.14.1",
+      "xgboost": "3.4.1"
+    },
+    "git_commit": "c232c4a198cbaeb086ca8f6a135621d2a8d8d565",
+    "git_dirty": false,
+    "gpu": "NVIDIA GeForce GTX 1650",
+    "gpu_memory_gb": 4.0
+  }
+}
