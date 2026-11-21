@@ -25,7 +25,8 @@ is the **random control**.
 **Multiple testing.** A filter that tests every gene runs thousands of
 tests. The Benjamini and Hochberg (1995) procedure keeps the expected share
 of false discoveries below a chosen level. Bonferroni correction controls
-the chance of even one false discovery, so it is stricter. The FDR and FWE
+the chance of even one false discovery, the family-wise error, so it is
+stricter. The FDR (false discovery rate) and FWE (family-wise error)
 selectors apply these two corrections.
 
 ## 4.2 The 16 methods
@@ -81,7 +82,8 @@ and 883 to 1,000 on LumA.
 
 liblinear at its default tolerance stops before the solution, and keeps
 more genes than the exact solution (section 6.2). LassoSelector now
-solves exactly, with PPDNA (Liu and Zhou 2023; section 6.2), and handles classification
+solves exactly, with PPDNA, a dual Newton proximal point algorithm (Liu
+and Zhou 2023; section 6.2), and handles classification
 only. In the experiments it takes no `k`. It chooses C by validation AUC
 (section 3.11), and that C sets the count.
 
@@ -184,7 +186,7 @@ replacements for scikit-learn's, but the experiments do not use them.
 per split, so the cost is paid once per split, not once per `k`.
 
 **Its limit.** The normal approximation is not exact in the extreme tail,
-where HC2004 reads its p-values. The exact permutation p-value would fix
+where HC2004 (section 4.4) reads its p-values. The exact permutation p-value would fix
 this. But with ties it depends on each gene's own pattern of ties, so it
 cannot be computed once for all genes.
 

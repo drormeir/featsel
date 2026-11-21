@@ -100,8 +100,8 @@ and a fast, reliable tool to run it.
 classifiers on three tumour gene expression datasets. Simple methods, such
 as diagonal linear discriminant analysis and nearest neighbours, did as
 well as complex ones. Statnikov et al. (2005) compared classifiers and
-gene selection methods on many multiclass cancer datasets. Multiclass SVMs
-were the most accurate classifiers. Bolón-Canedo et al. (2014) review
+gene selection methods on many multiclass cancer datasets. Multiclass
+support vector machines (SVMs) were the most accurate classifiers. Bolón-Canedo et al. (2014) review
 common microarray datasets and the selection methods applied to them.
 Saeys et al. (2007) review selection methods for bioinformatics. Most of
 those datasets have tens to a few hundred samples.
@@ -135,7 +135,8 @@ during the design, then tests the finished pipeline (section 8.9).
    (sections 7.1 and 8.1).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method pick the same features, on the CPU and on a GPU;
-   Lasso alone differs by 1 to 3 genes on LumA and LumB (section 6.2).
+   Lasso alone differs by 1 to 3 genes on two PAM50 subtypes, LumA and
+   LumB (chapter 2; section 6.2).
    Exact solvers make RFE, RFECV and Sequential selection faster, and
    Lasso faster on a GPU. For
    Lasso, RFE and RFECV they also reach the solution that scikit-learn's default

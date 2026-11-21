@@ -42,7 +42,8 @@ list.
 It is tempting to select genes once on all patients, then cross-validate
 only the classifier. The error is large. Ambroise and McLachlan (2002)
 showed it on real microarray data. On BreastMNIST with shuffled labels,
-where nothing can be learned and the true AUC is 0.5, the F-test picking
+where nothing can be learned and the true AUC is 0.5, the F-test (section
+4.3) picking
 50 embedding dimensions gives a median AUC over 20 splits of 0.465 inside
 each split, and 0.645 when selected on all 780 images first
 ([`selection.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb)).
@@ -95,7 +96,8 @@ value for J − 1 degrees of freedom):
 From 5 to 16 splits the interval narrows by about a third. Beyond 16 it
 can narrow by at most 14% more. So 16 is not only what the laptop allowed: on
 any machine, it gives most of what
-more splits can give. A difference not established at 16 splits needs
+more splits can give. A difference not established (p < 0.05 under the
+corrected test below) at 16 splits needs
 more patients, not more splits.
 
 We report the **mean over splits**, which estimates the score on new
@@ -201,7 +203,7 @@ as it follows from the algorithm.
 
 ## 3.8 The classifier
 
-L2-penalized logistic regression with C = 1. A side study with four other
+L2-penalized logistic regression with C = 1, scikit-learn's default. A side study with four other
 classifiers is the evidence for it (section 7.7). The penalty is (λ/2)‖w‖², and
 scikit-learn's C is 1/λ. Features are standardized on the training set
 first, so the penalty treats them alike. The default solver, `lbfgs`, does
@@ -231,14 +233,15 @@ question outside the project's four tasks.
 **Min-max scaling was rejected without a test.** Like standardization, it
 shifts and scales each feature. So it changes nothing for methods that
 ignore scale, such as the F-test, correlation and
-trees. For methods that depend on scale, such as k-NN and penalized models
+trees. For methods that depend on scale, such as k-nearest neighbours
+(k-NN) and penalized models
 (L1 or L2), it is worse: one outlier sets the range and squeezes every
 other sample.
 
 **A quantile transform was not tested.** 98.1% of genes reject
 normality. A quantile transform maps each feature to a normal
 distribution through its ranks, but discards the size of a fold change.
-Shrinkage LDA, which assumes normal classes, and k-NN, which suffers from
+Shrinkage linear discriminant analysis (LDA), which assumes normal classes, and k-NN, which suffers from
 heavy tails, might gain from it (both are in the classifier study of
 section 7.7). This is unknown.
 
@@ -252,14 +255,16 @@ also runs at 28,541, every gene. A first run stopped at 1,000, where AUC
 was still rising for every method with a `k` list. The list stops at
 2,000 because there the best method already reaches or passes the AUC of
 all genes on every task (Appendix C.1). On LumA and Normal, AUC still
-rises a little at 2,000 (mutual information: 0.958 to 0.960 and 0.945 to
+rises a little at 2,000 (mutual information, section 4.2: 0.958 to 0.960 and 0.945 to
 0.948 from 1,500), so a larger `k` could still add a little there. On
 BreastMNIST and
 FGVC-Aircraft (2,048 features), `k` is 10, 50, 250, 500 and 1000; random
 selection also runs at 2,048. The largest `k`, 1,000, is more than the
 number of training images (546 and 840), because the goal is the best
 AUC, not a small set. A two-stage chain (a filter, then a slower method;
-section 5.4) uses the same list, cut below the size its first step keeps.
+section 5.4) uses the same list, cut below the size its first step keeps:
+1,000 genes on SCAN-B and 500 features on the image data, set by hand
+(sections 7.9 and 8.7).
 
 - **Why a sweep.** One `k` cannot tell a method good at small budgets from
   one that needs many features.

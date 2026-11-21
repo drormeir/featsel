@@ -24,7 +24,7 @@ remain.
 | Keep only HiSeq 2000 samples: 3,069 of 3,409. The other 340 are NextSeq 500. | Two machines can differ for technical reasons alone. The NextSeq samples add 297 patients not in the HiSeq set. They are left out. |
 | Keep one sample per patient, the first in file order: 2,976 patients. | 93 of them have a HiSeq sample and its repeat. Split between the training set and the test set, they would test the model on a patient it has seen. |
 | Drop 2,313 genes with a single value across the kept patients. | They carry no information. |
-| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32, they become noise. On LumB vs rest, that noise made Lasso's solver slower on the CPU (a single trial, not saved). |
+| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32, they become noise. On LumB vs rest (a task of section 2.1), that noise made Lasso's solver slower on the CPU (a single trial, not saved). |
 
 **The repeat samples.** Brueffer et al. sequenced 136 tumours twice, to
 test their classifiers' reproducibility. GSE96058 lists each repeat as
@@ -191,15 +191,15 @@ and cached.
 |---|---|
 | Values exactly zero | 42.8% (ReLU, then average pooling) |
 | Negative values | none |
-| Features passing the U test at 5% false discovery rate | 27% to 35% |
+| Features passing the U test at 5% false discovery rate (section 4.1) | 27% to 35% |
 | Features with U-test p < 0.05 | 38% to 45% |
-| Features passing the F-test at p < 0.05 / 2,048 (Bonferroni) | 223 |
+| Features passing the F-test (section 4.3) at p < 0.05 / 2,048 (Bonferroni, section 4.1) | 223 |
 | Median absolute correlation between two features | 0.056 |
 | Pairs of features with correlation above 0.5 | 0.17% |
 | Principal components for 50% / 90% / 99% of the variance | 12 / 150 / 462 |
 
 The U-test ranges are over the training sets of 16 random splits with 70%
-of the images, as in the main runs, drawn by `scripts/data_facts.py`.
+of the images, as in the main runs (section 3.3), drawn by `scripts/data_facts.py`.
 
 As in SCAN-B, the signal is widespread: about a third of the features
 separate the classes. Unlike SCAN-B, pairs of features are only weakly

@@ -46,7 +46,8 @@ What the five frontiers show:
 
 - **Random genes are the fast end of every frontier.** They take 0.02 to
   0.07 s. On Basal, 50 random genes already reach 0.981.
-- **No one method tops every task.** Mann-Whitney 1000 then Lasso on
+- **No one method tops every task.** Mann-Whitney 1000 then Lasso (a
+  chain: Mann-Whitney keeps 1,000 genes, then Lasso; section 7.9) on
   Basal (0.994), Mann-Whitney and correlation at 1,500 on Her2 (0.987),
   Berk-Jones, HC2008 and tree importance on LumA (0.961), Mann-Whitney and
   correlation at 1,000 on LumB (0.972), and mutual information at 2,000 on
