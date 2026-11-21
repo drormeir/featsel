@@ -66,7 +66,8 @@ facts follow.
   1.44. Within a class, a gene is a heap at the floor plus a spread of
   detected values, not a normal curve.
 
-These facts decided the test that scores genes
+These facts decided the test that scores genes: the Mann-Whitney U test,
+which uses only the order of the values
 ([chapter 4](04_the_methods.md), section 4.3).
 
 ### The labels: measured and computed

@@ -72,7 +72,8 @@ At small `k`, selection matters. At large `k`, random features catch up.
 *Test AUC at each `k`, mean over the 16 splits, on both image datasets.
 The dotted line is all 2,048 features. Plot: [`scripts/plot_curves.py`](../scripts/plot_curves.py).*
 
-Every method's test AUC at every `k` is in Appendix C.2.
+Every method's test AUC at every `k` is in Appendix C.2 (BreastMNIST)
+and C.4 (FGVC-Aircraft).
 
 The corrected test (section 3.3) against random at the same `k`:
 

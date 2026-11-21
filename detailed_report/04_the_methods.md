@@ -70,7 +70,7 @@ and 883 to 1,000 on LumA.
 
 liblinear at its default tolerance stops before the solution, and keeps
 more genes than the exact solution (section 6.2). LassoSelector now
-solves exactly, with PPDNA, and handles classification
+solves exactly, with PPDNA (Liu and Zhou 2023; section 6.2), and handles classification
 only. In the experiments it takes no `k`. It chooses C by validation AUC
 (section 3.11), and that C sets the count.
 
@@ -81,7 +81,7 @@ in impurity it causes, averaged over the trees.
 
 **SVM-RFE.** On standardized data, a linear SVM's weight on a feature says
 how much the decision depends on it. RFE removes the weakest features,
-retrains, and repeats. It uses an exact Newton solver only. The `step`
+retrains, and repeats. It uses an exact Newton solver only (section 6.2). The `step`
 sets how many features go per round. A step of 0.1 removes 10% of the
 starting features each round, so about ten rounds. Guyon et al. (2002)
 introduced it on gene expression data from leukemia and colon cancer. It
@@ -292,14 +292,16 @@ assumptions are those of HC: rare, weak and independent signal.
 |---|---|
 | The frontier (chapters 7 and 8) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE. The first frontier run had two solvers each for Lasso (liblinear and PPDNA) and RFE (liblinear and Newton); the configurations now run only PPDNA and Newton. |
 | The classifier study (section 7.7) | Random and Mann-Whitney, with five classifiers |
-| The unseen dataset (section 8.9) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso (PPDNA), tree importance, RFE (Newton), RFECV (Newton, scored by accuracy and by AUC), Sequential (Newton); chains of Mann-Whitney then Lasso, tree importance or RFE |
+| The unseen dataset (section 8.9) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso (PPDNA), tree importance, RFE (Newton), RFECV (Newton, scored by accuracy and by AUC), Sequential (a batched Newton solver, section 6.2); chains of Mann-Whitney then Lasso, tree importance or RFE |
 | Simulated rare signal (section 8.11) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, FDR, Lasso (PPDNA) |
 | The chains' first step (section 8.7) | the three chains, with Mann-Whitney keeping 250 or 1,000 features, on the image data |
 
 Variance threshold, ANOVA, Percentile and FWE are in the package and
 tested, but not in the experiments; FDR only in the simulation. ANOVA,
 Percentile, FWE and FDR use the F-test, which the U test replaces on real
-data (section 4.3). Variance threshold uses no label at
+data (section 4.3). For the same reason, the correlation selector uses
+Spearman (rank) correlation: Pearson's value changes with the transform
+of the gene values, and only their order is meaningful (section 2.1). Variance threshold uses no label at
 all.
 
 ## 4.7 Cost in time and memory

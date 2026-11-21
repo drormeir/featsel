@@ -192,7 +192,8 @@ as it follows from the algorithm.
 
 ## 3.8 The classifier
 
-L2-penalized logistic regression with C = 1. The penalty is (λ/2)‖w‖², and
+L2-penalized logistic regression with C = 1. A side study with four other
+classifiers is the evidence for it (section 7.7). The penalty is (λ/2)‖w‖², and
 scikit-learn's C is 1/λ. Features are standardized on the training set
 first, so the penalty treats them alike. The default solver, `lbfgs`, does
 not penalize the bias term.
@@ -229,7 +230,8 @@ other sample.
 normality. A quantile transform maps each feature to a normal
 distribution through its ranks, but discards the size of a fold change.
 Shrinkage LDA, which assumes normal classes, and k-NN, which suffers from
-heavy tails, might gain from it. This is unknown.
+heavy tails, might gain from it (both are in the classifier study of
+section 7.7). This is unknown.
 
 If preprocessing is ever varied, it must be varied for every method alike.
 A method with its own preprocessing mixes the method with its transform.
@@ -242,8 +244,8 @@ was still rising for every method with a `k` list. On BreastMNIST and
 FGVC-Aircraft (2,048 features), `k` is 10, 50, 250, 500 and 1000; random
 selection also runs at 2,048. The largest `k`, 1,000, is more than the
 number of training images (546 and 840), because the goal is the best
-AUC, not a small set. A two-stage chain uses the same list, cut below the size its first
-step keeps.
+AUC, not a small set. A two-stage chain (a filter, then a slower method;
+section 5.4) uses the same list, cut below the size its first step keeps.
 
 - **Why a sweep.** One `k` cannot tell a method good at small budgets from
   one that needs many features.
@@ -296,7 +298,7 @@ The data are held as 32-bit floats, which halves their memory
 (section 5.5 gives the effect on a run). SCAN-B's values have at most 7 measured digits, so 32 bits lose
 nothing measured.
 
-The U test sums its ranks in 64 bits. An earlier run, scored by macro-F1,
+The U test (section 4.3) sums its ranks in 64 bits. An earlier run, scored by macro-F1,
 showed why. In 32 bits, the tie correction of
 near-constant genes went wrong: Mann-Whitney chose different genes in
 every SCAN-B cell, and macro-F1 moved by up to 0.55. After the fix, a

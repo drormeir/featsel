@@ -355,7 +355,8 @@ five:
 At the chosen `k`, in mean AUC over tasks, Mann-Whitney then Lasso beats
 Lasso alone by 0.005, and Mann-Whitney then RFE beats RFE alone by 0.002.
 Mann-Whitney then tree importance loses 0.004 to tree importance alone.
-The chains keep at most 500 genes, by design. Their selection is faster:
+The chains keep at most 500 genes, by design: their `k` list stops below
+the 1,000 of the first step (section 3.11). Their selection is faster:
 6 times for tree importance, about 2.3 times for RFE.
 
 ## 7.10 Sequential selection
