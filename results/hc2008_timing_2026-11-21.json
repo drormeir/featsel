@@ -1,0 +1,78 @@
+{
+  "written": 10,
+  "started": "2026-11-21T21:00:42+02:00",
+  "resumed": false,
+  "dataset": "SCAN-B GSE96058",
+  "target": "pam50 subtype",
+  "n_samples": 2976,
+  "n_features": 28541,
+  "config": {
+    "seed": 42,
+    "n_splits": 2,
+    "selection_repeats": 10,
+    "train_sizes": [
+      0.7
+    ],
+    "preprocess": [
+      "standard"
+    ],
+    "metrics": [
+      "roc_auc",
+      "macro_f1",
+      "balanced_accuracy"
+    ],
+    "n_jobs": 1,
+    "max_worker_memory_gb": 5.74021589756012,
+    "tuning": {
+      "n_splits": 3,
+      "train_size": 0.5,
+      "scoring": "roc_auc"
+    },
+    "dataset": "featsel_datasets.scanb_gse96058.featsel_view",
+    "target": "pam50 subtype",
+    "output": "/tmp/claude-1000/-home-dror-projects-featsel/e3ea5a96-3c1f-41d2-bce3-3983f722f916/scratchpad/hc/hc2008_timing.csv",
+    "k_validation": {
+      "cv": 5
+    },
+    "selectors": [
+      {
+        "name": "HigherCriticismSelector",
+        "label": "HC2008",
+        "params": {
+          "variant": "2008",
+          "device": "cuda"
+        }
+      }
+    ],
+    "models": [
+      {
+        "name": "logistic_regression",
+        "params": {
+          "max_iter": 1000
+        }
+      }
+    ]
+  },
+  "finished": "2026-11-21T21:02:57+02:00",
+  "out_of_memory": [],
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.39",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "cpu_count": 12,
+    "ram_gb": 15.5,
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "torch": "2.14.1",
+      "xgboost": "3.4.1"
+    },
+    "git_commit": "40caa3044ee39f0c3bb873215fe01484dc4d3f48",
+    "git_dirty": true,
+    "gpu": "NVIDIA GeForce GTX 1650",
+    "gpu_memory_gb": 4.0
+  }
+}

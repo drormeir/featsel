@@ -28,7 +28,14 @@ CSV with the exact versions, the machine and the git commit.
 Chapters 7 and 8 come from the current configs. The main SCAN-B runs
 were made on 2026-11-14 and 15; the later runs, from 2026-11-20 on,
 among them BreastMNIST without copies, carry their dates in their JSON files. Each result's JSON
-file records the commit, machine and settings.
+file records the commit, machine and settings. The HC2004 rows of
+`frontier_scanb70_gpu`, `frontier_breastmnist70_nocopies`, `aircraft70_gpu`
+and `rare_signal70` come from a later run of HC2004 alone, on 2026-11-21,
+on the same splits and data; its record is `<run>_hc2004.json` beside each
+CSV. The same day, HC2008 alone was timed on two SCAN-B splits, the
+config of `frontier_scanb70_gpu` with HC2008 only and `--n-splits 2`
+([`results/hc2008_timing_2026-11-21.csv`](../results/hc2008_timing_2026-11-21.csv)
+and its JSON; section 7.11).
 
 | Result | Command | Output |
 |---|---|---|
@@ -60,7 +67,6 @@ file records the commit, machine and settings.
 | RFECV, one split, three inner scores (a check behind section 7.8, not reported) | `.venv/bin/python scripts/rfecv_scoring.py` | prints its table, writes no file |
 | liblinear against the exact solvers, from the archived run (section 6.2) | `.venv/bin/python scripts/liblinear_vs_exact.py results/local/archive_2026-11-13 --out detailed_report/figures/liblinear_vs_exact.csv`; the archived run cannot be made again | [`figures/liblinear_vs_exact.csv`](figures/liblinear_vs_exact.csv) |
 | The correlation fix against the saved frontier selections (section 4.2) | `.venv/bin/python scripts/correlation_fix_check.py --out detailed_report/figures/correlation_fix_check.csv`, about 15 minutes | [`figures/correlation_fix_check.csv`](figures/correlation_fix_check.csv) |
-| HC2004 centred at μᵢ against the saved runs, which predate it (section 4.4) | For each of `frontier_scanb70_gpu`, `frontier_breastmnist70_nocopies`, `aircraft70_gpu` (without `dataset_params`, all 1,200 photos, as the saved run) and `rare_signal70`: a copy of the config with only HC2004, run with `--n-jobs 1` into `results/local/hc2004_rerun/<name>_hc.csv`; about 15 minutes in all. Then `.venv/bin/python scripts/hc2004_rerun_check.py --out detailed_report/figures/hc2004_rerun_check.csv` | `results/local/hc2004_rerun/` with the configs and JSON; [`figures/hc2004_rerun_check.csv`](figures/hc2004_rerun_check.csv) |
 | Every pair of methods at each `k`, SCAN-B (section 7.9) | `.venv/bin/python scripts/paired_tests.py results/local/frontier_scanb70_{gpu,cpu,chains}.csv --metric roc_auc --out detailed_report/figures/paired_tests_scanb70.csv` | [`figures/paired_tests_scanb70.csv`](figures/paired_tests_scanb70.csv) |
 | Every pair of methods at their chosen `k` (sections 7.1, 8.1, 8.9) | `.venv/bin/python scripts/chosen_pair_tests.py results/local/frontier_scanb70_{gpu,cpu,chains,berkjones,rfecv_auc}.csv --within 0.01 --out detailed_report/figures/chosen_pairs_scanb70.csv`; the same with `results/local/frontier_breastmnist70_nocopies.csv` and `results/aircraft70_gpu.csv`, out `chosen_pairs_breastmnist70_nocopies.csv` and `chosen_pairs_aircraft70.csv` | `chosen_pairs_*.csv` in [`figures/`](figures/) |
 | Mann-Whitney 1000 then RFE against every method at 10 genes (section 7.9) | `.venv/bin/python scripts/k10_tests.py results/local/frontier_scanb70_{gpu,cpu,chains,seq}.csv --out detailed_report/figures/scanb70_k10_tests.csv` | [`figures/scanb70_k10_tests.csv`](figures/scanb70_k10_tests.csv) |

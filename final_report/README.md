@@ -538,7 +538,8 @@ each dataset, then SCAN-B's selection time and stability. SCAN-B
 values are means over its five tasks; the time is the mean of each task's
 median time per fit. On SCAN-B, tree importance, RFE and RFECV ran on
 the CPU, also as the second step of a chain; every other method ran on
-the GPU. On the
+the GPU. HC2004 was timed on a later day, when HC2008 also took about
+1 s per fit (D 7.11). On the
 CPU, on SCAN-B-shaped synthetic data, a fit takes 3.8 to 3.9 s for the U-test
 methods, 6.9 s for correlation, 25 s for Lasso at one penalty and 18 s
 for mutual information at 10,000 features (D 6.2). Over
@@ -565,7 +566,7 @@ Source: `table5.csv` in `final_report/figures/`.*
 | Mann-Whitney, then RFE | 0.962 | 0.860 | 0.829 | 3.0 | 0.42 |
 | RFECV, scored by AUC | 0.962 | 0.884 | 0.858 | 5.7 | 0.23 |
 | RFE | 0.961 | 0.891 | 0.862 | 6.9 | 0.33 |
-| HC2004 | 0.874 | 0.771 | 0.674 | 0.68 | 0.67 |
+| HC2004 | 0.874 | 0.771 | 0.674 | 0.94 | 0.67 |
 | RFECV, scored by accuracy | 0.720 | 0.847 | 0.854 | 6.3 | 0.20 |
 
 ### 6.4 Higher Criticism and Berk-Jones

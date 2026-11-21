@@ -1,5 +1,0 @@
-run,cells,same_features,same_roc_auc
-frontier_scanb70_gpu,80,80,80
-frontier_breastmnist70_nocopies,16,16,16
-aircraft70_gpu,16,16,16
-rare_signal70,16,16,16

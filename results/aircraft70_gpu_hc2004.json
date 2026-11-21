@@ -1,0 +1,78 @@
+{
+  "written": 16,
+  "started": "2026-11-21T20:51:31+02:00",
+  "resumed": false,
+  "dataset": "FGVC-Aircraft ResNet-50",
+  "target": "family",
+  "n_samples": 1200,
+  "n_features": 2048,
+  "config": {
+    "seed": 42,
+    "n_splits": 16,
+    "selection_repeats": 3,
+    "train_sizes": [
+      0.7
+    ],
+    "preprocess": [
+      "standard"
+    ],
+    "metrics": [
+      "roc_auc",
+      "macro_f1",
+      "balanced_accuracy"
+    ],
+    "n_jobs": 1,
+    "max_worker_memory_gb": 8.505229949951172,
+    "tuning": {
+      "n_splits": 3,
+      "train_size": 0.5,
+      "scoring": "roc_auc"
+    },
+    "dataset": "featsel_datasets.fgvc_aircraft.featsel_view",
+    "target": "family",
+    "output": "/tmp/claude-1000/-home-dror-projects-featsel/e3ea5a96-3c1f-41d2-bce3-3983f722f916/scratchpad/hc/aircraft70_gpu_hc.csv",
+    "k_validation": {
+      "cv": 5
+    },
+    "selectors": [
+      {
+        "name": "HigherCriticismSelector",
+        "label": "HC2004",
+        "params": {
+          "variant": "2004",
+          "device": "cuda"
+        }
+      }
+    ],
+    "models": [
+      {
+        "name": "logistic_regression",
+        "params": {
+          "max_iter": 1000
+        }
+      }
+    ]
+  },
+  "finished": "2026-11-21T20:51:39+02:00",
+  "out_of_memory": [],
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.39",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "cpu_count": 12,
+    "ram_gb": 15.5,
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "torch": "2.14.1",
+      "xgboost": "3.4.1"
+    },
+    "git_commit": "a2eabd57338917c527a611c0c1aef8fed9e039b4",
+    "git_dirty": false,
+    "gpu": "NVIDIA GeForce GTX 1650",
+    "gpu_memory_gb": 4.0
+  }
+}

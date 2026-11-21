@@ -248,12 +248,6 @@ HC2004's denominator is the p-value itself. At the smallest p-value, far below
 the single strongest p-value. HC2008 divides by μᵢ, the expected
 position, and does not.
 
-The saved HC2004 runs predate its centring at μᵢ. HC2004 alone was rerun
-with μᵢ on the same splits: it selected the same features, with the same
-test AUC, on all 128 task and split cells of the four runs that use it
-([`figures/hc2004_rerun_check.csv`](figures/hc2004_rerun_check.csv), from
-[`scripts/hc2004_rerun_check.py`](../scripts/hc2004_rerun_check.py)).
-
 HC2008 could also use the exact variance of the sorted p-value,
 μᵢ(1 − μᵢ)/(N + 2). That would only multiply every HC(i) by the same
 constant, √((N + 2)/N). The selected genes would not change, so this is
