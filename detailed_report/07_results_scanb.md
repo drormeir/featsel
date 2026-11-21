@@ -392,7 +392,11 @@ chapter 6:
 | Sequential, `k` = 10 | 588 | none |
 
 The GPU methods ran one fit at a time; the CPU methods (tree importance,
-RFE, RFECV) ran two workers at once, which slows each a little.
+RFE, RFECV) ran two workers at once, which slows each fit. Tree
+importance, with 4 threads per fit on Basal's 2,083 training patients,
+takes 9.6 s alone and 13.4 s with two fits at once (medians;
+[`results/tree_timing.csv`](../results/tree_timing.csv)). The series of
+section 6.2 used 1,488 patients, so its times are lower.
 
 Choosing `k` costs more than one selection: 5 fits on validation sets, and
 a classifier for each `k` on each. For a filter, that dominates.
