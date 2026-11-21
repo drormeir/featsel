@@ -101,7 +101,8 @@ shape our protocol (Table 1):
 2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
    thresholds were built for rare signal. On widespread signal, HC2008
    and Berk-Jones stopped at the edge of their search and acted as
-   top-10% filters; HC2004 kept one to three features.
+   top-10% filters; HC2004 kept one to three features. On simulated rare
+   signal, HC2008 chose a good count.
 3. **A cost-quality frontier**: selection time against AUC for every
    method and setting, on each dataset.
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
@@ -343,7 +344,8 @@ guarantees are not proved.
 
 **Rare signal.** Both thresholds were built for signal that is rare, weak
 and independent. In none of the three datasets is the signal rare
-(section 2). Section 6.4 shows what the thresholds do then.
+(section 2). Section 6.4 shows what the thresholds do then, and on
+simulated rare signal.
 
 ## 5. Software and speed
 
@@ -540,6 +542,13 @@ features (p < 0.001). HC2004 keeps one to three features. It is the
 weakest method on both image datasets, and on SCAN-B only RFECV scored
 by accuracy is weaker.
 
+**Simulated rare signal** (D 8.11): 10,000 independent normal features, 40
+of them moved by 0.4 standard deviations in the positive class. HC2008
+kept a median of 34 features and had the best mean AUC, 0.858. Mann-Whitney
+with a validated `k` reached 0.843; the difference is not established
+(p = 0.62). Berk-Jones (0.813, 12 features) and FDR were stricter, and
+HC2004 kept one or two. All features gave 0.629.
+
 ### 6.5 Does selection find the PAM50 genes?
 
 The PAM50 label is computed from 50 known genes (section 2). A side study
@@ -663,14 +672,14 @@ safe default.
   memory, and an NVIDIA GTX 1650 with 4 GB. A time is meaningful only on
   that machine. The runner's speed-up comes from three runs of one small
   grid.
-- **Higher Criticism.** No dataset here has rare signal, so these results
-  do not test it in the setting it was built for.
+- **Higher Criticism.** No real dataset here has rare signal. One
+  simulation, with independent features, tests it in that setting.
 
 ### 7.5 Open research questions
 
-- **A dataset with rare signal**, or a simulation with a known number of
-  useful features, would test whether Higher Criticism and Berk-Jones
-  choose a good count where their theory holds.
+- **A real dataset with rare signal**, and simulations with other
+  rarities, strengths and correlated features, would test further whether
+  Higher Criticism and Berk-Jones choose a good count.
 - **An exact test for floor-heavy genes.** A test that separates how often
   a gene is detected from how high it is when detected would fit these
   data better than the U test, which merges both (D B.4).
@@ -822,7 +831,7 @@ one command:
 ```
 
 The configs behind section 6 are `configs/frontier_scanb70_*.yaml`,
-`configs/frontier_breastmnist70_*.yaml` and `configs/aircraft70_gpu.yaml`.
+`configs/frontier_breastmnist70_*.yaml`, `configs/aircraft70_gpu.yaml` and `configs/rare_signal70.yaml`.
 Adding `--resume` continues a stopped run. Each run writes a CSV, and a
 JSON file with the machine, the library versions and the git commit. D A
 gives the command behind every summary table. This report's figures and
