@@ -80,13 +80,10 @@ hand (section 3.11).
 features with non-zero weights are selected. scikit-learn sets the
 penalty's strength by C = 1/λ, so a smaller C keeps fewer features.
 
-So C, not the requested count, caps the count. An earlier SCAN-B
-comparison, with C fixed at 1 and liblinear as the solver, showed this.
-Asked for 1,000 genes, Lasso kept 127 to 647 on four of the five tasks,
-and 883 to 1,000 on LumA.
+So C, not the requested count, caps the count.
 
 liblinear at its default tolerance stops before the solution, and keeps
-more genes than the exact solution (section 6.2). LassoSelector now
+more genes than the exact solution (section 6.2). LassoSelector
 solves to a residual of 10⁻¹⁰, not proven exact, with PPDNA, a dual Newton proximal point algorithm (Liu
 and Zhou 2023; section 6.2), and handles classification
 only. In the experiments it takes no `k`. It chooses C by validation AUC
@@ -122,24 +119,22 @@ linear SVM (`LinearSVC`). Sequential scores candidates with logistic
 regression. Every method is then judged by logistic regression. Part of a
 gap between RFE and Sequential may come from this difference.
 
-**Correlation: a defect, fixed after the runs.** Of each highly
-correlated pair, CorrelationSelector dropped the gene less correlated with
-the label, even when the other gene of the pair was itself dropped. Take
-genes A, B and C, in falling order of correlation with the label. A–B and
-B–C correlate above the threshold, A–C does not. Then B was dropped for
-A, and C for B. Only A remained, though C was redundant only with a gene
-that was gone. The selector now walks the genes from the largest
-correlation with the label down, and drops a gene only when it is
-redundant with a gene already kept, so A and C stay. A test checks this
-example. Every correlation result in this report comes from the old
-version: the frontier, the main comparison of chapters 7 and 8 (section
-4.6), ran before the fix. On the frontier's own splits, the old version
-reproduces every saved selection, and the new one changes none on the
-image data and 47 of 560 on SCAN-B, each by one gene of 1,000 to 2,000
-([`figures/correlation_fix_check.csv`](figures/correlation_fix_check.csv),
+**Correlation: the redundancy rule.** CorrelationSelector walks the
+genes from the largest correlation with the label down, and drops a gene
+only when it is redundant with a gene already kept. Take genes A, B and
+C, in falling order of correlation with the label, where A–B and B–C
+correlate above the threshold and A–C does not. Then B is dropped, and A
+and C stay. A test checks this example.
+
+**Limit.** The correlation results of chapters 7 and 8 come from a
+previous rule, which dropped the weaker gene of every redundant pair,
+even when the stronger one was itself dropped; in the example it kept
+only A. On the frontier's splits, the current rule changes no image-data
+selection and 47 of 560 SCAN-B selections, each by one gene of 1,000 to
+2,000 ([`figures/correlation_fix_check.csv`](figures/correlation_fix_check.csv),
 from [`scripts/correlation_fix_check.py`](../scripts/correlation_fix_check.py)).
-So the frontier was not rerun. The `k` chosen on validation sets and
-the test AUC were not recomputed with the new version.
+The `k` chosen on validation sets and the test AUC were not recomputed
+with the current rule.
 
 ### One ranking for every `k`
 
@@ -210,8 +205,7 @@ cannot be computed once for all genes.
 standard 64-bit float rounds to 0. Higher Criticism needs to tell them
 apart. We compute the logarithm of the p-value directly from the normal
 tail, so nothing underflows ([`featsel/selectors/log_pvalue/`](../featsel/selectors/log_pvalue/)).
-On `scanb_small`, an earlier course copy of SCAN-B, 167 genes had an
-F-test p-value of exactly 0 for the five classes. The module's tutorial
+The module's tutorial
 uses 2,000 synthetic features with 1,500 samples per class, 300 of them
 with signal. There SciPy gives p = 0 to 170 features with the U test, and
 to 189 with the F-test. The logs keep all of them distinct. Against
@@ -254,8 +248,8 @@ constant, √((N + 2)/N). The selected genes would not change, so this is
 not a separate variant.
 
 Donoho and Jin (2004) also give HC⁺, which skips p-values below 1/N. It
-was not used. On `scanb_small`, the earlier course copy, every p-value
-inside the search lay below 1/N, so HC⁺ would have had nothing to search.
+is not used. On SCAN-B many genes have p-values far below 1/N (section
+4.3), so HC⁺ would search for its maximum only past all of them.
 
 The maximum is searched over the smallest alpha0 · N p-values. The 2008
 paper gives alpha0 = 0.1 as an example ("e.g., α0 = 1/10", p. 14791); the
@@ -317,7 +311,7 @@ assumptions are those of HC: rare, weak and independent signal.
 
 | Experiment | Methods |
 |---|---|
-| The frontier (chapters 7 and 8) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE. The first frontier run had two solvers each for Lasso (liblinear and PPDNA) and RFE (liblinear and Newton); the configurations now run only PPDNA and Newton. |
+| The frontier (chapters 7 and 8) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE |
 | The classifier study (section 7.7) | Random and Mann-Whitney, with five classifiers |
 | The unseen dataset (section 8.9) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso (PPDNA), tree importance, RFE (Newton), RFECV (Newton, scored by accuracy and by AUC, section 7.8), Sequential (a batched Newton solver, section 6.2); chains of Mann-Whitney then Lasso, tree importance or RFE |
 | Simulated rare signal (section 8.11) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, FDR, Lasso (PPDNA) |

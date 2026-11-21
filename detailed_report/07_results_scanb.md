@@ -466,8 +466,7 @@ chapter 6:
 | Sequential, `k` = 10 | 588 | none |
 
 The GPU methods ran one fit at a time; the CPU methods (tree importance,
-RFE, RFECV) ran two workers at once (in an early SCAN-B run, memory made
-6 workers fall back to 3, section 6.1), which slows each fit. Tree
+RFE, RFECV) ran two workers at once, which slows each fit. Tree
 importance, with 4 threads per fit on Basal's 2,083 training patients,
 takes 9.6 s alone and 13.4 s with two fits at once (medians;
 [`results/tree_timing.csv`](../results/tree_timing.csv)). In the runs,

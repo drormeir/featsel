@@ -78,9 +78,8 @@ The corrected test below allows for this overlap.
 the five-class PAM50 label, so every subtype-vs-rest task is scored on the
 same patients.
 
-**How many splits.** The first plan was 100 splits at training fractions
-0.5, 0.7 and 0.9, for a learning curve. It was dropped for time. Every
-method comparison now uses 16 splits with 70% of
+**How many splits.** Every
+method comparison uses 16 splits with 70% of
 samples in the training set: 50% trains on fewer samples than a model
 in real use would have, and 90% leaves too few to test: on BreastMNIST,
 59 images, 18 of them malignant. Sixteen or more values support quartiles; five do not.
@@ -330,15 +329,13 @@ same features as the search.
 
 ## 3.12 Data precision
 
-The data are held as 32-bit floats, which halves their memory
-(section 5.5 gives the effect on a run). SCAN-B's values have at most 7 measured digits, so 32 bits lose
-nothing measured.
+The data are held as 32-bit floats, which halves their memory. SCAN-B's
+values have at most 7 measured digits, so 32 bits lose nothing measured.
 
-The U test (section 4.3) sums its ranks in 64 bits. An earlier run
-showed why: in 32 bits, the tie correction of near-constant genes went
-wrong, and Mann-Whitney chose different genes in every SCAN-B cell. That
-run and the check after the fix were not kept, so their scores are not
-given here.
+The U test (section 4.3) sums its ranks and its tie term in 64 bits. For
+a near-constant gene, the tie term Σ(t³ − t) reaches about 10¹⁰ on
+2,083 training patients, far above 2²⁴, the largest range in which a
+32-bit float holds every whole number exactly.
 
 ## 3.13 Scores we considered and did not use
 

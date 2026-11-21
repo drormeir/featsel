@@ -400,7 +400,7 @@ scores = cross_val_score(pipe, X, y, cv=5, scoring='roc_auc')
 **The runner.** A method that ranks all features in one fit, such as
 Mann-Whitney, is fitted once per split, and every `k` is cut from its
 ranking. Each split is prepared once and shared by all workers in memory.
-Long runs on a 16 GB laptop (section 7.3) crashed at first, so the runner caps each
+So that long runs survive on a 16 GB laptop (section 7.3), the runner caps each
 worker's memory, skips a cell (one task, split, method and `k`) that
 does not fit, restarts with fewer
 workers when one dies, writes each row as it finishes, and resumes a
@@ -416,7 +416,7 @@ to 4.5 and 10.1 to 10.8 over the runs); against scikit-learn on 12
 threads, 6.8 times (D 6.1), with identical test scores (`results/speed_benchmark.csv`). It
 does less work: it prepares each split once and ranks once per split. On
 this grid, 10 jobs in parallel gained 2.5 times over one. On all the genes and all five
-tasks, an older run gained at most 1.8 times, from 3 workers on. There,
+tasks, the runner gained at most 1.8 times, from 3 workers on. There,
 each selection fit ran 1.76 times slower beside others. A fit reads the
 whole training set, so this points to the memory bandwidth that all cores
 share (D 6.1).
@@ -710,7 +710,7 @@ can change between datasets.
 - **Protocol.** One classifier in the main runs, logistic regression with
   C fixed at 1; for Mann-Whitney and all features, C = 0.01 to 100 gave
   no established AUC difference on the image data, and
-  SCAN-B was not tested (D 3.8). In a side study with four more classifiers and older
+  SCAN-B was not tested (D 3.8). In a side study with four more classifiers and other
   settings (12 splits, 50% training, macro-F1), Mann-Whitney beat random
   genes at 10 genes with each of the five, by 0.20 to 0.23, on every
   SCAN-B task and split (D 7.7). One training fraction and 16 splits; the spread over splits is not a
@@ -719,7 +719,7 @@ can change between datasets.
   fixed, except Lasso's penalty; so is a chain's first count, and other
   counts were tested only on the image data (section 6.6). Whether more trees would change tree importance's AUC was not
   tested (D 7.4). The correlation results come from a
-  version with a defect, fixed later; at each `k`, the fix changes at most one gene
+  previous redundancy rule; at each `k`, the current rule changes at most one gene
   of a selection; the chosen `k` and the AUC were not recomputed (D 4.2).
 - **Many tests.** Each test is judged at p < 0.05, with no correction for
   the number of tests, more than a hundred per dataset. So some

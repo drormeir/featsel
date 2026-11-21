@@ -94,11 +94,8 @@ this for a clean NumPy array. `transform` returns a NumPy array, or pandas
 with `set_output(transform='pandas')`. A tensor comes back as a tensor on
 the same device.
 
-**Why.** An earlier wrapper class forwarded parameters through a
-hand-written list. A parameter missing from it was silently dropped, so a
-config typo ran with the default. Adding a selector meant editing three
-places. The wrapper, its list and its combining modes (union,
-intersection, voting) were removed.
+**Why.** A misspelled parameter raises an error, instead of running
+silently with the default.
 
 **Registration.** A selector registers under its class name when defined,
 through `__init_subclass__`. Names are stored in lower case, so lookup
@@ -303,8 +300,8 @@ preprocesses once instead of five times.
 
 ## 5.5 Running for hours without supervision
 
-Long runs on a 16 GB laptop crashed at first: when memory ran out, the
-operating system killed the run with no message. Six mechanisms fix this.
+On a 16 GB laptop, a long run can run out of memory, and the operating
+system then kills it with no message. Six mechanisms prevent this.
 
 | Mechanism | What it does |
 |---|---|
@@ -320,21 +317,9 @@ libraries reserve address space they never use. Under an address-space
 cap below about 5 GB, they could not even load. After a GPU call, a
 worker releases its cached GPU memory and keeps about 64 MB.
 
-**What happened in practice.** Full SCAN-B needs several GB per worker.
-On the 16 GB laptop, six workers ran out of memory; the run resumed with
-fewer. Under a 3 GB cap the U-test selectors were skipped, and a resume
-at a higher cap filled them in. Holding the data as 32-bit floats
-(section 3.12) cut peak selection memory by 30% to 45%: under a 3 GB cap,
-4 workers fit instead of 2. These are single measurements, not saved. Two
-later changes were not measured again: the one-sort U test (section 6.2) needs about
-1.25 times the memory (a single measurement), and the cap moved from
-address space to data memory.
-
-The last two mechanisms came from the scaling measurement of section 6.1.
-There liblinear aborted workers, and the runner fell back to fewer, as
-designed. But many runs in one process left memory behind, and the
-process crashed even with one worker. The scaling script now runs each
-measurement in a fresh process, saves it as it ends, and can resume.
+Many runs in one process leave memory behind. So the scaling script of
+section 6.1 runs each measurement in a fresh process, saves it as it
+ends, and can resume.
 
 **Limits.** Nothing restarts a run after a reboot or power loss; the same
 command continues from the saved rows. A cell that never fits in memory

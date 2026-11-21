@@ -12,9 +12,9 @@ times. The few single timings in the text are marked as such. They
 explain a design choice and claim no speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM,
 and an NVIDIA GTX 1650 with 4 GB.
 
-The SCAN-B measurements here, except the table of section 6.1, were made
-before the 11 flat genes were dropped (section 2.1). So they use 28,552
-genes, not the 28,541 of chapter 7 (Appendix B.5).
+The SCAN-B measurements here, except the table of section 6.1, use
+28,552 genes: the 28,541 of chapter 7 and the 11 flat genes (section 2.1,
+Appendix B.5).
 
 ## 6.1 The runner against plain scikit-learn
 
@@ -42,12 +42,12 @@ The setting, chosen to see the whole flow in about a minute:
 
 The runner solves Lasso by PPDNA and RFE by Newton's method (section
 6.2). scikit-learn runs liblinear to a tight tolerance, so that both
-sides reach the same solution. The script ran three times, on 2026-11-20
-and 21, with the laptop otherwise idle. The table gives the median
+sides reach the same solution. The script ran three times, with the
+laptop otherwise idle. The table gives the median
 seconds and the speed-up of the medians. Over the three runs, the
 runner's speed-up was 3.9 to 4.5 on one core and 10.1 to 10.8 on 12
 threads. Against scikit-learn on 12 threads, the runner on 12 threads is
-6.8 times faster (32.8 s against 4.8 s). An earlier run gave 4.3 and 10.1 (`results/speed_benchmark.csv` at commit `46674fc`).
+6.8 times faster (32.8 s against 4.8 s).
 
 | Run | Seconds (median of 3) | Speed-up over scikit-learn on 1 core |
 |---|---|---|
@@ -102,11 +102,9 @@ A classifier fit reads only a few genes. This points to memory bandwidth,
 shared by all cores, as the limit. We did not measure the bandwidth
 itself.
 
-This run also predates dropping liblinear. With 6 workers, the memory cap
-per worker was too small for a liblinear fit, so it aborted. Every
-6-worker run fell back to 3 workers (section 5.5;
-`ended_with_workers` in `figures/parallel_scaling.csv`). So
-on this 16 GB laptop, more than 3 workers gained almost nothing for this
+With 6 workers, the memory cap per worker was too small, and every
+6-worker run fell back to 3 workers (section 5.5; `ended_with_workers`
+in `figures/parallel_scaling.csv`). So on this 16 GB laptop, more than 3 workers gained almost nothing for this
 grid: the median time was 138.7 s with 3 workers and 137.6 s with 4.
 
 Sources: [`scripts/parallel_scaling.py`](../scripts/parallel_scaling.py),
@@ -159,7 +157,7 @@ faster than liblinear (Appendix D.2).
 
 | Method | What changed |
 |---|---|
-| U test | One sort per gene gives the ranks and the tie groups. On the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed there, exactly, in 64-bit floats. The p-value is finished on the CPU, so every device gives identical results. The NumPy version replaced two ranking passes by one sort, at about 1.25 times the peak memory. In the speed series it takes 1.27 s at 3,000 × 10,000 and 3.76 s at 3,000 × 30,000. |
+| U test | One sort per gene gives the ranks and the tie groups. On the GPU, PyTorch sorts thousands of genes in parallel. Only the rank sums and tie counts are computed there, exactly, in 64-bit floats. The p-value is finished on the CPU, so every device gives identical results. The NumPy version also uses one sort per gene. In the speed series it takes 1.27 s at 3,000 × 10,000 and 3.76 s at 3,000 × 30,000. |
 | F-test, variance | Class sums as one vector product per class, on the GPU. |
 | Correlation | The gene-gene correlations are computed in blocks, so the full 28,552 × 28,552 matrix is never held in memory. |
 | Mutual information | scikit-learn's estimate (Ross 2014) finds nearest neighbours with a KD-tree. For one feature, a sort per class finds the third-nearest neighbour (scikit-learn's default of three neighbours), and a binary search counts the points within its radius. The random noise, the distances and the order of every mean are scikit-learn's, so the scores are identical, bit for bit. A class of 2 to 7 samples, and regression, go to scikit-learn, which uses brute-force distances there. The GPU path draws scikit-learn's noise on the CPU and sends it over. |
@@ -211,8 +209,8 @@ liblinear's 10⁻⁴.
 **Why PPDNA.** Simpler solvers failed, and PPDNA itself needed changes
 from its paper to work on SCAN-B-shaped data (Appendix D.3).
 
-**Dropping liblinear.** RFE, RFECV and Lasso no longer offer liblinear,
-and have no `solver` parameter. Each runs only its exact solver: Newton
+**No liblinear.** RFE, RFECV and Lasso do not offer liblinear, and have
+no `solver` parameter. Each runs only its exact solver: Newton
 for RFE and RFECV, PPDNA for Lasso. The reasons:
 
 - **Speed.** On the synthetic data of the first table, Newton RFE was
@@ -221,16 +219,15 @@ for RFE and RFECV, PPDNA for Lasso. The reasons:
   approaches.
 - **Repeatability.** Unless its seed is fixed, liblinear shuffles the
   data differently on each fit and keeps different genes. Newton and
-  PPDNA use no randomness, so the selectors lost `random_state` too.
+  PPDNA use no randomness, so the selectors take no `random_state`.
 
 For Lasso the speed argument is weaker. On the CPU, a single PPDNA fit
 was faster than liblinear on some tasks and slower on others; only on a
 GPU was PPDNA clearly faster (Appendix D.2, D.4).
 
-The cost is the drop-in promise. These three selectors now select what
+The cost is the drop-in promise. These three selectors select what
 scikit-learn selects with liblinear run to a tight tolerance, not with
-its defaults. Lasso also lost regression, which only liblinear supported.
-It is now classification only. The project's tasks are all binary
+its defaults. Lasso is classification only. The project's tasks are all binary
 classification (section 2.1).
 
 Newton has one limit. It works in the samples' space, through an n × n

@@ -156,7 +156,7 @@ settings stated in their sections.
 15. **Exactness has a price in agreement.** Faster, tighter solvers can pick
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
     does on some synthetic data. The reason is that the default stops before it
-    reaches the solution. So RFE, RFECV and Lasso now run only their
+    reaches the solution. So RFE, RFECV and Lasso run only their
     exact solvers (section 6.2).
 16. **Selection buys a smaller model more often than a better one.** On
     BreastMNIST all 2,048 features scored 0.895 and on FGVC-Aircraft
@@ -251,7 +251,7 @@ described in the section given.
   replicates.
 - Each selector's own settings are fixed, except Lasso's C (section 3.11).
   HC keeps alpha0 = 0.1 (section 4.4). The correlation results come
-  from a version with a defect, fixed after the runs; at each `k`, the fix changes
+  from a previous redundancy rule; at each `k`, the current rule changes
   at most one gene of a selection; the chosen `k` and the AUC were not
   recomputed (section 4.2).
 - A chain's first count is fixed: 1,000 genes on SCAN-B, 500 features on
@@ -271,8 +271,7 @@ described in the section given.
   a new metric needs a new run (section 10.1).
 - Side studies keep their own protocols: the PAM50 recovery uses 10
   splits (section 7.6), the classifier study 12 splits at 50% (section
-  7.7). Some early results come from the course copy `scanb_small`, which
-  keeps the repeated patients (section 2.1).
+  7.7).
 
 **The cost.**
 

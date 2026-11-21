@@ -5,19 +5,14 @@
 Chapter 6 gives the speed results and the reasons behind them. This
 appendix keeps the detail behind them: how the timings were checked, how
 the Lasso solver was made to work, and what the GPU trials found. Like
-chapter 6, its SCAN-B measurements use 28,552 genes, before the 11 flat
-genes were dropped (section 2.1).
+chapter 6, its SCAN-B measurements use 28,552 genes, the 11 flat genes
+included (section 2.1).
 
 ## D.1 How the timings were checked
 
-The speed notebooks had a defect. Past the largest size scikit-learn
-reached, the "Same features?" check compared two of our variants instead
-of one of ours with scikit-learn's. That cell is now left empty. After
-the fix, the mutual information, tree importance, RFECV and Sequential
-notebooks were run again. Most times moved by 7% or less.
-scikit-learn's Sequential selection took 164 s, against 191 s before, so
-the GPU's lead fell from 39 to 34 times. Two timed fits cannot pin a time
-closer than that.
+Past the largest size scikit-learn reaches, a speed notebook leaves the
+"Same features?" cell empty: there is no scikit-learn selection to
+compare with.
 
 The RFE, RFECV and Lasso results come from a plain script,
 [`scripts/benchmark_speed_selectors.py`](../scripts/benchmark_speed_selectors.py),

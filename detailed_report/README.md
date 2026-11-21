@@ -77,9 +77,8 @@ methods and the main results in one page, read the
 Every number comes from a file in the repository, and each table names its
 source. The method comparisons follow one protocol (chapter 3): 16
 random splits, 70% of the samples in the training set, `k` chosen on
-validation sets, ROC AUC, and timing. The main SCAN-B runs were made on
-2026-11-14 and 15; BreastMNIST without copies on 2026-11-20. Each run's
-JSON file, beside its CSV, holds its date; most of these files are in
+validation sets, ROC AUC, and timing. Each run's JSON file, beside its
+CSV, records its commit, machine and settings; most of these files are in
 `results/local/`, which is not tracked (Appendix A). A few side studies keep their own
 settings, stated where they appear: the PAM50 recovery (section 7.6), the
 classifier study (section 7.7) and the speed benchmarks (chapter 6). Section 9.6 gives the limits that
