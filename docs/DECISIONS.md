@@ -3,7 +3,7 @@
 The decisions that shaped the project, in date order. Each gives the
 problem, the decision, and the alternatives rejected. A row with two dates
 is placed by its first. The first date is when the problem was raised or
-decided; the second is when it was built or settled. Sources: `SCOPE.md`,
+decided; the second is when it was built or settled. Sources: the project's scope notes,
 git history, the project's working sessions, the working notes once in
 `docs/` and the drafts once in `docs/report/`. Git history keeps them.
 
@@ -84,14 +84,14 @@ added here.
 | 2026-11-07 | What to time, how often. | Selection time only. Median of 10 fits per selection. The device recorded. | One fit (noisy); including classifier time. |
 | 2026-11-11 | Random splits share most of their training patients, so the Wilcoxon test of 2026-11-09 treats dependent scores as independent and overstates certainty. | The corrected resampled t-test of Nadeau and Bengio (2003), with the mean difference and its 95% interval, and Bonferroni. The Wilcoxon p-value stays as a column for comparison. Tests passed on SCAN-B fell from 67 to 35 of 81; the lead of tree importance over Mann-Whitney is no longer established. | Keeping Wilcoxon (independence fails); the 5 × 2 cross-validation t-test (needs its own new run); a permutation test over splits (also assumes independent splits). |
 | 2026-11-11 | Kuncheva's index assumes equal set sizes, but Lasso, Higher Criticism and RFECV choose different sizes on different splits. | Add the measure of Nogueira, Sechidis and Brown (2018) beside Kuncheva's. It equals the mean pairwise Kuncheva index at equal sizes, so the existing tables stay. | Replacing Kuncheva's index (the tables and figures already use it, and the two agree wherever sizes are equal); Jaccard overlap (not corrected for chance). |
-| 2026-11-10 | `SCOPE.md` allowed published Higher Criticism only, but HC2008 uses i/(N+1) where the papers use i/N. | Keep i/(N+1), say so in section 4.4, and drop the rule from `SCOPE.md`. | Switching HC2008 to i/N (its results in chapters 7 and 8 would need a rerun). |
+| 2026-11-10 | The project's scope allowed published Higher Criticism only, but HC2008 uses i/(N+1) where the papers use i/N. | Keep i/(N+1), say so in section 4.4, and drop the rule from the scope. | Switching HC2008 to i/N (its results in chapters 7 and 8 would need a rerun). |
 
 ## Speed and hardware
 
 | Date | Problem | Decision | Rejected |
 |---|---|---|---|
-| 2026-11-02, 2026-11-03 | The U test took about 10 s per fit. | A NumPy version with one sort per gene: about 3 s. Then a GPU version in PyTorch, `device='auto'` by default. Identical results on every device. `SCOPE.md` allowed PyTorch in the package for this one method, because the three U-test selectors took about 37% of the comparison's computing time. | SciPy's private one-sort ranking (a private interface can break on upgrade); JAX, CuPy and Numba (one GPU library is enough; PyTorch is already the embedding dependency). |
-| 2026-11-06, 2026-11-07 | How far to optimize. | Every selector as fast as it can be on this machine. `SCOPE.md` widened to allow a GPU path for every selector. scikit-learn's version stays the reference and the default wherever a faster one can select differently. Only problems with more features than samples are optimized. | Optimizing only the slowest. |
+| 2026-11-02, 2026-11-03 | The U test took about 10 s per fit. | A NumPy version with one sort per gene: about 3 s. Then a GPU version in PyTorch, `device='auto'` by default. Identical results on every device. The project's scope allowed PyTorch in the package for this one method, because the three U-test selectors took about 37% of the comparison's computing time. | SciPy's private one-sort ranking (a private interface can break on upgrade); JAX, CuPy and Numba (one GPU library is enough; PyTorch is already the embedding dependency). |
+| 2026-11-06, 2026-11-07 | How far to optimize. | Every selector as fast as it can be on this machine. The project's scope widened to allow a GPU path for every selector. scikit-learn's version stays the reference and the default wherever a faster one can select differently. Only problems with more features than samples are optimized. | Optimizing only the slowest. |
 | 2026-11-06, 2026-11-07 | Single timings mislead. | Speed claims only from a benchmark series on synthetic data shaped like SCAN-B. AUC only on real data. | Quoting one timing. |
 | 2026-11-06, 2026-11-07 | What the study should deliver to practitioners. | A cost-quality frontier: selection time against AUC, every method on one plot. | Accuracy tables only. |
 | 2026-11-07 | Mutual information on the GPU must stay exact. | The whole estimate on the GPU. Only scikit-learn's random noise is drawn on the CPU and sent over. Divisions and sums follow NumPy's rounding and order. | Drawing noise on the GPU (different numbers from scikit-learn); copying the data back to the CPU for scaling and noise (the work must stay on the GPU). |
@@ -117,8 +117,8 @@ added here.
 
 ## Parked ideas
 
-Ideas that are interesting but serve none of the four tasks in
-`SCOPE.md`. Until 2026-11-10 this list was section 10.3 of the final
+Ideas that are interesting but serve none of the four tasks of
+the project proposal. Until 2026-11-10 this list was section 10.3 of the final
 report. Writing an idea down here is how it stops competing for attention.
 Format: the date, the idea, and why it was parked.
 
@@ -130,7 +130,7 @@ Format: the date, the idea, and why it was parked.
   not a project requirement.
 - 2026-10-05 - Higher Criticism with exact null moments: centre the i-th
   p-value at i/(N+1) and scale by √(N+2), from Beta(i, N−i+1), with a
-  proof. Parked: no publication was found. `SCOPE.md` then allowed
+  proof. Parked: no publication was found. The project's scope then allowed
   published HC only. That rule was dropped on 2026-11-10. HC2008 here
   already uses the exact centre, i/(N+1) (detailed report, section 4.4). The
   √(N+2) scale multiplies every score by the same constant, so it would

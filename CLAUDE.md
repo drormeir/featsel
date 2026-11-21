@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Read `docs/SCOPE.md` first.** It defines what is allowed to be built and how to work with Dror. It overrides anything here that looks like an invitation to expand the project (PyPI publishing, future phases, PyTorch integration).
+**Read `docs/SCOPE.md` first, if present.** It is local and not tracked in git. It defines what is allowed to be built. It overrides anything here that looks like an invitation to expand the project (PyPI publishing, future phases, PyTorch integration).
 
 ## Project Overview
 
@@ -122,7 +122,7 @@ config. A CSV dataset config specifies:
 **Current dataset: SCAN-B, GSE96058 (`featsel_datasets/scanb_gse96058/`)**
 - 3,273 patients, 3,409 samples, 30,865 genes; `load_xy()` gives 2,976 patients
 - Default target `pam50 subtype` (Basal, LumA, LumB, Her2, Normal)
-- Every task is binary (`docs/SCOPE.md` 3a): PAM50 becomes five tasks, each subtype vs the rest. No five-class results
+- Every task is binary (`docs/DECISIONS.md`, 2026-10-18): PAM50 becomes five tasks, each subtype vs the rest. No five-class results
 - Other targets are GSE96058's own field names, e.g. `er status` (pathologist), `er prediction mgc` (computed from genes), `overall survival event`
 - PAM50 and the `prediction` fields are computed from gene expression, not measured. See `detailed_report/02_the_data.md`.
 
@@ -368,7 +368,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 
 ### Package Installation
 - The package uses modern Python packaging with `pyproject.toml`
-- Version 0.1.0; not published on PyPI (`docs/SCOPE.md` §4)
+- Version 0.1.0; not published on PyPI
 - Support for Python 3.9-3.13
 - Core dependencies: numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, pyyaml, tqdm
 - Optional dependencies: jupyter (dev), optuna (hyperparameter optimization), torch and torchvision (embeddings: only to compute the BreastMNIST embeddings), torch (gpu: every selector's GPU path, `device='cuda'` or `'auto'`)

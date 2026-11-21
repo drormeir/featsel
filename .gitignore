@@ -228,3 +228,6 @@ results/local/
 # Papers and documents kept locally: the repo is public, and they may not be
 # redistributed.
 references/local/
+
+# The private scope agreement: kept locally, not published.
+docs/SCOPE.md
