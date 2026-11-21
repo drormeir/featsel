@@ -130,7 +130,7 @@ config. A CSV dataset config specifies:
 - 780 breast ultrasound images (MedMNIST v2, 224 x 224), malignant 210 vs benign or normal 570
 - Features: 2,048 ResNet-50 embedding dimensions per image (ImageNet weights, last layer removed)
 - Target `label`; all 780 images are used, MedMNIST's own split is ignored
-- Computing embeddings needs `torch`/`torchvision` (the `embeddings` extra); they are cached as `embeddings_resnet50.npz`
+- Computing embeddings needs `torch`/`torchvision` (the `embeddings` extra); cached as `embeddings_resnet50_v2.npz` (V2, the default; `weights='V1'` gives `_v1.npz`)
 - 339 images fall in 150 groups of copies: `samples['copy_group']`, found on first use by `copies.py` (OpenCV, about 40 s) and cached as `copies.csv` beside the images, untracked; `BreastMNIST(find_copies=False)` skips it. `load_xy(drop_copies=True)`, or `dataset_params: {drop_copies: true}` in a config, keeps 585 images. Analysis: `demos/copies.ipynb`
 
 **Third dataset, unseen during the design: FGVC-Aircraft (`featsel_datasets/fgvc_aircraft/`)**

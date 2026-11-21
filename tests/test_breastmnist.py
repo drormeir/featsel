@@ -16,7 +16,7 @@ from featsel_datasets.medmnist_breastmnist.featsel_view import load_xy
 @pytest.fixture(scope='module')
 def data():
     data = BreastMNIST()
-    if not all((data.cache_dir / name).exists() for name in (FILE, 'embeddings_resnet50.npz', 'copies.csv')):
+    if not all((data.cache_dir / name).exists() for name in (FILE, 'embeddings_resnet50_v2.npz', 'copies.csv')):
         pytest.skip('BreastMNIST, its embeddings or its copy groups are not cached')
     return data
 

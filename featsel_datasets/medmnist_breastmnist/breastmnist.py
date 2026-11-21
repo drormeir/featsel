@@ -46,13 +46,19 @@ class BreastMNIST:
 
     'copy_group' numbers each group of copied images; it is missing for an
     image without copies. The first use finds the groups, which needs the
-    embeddings and OpenCV, and caches them as copies.csv. find_copies=False
+    V2 embeddings and OpenCV, and caches them as copies.csv. find_copies=False
     leaves the column out and runs no search.
+
+    weights names torchvision's ImageNet weights for ResNet-50: 'V2'
+    (IMAGENET1K_V2, the default) or 'V1'. Each has its own cache file.
+    demos/weights.ipynb compares the two on this project's task.
     """
 
-    def __init__(self, cache_dir: str | Path = Path(__file__).parent, find_copies: bool = True):
+    def __init__(self, cache_dir: str | Path = Path(__file__).parent, find_copies: bool = True,
+                 weights: str = 'V2'):
         self.cache_dir = Path(cache_dir)
         self.find_copies = find_copies
+        self.weights = weights
 
     def _file(self) -> Path:
         """Return the cached file, downloading and checking it first if missing."""
@@ -95,7 +101,7 @@ class BreastMNIST:
         """Each copied image's group, by image id; searched once, then cached."""
         path = self.cache_dir / 'copies.csv'
         if not path.exists():
-            groups = copy_groups(copy_pairs(self.images, self._embedding_values()),
+            groups = copy_groups(copy_pairs(self.images, self._embedding_values('V2')),
                                  len(index))
             groups.set_axis(index[groups.index]).rename_axis('image').to_csv(path)
         return pd.read_csv(path, index_col='image')['group']
@@ -103,31 +109,32 @@ class BreastMNIST:
     @cached_property
     def embeddings(self) -> pd.DataFrame:
         """ResNet-50 embeddings, one row per image; computed once, then cached."""
-        values = self._embedding_values()
+        values = self._embedding_values(self.weights)
         columns = [f'resnet50_{i:04d}' for i in range(values.shape[1])]
         return pd.DataFrame(values, index=self.samples.index, columns=columns)
 
-    def _embedding_values(self) -> np.ndarray:
-        path = self.cache_dir / 'embeddings_resnet50.npz'
+    def _embedding_values(self, weights: str) -> np.ndarray:
+        path = self.cache_dir / f'embeddings_resnet50_{weights.lower()}.npz'
         if not path.exists():
-            np.savez_compressed(path, embeddings=_resnet50_embeddings(self.images))
+            np.savez_compressed(path, embeddings=_resnet50_embeddings(self.images, weights))
         with np.load(path) as npz:
             return npz['embeddings']
 
 
-def _resnet50_embeddings(images: np.ndarray, batch_size: int = 32) -> np.ndarray:
+def _resnet50_embeddings(images: np.ndarray, weights: str, batch_size: int = 32) -> np.ndarray:
     """
     Embed grayscale images with ImageNet ResNet-50, without its last layer.
 
     Each image is repeated over three channels and normalized as ImageNet
-    images are. The output is the 2,048-number average-pooled feature vector.
-    Uses the GPU when one is available.
+    images are, the same for both weights versions. The output is the
+    2,048-number average-pooled feature vector. Uses the GPU when one is
+    available.
     """
     import torch
     from torchvision.models import ResNet50_Weights, resnet50
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+    model = resnet50(weights=ResNet50_Weights[f'IMAGENET1K_{weights}'])
     model.fc = torch.nn.Identity()
     model.eval().to(device)
 
