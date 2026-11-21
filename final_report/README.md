@@ -346,9 +346,9 @@ p~(i)~ falls below that line, in standard deviations, and keeps every
 feature up to the largest gap (Donoho and Jin 2004, 2008). HC2004 is the
 2004 paper's form:
 
-HC(i) = √N (i/N − p~(i)~) / √(p~(i)~ (1 − p~(i)~)).
+HC(i) = √N (μ~i~ − p~(i)~) / √(p~(i)~ (1 − p~(i)~)).
 
-HC2008 is the 2008 paper's form with one change, μ~i~ in place of i/N:
+HC2008 is the 2008 paper's form:
 
 HC(i) = √N (μ~i~ − p~(i)~) / √(μ~i~ (1 − μ~i~)).
 
