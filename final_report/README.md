@@ -842,7 +842,7 @@ docstring: `scripts/plot_final_frontier.py`, `scripts/plot_curves.py` and
 One seed, 42, fixes every random step; split `s` uses 42 + `s`. A rerun
 gives the same features and scores, for any number of workers. The tests
 run with `.venv/bin/python -m pytest`; GPU tests are skipped without a
-GPU. On 2026-11-21, on the laptop of section 7.4 with its GPU, all 412
+GPU. On 2026-11-21, on the laptop of section 7.4 with its GPU, all 413
 tests passed in 23 minutes (`results/test_run.md`).
 
 ## Appendix B. Engineering notes
