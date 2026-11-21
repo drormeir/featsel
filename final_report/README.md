@@ -25,7 +25,7 @@ design.
 
 **Results.** Selection helps most when few features are allowed: at 10
 features, the filters and tree importance beat random features by 0.12
-to 0.19 AUC on SCAN-B and by 0.10 to 0.16 on the image data. As the number grows, random
+to 0.19 AUC (area under the ROC curve: 0.5 is chance, 1 is perfect) on SCAN-B and by 0.10 to 0.16 on the image data. As the number grows, random
 features catch up, because thousands of correlated features carry the
 signal. At the number each method chose, the top methods cannot be told
 apart: on SCAN-B, eleven lie within 0.01 mean AUC. The Mann-Whitney U
@@ -150,8 +150,8 @@ technical reasons alone. We keep one sample per patient: 93 patients have
 a tumour sequenced twice, and split between the training and the test
 set, such a pair tests a model on a patient it has seen. We drop genes
 with a single value and 11 nearly flat genes. This leaves 2,976 patients
-and 28,541 genes. The course's copies of the data kept the repeated
-patients, and the smaller copy lacked 11 of the 50 genes that the label
+and 28,541 genes. The two copies of SCAN-B handed out in the course kept
+the repeated patients, and the smaller copy lacked 11 of the 50 genes that the label
 is computed from (below; D 2.1), so we load GSE96058 directly.
 
 **The values.** Each value is log2(FPKM + 0.1), a transform of a read
@@ -221,7 +221,7 @@ samples it has not seen. Every method comparison follows one protocol
 
 | Part | Choice |
 |---|---|
-| Splits | 16 random stratified splits; 70% of the samples in the training set |
+| Splits | 16 random stratified splits; 70% of the samples in the training set, closer to real use than 50% |
 | Selection | inside each split, on the training set only |
 | Main score | ROC AUC on the test set, mean over the splits |
 | Control | random features at every `k` |
@@ -266,7 +266,8 @@ has value at `k` only if it beats random features at that `k`. Small
 random subsets have matched selected ones on many high-dimensional
 datasets (Neekhra et al. 2025).
 
-**ROC AUC.** The tasks are imbalanced, and AUC needs no decision
+**ROC AUC.** The chance that a random positive sample scores above a
+random negative one. The tasks are imbalanced, and AUC needs no decision
 threshold. Macro-F1 and balanced accuracy were also recorded; they give
 almost the same order of methods (D 7.12, 8.10).
 
@@ -392,7 +393,8 @@ scores = cross_val_score(pipe, X, y, cv=5, scoring='roc_auc')
 Mann-Whitney, is fitted once per split, and every `k` is cut from its
 ranking. Each split is prepared once and shared by all workers in memory.
 Long runs on a 16 GB laptop crashed at first, so the runner caps each
-worker's memory, skips a cell that does not fit, restarts with fewer
+worker's memory, skips a cell (one task, split, method and `k`) that
+does not fit, restarts with fewer
 workers when one dies, writes each row as it finishes, and resumes a
 stopped run. Every seed is fixed, so a rerun gives the same features and
 scores, for any number of workers.
