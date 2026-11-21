@@ -106,7 +106,8 @@ itself.
 This run also predates dropping liblinear. With 6 workers, the memory cap
 gave each worker 1.26 GB. liblinear needed about 1.45 GB for one fit (a
 single measurement), so it aborted. Every 6-worker run fell back to 3 workers (section 5.5). So
-on this 16 GB laptop, 3 workers were the useful maximum for this grid.
+on this 16 GB laptop, more than 3 workers gained almost nothing for this
+grid: the median time was 138.7 s with 3 workers and 137.6 s with 4.
 
 Sources: [`scripts/parallel_scaling.py`](../scripts/parallel_scaling.py),
 [`figures/parallel_scaling.csv`](figures/parallel_scaling.csv); per-job
@@ -236,7 +237,7 @@ from its paper to work on SCAN-B-shaped data (Appendix D.3).
 and have no `solver` parameter. Each runs only its exact solver: Newton
 for RFE and RFECV, PPDNA for Lasso. The reasons:
 
-- **Speed.** In the first SCAN-B frontier run (5 splits, since
+- **Speed.** In an earlier SCAN-B frontier run (5 splits, since
   replaced), liblinear RFE took 57 s per fit, Newton 6.0 s. RFE with liblinear was the largest single
   cost of the frontier runs.
 - **Exactness.** Newton reaches the solution that liblinear only

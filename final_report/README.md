@@ -416,7 +416,7 @@ runner was 4.3 times faster on one core and 10.6 times on 12 threads (3.9
 to 4.5 and 10.1 to 10.8 over the runs); against scikit-learn on 12
 threads, 6.8 times (D 6.1), with identical test scores (`results/speed_benchmark.csv`). It
 does less work: it prepares each split once and ranks once per split. On
-this grid, 12 workers gained 2.5 times over one. On all the genes and all five
+this grid, 10 jobs in parallel gained 2.5 times over one. On all the genes and all five
 tasks, an older run gained at most 1.8 times, from 3 workers on. There,
 each selection fit ran 1.76 times slower beside others. A fit reads the
 whole training set, so this points to the memory bandwidth that all cores
@@ -618,8 +618,8 @@ of all methods at 10 genes on four tasks of five. Sequential selection
 beat random genes on every task at 10 genes. This chain scored above it
 on all five tasks, with no difference established, in 3 s per fit instead
 of 10 minutes. Over the other methods, the chain's lead is established
-on LumA over every method but Sequential, on LumB over two filters, and
-elsewhere only over RFE alone (D 7.9, 7.10).
+on LumA over every method but Sequential, on LumB over two filters, on
+Her2 and Normal only over RFE alone, and on Basal over none (D 7.9, 7.10).
 
 A chain's first count was set by hand. The chain's `k` values stay below
 it, so on the image data the 500 also caps `k` at 250, and RFE and tree
@@ -634,9 +634,9 @@ test AUC would use the test set twice (section 3).
 BreastMNIST holds 150 groups of copied images (section 2), which would
 leak between the training and the test set. The main BreastMNIST
 results of this report are without them: 585 images, 409 of them in each training
-set (D 8.8). Sequential selection and three side studies (the
-classifier's C, RFE's C, the tree count) still include them; their
-reruns are open work (D 10).
+set (D 8.8). Sequential selection has not yet run without them. Three
+side studies (the classifier's C, RFE's C, the tree count) still include
+them. These runs are open work (D 10).
 
 ### 6.8 Cost
 
@@ -709,8 +709,8 @@ cannot be known in advance from these datasets; a safe default can.
 - **Data.** Three datasets, two of them embeddings from the same network.
   Every SCAN-B task predicts PAM50, a label computed from the genes; no
   measured target was run. The BreastMNIST results are without its
-  copied images, but Sequential selection and three side studies on it
-  still include them (section 6.7). FGVC-Aircraft was checked the same
+  copied images, but Sequential selection has not yet run without them, and
+  three side studies on it still include the copies (section 6.7). FGVC-Aircraft was checked the same
   way: no copied photos, but one group of three near-identical shots of
   one aircraft, with the same label, still in all its runs (D 2.3). Their
   reruns are open work (D 10).
