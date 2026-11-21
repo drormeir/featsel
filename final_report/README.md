@@ -601,7 +601,7 @@ five tasks, in 3 s per fit instead of 10 minutes (D 7.9, 7.10).
 
 A chain's first count was set by hand. The chain's `k` values stay below
 it, so on the image data the 500 also caps `k` at 250, and RFE and tree
-importance chose that cap. A side
+importance chose that cap as a median over splits. A side
 study kept 250 or 1,000 instead, on the same splits. At 1,000, every
 chain gained 0.012 to 0.025 AUC on BreastMNIST, with and without the
 copies, and on FGVC-Aircraft. Only RFE's gains on BreastMNIST and

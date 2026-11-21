@@ -208,7 +208,7 @@ and `chain_size_aircraft70.csv` in [`figures/`](figures/) (Appendix A.2).*
 At 1,000, every chain gains on every dataset, by 0.012 to 0.025 AUC, for
 at most 0.32 s more per fit. Two gains are established: RFE on
 BreastMNIST and on FGVC-Aircraft. Without the copies, none is. RFE and
-tree importance chose the largest `k` they were allowed, 250 after 500
+tree importance chose, as a median over splits, the largest `k` they were allowed, 250 after 500
 and 500 after 1,000. So most of the gain is likely the larger `k` that a
 larger first step allows. Lasso has no such cap and still gained. The
 main results keep 500: changing it now would let the test set choose the
@@ -379,12 +379,12 @@ F-test's assumption holds (section 4.3). Config:
 
 | Method | Test AUC | Features kept, median (range) | Recall | Precision | HC2008 minus the method (p) |
 |---|---|---|---|---|---|
-| HC2008 | **0.858** | 34 (21 to 103) | 0.56 | 0.59 | — |
+| HC2008 | **0.858** | 33.5 (21 to 103) | 0.56 | 0.59 | — |
 | Mann-Whitney | 0.843 | 20 (10 to 80) | 0.43 | 0.73 | 0.015 (0.62) |
 | Berk-Jones | 0.813 | 12 (4 to 33) | 0.28 | 0.86 | 0.045 (0.26) |
 | FDR, F-test, 5% | 0.808 | 8 (5 to 18) | 0.21 | 0.95 | 0.050 (0.22) |
 | Lasso | 0.805 | 129 (108 to 141) | 0.72 | 0.23 | 0.053 (0.10) |
-| HC2004 | 0.656 | 2 (1 to 9) | 0.05 | 0.99 | 0.202 (0.007) |
+| HC2004 | 0.656 | 1.5 (1 to 9) | 0.05 | 0.99 | 0.202 (0.007) |
 | All features | 0.629 | 10,000 | 1 | 0.004 | 0.229 (< 0.001) |
 
 Tables:

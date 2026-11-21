@@ -130,8 +130,9 @@ What it shows:
 - **At 10 genes, selection matters a lot.** Every filter and tree
   importance beat random by 0.12 to 0.19 AUC, on every task. With the
   chains and Sequential, the range is 0.11 to 0.20.
-- **Basal is easy.** Random genes reach 0.98 at 50 genes. After that no
-  method beats them.
+- **Basal is easy.** Random genes reach 0.98 at 50 genes. At 50, the
+  filters, tree importance and one chain still gain about 0.01; from 250
+  on, no method beats them.
 - **On LumA and LumB the gain lasts.** At 2,000 genes, the filters and
   tree importance still beat random by about 0.02. On Her2 and Normal a
   smaller gain remains for some filters (table above).
@@ -304,7 +305,8 @@ Mean macro-F1 over the 12 splits and five tasks:
 | | Random | 0.609 | 0.774 | 0.833 | 0.832 |
 
 - **Selection helps every classifier at small `k`.** At 10 genes,
-  Mann-Whitney beats random by 0.20 to 0.23 macro-F1.
+  Mann-Whitney beats random by 0.20 to 0.23 macro-F1, on every task and
+  split (all 300 cases; the smallest gain is 0.021).
 - **The gain shrinks with `k`, at different rates.** At 1,000 genes it is
   0.13 for k-NN, 0.07 for the random forest, 0.02 to 0.03 for the linear
   models, and −0.007 for shrinkage LDA. k-NN's distances over many random
