@@ -283,7 +283,9 @@ choice does not depend on them. Made on validation sets instead, as `k`
 is chosen (5 folds of each training set, section 3.11), it picks V1 on
 all 16 splits: 0.852 against 0.754 mean validation AUC
 ([`results/aircraft_weights_validation.csv`](../results/aircraft_weights_validation.csv),
-from [`scripts/aircraft_weights_validation.py`](../scripts/aircraft_weights_validation.py)).
+from [`scripts/aircraft_weights_validation.py`](../scripts/aircraft_weights_validation.py);
+both comparisons are in
+[`demos/weights.ipynb`](../featsel_datasets/fgvc_aircraft/demos/weights.ipynb)).
 Features with a single value across the 1,200 photos are dropped.
 
 **The signal.** As in BreastMNIST, the signal is widespread: 25% to 31%

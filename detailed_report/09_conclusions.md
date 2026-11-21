@@ -213,8 +213,9 @@ described in the section given.
   images.
   Without them, the scores fall by 0.016 to 0.042 AUC, except HC2004's,
   and the
-  conclusions hold (section 8.8). That run also trains on 25% fewer
-  images, so the fall is not due to the copies alone.
+  conclusions hold (section 8.8). About half of the fall comes from that
+  run's smaller training set, 409 images against 546, not from the
+  copies (section 8.8).
 
 **The protocol.**
 

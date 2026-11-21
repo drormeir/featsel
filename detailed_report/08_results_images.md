@@ -261,12 +261,39 @@ HC2004 lost 0.016 to 0.042; HC2004 gained 0.013. The top of the order changed wi
 0.009 AUC: mutual information, tree importance and RFECV by AUC moved
 above Mann-Whitney. RFE still ties all features. The chains, HC2008,
 Berk-Jones and HC2004 still lose to all features (p < 0.05); correlation
-and Lasso no longer do (p = 0.07 and 0.28). The training set is also
-25% smaller, 409 images against 546
-([`results/breastmnist_weights.csv`](../results/breastmnist_weights.csv)),
-so the fall in scores mixes two causes: the copies and less training
-data. The conclusions of sections 8.3 to 8.7 hold. Table:
+and Lasso no longer do (p = 0.07 and 0.28). The conclusions of sections
+8.3 to 8.7 hold. Table:
 [`figures/summary_breastmnist70_nocopies_chosen.csv`](figures/summary_breastmnist70_nocopies_chosen.csv).
+
+**Copies or a smaller training set?** Without the copies, the training set
+also has 25% fewer images, 409 against 546. A third run separates the two
+causes: the copies kept, and the training set cut to the same 409 images
+([`configs/frontier_breastmnist70_n409.yaml`](../configs/frontier_breastmnist70_n409.yaml)).
+Its splits pair with neither other run, so only means are compared.
+
+| Mean test AUC | With copies, 546 | With copies, 409 | Without copies, 409 | Smaller training set | Copies |
+|---|---|---|---|---|---|
+| All features | 0.924 | 0.907 | 0.895 | 0.017 | 0.013 |
+| RFE | 0.923 | 0.904 | 0.891 | 0.019 | 0.013 |
+| Mann-Whitney | 0.918 | 0.898 | 0.883 | 0.019 | 0.016 |
+| Mutual information | 0.916 | 0.894 | 0.887 | 0.022 | 0.007 |
+| Tree importance | 0.906 | 0.897 | 0.885 | 0.009 | 0.012 |
+| Correlation | 0.905 | 0.891 | 0.866 | 0.015 | 0.024 |
+| Lasso | 0.898 | 0.877 | 0.882 | 0.021 | −0.005 |
+| HC2008 | 0.868 | 0.855 | 0.848 | 0.013 | 0.007 |
+
+For most methods each cause costs about 0.01 to 0.02 AUC, so the copies
+explain about half of the fall, and the smaller training set the other
+half. At 409 training images, the copies still raise all features by
+0.013. In that run more copy groups fall on both sides of a split, 82
+against 69 per split, so this may overstate their effect a little. Over
+all methods of Table 5 the copies' effect runs from −0.018 (HC2004) to
++0.024 (correlation). Tables:
+[`figures/summary_breastmnist70_n409_chosen.csv`](figures/summary_breastmnist70_n409_chosen.csv);
+for all features,
+[`results/breastmnist_copies_size.csv`](../results/breastmnist_copies_size.csv),
+from the last section of
+[`demos/copies.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/copies.ipynb).
 
 ## 8.9 An unseen dataset: FGVC-Aircraft
 

@@ -636,8 +636,11 @@ fall from 0.924 to 0.895 AUC, and every method but HC2004 by 0.016 to
 0.042; HC2004 rises by 0.013. The
 leaders change places within 0.009 AUC. RFE still ties all
 features, and the chains, HC2008, Berk-Jones and HC2004 still lose
-(D 8.8). The training set is also 25% smaller (409 against 546
-images), so the fall in scores mixes two causes. The conclusions hold.
+(D 8.8). The conclusions hold. That run also trains on 25% fewer
+images, 409 against 546. A run with the copies kept and 409 training
+images splits the fall of all features: 0.017 AUC from the smaller
+training set, 0.013 from the copies. Most methods show the same split, so
+the copies explain about half of the fall.
 
 ### 6.8 Cost
 
@@ -711,9 +714,9 @@ cannot be known in advance from these datasets; a safe default can.
   Every SCAN-B task predicts PAM50, a label computed from the genes; no
   measured target was run. The main BreastMNIST results include the
   copied images; a run without them gives the same conclusions, except
-  that Mann-Whitney falls 0.012 below all features (section 6.7). That
-  run also trains on 25% fewer images (409 against 546), so the fall in
-  scores is not due to the copies alone.
+  that Mann-Whitney falls 0.012 below all features (section 6.7). About
+  half of the fall in scores comes from that run's smaller training set,
+  not from the copies.
 - **Protocol.** One classifier in the main runs, logistic regression with
   C fixed at 1; for Mann-Whitney and all features, C = 0.01 to 100 gave
   no established AUC difference on the image data, and
