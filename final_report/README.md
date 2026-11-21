@@ -637,10 +637,8 @@ fall from 0.924 to 0.895 AUC, and every method but HC2004 by 0.016 to
 leaders change places within 0.009 AUC. RFE still ties all
 features, and the chains, HC2008, Berk-Jones and HC2004 still lose
 (D 8.8). The conclusions hold. That run also trains on 25% fewer
-images, 409 against 546. A run with the copies kept and 409 training
-images splits the fall of all features: 0.017 AUC from the smaller
-training set, 0.013 from the copies. Most methods show the same split, so
-the copies explain about half of the fall.
+images, and about half of the fall comes from that, not from the copies
+(D 8.8).
 
 ### 6.8 Cost
 

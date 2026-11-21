@@ -92,7 +92,8 @@ What it shows:
   2,000 genes, tree importance 1,000 to 1,500. On Basal some splits chose
   10: that task is nearly solved by a few genes.
 - **Lasso and the chains keep fewer genes.** Lasso kept 67 to 523, and
-  Mann-Whitney then Lasso 9 to 158, at about the same AUC.
+  Mann-Whitney then Lasso 9 to 158, at 0.964 and 0.968 mean AUC, against
+  0.971 for the best method.
 - **RFECV scored by accuracy failed on three tasks** (section 7.8).
 
 ## 7.2 The bar: random genes at each `k`
