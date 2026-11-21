@@ -222,7 +222,8 @@ So Newton gives the selection SVM-RFE intends, and liblinear's default
 approximates it.
 
 For Lasso the claim is weaker. PPDNA is not proven to stop exactly at
-Lasso's solution. It stops at a residual of 10⁻¹⁰, far tighter than
+Lasso's solution. It stops at a residual of 10⁻¹⁰, or after 1,000 outer
+steps, both set by hand (Appendix D.3); 10⁻¹⁰ is far tighter than
 liblinear's 10⁻⁴.
 
 **Why PPDNA.** Simpler solvers failed, and PPDNA itself needed changes

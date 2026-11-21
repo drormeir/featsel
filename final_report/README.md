@@ -233,11 +233,11 @@ samples it has not seen. Every method comparison follows one protocol
 | Selection | inside each split, on the training set only |
 | Main score | ROC AUC on the test set, mean over the splits |
 | Control | random features at every `k` |
-| `k` | 10, 50, 250, 500, 1,000 (and 1,500, 2,000 on SCAN-B, where 2,000 already reaches the AUC of all genes; D 3.11), chosen on validation sets |
+| `k` | 10, 50, 250, 500, 1,000, set by hand (and 1,500, 2,000 on SCAN-B, where 2,000 already reaches the AUC of all genes; D 3.11), chosen on validation sets |
 | Classifier | logistic regression, L2 penalty, C (the inverse of the penalty's strength) fixed at 1, scikit-learn's default: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
-| Timing | each selection fit 10 times (3 on FGVC-Aircraft, set by hand, once in the simulation of section 6.4; Sequential selection, section 4, once on SCAN-B and BreastMNIST); the median is recorded |
+| Timing | each selection fit 10 times, set by hand since one fit is noisy (3 on FGVC-Aircraft, also set by hand, once in the simulation of section 6.4; Sequential selection, section 4, once on SCAN-B and BreastMNIST); the median is recorded |
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
@@ -281,7 +281,7 @@ accuracy (the mean of the two classes' recall) were also recorded; they give
 almost the same order of methods (D 7.12, 8.10).
 
 **Choosing `k`.** Choosing `k` by test AUC would use the test set twice.
-So the training set is cut into 5 folds. Each fold in turn is the
+So the training set is cut into 5 folds, a common count set by hand. Each fold in turn is the
 validation set: the selector is fit on the other four folds, and for each
 `k` the classifier is scored on the held-out fold. The `k` with the best
 mean validation AUC wins. Lasso chooses its penalty the same way, and
@@ -413,7 +413,7 @@ scores, for any number of workers.
 **Faster than plain scikit-learn (task 3).** One small grid ran with
 scikit-learn's `cross_validate` and with the runner: SCAN-B's Basal task
 on 3,000 random genes, 5 splits, and Lasso and RFE at three values of
-`k`. In the median of three runs, against scikit-learn on one core, the
+`k`, set by hand so that the grid runs in about a minute (D 6.1). In the median of three runs, against scikit-learn on one core, the
 runner was 4.3 times faster on one core and 10.6 times on 12 threads (3.9
 to 4.5 and 10.1 to 10.8 over the runs); against scikit-learn on 12
 threads, 6.8 times (D 6.1), with identical test scores (`results/speed_benchmark.csv`). It
@@ -904,7 +904,7 @@ config and the command behind every table. This report's figures and
 Table 5 come from `scripts/plot_final_frontier.py`, `plot_curves.py` and
 `final_table.py`, each with its command in its docstring.
 
-One seed, 42, fixes every random step; split `s` uses 42 + `s`. A rerun
+One seed, 42, an arbitrary choice, fixes every random step; split `s` uses 42 + `s`. A rerun
 gives the same features and scores, for any number of workers. The tests
 run with `.venv/bin/python -m pytest`; GPU tests are skipped without a
 GPU.

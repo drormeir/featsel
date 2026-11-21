@@ -349,7 +349,8 @@ scikit-learn method:
 - it selects the same features as that method;
 - its `fit` plus `get_support` is at most 5% slower. Both are timed,
   because scikit-learn builds its mask only in `get_support`. Each side's
-  time is the median of 50 fits. The fast filters are timed on larger
+  time is the median of 50 fits: with 10, two equal versions drifted 5%
+  apart (`docs/DECISIONS.md`, 2026-09-29). The fast filters are timed on larger
   data (1,000 × 4,000), so timing noise stays below 5%. ANOVA is timed on
   1,000 × 10,000: on 1,000 × 4,000 it was about 16% slower than
   scikit-learn in every run, for a reason not found;

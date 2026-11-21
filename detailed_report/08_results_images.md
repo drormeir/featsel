@@ -367,7 +367,8 @@ with 10,000 features in place of 2,000, so the signal is rarer. The 500
 samples and the 30% positive share were set by hand.
 
 **The protocol** is that of chapter 3: 16 splits, 70% for training, `k`
-chosen on validation sets from 10, 20, 40, 80 and 160 (Mann-Whitney also
+chosen on validation sets from 10, 20, 40, 80 and 160, doublings set by
+hand around the 40 informative features (Mann-Whitney also
 500; random also all 10,000). The runner also records the share of the 40
 features each selection found (recall) and the share of the selection that
 is informative (precision). One method appears only here: FDR, the

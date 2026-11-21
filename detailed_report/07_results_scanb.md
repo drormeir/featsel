@@ -197,8 +197,9 @@ mean over the five tasks:
 | RFECV, by AUC | 0.23 | 0.09 to 0.35 |
 
 The filters are stable; the methods that look at genes together are not.
-Tree importance scores as well as Mann-Whitney but picks a different set on
-each split. Part of the filters' range comes from `k`: a method whose
+Tree importance reaches the same mean AUC as Mann-Whitney, with no
+established difference on any task (section 7.1), but picks a different
+set on each split. Part of the filters' range comes from `k`: a method whose
 chosen `k` varies between splits is less stable. On Basal, Mann-Whitney's
 `k` ran from 10 to 2,000, and its stability fell to 0.46.
 
@@ -207,7 +208,7 @@ Each split seeds its forest differently (section 3.9). On one training
 set, two forests of 200 trees that differ only in their seed have a
 Jaccard index (section 6.2) of 0.12 for their top 10 genes, about 2 genes
 in common, and 0.33 for their top 250 (mean over 5 tasks and 3 training
-sets). The index grows with the trees, to 0.34 and 0.61 at 1,000, and is
+sets, a count set by hand). The index grows with the trees, to 0.34 and 0.61 at 1,000, and is
 still rising there. On the image data (BreastMNIST still with its
 copies, section 10.1), at 200 trees, it is 0.28 to 0.52. So the 200 trees, set by hand (section 4.2), leave the
 ranking noisy. Whether more trees would change tree importance's AUC was
@@ -304,8 +305,8 @@ Results: [`results/pam50_recovery.md`](../results/pam50_recovery.md).
 ## 7.7 Does the classifier matter?
 
 A side study runs Mann-Whitney and random selection with five classifiers:
-logistic regression, linear SVM, random forest (200 trees), k-nearest
-neighbours (k = 5) and shrinkage LDA. It asks how much a separate selection
+logistic regression, linear SVM, random forest (200 trees, set by hand),
+k-nearest neighbours (k = 5, scikit-learn's default) and shrinkage LDA. It asks how much a separate selection
 step adds on top of each classifier's own regularization. It is the
 evidence for using logistic regression in every other run.
 
@@ -380,7 +381,8 @@ from [`scripts/paired_tests.py`](../scripts/paired_tests.py).
 
 **No other C changes RFE's AUC by an established amount.** C = 0.01 was
 set by hand (section
-4.2). A side study ran RFE at C = 0.001, 0.1 and 1 on the same splits
+4.2). A side study ran RFE at C = 0.001, 0.1 and 1 (powers of ten around
+0.01, set by hand) on the same splits
 (`configs/rfe_c_*.yaml`). On SCAN-B, without the `k` search, each C was
 compared with 0.01 at every `k` of every task: none of the 105 differences
 is established (smallest p = 0.16). From `k` = 250 they are at most 0.008

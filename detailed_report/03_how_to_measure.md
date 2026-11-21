@@ -44,7 +44,7 @@ only the classifier. The error is large. Ambroise and McLachlan (2002)
 showed it on real microarray data. On BreastMNIST with shuffled labels,
 where nothing can be learned and the true AUC is 0.5, the F-test (section
 4.3) picking
-50 embedding dimensions gives a median AUC over 20 splits of 0.465 inside
+50 embedding dimensions (50 and the 20 splits set by hand) gives a median AUC over 20 splits of 0.465 inside
 each split, and 0.645 when selected on all 780 images first
 ([`selection.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb)).
 
@@ -182,7 +182,8 @@ stability would be a meaningless 1.0.
 For every fit we record:
 
 - **Selection time**: the selector's `fit` alone. Each selection is fit 10
-  times by a fresh selector (3 times on FGVC-Aircraft, a count set by hand; once in the
+  times by a fresh selector, a count set by hand because one fit is noisy
+  (3 times on FGVC-Aircraft, also set by hand; once in the
   simulation of section 8.11), and the median is
   recorded. Sequential selection takes minutes per fit on SCAN-B, and 10
   fits would take about a week (the SCAN-B run with one fit took 18 hours,
@@ -218,7 +219,8 @@ scores may be slightly lower than with tuning. Lasso's own C is separate
 and chosen on validation sets (section 3.11).
 
 **What a different C would change, so far.** A side study scored the same
-selections with C = 0.01, 0.1, 10 and 100, on the main splits, for
+selections with C = 0.01, 0.1, 10 and 100 (powers of ten around 1, set
+by hand), on the main splits, for
 Mann-Whitney and all features, each C choosing its own `k`
 (`configs/clf_c_*.yaml`). On BreastMNIST (still with its copied images,
 section 10.1) and FGVC-Aircraft no difference
@@ -229,7 +231,7 @@ was not tested. Tables: `clf_c_breastmnist70.csv` and
 
 ## 3.9 Reproducibility
 
-There is one global seed, 42. Split `s` uses seed 42 + `s` for every random
+There is one global seed, 42, an arbitrary choice. Split `s` uses seed 42 + `s` for every random
 step in it: the random selector, the forest of tree importance (section
 4.2), the solvers and the
 validation folds for `k`. Lasso's search for C and RFECV's search for its
@@ -264,7 +266,8 @@ A method with its own preprocessing mixes the method with its transform.
 ## 3.11 The feature budget `k`
 
 On SCAN-B, `k` is 10, 50, 250, 500, 1000, 1500 and 2000; random selection
-also runs at 28,541, every gene. A first run stopped at 1,000, where AUC
+also runs at 28,541, every gene. The values were set by hand; the reasons
+for the largest follow. A first run stopped at 1,000, where AUC
 was still rising for every method with a `k` list. The list stops at
 2,000 because there the best method already reaches or passes the AUC of
 all genes on every task (Appendix C.1). On LumA and Normal, AUC still
@@ -296,8 +299,8 @@ fraction, `k` is given directly.
 test set twice. So each method with a `k` list chooses it on validation
 sets:
 
-1. The training set is cut into 5 folds. Each fold in turn is the
-   validation set.
+1. The training set is cut into 5 folds, a common count set by hand.
+   Each fold in turn is the validation set.
 2. The selector is fit on the other four folds.
 3. For each `k`, logistic regression is fit on the top `k` features and
    scored by AUC on the validation set.
