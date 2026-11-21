@@ -102,7 +102,12 @@ every remaining feature by cross-validation and adds the best. For 10
 features out of 28,541 that is about 285,000 candidates, each scored by
 5-fold cross-validation: about 1.4 million model fits, the most of any
 method here. The count grows with `k`, so we run it only at `k` = 5 and 10
-(section 3.11).
+(section 3.11). It scores candidates by accuracy: scikit-learn's default,
+and the only score the batched Newton solver (section 6.2) computes.
+Section 3.5 rejects accuracy as a judge of methods; here it only ranks
+candidates, and AUC still judges the result. On imbalanced tasks, mostly
+Normal, accuracy may favor features that help the large class, so
+Sequential may be underrated.
 
 **The wrappers use different classifiers inside.** RFE and RFECV rank by a
 linear SVM (`LinearSVC`). Sequential scores candidates with logistic
