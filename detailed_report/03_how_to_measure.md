@@ -146,7 +146,11 @@ is not used.
 F1, accuracy and balanced accuracy depend on a decision threshold, and so
 imply a choice of costs between false positives and false negatives. A
 comparison of selection methods should not make that choice. AUC needs no
-threshold.
+threshold, so nothing is tuned for it. The side scores use the
+classifier's default threshold, a probability of 0.5, not tuned. On
+imbalanced tasks this threshold favors the large class, so the side
+scores are low in absolute terms. They serve only to check that the order
+of methods agrees with AUC (sections 7.12 and 8.10).
 
 AUC is computed per split, from one model on that split's test set.
 Pooling scores from different models into one AUC would mix scales.
