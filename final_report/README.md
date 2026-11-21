@@ -466,7 +466,7 @@ of these gains is established and holds on all 16 splits (D 7.2, 8.2,
 8.9).
 
 As `k` grows, random features catch up. On Basal, no method beats random
-genes from 250 genes on. On BreastMNIST, no gain is established at 1,000
+genes from 250 genes on. On BreastMNIST, no gain is established from 500
 features. At 2,000 genes a gain of about 0.02 remains on LumA, LumB and,
 for mutual information, Normal, and about 0.01 on Her2.
 The reason is in the data: thousands of genes carry the signal, and they

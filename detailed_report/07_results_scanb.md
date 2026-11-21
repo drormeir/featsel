@@ -200,7 +200,8 @@ set, two forests of 200 trees that differ only in their seed have a
 Jaccard index (section 6.2) of 0.12 for their top 10 genes, about 2 genes
 in common, and 0.33 for their top 250 (mean over 5 tasks and 3 training
 sets). The index grows with the trees, to 0.34 and 0.61 at 1,000, and is
-still rising there. On the image data, at 200 trees, it is 0.28 to 0.52. So the 200 trees, set by hand (section 4.2), leave the
+still rising there. On the image data (BreastMNIST still with its
+copies, section 10.1), at 200 trees, it is 0.28 to 0.52. So the 200 trees, set by hand (section 4.2), leave the
 ranking noisy. Whether more trees would change tree importance's AUC was
 not tested. Source: [`results/tree_count_stability.csv`](../results/tree_count_stability.csv),
 from [`scripts/tree_count_stability.py`](../scripts/tree_count_stability.py).
@@ -369,8 +370,9 @@ set by hand (section
 compared with 0.01 at every `k` of every task: none of the 105 differences
 is established (smallest p = 0.16). From `k` = 250 they are at most 0.008
 AUC; at 10 and 50 genes, where RFE varies most between splits, at most
-0.09. On BreastMNIST and FGVC-Aircraft, at the `k` chosen on validation
-sets, they are at most 0.003 AUC (p ≥ 0.48). The genes do change: against
+0.09. On BreastMNIST (still with its copies, section 10.1) and
+FGVC-Aircraft, at the `k` chosen on validation sets, they are at most
+0.003 AUC (p ≥ 0.48). The genes do change: against
 0.01, a selection has a Jaccard index of 0.19 to 0.71 (mean per task and
 `k`). So C changes which genes RFE keeps; no change in how well they
 predict is established, as expected when many gene sets predict about

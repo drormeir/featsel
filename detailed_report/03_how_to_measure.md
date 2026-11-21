@@ -219,7 +219,8 @@ and chosen on validation sets (section 3.11).
 **What a different C would change, so far.** A side study scored the same
 selections with C = 0.01, 0.1, 10 and 100, on the main splits, for
 Mann-Whitney and all features, each C choosing its own `k`
-(`configs/clf_c_*.yaml`). On BreastMNIST and FGVC-Aircraft no difference
+(`configs/clf_c_*.yaml`). On BreastMNIST (still with its copied images,
+section 10.1) and FGVC-Aircraft no difference
 from C = 1 is established: the largest gain is 0.005 AUC (p = 0.29), and
 C = 100 loses 0.011 to 0.014 on BreastMNIST (p = 0.055 and 0.057). SCAN-B
 was not tested. Tables: `clf_c_breastmnist70.csv` and
