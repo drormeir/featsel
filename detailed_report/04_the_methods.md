@@ -68,7 +68,8 @@ dataset. They were set by hand and not tuned:
   default thresholds. A feature must have a target correlation of at
   least 0.1, and of a pair above 0.95, one is dropped.
 
-Only Lasso's C is chosen, from 0.01, 0.1, 1 and 10 (section 3.11).
+Only Lasso's C is chosen, from 0.01, 0.1, 1 and 10, a list also set by
+hand (section 3.11).
 
 ### A few methods in more detail
 

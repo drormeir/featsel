@@ -16,7 +16,7 @@ where they appear.
 | `k` | Chosen on validation sets: 5 folds of the training set, best mean AUC, tie to the smaller `k` | 3.11 |
 | Classifier | Logistic regression, C fixed at 1 | 3.8 |
 | Lasso's C (its penalty, section 4.2) | Chosen on validation sets | 3.11 |
-| Timing | Each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation, which reports no times; Sequential once on SCAN-B and BreastMNIST); a searching method searches once, then is timed | 3.7, 3.11 |
+| Timing | Each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation of section 8.11, which reports no times; Sequential once on SCAN-B and BreastMNIST); a searching method searches once, then is timed | 3.7, 3.11 |
 
 ## 3.1 The basic flow
 
@@ -218,8 +218,8 @@ and chosen on validation sets (section 3.11).
 ## 3.9 Reproducibility
 
 There is one global seed, 42. Split `s` uses seed 42 + `s` for every random
-step in it: the random selector, the forest of tree importance, the
-solvers and the
+step in it: the random selector, the forest of tree importance (section
+4.2), the solvers and the
 validation folds for `k`. Lasso's search for C and RFECV's search for its
 count use their own 5 folds, not shuffled, so they need no seed. Every selector that uses randomness seeds its own generators in its
 `fit`. Re-running a configuration gives the same genes and scores, for any

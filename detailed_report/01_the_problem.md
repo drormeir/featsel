@@ -131,7 +131,7 @@ during the design, then tests the finished pipeline (section 8.9).
    signal, HC2008 and Berk-Jones stopped at or near the edge of their search and
    acted as top-10% filters (sections 7.5 and 8.5).
 3. **A cost-quality frontier.** One plot of selection time against AUC
-   (section 3.5),
+   (the score, section 3.5),
    for every method and setting. It shows which method fits a time budget
    (sections 7.1 and 8.1).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy

@@ -32,7 +32,8 @@ The setting, chosen to see the whole flow in about a minute:
 
 - SCAN-B, Basal vs rest: 2,976 patients, 3,000 random genes of 28,541.
 - 5 splits at a training fraction of 0.5.
-- Lasso and RFE (step 0.5) at `k` = 10, 50 and 250.
+- Lasso and RFE (step 0.5 for speed; the experiments use 0.1) at `k` =
+  10, 50 and 250.
 - Logistic regression with a fixed C, as in the experiments.
 - Every seed fixed and the same on every split, so both sides fit the
   same models. The experiments seed each split differently.

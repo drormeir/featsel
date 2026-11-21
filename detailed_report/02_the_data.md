@@ -24,7 +24,7 @@ remain.
 | Keep only HiSeq 2000 samples: 3,069 of 3,409. The other 340 are NextSeq 500. | Two machines can differ for technical reasons alone. The NextSeq samples add 297 patients not in the HiSeq set. They are left out. |
 | Keep one sample per patient, the first in file order: 2,976 patients. | 93 of them have a HiSeq sample and its repeat. Split between the training set and the test set, they would test the model on a patient it has seen. |
 | Drop 2,313 genes with a single value across the kept patients. | They carry no information. |
-| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32, they become noise. On LumB vs rest (a task of section 2.1), that noise made Lasso's solver slower on the CPU (a single trial, not saved). |
+| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32 (sections 3.1, 3.12), they become noise. On LumB vs rest (a task of section 2.1), that noise made Lasso's solver slower on the CPU (a single trial, not saved). |
 
 **The repeat samples.** Brueffer et al. sequenced 136 tumours twice, to
 test their classifiers' reproducibility. GSE96058 lists each repeat as
