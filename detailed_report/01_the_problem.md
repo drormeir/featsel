@@ -134,10 +134,11 @@ during the design, then tests the finished pipeline (section 8.9).
    for every method and setting. It shows which method fits a time budget
    (sections 7.1 and 8.1).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
-   a scikit-learn method pick the same features, on the CPU and on a GPU.
+   a scikit-learn method pick the same features, on the CPU and on a GPU;
+   Lasso alone differs by 1 to 3 genes on LumA and LumB (section 6.2).
    Exact solvers make RFE, RFECV and Sequential selection faster, and
    Lasso faster on a GPU. For
-   Lasso and RFE they also reach the solution that scikit-learn's default
+   Lasso, RFE and RFECV they also reach the solution that scikit-learn's default
    solver stops short of (chapters 5 and 6).
 5. **Checks of the data that change its use.** SCAN-B repeats some
    patients, and its labels are computed from the features. BreastMNIST

@@ -25,8 +25,8 @@ advance? It ends with the limits of the answer.
   survives memory exhaustion and can resume a stopped run. (Tasks 1
   and 2.)
 - **Speed**, in the runner and in the selectors (chapter 6). The runner
-  is 4.3 to 10.6 times faster than plain scikit-learn, with identical
-  scores. On a GPU, ten filters run 2.6 to 49 times faster and pick the
+  is 4.3 to 10.6 times faster than plain scikit-learn on one core (6.8
+  times against it on 12 threads), with identical scores. On a GPU, ten filters run 2.6 to 49 times faster and pick the
   same features. Running jobs in parallel gains at most 1.8 times on full
   SCAN-B on this laptop; shared memory bandwidth is the likely limit.
   (Task 3.)

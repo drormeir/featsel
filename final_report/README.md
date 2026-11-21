@@ -24,8 +24,8 @@ photos (FGVC-Aircraft: 1,200 photos), a dataset not seen during the
 design.
 
 **Results.** Selection helps most when few features are allowed: at 10
-features, the best methods beat random features by 0.11 to 0.20 AUC on
-SCAN-B and by 0.10 to 0.16 on the image data. As the number grows, random
+features, the filters and tree importance beat random features by 0.12
+to 0.19 AUC on SCAN-B and by 0.10 to 0.16 on the image data. As the number grows, random
 features catch up, because thousands of correlated features carry the
 signal. At the number each method chose, the top methods cannot be told
 apart: on SCAN-B, eleven lie within 0.01 mean AUC. The Mann-Whitney U
@@ -107,7 +107,8 @@ shape our protocol (Table 1):
    method and setting, on each dataset (section 6.8).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method select the same features, on the CPU and on a
-   GPU. RFE, RFECV and Lasso reach the exact solution that scikit-learn's
+   GPU; Lasso alone differs by 1 to 3 genes on two tasks (D 6.2). RFE,
+   RFECV and Lasso reach the exact solution that scikit-learn's
    default solver stops short of (sections 4, 5).
 5. **Checks of the data that change its use**: repeated patients and a
    computed label in SCAN-B, and copied images in BreastMNIST (sections
@@ -287,7 +288,8 @@ the number of features:
 
 Feature selection methods fall into three families (Guyon and Elisseeff
 2003). We add two filters that choose their own count,
-and the random control. Table 4 lists the methods the experiments used;
+and the random control. Table 4 lists the methods the experiments on
+real data used;
 `featsel` also holds the F-test selectors of scikit-learn and a variance
 filter (D 4.2).
 
@@ -396,9 +398,10 @@ scores, for any number of workers.
 **Faster than plain scikit-learn (task 3).** One small grid ran with
 scikit-learn's `cross_validate` and with the runner: SCAN-B's Basal task
 on 3,000 random genes, 5 splits, and Lasso and RFE at three values of
-`k`. In the median of three runs, the runner was 4.3 times faster on one
-core and 10.6 times on 12 threads (3.9 to 4.5 and 10.1 to 10.8 over the
-runs), with identical test scores (`results/speed_benchmark.csv`). It
+`k`. In the median of three runs, against scikit-learn on one core, the
+runner was 4.3 times faster on one core and 10.6 times on 12 threads (3.9
+to 4.5 and 10.1 to 10.8 over the runs); against scikit-learn on 12
+threads, 6.8 times (D 6.1), with identical test scores (`results/speed_benchmark.csv`). It
 does less work: it prepares each split once and ranks once per split. On
 this grid, 12 workers gained 2.5 times over one. On all the genes and all five
 tasks, an older run gained at most 1.8 times, from 3 workers on. There,
