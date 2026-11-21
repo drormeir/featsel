@@ -14,6 +14,7 @@ to the file itself.
 | `experiment_classifiers.yaml` | experiment | Random vs Mann-Whitney across five classifiers, 12 splits |
 | `smoke_scanb.yaml` | experiment | Smoke test: every selector and classifier once on one SCAN-B split, about 3 minutes on 6 workers. A check, not a result |
 | `aircraft70_gpu.yaml` | experiment | FGVC-Aircraft, Boeing 737 vs A320 family: every method, on the GPU except tree importance, k = 10 to 1000 and all features, 16 splits at 70% training |
+| `rare_signal70.yaml` | experiment | Simulated rare signal, 40 informative among 10,000 features: Mann-Whitney, HC2008, HC2004, Berk-Jones, FDR, Lasso and random, 16 splits at 70% training; records how many informative features each finds |
 
 ## Dataset
 

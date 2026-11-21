@@ -1011,9 +1011,20 @@ def _available_bytes():
 
 
 def run_config(config, resume=False):
-    """Load the dataset named in the config, then run the experiment on it."""
+    """
+    Load the dataset named in the config, then run the experiment on it.
+
+    A dataset module that defines truth(X), the column indices of the
+    features it made informative, as a simulation does, gets truth_recall and
+    truth_precision in every row (see run).
+    """
     X, y, target, name = load_dataset(config)
-    return run(X, y, config, resume=resume, target=target, name=name)
+    truth = None
+    if not _is_dataset_file(config['dataset']):
+        view = importlib.import_module(config['dataset'])
+        if hasattr(view, 'truth'):
+            truth = view.truth(X)
+    return run(X, y, config, resume=resume, target=target, truth=truth, name=name)
 
 
 def main(argv=None):

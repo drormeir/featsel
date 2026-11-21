@@ -67,6 +67,22 @@ are not redistributed.
 Experiment config: `configs/aircraft70_gpu.yaml`, every method, on the GPU
 except tree importance.
 
+### Simulated rare signal (`rare_signal/`)
+
+Higher Criticism and Berk-Jones are built for rare, weak and independent
+signal. No real dataset here has it, so this one is simulated. Every
+feature is independent and standard normal. In a few features, at random
+positions, the positive class has its mean moved by a small shift. The
+defaults: 500 samples, 30% positive, 10,000 features, 40 informative,
+shift 0.4 standard deviations. Nothing is downloaded.
+
+- `featsel_view.py` defines `NAME`, `TARGET` (`label`), `load_xy`, whose
+  arguments set the simulation, and `truth(X)`, the informative columns.
+  The runner reads `truth` and records `truth_recall` and
+  `truth_precision` in every row.
+
+Experiment config: `configs/rare_signal70.yaml`.
+
 ## Retired datasets
 
 `scanb_small` and `scanb_full`, the course's copies of SCAN-B, were retired

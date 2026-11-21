@@ -281,6 +281,26 @@ def test_truth_records_feature_recovery(experiment):
     assert by_selector['ANOVAFSelector'] > by_selector['RandomSelector']
 
 
+def test_simulated_dataset_records_feature_recovery(tmp_path):
+    """Test that a dataset module's truth(X) reaches the rows of a config run."""
+    config = {
+        'dataset': 'featsel_datasets.rare_signal.featsel_view',
+        'dataset_params': {'n_samples': 200, 'n_features': 500, 'n_signal': 10,
+                           'shift': 1.5},
+        'output': str(tmp_path / 'rare.csv'),
+        'n_splits': 2,
+        'selectors': [{'name': 'RandomSelector', 'k': [10]},
+                      {'name': 'MannWhitneySelector', 'k': [10], 'params': {'device': 'cpu'}}],
+        'models': [{'name': 'logistic_regression'}],
+    }
+
+    df = pd.read_csv(run_config(config))
+
+    by_selector = df.groupby('selector').truth_recall.mean()
+    assert by_selector['MannWhitneySelector'] > 0.8
+    assert by_selector['RandomSelector'] < 0.2
+
+
 def test_config_paths_are_relative_to_the_config_file(tmp_path, monkeypatch):
     """Test that dataset and output resolve against the config, not the cwd."""
     (tmp_path / 'configs').mkdir()

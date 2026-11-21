@@ -1,0 +1,63 @@
+# Simulated rare, weak signal (featsel_datasets/rare_signal/): 500 samples,
+# 30% positive, 10,000 independent standard normal features, 40 of them
+# informative with the positive class moved by 0.4 standard deviations.
+# Higher Criticism and Berk-Jones are built for this setting; the real
+# datasets do not have it. Every row records truth_recall and
+# truth_precision against the 40 informative features.
+# Run with: python -m featsel.run --config configs/rare_signal70.yaml --n-jobs 1
+#
+# The protocol of the other experiments: 16 splits, 70% for training, k
+# chosen on validation folds. Random at k = 10000 is every feature, no
+# selection. Timing is not the aim, so the filters use the GPU when free.
+
+dataset: "featsel_datasets.rare_signal.featsel_view"
+dataset_params:
+  n_samples: 500
+  n_features: 10000
+  n_signal: 40
+  shift: 0.4
+  positive_fraction: 0.3
+  seed: 0
+
+output: "../results/rare_signal70.csv"
+
+seed: 42
+n_splits: 16
+train_sizes: [0.7]
+preprocess: ["standard"]
+k_validation:
+  cv: 5
+selection_repeats: 1
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  - name: RandomSelector
+    k: [10, 20, 40, 80, 160, 10000]
+  - name: MannWhitneySelector
+    k: [10, 20, 40, 80, 160, 500]
+    params: {device: "auto"}
+  - name: HigherCriticismSelector
+    label: HC2008
+    params: {variant: "2008", device: "auto"}
+  - name: HigherCriticismSelector
+    label: HC2004
+    params: {variant: "2004", device: "auto"}
+  - name: BerkJonesSelector
+    label: BerkJones
+    params: {device: "auto"}
+  # Benjamini-Hochberg on the F-test: the usual count-choosing filter.
+  - name: FDRSelector
+    params: {alpha: 0.05}
+  # No k: C, chosen from Cs by validation AUC, sets the count.
+  - name: LassoSelector
+    label: Lasso_ppdna
+    params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
