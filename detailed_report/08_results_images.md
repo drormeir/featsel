@@ -329,7 +329,7 @@ threshold of 0.5 (section 9.6), on both image datasets:
 | RFECV, scored by AUC | 0.831 [0.805, 0.847] | 0.823 | 0.789 [0.779, 0.802] | 0.785 |
 | Lasso | 0.824 [0.803, 0.847] | 0.816 | 0.782 [0.765, 0.796] | 0.777 |
 | HC2008 | 0.788 [0.777, 0.804] | 0.789 | 0.741 [0.732, 0.757] | 0.738 |
-| Berk-Jones | 0.788 [0.772, 0.804] | 0.790 | 0.744 [0.732, 0.764] | 0.741 |
+| Berk-Jones | 0.788 [0.772, 0.804] | 0.790 | 0.743 [0.732, 0.763] | 0.741 |
 | Sequential, `k` = 10 | 0.708 [0.686, 0.726] | 0.690 | 0.620 [0.601, 0.638] | 0.617 |
 | HC2004 | 0.625 [0.601, 0.642] | 0.614 | 0.553 [0.542, 0.563] | 0.564 |
 
@@ -383,7 +383,7 @@ F-test's assumption holds (section 4.3). Config:
 | Mann-Whitney | 0.843 | 20 (10 to 80) | 0.43 | 0.73 | 0.015 (0.62) |
 | Berk-Jones | 0.813 | 12 (4 to 33) | 0.28 | 0.86 | 0.045 (0.26) |
 | FDR, F-test, 5% | 0.808 | 8 (5 to 18) | 0.21 | 0.95 | 0.050 (0.22) |
-| Lasso | 0.805 | 129 (108 to 141) | 0.72 | 0.23 | 0.053 (0.10) |
+| Lasso | 0.805 | 128.5 (108 to 141) | 0.72 | 0.23 | 0.053 (0.10) |
 | HC2004 | 0.656 | 1.5 (1 to 9) | 0.05 | 0.99 | 0.202 (0.007) |
 | All features | 0.629 | 10,000 | 1 | 0.004 | 0.229 (< 0.001) |
 
@@ -396,7 +396,7 @@ from [`scripts/summarize_frontier.py`](../scripts/summarize_frontier.py) and
 
 What the run shows:
 
-- **HC2008 chooses a good count here.** It kept a median of 34 features
+- **HC2008 chooses a good count here.** It kept a median of 33.5 features
   for 40 informative ones, far below the edge of its search (1,000). It
   has the highest mean AUC, with no `k` to choose.
 - **It is not better than Mann-Whitney with a validated `k`.** The

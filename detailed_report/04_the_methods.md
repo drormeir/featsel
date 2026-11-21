@@ -62,8 +62,9 @@ dataset. They were set by hand and not tuned:
 
 - RFE and RFECV: the SVM's C = 0.01, a step of 0.1.
 - Tree importance: 200 trees.
-- Correlation: the selector's defaults. A feature must have a target
-  correlation of at least 0.1, and of a pair above 0.95, one is dropped.
+- Correlation: Spearman (the selector's default is Pearson), and the
+  default thresholds. A feature must have a target correlation of at
+  least 0.1, and of a pair above 0.95, one is dropped.
 
 Only Lasso's C is chosen, from 0.01, 0.1, 1 and 10 (section 3.11).
 

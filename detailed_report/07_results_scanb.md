@@ -397,8 +397,12 @@ The GPU methods ran one fit at a time; the CPU methods (tree importance,
 RFE, RFECV) ran two workers at once, which slows each fit. Tree
 importance, with 4 threads per fit on Basal's 2,083 training patients,
 takes 9.6 s alone and 13.4 s with two fits at once (medians;
-[`results/tree_timing.csv`](../results/tree_timing.csv)). The series of
-section 6.2 used 1,488 patients, so its times are lower.
+[`results/tree_timing.csv`](../results/tree_timing.csv)). In the runs,
+the median on Basal was 15 s; the mean of 17.5 s includes Her2 and Normal,
+at 20 to 21 s (Appendix C.1). The series of section 6.2 used 1,488
+patients, so its times are lower. That holds for RFE too: its Newton
+solver works on the patients' n × n kernel, which grows with the square
+of the patients.
 
 Choosing `k` costs more than one selection: 5 fits on validation sets, and
 a classifier for each `k` on each. For a filter, that dominates.

@@ -229,7 +229,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Classifier | logistic regression, L2 penalty, C fixed at 1: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
-| Timing | each selection fit 10 times (3 on FGVC-Aircraft; Sequential selection, section 4, once on the other two); the median is recorded |
+| Timing | each selection fit 10 times (3 on FGVC-Aircraft; Sequential selection, section 4, once on the other two; once in the simulation); the median is recorded |
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
@@ -561,7 +561,7 @@ by accuracy is weaker.
 
 **Simulated rare signal** (D 8.11): 10,000 independent normal features, 40
 of them moved by 0.4 standard deviations in the positive class. HC2008
-kept a median of 34 features and had the best mean AUC, 0.858. Mann-Whitney
+kept a median of 33.5 features and had the best mean AUC, 0.858. Mann-Whitney
 with a validated `k` reached 0.843; the difference is not established
 (p = 0.62). Berk-Jones (0.813, 12 features) and an FDR filter, run only
 here (the features that pass the F-test at a 5% false discovery rate,

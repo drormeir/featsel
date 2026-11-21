@@ -114,7 +114,7 @@ settings stated in their sections.
     stopped at or just before it (sections 7.5, 8.5, 8.9). As a top-10% filter, both are among the best on SCAN-B and
     the most stable. HC2004 keeps one to three features and is the
     weakest method, except RFECV scored by accuracy on SCAN-B. On simulated rare signal (section 8.11), HC2008 kept
-    a median of 34 features for 40 informative ones and had the best mean
+    a median of 33.5 features for 40 informative ones and had the best mean
     AUC, 0.858. Mann-Whitney with a validated `k` came within 0.015
     (p = 0.62).
 11. **Wrappers pay only in some places, and only with care.** RFE was the

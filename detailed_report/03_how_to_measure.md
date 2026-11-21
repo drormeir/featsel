@@ -16,7 +16,7 @@ where they appear.
 | `k` | Chosen on validation sets: 5 folds of the training set, best mean AUC, tie to the smaller `k` | 3.11 |
 | Classifier | Logistic regression, C fixed at 1 | 3.8 |
 | Lasso's C | Chosen on validation sets | 3.11 |
-| Timing | Each selection fit 10 times (3 on FGVC-Aircraft; Sequential once on SCAN-B and BreastMNIST); a searching method searches once, then is timed | 3.7, 3.11 |
+| Timing | Each selection fit 10 times (3 on FGVC-Aircraft; Sequential once on SCAN-B and BreastMNIST; once in the simulation, which reports no times); a searching method searches once, then is timed | 3.7, 3.11 |
 
 ## 3.1 The basic flow
 
