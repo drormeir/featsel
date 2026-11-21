@@ -368,8 +368,8 @@ per fit (by the rule of section 7.11) was 274 s at `k` = 5 and 588 s at
 step with `k`. At 10 genes it beat random on every task, and scored above
 Mann-Whitney on Her2, LumA and LumB. But Mann-Whitney then RFE scored above
 it on all five tasks, in 3 s instead of 10 minutes. Sequential was timed on
-one fit per split. The other methods use the median of 10 fits
-(section 3.7).
+one fit per split, because 10 would take about a day. The other methods
+use the median of 10 fits (section 3.7).
 
 ## 7.11 Cost
 

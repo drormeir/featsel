@@ -174,9 +174,11 @@ For every fit we record:
 
 - **Selection time**: the selector's `fit` alone. Each selection is fit 10
   times by a fresh selector (3 times on FGVC-Aircraft), and the median is
-  recorded. Sequential selection takes minutes per fit on SCAN-B, so there
-  and on BreastMNIST it is fit once; on FGVC-Aircraft it is fit 3 times,
-  like every method there.
+  recorded. Sequential selection takes minutes per fit on SCAN-B, and 10
+  fits would take about a day, so there and on BreastMNIST it is fit once;
+  on FGVC-Aircraft it is fit 3 times, like every method there. On
+  FGVC-Aircraft every fit chose the same features, so the count changes
+  only how precise the time is, not the AUC.
 - **Search time**: choosing `k`, or a method's own hyperparameter, on
   validation sets (section 3.11), recorded apart.
 - **Peak memory** of the selection: what Python and NumPy allocate on
