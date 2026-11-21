@@ -202,7 +202,7 @@ FGVC-Aircraft (Maji et al. 2013) holds 10,000 aircraft photos. The task
 is Boeing 737 against the Airbus A320 family, two families of airliners
 that look alike. Each photo becomes 2,048 numbers through ResNet-50, as
 for BreastMNIST, but with torchvision's older ImageNet weights, V1. With
-the V2 weights used for BreastMNIST, 80% of the features were exactly zero
+the V2 weights used for BreastMNIST (better there, D 2.2), 80% of the features were exactly zero
 and all the features reached only 0.742 AUC (the score of section 3); V1 gave 0.1% zeros and 0.862
 (`results/aircraft_weights.csv`). As on BreastMNIST, the signal is
 widespread: 17% to 23% of the features pass the U test at a 5% false

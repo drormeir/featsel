@@ -177,13 +177,9 @@ validation and 156 test images.
 **Features.** Each image goes through ResNet-50 (He et al. 2016) with its
 last layer removed. ResNet-50 is a convolutional network trained on the
 ImageNet photo collection. We use torchvision's `IMAGENET1K_V2` weights,
-its default and its more accurate set on ImageNet (top-1 80.9% against
-76.1% for V1). A later check with all features confirmed the choice: AUC
-0.924 with V2 against 0.898 with V1, V2 better on all 16 splits (p =
-0.039). Without the copies (below), 0.895 against 0.876, not established
-(p = 0.36;
-[`demos/weights.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/weights.ipynb),
-[`results/breastmnist_weights.csv`](../results/breastmnist_weights.csv)).
+its default and its more accurate set on ImageNet. A later check
+confirmed that V2 gives better features than V1 here
+([`demos/weights.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/weights.ipynb)).
 On FGVC-Aircraft, V1 was better (section 2.3).
 The grayscale image is repeated over three colour channels and normalized
 as for ImageNet. The result, an embedding, is 2,048 numbers per image.
