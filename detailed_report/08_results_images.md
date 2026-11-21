@@ -331,7 +331,7 @@ The chains and RFECV scored by accuracy are in the tables only:
 from [`scripts/summarize_side_metrics.py`](../scripts/summarize_side_metrics.py).
 
 The picture of AUC holds, though these scores were not tested. RFE is
-within 0.002 macro-F1 of all features. Mann-Whitney and mutual
+within 0.003 macro-F1 of all features. Mann-Whitney and mutual
 information come within 0.011 of them. The methods that choose a smaller
 count of their own (Lasso, HC, Berk-Jones) lose more. No selected set beats all
 features by more than 0.003 macro-F1.

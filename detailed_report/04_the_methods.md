@@ -45,7 +45,7 @@ to a tight tolerance.
 | FDRSelector | filter | F-test, keep what passes Benjamini-Hochberg false discovery control. | alpha | same as `SelectFdr` |
 | FWESelector | filter | F-test, keep what passes Bonferroni. | alpha | same as `SelectFwe` |
 | MannWhitneySelector | filter | Rank by the Mann-Whitney U test (section 4.3). | `k` | none in scikit-learn; equals SciPy's test |
-| CorrelationSelector | filter | Rank by correlation with the label, then drop one of each highly correlated pair. | `k`, thresholds | own method |
+| CorrelationSelector | filter | Rank by correlation with the label, skip a feature highly correlated with one already kept. | `k`, thresholds | own method |
 | MutualInfoSelector | filter | Rank by mutual information, which catches any dependence, not only linear. | `k` | same scores as `mutual_info_classif`, bit for bit |
 | HigherCriticismSelector | filter, own count | Keep the features below the Higher Criticism threshold (section 4.4). | variant, alpha0 | none in scikit-learn |
 | BerkJonesSelector | filter, own count | Keep the features below the exact Berk-Jones threshold (section 4.5). | alpha0 | none in scikit-learn |
@@ -68,7 +68,8 @@ dataset. They were set by hand and not tuned:
 - Correlation: Spearman (the selector's default is Pearson; section 4.6
   gives the reason), and the
   default thresholds. A feature must have a target correlation of at
-  least 0.1, and of a pair above 0.95, one is dropped.
+  least 0.1, and a feature correlated above 0.95 with one already kept
+  is skipped.
 
 Only Lasso's C is chosen, from 0.01, 0.1, 1 and 10, a list also set by
 hand (section 3.11).
@@ -137,7 +138,8 @@ reproduces every saved selection, and the new one changes none on the
 image data and 47 of 560 on SCAN-B, each by one gene of 1,000 to 2,000
 ([`figures/correlation_fix_check.csv`](figures/correlation_fix_check.csv),
 from [`scripts/correlation_fix_check.py`](../scripts/correlation_fix_check.py)).
-So the frontier was not rerun.
+So the frontier was not rerun. The `k` chosen on validation sets and
+the test AUC were not recomputed with the new version.
 
 ### One ranking for every `k`
 

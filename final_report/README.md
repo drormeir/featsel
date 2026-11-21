@@ -309,7 +309,7 @@ and the random control. Table 4 lists the methods the experiments used;
 |---|---|---|
 | Random | control | Pick `k` features at random. |
 | Mann-Whitney | filter | Rank features by the U test (below). |
-| Correlation | filter | Rank by Spearman correlation with the label; drop one of each highly correlated pair. |
+| Correlation | filter | Rank by Spearman correlation with the label; skip a feature highly correlated with one already kept. |
 | Mutual information | filter | Rank by mutual information, which sees any dependence. |
 | HC2004, HC2008 | filter, own count | Keep the features below the Higher Criticism threshold. |
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
@@ -716,8 +716,8 @@ test near 0.05.
   fixed, except Lasso's penalty; so is a chain's first count, and other
   counts were tested only on the image data (section 6.6). Whether more trees would change tree importance's AUC was not
   tested (D 7.4). The correlation results come from a
-  version with a defect, fixed later; the fix changes at most one gene
-  of a selection (D 4.2).
+  version with a defect, fixed later; at each `k`, the fix changes at most one gene
+  of a selection; the chosen `k` and the AUC were not recomputed (D 4.2).
 - **Many tests.** Each test is judged at p < 0.05, with no correction for
   the number of tests, more than a hundred per dataset. So some
   established differences may be chance, most likely those with p between

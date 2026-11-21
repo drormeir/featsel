@@ -356,7 +356,7 @@ predicting the majority class, so one gene scores as well as many.
 
 Scored by AUC, RFECV kept 2,855 to 28,541 genes and reached 0.962 mean
 AUC, level with RFE. The gain over accuracy is established on Her2, LumB
-and Normal (+0.38 to +0.43, p ≤ 0.0005), not on Basal and LumA (+0.007
+and Normal (+0.38 to +0.43, p ≤ 0.0006), not on Basal and LumA (+0.007
 and +0.0003, p = 0.76 and 0.72). Table:
 [`figures/rfecv_scoring_tests.csv`](figures/rfecv_scoring_tests.csv), from
 [`scripts/rfecv_scoring_tests.py`](../scripts/rfecv_scoring_tests.py). AUC does not reward the majority class, so it is the
@@ -464,8 +464,8 @@ chapter 6:
 | Sequential, `k` = 10 | 588 | none |
 
 The GPU methods ran one fit at a time; the CPU methods (tree importance,
-RFE, RFECV) ran two workers at once (memory limited an early SCAN-B run
-to two, section 6.1), which slows each fit. Tree
+RFE, RFECV) ran two workers at once (in an early SCAN-B run, memory made
+6 workers fall back to 3, section 6.1), which slows each fit. Tree
 importance, with 4 threads per fit on Basal's 2,083 training patients,
 takes 9.6 s alone and 13.4 s with two fits at once (medians;
 [`results/tree_timing.csv`](../results/tree_timing.csv)). In the runs,

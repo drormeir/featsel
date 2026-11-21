@@ -105,7 +105,7 @@ itself.
 This run also predates dropping liblinear. With 6 workers, the memory cap
 per worker was too small for a liblinear fit, so it aborted. Every
 6-worker run fell back to 3 workers (section 5.5;
-`ended_with_workers` in the table). So
+`ended_with_workers` in `figures/parallel_scaling.csv`). So
 on this 16 GB laptop, more than 3 workers gained almost nothing for this
 grid: the median time was 138.7 s with 3 workers and 137.6 s with 4.
 

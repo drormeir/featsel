@@ -18,8 +18,9 @@ methods and the main results in one page, read the
   on the CPU. Lasso, RFE, RFECV and Sequential selection can also run on
   a GPU. There the filters run 2.6 to 49 times faster than the originals they replace, and sequential
   selection 34 times (chapter 6).
-- **Exact solvers** for RFE, RFECV and Lasso, which reach the solution
-  that scikit-learn's default solver stops short of. On SCAN-B, one RFE
+- **Exact solvers** for RFE and RFECV, which reach the solution
+  that scikit-learn's default solver stops short of, and for Lasso a
+  solver that comes far closer to it. On SCAN-B, one RFE
   fit became 8 times faster, 23.1 s against 2.8 s (chapter 6).
 - **An experiment runner driven by one YAML file.** It selects inside
   every split, runs a random control at every `k`, and chooses `k` on
