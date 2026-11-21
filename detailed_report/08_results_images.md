@@ -4,7 +4,9 @@
 
 This chapter reports the two image datasets. Each image is a ResNet-50
 embedding of 2,048 features (chapter 2). BreastMNIST is task 4. FGVC-Aircraft
-is a dataset the pipeline never saw during its design.
+is a dataset the pipeline never saw during its design. Section 8.11 adds
+simulated data with rare signal, the setting Higher Criticism was built
+for.
 
 Every run follows the protocol of chapter 3. All numbers are means over
 the 16 splits.
@@ -306,3 +308,69 @@ features by more than 0.001 macro-F1.
 **Memory.** By the measure of section 7.12, every fit took under 20 MB,
 in the median over splits. The largest single fit took 61 MB. With 2,048
 features, memory does not limit any method here.
+
+## 8.11 Simulated rare signal
+
+**The problem.** Higher Criticism and Berk-Jones were built for signal
+that is rare, weak and independent. None of the three datasets has it, so
+both stopped at the edge of their search (sections 7.5, 8.5, 8.9). That
+does not show whether they choose a good count where their assumptions
+hold.
+
+**The data.** We simulated such signal
+([`featsel_datasets/rare_signal/`](../featsel_datasets/rare_signal/)):
+
+- 500 samples, 150 of them positive.
+- 10,000 features, each independent and standard normal.
+- In 40 features, at random positions, the positive class has its mean
+  moved by 0.4 standard deviations.
+
+The signal is weak. In a training set of 350 samples, a t-test on one
+informative feature gives z ≈ 3.4 on average. A Bonferroni test at 5%
+needs about 4.6 at 10,000 features.
+
+**The protocol** is that of chapter 3: 16 splits, 70% for training, `k`
+chosen on validation sets. The runner also records the share of the 40
+features each selection found (recall) and the share of the selection that
+is informative (precision). Config:
+[`configs/rare_signal70.yaml`](../configs/rare_signal70.yaml). The run took
+5 minutes.
+
+| Method | Test AUC | Features kept, median (range) | Recall | Precision | HC2008 minus the method (p) |
+|---|---|---|---|---|---|
+| HC2008 | **0.858** | 34 (21 to 103) | 0.56 | 0.59 | — |
+| Mann-Whitney | 0.843 | 20 (10 to 80) | 0.43 | 0.73 | 0.015 (0.62) |
+| Berk-Jones | 0.813 | 12 (4 to 33) | 0.28 | 0.86 | 0.045 (0.26) |
+| FDR, F-test, 5% | 0.808 | 8 (5 to 18) | 0.21 | 0.95 | 0.050 (0.22) |
+| Lasso | 0.805 | 129 (108 to 141) | 0.72 | 0.23 | 0.053 (0.10) |
+| HC2004 | 0.656 | 2 (1 to 9) | 0.05 | 0.99 | 0.202 (0.007) |
+| All features | 0.629 | 10,000 | 1 | 0.004 | 0.229 (< 0.001) |
+
+Tables:
+[`figures/summary_rare_signal70_chosen.csv`](figures/summary_rare_signal70_chosen.csv),
+[`figures/summary_rare_signal70_curve.csv`](figures/summary_rare_signal70_curve.csv),
+[`figures/paired_tests_rare_signal70.csv`](figures/paired_tests_rare_signal70.csv),
+from [`scripts/summarize_frontier.py`](../scripts/summarize_frontier.py) and
+[`scripts/rare_signal_tests.py`](../scripts/rare_signal_tests.py).
+
+What the run shows:
+
+- **HC2008 chooses a good count here.** It kept a median of 34 features
+  for 40 informative ones, far below the edge of its search (1,000). It
+  has the highest mean AUC, with no `k` to choose.
+- **It is not better than Mann-Whitney with a validated `k`.** The
+  difference, 0.015, is not established (p = 0.62). Nor are those to
+  Berk-Jones, FDR and Lasso. HC2008 beats only HC2004 and all features.
+- **The best fixed count is near the true one.** Mann-Whitney reaches
+  0.864 at `k` = 20 and 0.862 at 40, then falls: 0.810 at 80, 0.695 at
+  500. HC2008 finds this region without validation folds.
+- **The thresholds differ in strictness.** Berk-Jones and FDR keep fewer
+  features, with high precision and low recall. HC2004 again keeps one or
+  two. Lasso keeps the most and finds the most, at low precision.
+- **Here selection is needed.** All features give 0.629: 9,960 null
+  features drown the signal. On the three real datasets, all features
+  were at most 0.008 below the best method (Table 5 of the final report).
+
+**Limits.** One setting: 40 of 10,000 features, one shift, one simulated
+dataset. The features are independent and normal, which real data are
+not.

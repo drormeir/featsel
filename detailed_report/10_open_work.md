@@ -29,11 +29,12 @@ Config validation and other known limits are in section 5.8.
 | **Random forest on the GPU.** | Unresolved. XGBoost ran out of memory at full size on the 4 GB GPU; a larger GPU is its next test. cuML was slower than scikit-learn (Appendix D.5). |
 ## 10.2 Beyond this project
 
-**A dataset where Higher Criticism should work.** HC is built for rare,
-weak, independent signal. All three datasets have widespread signal (on
-SCAN-B also strongly correlated), so HC acted as a top-10% filter. A dataset with rare signal, or a
-simulation with a known number of useful features, would test whether HC
-picks its own count well.
+**Where Higher Criticism should work.** HC is built for rare, weak,
+independent signal. All three datasets have widespread signal (on SCAN-B
+also strongly correlated), so HC acted as a top-10% filter. One simulation
+with rare signal (section 8.11) showed HC2008 choosing a good count. Open:
+a real dataset with rare signal, other rarities and strengths, and
+correlated features.
 
 **An exact test for floor-heavy data.** Half the gene values sit at a
 floor. A test that separates how often a gene is detected from how high
