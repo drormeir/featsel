@@ -367,6 +367,12 @@ The signal is weak. In a training set of 350 samples, a t-test on one
 informative feature gives z ≈ 3.4 on average. A Bonferroni test at 5%
 needs about 4.6 at 10,000 features.
 
+The 40 features and the shift of 0.4 come from the rare, weak setting of
+the Higher Criticism tutorial
+([`tutorial.ipynb`](../featsel/selectors/higher_criticism/demos/tutorial.ipynb)),
+with 10,000 features in place of 2,000, so the signal is rarer. The 500
+samples and the 30% positive share were set by hand.
+
 **The protocol** is that of chapter 3: 16 splits, 70% for training, `k`
 chosen on validation sets from 10, 20, 40, 80 and 160 (Mann-Whitney also
 500; random also all 10,000). The runner also records the share of the 40

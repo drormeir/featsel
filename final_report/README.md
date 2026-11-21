@@ -222,7 +222,7 @@ samples it has not seen. Every method comparison follows one protocol
 
 | Part | Choice |
 |---|---|
-| Splits | 16 random stratified splits; 70% of the samples in the training set, closer to real use than 50% |
+| Splits | 16 random stratified splits; 70% of the samples in the training set, closer to real use than 50%, and 90% would leave 78 BreastMNIST test images |
 | Selection | inside each split, on the training set only |
 | Main score | ROC AUC on the test set, mean over the splits |
 | Control | random features at every `k` |
@@ -563,7 +563,8 @@ weakest on both image datasets; on SCAN-B only RFECV by accuracy is
 weaker.
 
 **Simulated rare signal** (D 8.11): 10,000 independent normal features, 40
-of them moved by 0.4 standard deviations in the positive class. HC2008
+of them moved by 0.4 standard deviations in the positive class, each too
+weak alone for a Bonferroni test. HC2008
 kept a median of 33.5 features and the best mean AUC, 0.858. Mann-Whitney
 reached 0.843; the difference is not established
 (p = 0.62). Berk-Jones (0.813, 12 features) and an F-test filter at a
@@ -573,8 +574,8 @@ HC2004 kept 1 to 9 (median 1.5). All features gave 0.629.
 ### 6.5 Does selection find the PAM50 genes?
 
 The PAM50 label is computed from 50 known genes (section 2). A side study
-measured where these genes lie in each method's ranking, over 10 splits
-(`results/pam50_recovery.md`). In their top 50 genes, the methods found on
+measured where these genes lie in each method's ranking, over 10 splits,
+a count set by hand (`results/pam50_recovery.md`). In their top 50 genes, the methods found on
 average 12% of them (Mann-Whitney), 11% (tree importance), 9% (Lasso) and
 3% (RFE). Mann-Whitney found half of the 50 by rank 1,031; random ranking
 would need rank 14,271.

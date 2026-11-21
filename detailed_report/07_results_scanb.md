@@ -213,7 +213,8 @@ no `k` to choose.
 
 The PAM50 label is computed from 50 known genes. A strong method should rank
 them high. [`scripts/pam50_recovery.py`](../scripts/pam50_recovery.py)
-measures where the 50 lie in each method's ranking: 10 splits, 70% of the
+measures where the 50 lie in each method's ranking: 10 splits (a count
+set by hand), 70% of the
 patients in the training set, all five tasks. Mann-Whitney runs on the
 GPU, Lasso chooses its C on validation sets, the forest has 200 trees, and
 RFE ranks by elimination order.
@@ -409,7 +410,8 @@ chapter 6:
 | Sequential, `k` = 10 | 588 | none |
 
 The GPU methods ran one fit at a time; the CPU methods (tree importance,
-RFE, RFECV) ran two workers at once, which slows each fit. Tree
+RFE, RFECV) ran two workers at once (memory limited an early SCAN-B run
+to two, section 6.1), which slows each fit. Tree
 importance, with 4 threads per fit on Basal's 2,083 training patients,
 takes 9.6 s alone and 13.4 s with two fits at once (medians;
 [`results/tree_timing.csv`](../results/tree_timing.csv)). In the runs,

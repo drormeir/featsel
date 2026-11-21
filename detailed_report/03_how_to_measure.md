@@ -81,7 +81,8 @@ same patients.
 0.5, 0.7 and 0.9, for a learning curve. It was dropped for time. Every
 method comparison now uses 16 splits with 70% of
 samples in the training set: 50% trains on fewer samples than a model
-in real use would have. Sixteen or more values support quartiles; five do not.
+in real use would have, and 90% leaves too few to test: on BreastMNIST,
+78 images, 21 of them malignant. Sixteen or more values support quartiles; five do not.
 
 **More splits help less than they seem.** The corrected test below
 multiplies the variance by 1/J + n_test/n_train, for J splits. The second
