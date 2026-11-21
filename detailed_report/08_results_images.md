@@ -197,8 +197,8 @@ in the main runs.
 | then Lasso | FGVC-Aircraft | 0.812 / 0.828 / 0.847 | +0.019 (0.084; 14) | 0.15 / 0.23 |
 | then tree importance | BreastMNIST | 0.874 / 0.879 / 0.904 | +0.025 (0.057; 15) | 0.41 / 0.56 |
 | then tree importance | no copies | 0.862 / 0.855 / 0.866 | +0.012 (0.52; 11) | 0.39 / 0.38 |
-| then tree importance | FGVC-Aircraft | 0.782 / 0.814 / 0.833 | +0.020 (0.17; 13) | 0.68 / 1.00 |
-| then RFE | BreastMNIST | 0.852 / 0.889 / 0.914 | +0.025 (0.047; 14) | 0.18 / 0.20 |
+| then tree importance | FGVC-Aircraft | 0.781 / 0.814 / 0.833 | +0.020 (0.17; 13) | 0.68 / 1.00 |
+| then RFE | BreastMNIST | 0.852 / 0.889 / 0.913 | +0.025 (0.047; 14) | 0.18 / 0.20 |
 | then RFE | no copies | 0.847 / 0.860 / 0.878 | +0.019 (0.21; 12) | 0.12 / 0.13 |
 | then RFE | FGVC-Aircraft | 0.821 / 0.829 / 0.854 | +0.025 (0.025; 16) | 0.35 / 0.34 |
 

@@ -232,7 +232,8 @@ samples it has not seen. Every method comparison follows one protocol
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
-the classifier, all on the training set. The test set is scored once.
+the classifier, all on the training set. The test set reaches none of
+these choices; a method's result is its test score at the chosen `k` (D 3.1).
 Selecting features on all the data first is a known error (Ambroise and
 McLachlan 2002): the test samples then help choose the features. On
 BreastMNIST with shuffled labels, where nothing can be learned, the error
@@ -431,7 +432,7 @@ the samples' n × n kernel, so it pays when features outnumber samples.
 1/32 of its 32-bit speed, and RFE needs 64 bits: with 32 bits it
 selected different genes (D 6.2). Copying the data takes
 about half the time of a fast filter. Tree importance runs on the CPU,
-with all threads.
+with 4 threads per fit in the experiments.
 
 ## 6. Results
 
@@ -490,7 +491,7 @@ better one.
 
 At the `k` each method chose, the top methods cannot be told apart. On
 SCAN-B, eleven methods lie within 0.01 of each other in mean AUC
-(Table 5), and a different method leads on each task (D 7.1). On the
+(Table 5), and no one method leads on every task (D 7.1). On the
 image data, RFE ties all features, and Mann-Whitney is within 0.01 of them
 on both datasets.
 

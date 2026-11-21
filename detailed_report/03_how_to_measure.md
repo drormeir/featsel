@@ -179,7 +179,8 @@ For every fit we record:
 - **Selection time**: the selector's `fit` alone. Each selection is fit 10
   times by a fresh selector (3 times on FGVC-Aircraft), and the median is
   recorded. Sequential selection takes minutes per fit on SCAN-B, and 10
-  fits would take about a day, so there and on BreastMNIST it is fit once;
+  fits would take about a week (the SCAN-B run with one fit took 18 hours,
+  section 7.11), so there and on BreastMNIST it is fit once;
   on FGVC-Aircraft it is fit 3 times, like every method there. On
   FGVC-Aircraft every fit chose the same features, so the count changes
   only how precise the time is, not the AUC.
@@ -298,7 +299,7 @@ stays untouched.
 
 **A searching method searches once.** Lasso chooses its C from four values
 by mean AUC over 5 validation sets. RFECV chooses its count by 5-fold
-cross-validation on the training set. The 10 timed repeats then use what
+cross-validation on the training set. The timed repeats then use what
 the search chose: Lasso with that C, RFECV as RFE to that count. The search
 time is recorded on its own. The runner checks that the repeats select the
 same features as the search.

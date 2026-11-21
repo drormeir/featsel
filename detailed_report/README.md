@@ -47,7 +47,7 @@ methods and the main results in one page, read the
 | How much faster did we make it? | The runner: 4.3 to 10.6 times faster than plain scikit-learn on one core (6.8 times against it on 12 threads). GPU filters: 2.6 to 49 times faster than the originals. Sequential selection: 34 times. These select the same features as before. | [6](06_making_it_fast.md) |
 | Why did RFECV fail, and can it be fixed? | Its default validation score, accuracy, made it keep one gene on three imbalanced tasks. Scored by AUC, it recovers to 0.962 on SCAN-B, level with RFE but below a sub-second filter. | [7.8](07_results_scanb.md#78-rfecv-accuracy-against-auc) |
 | Does selection beat using every feature? | Not on image data: all 2,048 features score best (BreastMNIST 0.924, FGVC-Aircraft 0.862) and RFE ties them. On SCAN-B, ten methods beat all 28,541 genes on LumB by 0.014 to 0.023; on the other tasks no gain is established. | [7.3](07_results_scanb.md#73-selection-against-all-genes), [8.3](08_results_images.md#83-selection-against-all-features) |
-| Does the pipeline work on unseen data? | Yes. It ran unchanged, entirely on the GPU, on aircraft photos. At 10 features, Mann-Whitney beat random by 0.124 AUC and RFE by 0.103, on all 16 splits. | [8.9](08_results_images.md#89-an-unseen-dataset-fgvc-aircraft) |
+| Does the pipeline work on unseen data? | Yes. It ran unchanged on aircraft photos, on the GPU except tree importance. At 10 features, Mann-Whitney beat random by 0.124 AUC and RFE by 0.103, on all 16 splits. | [8.9](08_results_images.md#89-an-unseen-dataset-fgvc-aircraft) |
 
 ## Table of contents
 

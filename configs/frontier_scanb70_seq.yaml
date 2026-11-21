@@ -3,8 +3,8 @@
 # frontier_scanb70_gpu.yaml and frontier_scanb70_cpu.yaml.
 # Run with: python -m featsel.run --config configs/frontier_scanb70_seq.yaml --n-jobs 1
 #
-# One fit per selection, not the default 10: a fit takes minutes, and 10
-# would take about a day. One worker, as for the other GPU selectors.
+# One fit per selection, not the default 10: a fit takes minutes, and this
+# run took 18 hours with one; 10 would take about a week. One worker, as for the other GPU selectors.
 #
 # Output goes to results/local/, which git ignores.
 

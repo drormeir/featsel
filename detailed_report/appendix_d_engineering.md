@@ -107,8 +107,8 @@ times were not saved, so only their outcomes are given here:
   mostly to the middle levels of the trees, where nodes are many, not to
   memory.
 
-Tree importance therefore stays on the CPU, with scikit-learn on all
-threads. A larger GPU is the next test for XGBoost (section 10.1).
+Tree importance therefore stays on the CPU, with scikit-learn on several
+threads (4 per fit in the experiments). A larger GPU is the next test for XGBoost (section 10.1).
 
 ## D.6 Libraries we did not use
 

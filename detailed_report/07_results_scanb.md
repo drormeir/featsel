@@ -114,7 +114,7 @@ is listed when its gain is established (p < 0.05):
 
 | `k` | Basal | Her2 | LumA | LumB | Normal |
 |---|---|---|---|---|---|
-| 10 | all, +0.12 | all but RFE, +0.15 to +0.17 | all but RFE, +0.14 to +0.18 | all but RFE, +0.16 to +0.20 | all but RFE, +0.10 to +0.13 |
+| 10 | all, +0.12 | all but RFE, +0.15 to +0.17 | all but RFE, +0.14 to +0.18 | all but RFE, +0.16 to +0.20 | all but RFE, +0.11 to +0.13 |
 | 50 | filters, tree importance, one chain, +0.01 | filters, tree, chains, +0.07 | filters, tree, chains, +0.04 to +0.08 | filters, tree, chains, +0.07 to +0.09 | filters, tree, chains, +0.04 to +0.06 |
 | 250 | none | filters, tree, chains, +0.04 | filters, tree, chains, +0.02 to +0.03 | filters, tree, chains, +0.04 to +0.05 | none |
 | 2000 | none | filters, +0.01 | filters, tree, RFE, +0.02 | filters, tree, +0.02 | mutual information, +0.02 |
@@ -354,7 +354,7 @@ five:
 | Sequential | 0.989 | 0.944 | 0.919 | 0.950 | 0.895 |
 
 At the chosen `k`, in mean AUC over tasks, Mann-Whitney then Lasso beats
-Lasso alone by 0.005, and Mann-Whitney then RFE beats RFE alone by 0.002.
+Lasso alone by 0.004, and Mann-Whitney then RFE beats RFE alone by 0.001.
 Mann-Whitney then tree importance loses 0.004 to tree importance alone.
 The chains keep at most 500 genes, by design: their `k` list stops below
 the 1,000 of the first step (section 3.11). Their selection is faster:
@@ -368,7 +368,7 @@ per fit (by the rule of section 7.11) was 274 s at `k` = 5 and 588 s at
 step with `k`. At 10 genes it beat random on every task, and scored above
 Mann-Whitney on Her2, LumA and LumB. But Mann-Whitney then RFE scored above
 it on all five tasks, in 3 s instead of 10 minutes. Sequential was timed on
-one fit per split, because 10 would take about a day. The other methods
+one fit per split, because that run already took 18 hours (section 7.11). The other methods
 use the median of 10 fits (section 3.7).
 
 ## 7.11 Cost
