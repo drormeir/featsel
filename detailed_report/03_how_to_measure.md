@@ -16,7 +16,7 @@ where they appear.
 | `k` | Chosen on validation sets: 5 folds of the training set, best mean AUC, tie to the smaller `k` | 3.11 |
 | Classifier | Logistic regression, C fixed at 1, at most 1,000 iterations (scikit-learn's default of 100 can stop before it converges on thousands of features) | 3.8 |
 | Lasso's C (its penalty, section 4.2) | Chosen on validation sets | 3.11 |
-| Timing | Each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation of section 8.11, which reports no times; Sequential once on SCAN-B and BreastMNIST); a searching method searches once, then is timed | 3.7, 3.11 |
+| Timing | Each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation of section 8.11, which reports no times; Sequential selection (section 4.2) once on SCAN-B and BreastMNIST); a searching method searches once, then is timed | 3.7, 3.11 |
 
 ## 3.1 The basic flow
 

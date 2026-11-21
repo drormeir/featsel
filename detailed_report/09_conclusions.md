@@ -92,8 +92,8 @@ settings stated in their sections.
 6. **A gene list is therefore not a unique answer.** PAM50 is defined by
    50 genes. In their top 50, the methods found on average at most 12% of
    them (26% on the best task), yet they predicted the subtypes well
-   (section 7.6). On SCAN-B, tree importance reached the same mean AUC as
-   Mann-Whitney, 0.969, with no established difference on any task
+   (section 7.6). On SCAN-B, tree importance reached a mean AUC within
+   0.001 of Mann-Whitney's (0.969 for both), with no established difference on any task
    (p ≥ 0.07; section 7.1), but kept a different set on each split:
    stability 0.27 against 0.76, partly from its forest's own randomness
    (section 7.4). RFE has none, yet at other values of its C its genes
@@ -150,14 +150,15 @@ settings stated in their sections.
     0.67 s for one fit. A method that chooses its own count skips this.
 14. **A GPU helps sorting and matrix products, not everything.** A cheap
     GPU is slow in 64-bit arithmetic and has little memory. The data must
-    also be copied to it. RFE stayed faster on the CPU. On this 4 GB GPU,
+    also be copied to it. At 30,000 genes, RFE was faster on the CPU; at
+    1,000 to 10,000 genes, on the GPU (section 6.2). On this 4 GB GPU,
     the random forest did not fit at full size (section 6.2); a larger GPU
     is open work (section 10.1).
 15. **Exactness has a price in agreement.** Faster, tighter solvers can pick
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
     does on some synthetic data. The reason is that the default stops before it
-    reaches the solution. So RFE, RFECV and Lasso run only their
-    exact solvers (section 6.2).
+    reaches the solution. So RFE and RFECV run only Newton, which is
+    exact, and Lasso only PPDNA, to a residual of 10⁻¹⁰ (section 6.2).
 16. **Selection buys a smaller model more often than a better one.** On
     BreastMNIST all 2,048 features scored 0.895 and on FGVC-Aircraft
     0.862: no selected set beat them. On SCAN-B, selection beat all 28,541

@@ -115,7 +115,7 @@ those datasets have tens to a few hundred samples.
 | Ignoring which features are chosen | Nogueira et al. (2018) | Nogueira's stability measure for every method (3.6) |
 
 **Where this project stands.** It compares filters, embedded methods,
-wrappers (section 4.1) and Higher Criticism under one protocol. Running on a gene
+wrappers (section 4.1) and Higher Criticism (section 4.4) under one protocol. Running on a gene
 expression cohort and an image dataset tests whether the ranking of
 methods carries over between domains. A second image dataset, unseen
 during the design, then tests the finished pipeline (section 8.9).

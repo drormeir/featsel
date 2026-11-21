@@ -522,7 +522,7 @@ step is established (p = 0.07 to 0.19; D 8.2). Why RFE's place changes
 was not tested.
 
 Stability separates methods that AUC does not. Tree importance reaches
-the same mean AUC as Mann-Whitney on SCAN-B, 0.969, but its stability is
+a mean AUC within 0.001 of Mann-Whitney's on SCAN-B (0.969 for both), but its stability is
 0.27 against 0.76: it picks a different gene set on each split. Part of
 this is the forest's own randomness: at 200 trees, the top genes of two
 seeds on one training set have a Jaccard index (shared genes over all genes
@@ -585,8 +585,8 @@ weakest on both image datasets; on SCAN-B only RFECV by accuracy is
 weaker.
 
 **Simulated rare signal** (D 8.11): 10,000 independent normal features, 40
-of them moved by 0.4 standard deviations in the positive class, each too
-weak alone for a Bonferroni test (each feature tested at 5% divided by
+of them moved by 0.4 standard deviations in the positive class, each on
+average too weak alone for a Bonferroni test (each feature tested at 5% divided by
 10,000). The 40 features and the shift come from the rare, weak setting of
 our Higher Criticism tutorial, with 10,000 features in place of 2,000 for
 rarer signal; 500 samples and 30% positive were set by hand. HC2008
@@ -650,7 +650,7 @@ them. These runs are open work (D 10).
 The cheap end of Figure 2 comes close to the best mean AUC. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
-importance takes 17.5 s for 0.969 (Table 5). On the image data, all methods
+importance takes 17 s for 0.969 (Table 5). On the image data, all methods
 but Sequential selection take about a second per fit or less, so cost
 decides nothing there.
 
@@ -676,7 +676,7 @@ by how much over random? At small `k`, the answer depends on the dataset.
 At 10 genes on SCAN-B, Mann-Whitney then RFE has the highest mean on
 four tasks of five, and the filters and tree importance beat random genes by 0.12 to
 0.19 AUC. On the image data they lead at 10 features, alone or chained,
-by 0.10 to 0.16. At the `k` each method chose, the top methods are
+by 0.10 to 0.16 over random. At the `k` each method chose, the top methods are
 close (section 6.3). If time counts, a GPU filter is practical: on SCAN-B,
 HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
 per fit, 0.001 to 0.002 below the best.
@@ -685,7 +685,7 @@ per fit, 0.001 to 0.002 below the best.
 
 On all three datasets, selection beats random features most at small `k`;
 Mann-Whitney is within 0.012 AUC of the best, at the cheap end of the
-frontier; and HC2008 stops at the edge of its search. Wherever RFECV ran
+cost axis; and HC2008 stops at the edge of its search. Wherever RFECV ran
 with both inner scores, scoring by AUC gave a higher mean than scoring by
 accuracy; the gain is established only on three SCAN-B tasks, where
 accuracy kept one gene (D 7.8, 8.6). What changes is the best method for a given budget. At

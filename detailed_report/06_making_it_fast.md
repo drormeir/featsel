@@ -12,9 +12,10 @@ times. The few single timings in the text are marked as such. They
 explain a design choice and claim no speed-up. All ran on one laptop: Intel i7-9750H, 12 threads, 16 GB RAM,
 and an NVIDIA GTX 1650 with 4 GB.
 
-The SCAN-B measurements here, except the table of section 6.1, use
-28,552 genes: the 28,541 of chapter 7 and the 11 flat genes (section 2.1,
-Appendix B.5).
+The SCAN-B measurements here, except the table of section 6.1 and the
+tree importance timing of section 6.2, use 28,552 genes: the 28,541 of
+chapter 7 and the 11 flat genes (section 2.1, Appendix B.5). Those two
+use the 28,541 genes.
 
 ## 6.1 The runner against plain scikit-learn
 
@@ -210,8 +211,9 @@ liblinear's 10⁻⁴.
 from its paper to work on SCAN-B-shaped data (Appendix D.3).
 
 **No liblinear.** RFE, RFECV and Lasso do not offer liblinear, and have
-no `solver` parameter. Each runs only its exact solver: Newton
-for RFE and RFECV, PPDNA for Lasso. The reasons:
+no `solver` parameter. Each runs only its tight solver: Newton, which
+is exact, for RFE and RFECV; PPDNA, to a residual of 10⁻¹⁰, for Lasso.
+The reasons:
 
 - **Speed.** On the synthetic data of the first table, Newton RFE was
   2.0 times faster than liblinear on the CPU at 30,000 features.

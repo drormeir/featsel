@@ -62,7 +62,8 @@ What it shows:
   [`figures/chosen_pairs_breastmnist70_nocopies.csv`](figures/chosen_pairs_breastmnist70_nocopies.csv),
   from [`scripts/chosen_pair_tests.py`](../scripts/chosen_pair_tests.py).
 - **The GPU filters are the cheap choice.** Mann-Whitney reached 0.883 in
-  0.008 s per fit. RFE gained 0.009 more for 15 times the time.
+  0.008 s per fit. RFE scored 0.009 more, with no established
+  difference, for 15 times the time.
 - **Correlation equals Mann-Whitney up to `k` = 500.** Spearman correlation
   with a binary label ranks features as the U test does. At `k` = 1000 it
   kept about 800: its redundancy filter dropped the rest.
@@ -161,9 +162,10 @@ score about as well.
 ## 8.5 Higher Criticism and Berk-Jones
 
 HC2008 kept 204 features on every split. That is the edge of its search,
-0.1 × 2,048. Berk-Jones kept 175 to 204, so it behaves like HC2008, with
-the same AUC and stability. Both lose to Mann-Whitney at 250 features by
-about 0.004, and to all features by 0.047 and 0.048.
+0.1 × 2,048. Berk-Jones kept 175 to 204, so it behaves like HC2008:
+0.847 AUC against 0.848, and the same stability, 0.77 (Appendix C.2.2).
+They lose to Mann-Whitney at 250 features (0.851) by 0.004 and 0.003, and
+to all features by 0.048 and 0.047.
 
 HC2004 kept 1 or 2 features. It scored 0.771, the lowest of all. Its
 statistic peaks at the single strongest p-value (section 4.4).

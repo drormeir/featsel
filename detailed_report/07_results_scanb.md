@@ -198,7 +198,7 @@ mean over the five tasks:
 | RFECV, by AUC | 0.23 | 0.09 to 0.35 |
 
 The filters are stable; the methods that look at genes together are not.
-Tree importance reaches the same mean AUC as Mann-Whitney, with no
+Tree importance reaches a mean AUC within 0.001 of Mann-Whitney's, with no
 established difference on any task (section 7.1), but picks a different
 set on each split. Part of the filters' range comes from `k`: a method whose
 chosen `k` varies between splits is less stable. On Basal, Mann-Whitney's
