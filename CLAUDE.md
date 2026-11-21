@@ -140,6 +140,11 @@ config. A CSV dataset config specifies:
 - Licence: non-commercial research only; photos are not stored in the repo or in notebook outputs
 - `configs/aircraft70_gpu.yaml` runs every method of the final report's Table 5, on the GPU except tree importance; `demos/research.ipynb` has the analysis and conclusions
 
+**Simulated rare signal (`featsel_datasets/rare_signal/`)**
+- 10,000 independent normal features, 40 informative (positive class moved by 0.4 SD); 500 samples, 30% positive; `dataset_params` change these
+- `truth(X)` names the informative columns; `run_config` passes it, so every row gets `truth_recall` and `truth_precision`
+- `configs/rare_signal70.yaml` tests HC and Berk-Jones where their assumptions hold (detailed report 8.11)
+
 The course copies `scanb_small` and `scanb_full` are retired; they are
 archived outside git.
 
