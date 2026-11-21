@@ -179,6 +179,41 @@ its second method run alone. The chains save little time here: every method
 already runs in under a second on 2,048 features. The cap of 250 also
 matters, since every method preferred larger `k`.
 
+**The size of the first step.** The 500 was set by hand, and no reason
+was recorded. A chain's `k` stops below its first step, so the 500 also
+caps `k` at 250. A side study kept 250 or 1,000 features in the first
+step instead, with the same splits and the same second steps, on
+BreastMNIST, BreastMNIST without the copies (section 8.8) and
+FGVC-Aircraft (section 8.9). Each size is compared with 500 at the `k`
+chosen on validation sets, by the corrected test (section 3.3). The time
+is the median selection time per fit, 10 fits (3 on FGVC-Aircraft), as
+in the main runs.
+
+| Chain | Dataset | Test AUC at 250 / 500 / 1,000 | 1,000 against 500 (p; splits won of 16) | Seconds per fit at 500 / 1,000 |
+|---|---|---|---|---|
+| then Lasso | BreastMNIST | 0.883 / 0.878 / 0.896 | +0.018 (0.17; 13) | 0.09 / 0.15 |
+| then Lasso | no copies | 0.863 / 0.858 / 0.879 | +0.021 (0.052; 15) | 0.08 / 0.11 |
+| then Lasso | FGVC-Aircraft | 0.812 / 0.828 / 0.847 | +0.019 (0.084; 14) | 0.15 / 0.23 |
+| then tree importance | BreastMNIST | 0.874 / 0.879 / 0.904 | +0.025 (0.057; 15) | 0.41 / 0.56 |
+| then tree importance | no copies | 0.862 / 0.855 / 0.866 | +0.012 (0.52; 11) | 0.39 / 0.38 |
+| then tree importance | FGVC-Aircraft | 0.782 / 0.814 / 0.833 | +0.020 (0.17; 13) | 0.68 / 1.00 |
+| then RFE | BreastMNIST | 0.852 / 0.889 / 0.914 | +0.025 (0.047; 14) | 0.18 / 0.20 |
+| then RFE | no copies | 0.847 / 0.860 / 0.878 | +0.019 (0.21; 12) | 0.12 / 0.13 |
+| then RFE | FGVC-Aircraft | 0.821 / 0.829 / 0.854 | +0.025 (0.025; 16) | 0.35 / 0.34 |
+
+*Sources: `chain_size_breastmnist70.csv`, `chain_size_breastmnist70_nocopies.csv`
+and `chain_size_aircraft70.csv` in [`figures/`](figures/) (Appendix A.2).*
+
+At 1,000, every chain gains on every dataset, by 0.012 to 0.025 AUC, for
+at most 0.32 s more per fit. Three gains are established: RFE on
+BreastMNIST and on FGVC-Aircraft, and none without the copies. RFE and
+tree importance chose the largest `k` they were allowed, 250 after 500
+and 500 after 1,000. So most of the gain is likely the larger `k` that a
+larger first step allows. Lasso has no such cap and still gained. The
+main results keep 500: changing it now would let the test set choose the
+setting. Whether the chains at 1,000 still lose to all features was not
+tested.
+
 ## 8.8 Without the copied images
 
 BreastMNIST holds 150 groups of copied images (section 2.2). Without them,

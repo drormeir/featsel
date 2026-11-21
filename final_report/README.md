@@ -305,7 +305,7 @@ filter (D 4.2).
 | RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step. |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy; repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
-| Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`, and the filter first helps it (section 6.6). |
+| Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`, and the filter first helps it. The first count is fixed, not tuned (section 6.6). |
 
 **Why the U test.** The F-test compares class means and assumes normal
 values. Gene values are not normal, and only their order is meaningful
@@ -591,6 +591,15 @@ methods at 10 genes on four tasks of five. Sequential selection beat
 random genes on every task at 10 genes, but this chain beat it on all
 five tasks, in 3 s per fit instead of 10 minutes (D 7.9, 7.10).
 
+A chain's first count was set by hand. On the image data, its 500 also
+caps `k` at 250, and RFE and tree importance chose that cap. A side
+study kept 250 or 1,000 instead, on the same splits. At 1,000, every
+chain gained 0.012 to 0.025 AUC on BreastMNIST, with and without the
+copies, and on FGVC-Aircraft. Only RFE's gains on BreastMNIST and
+FGVC-Aircraft are established (p = 0.047 and 0.025); without the copies,
+no gain is (D 8.7). The main results keep 500: choosing the count now by
+test AUC would use the test set twice.
+
 ### 6.7 Without the copied images
 
 BreastMNIST holds 150 groups of copied images (section 2). Without them,
@@ -684,7 +693,8 @@ safe default.
   every SCAN-B task and split (D 7.7). One training fraction and 16 splits; the spread over splits is not a
   confidence interval for new patients. The five SCAN-B tasks share
   patients, so they are not independent. Each selector's own settings are
-  fixed, except Lasso's penalty. The correlation selector drops a gene
+  fixed, except Lasso's penalty; so is a chain's first count (section
+  6.6). The correlation selector drops a gene
   whose only redundant partner was itself dropped (D 4.2).
 - **Cost.** Every time comes from one laptop: Intel i7-9750H, 16 GB of
   memory, and an NVIDIA GTX 1650 with 4 GB. A time is meaningful only on
@@ -849,7 +859,8 @@ one command:
 ```
 
 The configs behind section 6 are `configs/frontier_scanb70_*.yaml`,
-`configs/frontier_breastmnist70_*.yaml`, `configs/aircraft70_gpu.yaml` and `configs/rare_signal70.yaml`.
+`configs/frontier_breastmnist70_*.yaml`, `configs/aircraft70_gpu.yaml`, `configs/rare_signal70.yaml`
+and, for the chains' first count, `configs/chain_size_*.yaml`.
 Adding `--resume` continues a stopped run. Each run writes a CSV, and a
 JSON file with the machine, the library versions and the git commit. D A
 gives the command behind every summary table. This report's figures and
