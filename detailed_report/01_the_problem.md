@@ -127,8 +127,9 @@ during the design, then tests the finished pipeline (section 8.9).
    overlapping splits checks the differences (chapters 7 and 8).
 2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
    thresholds were built for rare, independent signal. On our widespread
-   signal, HC2008 and Berk-Jones stopped at or near the edge of their search and
-   acted as top-10% filters (sections 7.5 and 8.5).
+   signal, HC2008 and Berk-Jones stopped at or near the edge of their search, the
+   smallest 10% of p-values (section 4.4), and acted as top-10% filters
+   (sections 7.5 and 8.5).
 3. **A cost-quality frontier.** One plot of selection time against AUC
    (the score, section 3.5),
    for every method and setting. It shows which method fits a time budget

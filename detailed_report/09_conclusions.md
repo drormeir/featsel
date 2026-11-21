@@ -88,7 +88,7 @@ settings stated in their sections.
    and they move together. On the image data, features are only weakly
    correlated, but a quarter or more of them pass the U test (sections
    2.2, 2.3). So random features catch up as `k` grows, and many
-   different feature sets predict about equally well.
+   different feature sets predict with no established difference in AUC.
 6. **A gene list is therefore not a unique answer.** PAM50 is defined by
    50 genes. In their top 50, the methods found on average at most 12% of
    them (26% on the best task), yet they predicted the subtypes well
@@ -138,7 +138,7 @@ settings stated in their sections.
 
 **About cost.**
 
-12. **The cheap corner wins.** On SCAN-B, HC2008 and Berk-Jones reach
+12. **The cheap corner comes close to the best.** On SCAN-B, HC2008 and Berk-Jones reach
     0.970 mean AUC in 0.66 to 0.68 s per fit on the GPU. The best mean, mutual
     information at 0.971, takes 3.6 s; tree importance takes 17.5 s for
     0.969. On the image data every method except Sequential runs in about
@@ -181,9 +181,10 @@ Each dataset has its own frontier. What do they share?
   RFE trails Mann-Whitney on SCAN-B by 0.020 AUC (p = 0.0003; section
   7.9) but leads it on FGVC-Aircraft by 0.029 (p = 0.047; section 8.9).
   At 10
-  features, the filters and tree importance, alone or chained, lead on the
-  image data, and Mann-Whitney then RFE
-  leads on SCAN-B. Whether selection beats all features also changes:
+  features, the filters and tree importance, alone or chained, have the
+  highest means on the image data, and Mann-Whitney then RFE on four
+  SCAN-B tasks of five, where its lead is established over only some
+  methods (section 7.9). Whether selection beats all features also changes:
   never on the image data, on one SCAN-B task of five.
 
 So the best method for a budget can change from one dataset to another,
@@ -227,7 +228,8 @@ described in the section given.
   of chapter 8 are without the copied images (section 8.8). Sequential
   selection has not yet run without them. The side studies on the image
   data (RFE's C, the classifier's C, the tree count) still use the copies
-  (section 10.1). So do the choice of the V2 weights (section 2.2), the
+  (section 10.1). So do the choice of the V2 weights (without the copies, V2 is
+  not established as better than V1, p = 0.36; section 2.2), the
   shuffled-label demo (section 3.2) and the BreastMNIST data facts
   (section 2.2).
 - FGVC-Aircraft holds one group of three near-identical photos, one

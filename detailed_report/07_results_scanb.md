@@ -338,7 +338,8 @@ Mean macro-F1 over the 12 splits and five tasks:
   0.13 for k-NN, 0.07 for the random forest, 0.02 to 0.03 for the linear
   models, and −0.007 for shrinkage LDA. k-NN's distances over many random
   genes are dominated by noise, so it needs selection most.
-- **Logistic regression is the best classifier at 1,000 genes** (0.873),
+- **Logistic regression has the highest mean at 1,000 genes** (0.873;
+  not tested against the other classifiers),
   and still rising at the largest `k` tested.
 - **The gain differs by subtype.** At 10 genes, averaged over the
   classifiers, it runs from 0.13 (LumA) to 0.29 (Basal).

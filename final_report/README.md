@@ -27,7 +27,7 @@ design.
 **Results.** Selection helps most when few features are allowed: at 10
 features, the filters and tree importance beat random features by 0.12
 to 0.19 AUC (area under the ROC curve: 0.5 is chance, 1 is perfect) on SCAN-B and by 0.10 to 0.16 on the image data. As the number grows, random
-features catch up, because many features carry the signal: thousands of
+features catch up, likely because many features carry the signal: thousands of
 correlated genes on SCAN-B, a quarter or more of the features on the image
 data. At the number each method chose, the top methods are close: on
 SCAN-B, eleven lie within 0.01 mean AUC, and among the top six, 2 of 75
@@ -177,7 +177,7 @@ against 2,776 patients), a model that always answers "rest" is right 93%
 of the time, so plain accuracy is not the main score (section 3).
 
 **The signal.** Genes work in groups, so many genes can carry the same
-signal, and different gene sets can predict about equally well (sections 6.1,
+signal, and different gene sets can predict with no established difference in AUC (sections 6.1,
 6.3 to 6.5).
 
 ### 2.2 BreastMNIST
@@ -468,7 +468,7 @@ As `k` grows, random features catch up. On Basal, no method beats random
 genes from 250 genes on. On BreastMNIST, no gain is established from 500
 features. At 2,000 genes a gain of about 0.02 remains on LumA, LumB and,
 for mutual information, Normal, and about 0.01 on Her2.
-The reason is in the data: many features carry the signal (section 2), so
+A likely reason, not tested, is in the data: many features carry the signal (section 2), so
 a large random set holds enough of them.
 
 RFE alone is the exception at small `k` on SCAN-B. At 10 genes it scored
@@ -645,7 +645,7 @@ them. These runs are open work (D 10).
 
 ### 6.8 Cost
 
-The cheap end of Figure 2 wins. On SCAN-B, HC2008, Berk-Jones and
+The cheap end of Figure 2 comes close to the best mean AUC. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
 importance takes 17.5 s for 0.969 (Table 5). On the image data, all methods
@@ -700,7 +700,8 @@ test near 0.05.
   measured target was run. The BreastMNIST results are without its
   copied images, but Sequential selection has not yet run without them, and
   three side studies on it still include the copies (section 6.7). So do
-  the choice of the V2 weights, the shuffled-label demo and the BreastMNIST
+  the choice of the V2 weights (without the copies, V2 is not
+  established as better than V1, p = 0.36; D 2.2), the shuffled-label demo and the BreastMNIST
   data facts (sections 2.2, 2.3, 3). FGVC-Aircraft was checked the same
   way: no copied photos, but one group of three near-identical shots of
   one aircraft, with the same label, still in all its runs (D 2.3). Their
