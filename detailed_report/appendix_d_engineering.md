@@ -19,14 +19,10 @@ scikit-learn's Sequential selection took 164 s, against 191 s before, so
 the GPU's lead fell from 39 to 34 times. Two timed fits cannot pin a time
 closer than that.
 
-The RFE, RFECV and Lasso results were rerun on 2026-11-14, after
-liblinear was dropped, against liblinear at its defaults. They ran as a
-plain script,
+The RFE, RFECV and Lasso results come from a plain script,
 [`scripts/benchmark_speed_selectors.py`](../scripts/benchmark_speed_selectors.py),
-with nothing else running. Inside Jupyter, the same call ran Newton
-slower on the CPU: 59 s against 38 s for RFECV at 3,000 features. The
-cause was not found. It was not heat: ten fits in a row held their time,
-clock and temperature.
+against liblinear at its defaults, with nothing else running. Their
+speed results come from this script, not from a notebook.
 
 ## D.2 Lasso on real SCAN-B
 
