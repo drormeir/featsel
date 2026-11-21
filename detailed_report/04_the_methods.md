@@ -57,6 +57,16 @@ to a tight tolerance.
 Each method has a tutorial notebook:
 `featsel/selectors/<name>/demos/tutorial.ipynb`.
 
+**Settings in the experiments.** The configs fix these values for every
+dataset. They were set by hand and not tuned:
+
+- RFE and RFECV: the SVM's C = 0.01, a step of 0.1.
+- Tree importance: 200 trees.
+- Correlation: the selector's defaults. A feature must have a target
+  correlation of at least 0.1, and of a pair above 0.95, one is dropped.
+
+Only Lasso's C is chosen, from 0.01, 0.1, 1 and 10 (section 3.11).
+
 ### A few methods in more detail
 
 **Lasso.** The penalty λ·Σ|wᵢ| drives most weights to exactly zero. The
