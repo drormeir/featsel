@@ -4,7 +4,8 @@
 # each chain is compared with its 500 version split by split.
 # The second steps and their settings are those of the 500 run.
 # Each chain's k list stops below its first step's count, as at 500.
-# Timing is not the aim, so each selection is fitted once.
+# Each selection is fitted 3 times and the median time kept, as at 500,
+# so cost and AUC can be compared across sizes.
 # Run with: python -m featsel.run --config configs/chain_size_aircraft70.yaml --n-jobs 1
 #
 # One worker: the first step uses the GPU.
@@ -21,7 +22,7 @@ train_sizes: [0.7]
 preprocess: ["standard"]
 k_validation:
   cv: 5
-selection_repeats: 1
+selection_repeats: 3
 
 metrics:
   - roc_auc
