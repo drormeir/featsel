@@ -87,7 +87,7 @@ and 883 to 1,000 on LumA.
 
 liblinear at its default tolerance stops before the solution, and keeps
 more genes than the exact solution (section 6.2). LassoSelector now
-solves exactly, with PPDNA, a dual Newton proximal point algorithm (Liu
+solves to a residual of 10⁻¹⁰, not proven exact, with PPDNA, a dual Newton proximal point algorithm (Liu
 and Zhou 2023; section 6.2), and handles classification
 only. In the experiments it takes no `k`. It chooses C by validation AUC
 (section 3.11), and that C sets the count.

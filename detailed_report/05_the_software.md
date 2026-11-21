@@ -356,10 +356,11 @@ scikit-learn method:
   scikit-learn in every run, for a reason not found;
 - its GPU path selects the same features as its CPU path.
 
-RFE, RFECV and Lasso reach the exact solution (section 6.2), so their
+RFE and RFECV reach the exact solution, and Lasso comes far closer to it
+than liblinear at its defaults (section 6.2). So their
 selection is compared with scikit-learn's liblinear run to a tight
 tolerance, not at its defaults. Lasso has no speed test: no scikit-learn
-solver reaches its solution.
+solver comes as close to its solution.
 
 The shared checks use one balanced binary dataset, but our real tasks are
 imbalanced. So two paths are also tested at positive fractions of 50%,
