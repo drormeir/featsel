@@ -39,5 +39,6 @@ training set and the test set.
 time, run on a GPU, is almost as good as the complex methods, and it costs
 far less. The best method for a given time budget cannot be known in
 advance, but Mann-Whitney is a safe default. Many different gene sets
-predict equally well, so stability must be reported next to accuracy.
+predict with no established difference in AUC, so stability must be
+reported next to accuracy.
 These results come from three datasets, one classifier and one laptop.

@@ -109,7 +109,7 @@ splits:
 | Mutual information | −0.008 [−0.029, 0.014] | 0.47 | 6 |
 | RFECV, by AUC | −0.012 [−0.033, 0.010] | 0.28 | 3 |
 | Tree importance | −0.018 [−0.041, 0.006] | 0.12 | 1 |
-| Correlation | −0.019 [−0.035, −0.003] | 0.03 | 1 |
+| Correlation | −0.019 [−0.035, −0.002] | 0.03 | 1 |
 | Lasso | −0.026 [−0.047, −0.005] | 0.02 | 0 |
 | HC2008 | −0.056 [−0.083, −0.029] | < 0.001 | 0 |
 | Berk-Jones | −0.057 [−0.083, −0.030] | < 0.001 | 0 |
@@ -141,8 +141,9 @@ Nogueira's measure over the 16 splits, at the chosen `k` (section 3.6):
 
 Mann-Whitney, correlation, HC2008 and Berk-Jones are the most stable
 (0.69 to 0.76). Mutual information, RFE, RFECV, Lasso and tree importance
-pick a different set on each split (0.19 to 0.34), at about the same AUC.
-So many different sets serve equally well.
+pick a different set on each split (0.19 to 0.34), at 0.898 to 0.923 AUC,
+against 0.918 for Mann-Whitney. So different sets can score about as
+well, although Lasso is established below all features.
 
 ## 8.5 Higher Criticism and Berk-Jones
 
@@ -187,8 +188,9 @@ step instead, with the same splits and the same second steps, on
 BreastMNIST, BreastMNIST without the copies (section 8.8) and
 FGVC-Aircraft (section 8.9). Each size is compared with 500 at the `k`
 chosen on validation sets, by the corrected test (section 3.3). The time
-is the median selection time per fit, 10 fits (3 on FGVC-Aircraft), as
-in the main runs.
+is the mean over splits of each split's median selection time per fit,
+10 fits (3 on FGVC-Aircraft). The main runs take the median over splits
+instead.
 
 | Chain | Dataset | Test AUC at 250 / 500 / 1,000 | 1,000 against 500 (p; splits won of 16) | Seconds per fit at 500 / 1,000 |
 |---|---|---|---|---|
@@ -241,7 +243,7 @@ are faster and better than every method. The best method, RFE, reaches
 | Lasso | 0.882 | 73 to 182 | −0.013 (0.28) |
 | Correlation (Spearman) | 0.866 | 10 to 813 | −0.028 (0.07) |
 | Mann-Whitney 500, then RFE | 0.860 | 50 to 250 | −0.035 (0.009) |
-| Mann-Whitney 500, then Lasso | 0.858 | 57 to 138 | −0.037 (0.002) |
+| Mann-Whitney 500, then Lasso | 0.858 | 57 to 138 | −0.037 (0.001) |
 | Mann-Whitney 500, then tree importance | 0.855 | 10 to 250 | −0.040 (0.02) |
 | HC2008 | 0.848 | 204 | −0.047 (0.02) |
 | RFECV, by accuracy | 0.847 | 8 to 416 | −0.048 (0.19) |
@@ -256,8 +258,11 @@ HC2004 lost 0.016 to 0.042; HC2004 gained 0.013. The top of the order changed wi
 0.009 AUC: mutual information, tree importance and RFECV by AUC moved
 above Mann-Whitney. RFE still ties all features. The chains, HC2008,
 Berk-Jones and HC2004 still lose to all features (p < 0.05); correlation
-and Lasso no longer do (p = 0.07 and 0.28). So the copies inflate the
-scores, but the conclusions of sections 8.3 to 8.7 hold. Table:
+and Lasso no longer do (p = 0.07 and 0.28). The training set is also
+25% smaller, 409 images against 546
+([`results/breastmnist_weights.csv`](../results/breastmnist_weights.csv)),
+so the fall in scores mixes two causes: the copies and less training
+data. The conclusions of sections 8.3 to 8.7 hold. Table:
 [`figures/summary_breastmnist70_nocopies_chosen.csv`](figures/summary_breastmnist70_nocopies_chosen.csv).
 
 ## 8.9 An unseen dataset: FGVC-Aircraft
@@ -276,7 +281,7 @@ first run, on the same splits.
 | RFE | **0.862** | 500 to 1,000 | −0.000 (0.92) |
 | RFECV, by AUC | 0.858 | 620 to 2,048 | −0.004 (0.36) |
 | Mann-Whitney | 0.854 | 500 to 1,000 | −0.008 (0.34) |
-| RFECV, by accuracy | 0.854 | 212 to 1,844 | −0.009 (0.37) |
+| RFECV, by accuracy | 0.854 | 212 to 1,844 | −0.008 (0.37) |
 | Tree importance | 0.851 | 1,000 | −0.011 (0.11) |
 | Mutual information | 0.847 | 500 to 1,000 | −0.015 (0.13) |
 | Lasso | 0.846 | 132 to 336 | −0.016 (0.03) |
@@ -316,7 +321,7 @@ The pattern of BreastMNIST holds:
 ## 8.10 Side scores and memory
 
 Macro-F1 and balanced accuracy at the `k` each method chose, with a
-threshold of 0.5 (section 9.6), on both image datasets:
+threshold of 0.5 (section 3.5), on both image datasets:
 
 | Method | BreastMNIST macro-F1 [Q1, Q3] | Balanced accuracy | FGVC-Aircraft macro-F1 [Q1, Q3] | Balanced accuracy |
 |---|---|---|---|---|
@@ -386,7 +391,7 @@ F-test's assumption holds (section 4.3). Config:
 
 | Method | Test AUC | Features kept, median (range) | Recall | Precision | HC2008 minus the method (p) |
 |---|---|---|---|---|---|
-| HC2008 | **0.858** | 33.5 (21 to 103) | 0.56 | 0.59 | — |
+| HC2008 | **0.858** | 33.5 (21 to 103) | 0.55 | 0.59 | — |
 | Mann-Whitney | 0.843 | 20 (10 to 80) | 0.43 | 0.73 | 0.015 (0.62) |
 | Berk-Jones | 0.813 | 12 (4 to 33) | 0.28 | 0.86 | 0.045 (0.26) |
 | FDR, F-test, 5% | 0.808 | 8 (5 to 18) | 0.21 | 0.95 | 0.050 (0.22) |
@@ -397,7 +402,9 @@ F-test's assumption holds (section 4.3). Config:
 Tables:
 [`figures/summary_rare_signal70_chosen.csv`](figures/summary_rare_signal70_chosen.csv),
 [`figures/summary_rare_signal70_curve.csv`](figures/summary_rare_signal70_curve.csv),
-[`figures/paired_tests_rare_signal70.csv`](figures/paired_tests_rare_signal70.csv),
+[`figures/paired_tests_rare_signal70.csv`](figures/paired_tests_rare_signal70.csv)
+and, for recall and precision, the run's own
+[`results/rare_signal70.csv`](../results/rare_signal70.csv),
 from [`scripts/summarize_frontier.py`](../scripts/summarize_frontier.py) and
 [`scripts/rare_signal_tests.py`](../scripts/rare_signal_tests.py).
 
@@ -406,8 +413,8 @@ What the run shows:
 - **HC2008 chooses a good count here.** It kept a median of 33.5 features
   for 40 informative ones, far below the edge of its search (1,000). It
   has the highest mean AUC, with no `k` to choose.
-- **It is not better than Mann-Whitney with a validated `k`.** The
-  difference, 0.015, is not established (p = 0.62). Nor are those to
+- **No gain over Mann-Whitney with a validated `k` is established.**
+  The difference is 0.015 (p = 0.62). Nor are those to
   Berk-Jones, FDR and Lasso. HC2008 beats only HC2004 and all features.
 - **The best fixed count is near the true one.** Mann-Whitney reaches
   0.864 at `k` = 20 and 0.862 at 40, then falls: 0.810 at 80, 0.695 at
@@ -416,8 +423,9 @@ What the run shows:
   features, with high precision and low recall. HC2004 keeps 1 to 9
   (median 1.5). Lasso keeps the most and finds the most, at low precision.
 - **Here selection is needed.** All features give 0.629: 9,960 null
-  features drown the signal. On the three real datasets, all features
-  were at most 0.008 below the best method (sections 7.1, 8.1 and 8.9).
+  features drown the signal. On the image data, all features were the
+  best; on SCAN-B, at most 0.008 below the best in the mean over tasks,
+  though 0.023 below on LumB (sections 7.1, 8.1 and 8.9).
 
 **Limits.** One setting: 40 of 10,000 features, one shift, one simulated
 dataset. The features are independent and normal, which real data are

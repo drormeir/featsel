@@ -19,8 +19,8 @@ methods and the main results in one page, read the
   a GPU. There the filters run 2.6 to 49 times faster than the originals they replace, and sequential
   selection 34 times (chapter 6).
 - **Exact solvers** for RFE, RFECV and Lasso, which reach the solution
-  that scikit-learn's default solver stops short of. RFE became 8 times
-  faster (chapter 6).
+  that scikit-learn's default solver stops short of. On SCAN-B, one RFE
+  fit became 8 times faster, 23.1 s against 2.8 s (chapter 6).
 - **An experiment runner driven by one YAML file.** It selects inside
   every split, runs a random control at every `k`, and chooses `k` on
   validation sets. It runs jobs in parallel, survives running out of
@@ -76,8 +76,9 @@ methods and the main results in one page, read the
 Every number comes from a file in the repository, and each table names its
 source. The method comparisons follow one protocol (chapter 3): 16
 random splits, 70% of the samples in the training set, `k` chosen on
-validation sets, ROC AUC, and timing. They come from one rerun under this
-protocol, made on 2026-11-14 and 15. A few side studies keep their own
+validation sets, ROC AUC, and timing. The main SCAN-B and BreastMNIST
+runs were made on 2026-11-14 and 15; later runs, from 2026-11-20 on, carry
+their dates in their JSON files. A few side studies keep their own
 settings, stated where they appear: the PAM50 recovery (section 7.6), the
 classifier study (section 7.7) and the speed benchmarks (chapter 6). Section 9.6 gives the limits that
 follow.

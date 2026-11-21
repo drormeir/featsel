@@ -25,8 +25,10 @@ CSV with the exact versions, the machine and the git commit.
 
 ## A.2 The experiments
 
-Chapters 7 and 8 come from the current configs, run on 2026-11-14 and 15.
-Each result's JSON file records the commit, machine and settings.
+Chapters 7 and 8 come from the current configs. The main SCAN-B and
+BreastMNIST runs were made on 2026-11-14 and 15; the later runs, from
+2026-11-20 on, carry their dates in their JSON files. Each result's JSON
+file records the commit, machine and settings.
 
 | Result | Command | Output |
 |---|---|---|
@@ -53,7 +55,7 @@ Each result's JSON file records the commit, machine and settings.
 | RFE's C, 0.001 to 1 against 0.01 (section 7.9) | `.venv/bin/python -m featsel.run --config configs/<name>.yaml` for `rfe_c_scanb70` and `rfe_c_breastmnist70` (`--n-jobs 2`) and `rfe_c_aircraft70` (`--n-jobs 1`); about 26, 1 and 7 minutes. Tables: `.venv/bin/python scripts/rfe_c_tests.py <main run> results/local/<name>.csv --out detailed_report/figures/<name>.csv`, with `--every-k` for SCAN-B, where the main run is `results/local/frontier_scanb70_cpu.csv`, `results/local/frontier_breastmnist70_cpu.csv` and `results/aircraft70_gpu.csv` | `results/local/rfe_c_*.csv` and their JSON; `rfe_c_scanb70.csv`, `rfe_c_breastmnist70.csv` and `rfe_c_aircraft70.csv` in [`figures/`](figures/) |
 | Chain first-step size, 250 and 1,000 against 500 (section 8.7) | `.venv/bin/python -m featsel.run --config configs/<name>.yaml --n-jobs 1` for `chain_size_breastmnist70`, `chain_size_breastmnist70_nocopies` and `chain_size_aircraft70`, about 8 minutes each. Tables: `.venv/bin/python scripts/chain_size_tests.py <500 run> results/local/<name>.csv --out detailed_report/figures/<name>.csv`, where the 500 run is `results/local/frontier_breastmnist70_chains.csv`, `results/local/frontier_breastmnist70_nocopies.csv` and `results/aircraft70_gpu.csv` | `results/local/chain_size_*.csv` and their JSON; `chain_size_breastmnist70.csv`, `chain_size_breastmnist70_nocopies.csv` and `chain_size_aircraft70.csv` in [`figures/`](figures/) |
 | Simulated rare signal (section 8.11) | `.venv/bin/python -m featsel.run --config configs/rare_signal70.yaml --n-jobs 1`, about 5 minutes. Tables: `.venv/bin/python scripts/summarize_frontier.py --n-features 10000 --out detailed_report/figures/summary_rare_signal70 results/rare_signal70.csv`, then `.venv/bin/python scripts/rare_signal_tests.py results/rare_signal70.csv --out detailed_report/figures/paired_tests_rare_signal70.csv`; the `_bar` table is deleted | `results/rare_signal70.csv` and its JSON; `summary_rare_signal70_chosen.csv`, `_curve.csv`, `_tests.csv` and `paired_tests_rare_signal70.csv` in [`figures/`](figures/) |
-| RFECV, one split, three inner scores (section 7.8) | `.venv/bin/python scripts/rfecv_scoring.py` | prints its table, writes no file |
+| RFECV, one split, three inner scores (a check behind section 7.8, not reported) | `.venv/bin/python scripts/rfecv_scoring.py` | prints its table, writes no file |
 | PAM50 gene recovery (section 7.6) | `.venv/bin/python scripts/pam50_recovery.py --n-splits 10 --out results/pam50_recovery.md` | [`results/pam50_recovery.md`](../results/pam50_recovery.md), the tables of section 7.6 (the script overwrites its output file) |
 | Classifier study (section 7.7) | `.venv/bin/python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs 4 --max-worker-memory-gb 3` | `results/experiment_classifiers.csv` |
 

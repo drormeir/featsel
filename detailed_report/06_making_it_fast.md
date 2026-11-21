@@ -47,7 +47,7 @@ and 21, with the laptop otherwise idle. The table gives the median
 seconds and the speed-up of the medians. Over the three runs, the
 runner's speed-up was 3.9 to 4.5 on one core and 10.1 to 10.8 on 12
 threads. Against scikit-learn on 12 threads, the runner on 12 threads is
-6.8 times faster (32.8 s against 4.8 s). An earlier run, with other programs running, gave 4.3 and 10.1.
+6.8 times faster (32.8 s against 4.8 s). An earlier run gave 4.3 and 10.1 (`results/speed_benchmark.csv` at commit `46674fc`).
 
 | Run | Seconds (median of 3) | Speed-up over scikit-learn on 1 core |
 |---|---|---|
@@ -96,7 +96,7 @@ Preparing the splits and writing the results took at most about 20 s.
 So 3 workers could finish in about 100 s. They took 139 s.
 
 Instead, each job ran slower beside others. With 3 workers, the selection
-fits took 1.75 times as long as alone. The classifier fits, on 10 to 250
+fits took 1.76 times as long as alone. The classifier fits, on 10 to 250
 genes, did not slow down. A selection fit reads the whole training set,
 1,488 patients × 28,552 genes, far more than the processor's cache holds.
 A classifier fit reads only a few genes. This points to memory bandwidth,
@@ -180,7 +180,7 @@ its output in `results/local/benchmark_selectors/` is not tracked. At all
 | Lasso | PPDNA (Liu and Zhou 2023), a semismooth Newton method, solves the same L1 problem to a tight tolerance on the GPU. |
 | RFE, RFECV | An exact Newton solver for the linear SVM (Chapelle 2007). With fewer samples than genes, it works through the samples' n × n kernel matrix (3,000 × 3,000, not 30,000 genes wide). The matrix is kept between rounds. |
 | Sequential | Each step solves all candidate features at once: one batched Newton problem on the logistic regressions, in PyTorch, in 64 bits. The candidates share the features already chosen, so every Hessian block is one product over all candidates and no design matrix is built. Each fit starts from that candidate's solution at the previous step. It selects what scikit-learn does with a converged logistic regression. It covers two classes, forward search and accuracy, and raises an error otherwise. The GPU wins here: the work is wide elementwise passes and large products. |
-| Tree importance | scikit-learn's own forest on all threads (`n_jobs=-1`). scikit-learn's default is one thread. On real SCAN-B (1,488 samples × 28,552 genes, the series above), one fit took 17.4 s on one thread and 3.0 s on 12. On the runs' 70% training set (2,083 patients), one thread takes 30.2 s and 4 threads 9.6 s ([`results/tree_timing.csv`](../results/tree_timing.csv); section 7.11). In the runner, threads per worker times workers should not exceed the 12 hardware threads; the experiments use 4 threads per fit (`n_jobs=4`). |
+| Tree importance | scikit-learn's own forest on several threads (`n_jobs`). scikit-learn's default is one thread. On real SCAN-B (1,488 samples × 28,552 genes, the series above), one fit took 17.4 s on one thread and 3.0 s on 12. On the runs' 70% training set (2,083 patients), one thread takes 30.2 s and 4 threads 9.6 s ([`results/tree_timing.csv`](../results/tree_timing.csv); section 7.11). In the runner, threads per worker times workers should not exceed the 12 hardware threads; the experiments use 4 threads per fit (`n_jobs=4`), a count set by hand within that limit. |
 
 **RFE's step.** RFE removes a fixed share of the starting genes each
 round. A
@@ -242,8 +242,8 @@ for RFE and RFECV, PPDNA for Lasso. The reasons:
 - **Repeatability.** Unless its seed is fixed, liblinear shuffles the
   data differently on each fit and keeps different genes. Newton and
   PPDNA use no randomness, so the selectors lost `random_state` too.
-- **No loss in AUC.** On that first frontier run, the two RFE solvers
-  scored the same AUC at every `k`, within the spread over splits: 0.811
+- **AUC.** One frontier run of 5 splits, with no test. The two RFE
+  solvers scored within 0.004 AUC at every `k`: 0.811
   and 0.807 at k = 10, 0.959 and 0.959 at k = 1000. The two Lasso solvers
   differed a little. At k = 10, PPDNA scored higher on all 5 splits
   (0.948 against 0.934); at k = 1000, liblinear scored higher on all 5

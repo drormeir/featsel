@@ -24,7 +24,7 @@ remain.
 | Keep only HiSeq 2000 samples: 3,069 of 3,409. The other 340 are NextSeq 500. | Two machines can differ for technical reasons alone. The NextSeq samples add 297 patients not in the HiSeq set. They are left out. |
 | Keep one sample per patient, the first in file order: 2,976 patients. | 93 of them have a HiSeq sample and its repeat. Split between the training set and the test set, they would test the model on a patient it has seen. |
 | Drop 2,313 genes with a single value across the kept patients. | They carry no information. |
-| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32 (sections 3.1, 3.12), they become noise. On LumB vs rest (a task of section 2.1), that noise made Lasso's solver slower on the CPU (a single trial, not saved). |
+| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32 (sections 3.1, 3.12), they become noise. On LumB vs rest (a task of section 2.1), that noise made Lasso's solver (section 4.2) slower on the CPU (a single trial, not saved). |
 
 **The repeat samples.** Brueffer et al. sequenced 136 tumours twice, to
 test their classifiers' reproducibility. GSE96058 lists each repeat as
@@ -177,9 +177,11 @@ validation and 156 test images.
 **Features.** Each image goes through ResNet-50 (He et al. 2016) with its
 last layer removed. ResNet-50 is a convolutional network trained on the
 ImageNet photo collection. We use torchvision's `IMAGENET1K_V2` weights,
-its default and its more accurate set on ImageNet. A later check
-confirmed that V2 gives better features than V1 here
-([`demos/weights.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/weights.ipynb)).
+its default and its more accurate set on ImageNet. A later check found
+V2 better than V1 here with the copies (0.924 against 0.898 AUC,
+p = 0.039), but not established without them (0.895 against 0.876,
+p = 0.36;
+[`demos/weights.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/weights.ipynb)).
 On FGVC-Aircraft, V1 was better (section 2.3).
 The grayscale image is repeated over three colour channels and normalized
 as for ImageNet. The result, an embedding, is 2,048 numbers per image.

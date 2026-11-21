@@ -136,7 +136,7 @@ during the design, then tests the finished pipeline (section 8.9).
    (sections 7.1 and 8.1).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method pick the same features, on the CPU and on a GPU;
-   Lasso alone differs by 1 to 3 genes on two PAM50 subtypes, LumA and
+   Lasso (section 4.2) alone differs by 1 to 3 genes on two PAM50 subtypes, LumA and
    LumB (chapter 2; section 6.2).
    Exact solvers make RFE, RFECV and Sequential selection (section 4.2)
    faster, and

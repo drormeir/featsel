@@ -117,7 +117,7 @@ is listed when its gain is established (p < 0.05):
 |---|---|---|---|---|---|
 | 10 | all, +0.12 | all but RFE, +0.15 to +0.17 | all but RFE, +0.14 to +0.18 | all but RFE, +0.16 to +0.20 | all but RFE, +0.11 to +0.13 |
 | 50 | filters, tree importance, one chain, +0.01 | filters, tree, chains, +0.07 | filters, tree, chains, +0.04 to +0.08 | filters, tree, chains, +0.07 to +0.09 | filters, tree, chains, +0.04 to +0.06 |
-| 250 | none | filters, tree, chains, +0.04 | filters, tree, chains, +0.02 to +0.03 | filters, tree, chains, +0.04 to +0.05 | none |
+| 250 | none | filters, tree, chains, +0.04 | filters, tree, chains, +0.02 to +0.03 | filters, tree, chains, +0.04 | none |
 | 2000 | none | filters, +0.01 | filters, tree, RFE, +0.02 | filters, tree, +0.02 | mutual information, +0.02 |
 
 "Filters" here are Mann-Whitney, correlation and mutual information;
@@ -135,8 +135,9 @@ What it shows:
   filters, tree importance and one chain still gain about 0.01; from 250
   on, no method beats them.
 - **On LumA and LumB the gain lasts.** At 2,000 genes, the filters and
-  tree importance still beat random by about 0.02. On Her2 and Normal a
-  smaller gain remains for some filters (table above).
+  tree importance still beat random by about 0.02. On Normal, mutual
+  information also keeps 0.02; on Her2 the filters keep 0.01 (table
+  above).
 - **Random's curve is not smooth.** On LumA it drops from 0.920 at 250 to
   0.911 at 500. Each split draws new random genes, so the curve is noisy.
 
@@ -194,11 +195,11 @@ chosen `k` varies between splits is less stable. On Basal, Mann-Whitney's
 
 **Part of tree importance's instability is the forest's own randomness.**
 Each split seeds its forest differently (section 3.9). On one training
-set, two forests of 200 trees that differ only in their seed share 12%
-of their top 10 genes and 33% of their top 250 (mean Jaccard index over
-5 tasks and 3 training sets). The overlap grows with the trees, to 34%
-and 61% at 1,000, and is still rising there. On the image data, 200 trees
-share 28% to 52%. So the 200 trees, set by hand (section 4.2), leave the
+set, two forests of 200 trees that differ only in their seed have a
+Jaccard index (section 6.2) of 0.12 for their top 10 genes, about 2 genes
+in common, and 0.33 for their top 250 (mean over 5 tasks and 3 training
+sets). The index grows with the trees, to 0.34 and 0.61 at 1,000, and is
+still rising there. On the image data, at 200 trees, it is 0.28 to 0.52. So the 200 trees, set by hand (section 4.2), leave the
 ranking noisy. Whether more trees would change tree importance's AUC was
 not tested. Source: [`results/tree_count_stability.csv`](../results/tree_count_stability.csv),
 from [`scripts/tree_count_stability.py`](../scripts/tree_count_stability.py).
@@ -279,10 +280,11 @@ with a non-zero weight, so it never reaches half.
   Mann-Whitney ranks them.
 
 **Good prediction does not need the genes that define the label.** Each
-PAM50 gene moves with hundreds of others, and these predict just as well.
-Each task also needs only part of the 50. So a low share here does not
-mean poor selection. It does mean that a method's gene list is one of many
-equally good answers.
+PAM50 gene moves with hundreds of others, which carry much of the same
+signal. Each task also needs only part of the 50. So a low share here does
+not mean poor selection: the methods still predicted the subtypes well
+(section 7.1). It does mean that a method's gene list is one of many
+possible answers.
 
 **Limit.** The share counts all 50 genes in every task, though a single
 subtype may depend on only some of them.
@@ -364,17 +366,18 @@ is established (smallest p = 0.16). From `k` = 250 they are at most 0.008
 AUC; at 10 and 50 genes, where RFE varies most between splits, at most
 0.09. On BreastMNIST and FGVC-Aircraft, at the `k` chosen on validation
 sets, they are at most 0.003 AUC (p ≥ 0.48). The genes do change: against
-0.01, a selection shares 19% to 71% of its genes (mean Jaccard index per
-task and `k`). So C changes which genes RFE keeps, not how well they
-predict, as expected when many gene sets predict equally well (sections
+0.01, a selection has a Jaccard index of 0.19 to 0.71 (mean per task and
+`k`). So C changes which genes RFE keeps; no change in how well they
+predict is established, as expected when many gene sets predict about
+equally well (sections
 7.4 and 7.6). Tables: `rfe_c_scanb70.csv`, `rfe_c_breastmnist70.csv` and
 `rfe_c_aircraft70.csv` in [`figures/`](figures/).
 
 A filter first fixes RFE's weakness at small `k`. Mann-Whitney keeps
 1,000 genes, a count set by
 hand and not tuned (on the image data, section 8.7 tests other counts);
-RFE then picks `k` of them. At 10 genes this chain is the best method on four tasks of
-five:
+RFE then picks `k` of them. At 10 genes this chain has the highest mean of all methods
+on four tasks of five:
 
 | Method at `k` = 10 | Basal | Her2 | LumA | LumB | Normal |
 |---|---|---|---|---|---|
@@ -446,7 +449,7 @@ time, from the JSON beside its CSV:
 ## 7.12 Side scores and memory
 
 AUC is the main score (section 3.5). Macro-F1 and balanced accuracy are
-side scores. They use a decision threshold, fixed at 0.5 (section 9.6).
+side scores. They use a decision threshold, fixed at 0.5 (section 3.5).
 At the `k` each method chose, mean over the five tasks:
 
 | Method | Macro-F1 | Range over tasks | Balanced accuracy | Peak memory of a fit, MB |

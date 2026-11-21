@@ -50,7 +50,7 @@ given.
 | The public GSE96058 data, one sample per patient, not the course copies | The course copies keep 93 repeated patients, and `scanb_small` lacks 11 of the 50 PAM50 genes | It removed a leak, and made the PAM50 recovery test possible (sections 2.1, 7.6) |
 | The U test, not the F-test, for every filter | About half the gene values sit at a floor (in the first 200 genes), and only their order is meaningful | One valid test for all filters, so the comparison is between selection rules, not tests (section 4.3) |
 | Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | Scores fell by 0.016 to 0.042 AUC without the copies, except HC2004's; the conclusions held (section 8.8) |
-| Exact solvers, not liblinear, for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became faster and repeatable, at the same AUC (section 6.2) |
+| Exact solvers, not liblinear, for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became faster and repeatable; in one 5-split run with no test, its AUC changed by at most 0.004 (section 6.2) |
 | RFECV scored by AUC, not accuracy | Accuracy rewards the majority class on imbalanced tasks | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (sections 7.1, 7.8) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | HC's behaviour on widespread signal is reported as it is (sections 4.4, 7.5) |
 | A third dataset, unseen during the design | Two datasets shaped the design, so they cannot test it | The pipeline ran unchanged on FGVC-Aircraft (section 8.9) |
@@ -87,16 +87,16 @@ settings stated in their sections.
    (sections 7.2, 8.2 and 8.9).
 5. **The signal is widespread.** Thousands of genes carry it, and they
    move together. So random genes catch up as `k` grows, and many
-   different gene sets predict equally well.
+   different gene sets predict about equally well.
 6. **A gene list is therefore not a unique answer.** PAM50 is defined by
    50 genes. In their top 50, the methods found on average at most 12% of
    them (26% on the best task), yet they predicted the subtypes well
    (section 7.6). On SCAN-B, tree importance scored as well as
    Mann-Whitney (0.969 mean AUC) but kept a different set on each split:
    stability 0.27 against 0.76, partly from its forest's own randomness
-   (section 7.4). RFE has none, yet at other values of its C it kept 19%
-   to 71% different genes with no established change in AUC (section
-   7.9). So report stability next to accuracy (section 7.4).
+   (section 7.4). RFE has none, yet at other values of its C its genes
+   had a Jaccard index of only 0.19 to 0.71 against C = 0.01, with no
+   established change in AUC (section 7.9). So report stability next to accuracy (section 7.4).
 7. **Simple is enough.** Mann-Whitney, one gene at a time, is within 0.002
    AUC of the best mean on SCAN-B, and within 0.01 of the best on both
    image datasets. It is among the most stable, and on a GPU it takes under
@@ -147,8 +147,8 @@ settings stated in their sections.
 15. **Exactness has a price in agreement.** Faster exact solvers can pick
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
     does on some synthetic data. The reason is that the default stops before it
-    reaches the solution. AUC changed little: RFE's two solvers scored
-    the same, and Lasso's differed by at most 0.014 (section 6.2). So RFE, RFECV and Lasso now
+    reaches the solution. In one 5-split run with no test, RFE's two
+    solvers scored within 0.004 AUC, and Lasso's within 0.014 (section 6.2). So RFE, RFECV and Lasso now
     run only their exact solvers (section 6.2).
 16. **Selection buys a smaller model more often than a better one.** On
     BreastMNIST all 2,048 features scored 0.924 and on FGVC-Aircraft
@@ -164,8 +164,8 @@ Each dataset has its own frontier. What do they share?
 - **What holds everywhere.** Selection beats random most at small `k`.
   Mann-Whitney on a GPU is within 0.01 AUC of the best, at the cheap end
   of the cost axis. HC2008 stops at the edge
-  of its search. Wherever RFECV ran with both inner scores, AUC did better
-  than accuracy.
+  of its search. Wherever RFECV ran with both inner scores, scoring by
+  AUC gave a higher mean than scoring by accuracy.
 - **What changes.** The best method for a given budget. At large `k`, RFE
   leads on both image datasets but trails the filters on SCAN-B. At 10
   features, the filters and tree importance, alone or chained, lead on the
@@ -183,7 +183,7 @@ For a given number of features `k`, which method gives the best
 classifier, and by how much over random?
 
 At small `k`, the answer depends on the dataset. At 10 genes on SCAN-B,
-Mann-Whitney then RFE is best on four tasks of five, and the filters and
+Mann-Whitney then RFE has the highest mean on four tasks of five, and the filters and
 tree importance beat random genes by 0.12 to 0.19 AUC. At 10 features on the image data, the
 filters and tree importance, alone or chained, lead, by 0.10 to 0.16 over
 random.
@@ -211,12 +211,18 @@ described in the section given.
   images.
   Without them, the scores fall by 0.016 to 0.042 AUC, except HC2004's,
   and the
-  conclusions hold (section 8.8).
+  conclusions hold (section 8.8). That run also trains on 25% fewer
+  images, so the fall is not due to the copies alone.
+- FGVC-Aircraft's ResNet weights, V1, were chosen by the AUC of all
+  features on the same 16 splits that test the methods (section 2.3).
+  V1 scored higher on all 16, and V2's features were 80% zeros.
 
 **The protocol.**
 
 - One classifier, logistic regression, with C fixed at 1 (section 3.8).
-  The classifier study used other settings (section 7.7).
+  Other values of C were tested only for Mann-Whitney and all features,
+  only on the image data. The classifier study used other settings
+  (section 7.7).
 - One training fraction, 70%, and 16 splits. The spread over splits is not
   a confidence interval for new patients (section 3.3).
 - The five SCAN-B tasks share patients, so they are not independent
@@ -224,6 +230,11 @@ described in the section given.
 - Each selector's own settings are fixed, except Lasso's C (section 3.11).
   HC keeps alpha0 = 0.1 (section 4.4). The correlation selector has a
   known defect (section 4.2).
+- A chain's first count is fixed: 1,000 genes on SCAN-B, 500 features on
+  the image data. Other counts were tested only on the image data
+  (section 8.7).
+- Tree importance uses 200 trees. Its ranking depends on the forest's
+  seed; whether more trees change its AUC was not tested (section 7.4).
 - The decision threshold is fixed at 0.5 on the predicted probability.
   Macro-F1 and balanced accuracy depend on it; AUC does not.
 - The runner stores each cell's metrics, not each test patient's score, so

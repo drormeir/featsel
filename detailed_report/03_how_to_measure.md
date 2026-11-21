@@ -137,7 +137,7 @@ Sections 7.2 and 8.2 show this on our data too once `k` is large.
 
 ## 3.5 Scores
 
-The tasks are imbalanced (chapter 2). On Normal vs rest (200 against 2,776
+Four of the five tasks are imbalanced (chapter 2). On Normal vs rest (200 against 2,776
 patients), always predicting "rest" has accuracy 0.93, so plain accuracy
 is not used.
 
@@ -181,7 +181,7 @@ stability would be a meaningless 1.0.
 For every fit we record:
 
 - **Selection time**: the selector's `fit` alone. Each selection is fit 10
-  times by a fresh selector (3 times on FGVC-Aircraft, once in the
+  times by a fresh selector (3 times on FGVC-Aircraft, a count set by hand; once in the
   simulation of section 8.11), and the median is
   recorded. Sequential selection takes minutes per fit on SCAN-B, and 10
   fits would take about a week (the SCAN-B run with one fit took 18 hours,

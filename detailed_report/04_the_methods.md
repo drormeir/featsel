@@ -49,7 +49,7 @@ to a tight tolerance.
 | MutualInfoSelector | filter | Rank by mutual information, which catches any dependence, not only linear. | `k` | same scores as `mutual_info_classif`, bit for bit |
 | HigherCriticismSelector | filter, own count | Keep the features below the Higher Criticism threshold (section 4.4). | variant, alpha0 | none in scikit-learn |
 | BerkJonesSelector | filter, own count | Keep the features below the exact Berk-Jones threshold (section 4.5). | alpha0 | none in scikit-learn |
-| LassoSelector | embedded | L1-penalized logistic regression; the penalty sets most weights to exactly zero; keep the features with a non-zero weight. | C, or values of C to choose from by validation AUC | same as `SelectFromModel` with liblinear run to a tight tolerance |
+| LassoSelector | embedded | L1-penalized logistic regression; the penalty sets most weights to exactly zero; keep the features with a non-zero weight. | C, or values of C to choose from by validation AUC | same as `SelectFromModel` with liblinear (scikit-learn's default solver for L1 and linear-SVM models; section 6.2) run to a tight tolerance |
 | TreeImportanceSelector | embedded | Random forest; rank by how much each feature reduces impurity in the trees. | number of trees | same as `SelectFromModel(RandomForest)` |
 | RFESelector | wrapper | SVM-RFE: train a linear SVM, remove the features with the smallest weights, repeat (Guyon et al. 2002). | `k`, step, C | same as `RFE(LinearSVC)` with a converged SVM |
 | RFECVSelector | wrapper | RFE, with the number of features chosen by cross-validation on the training set. | step, C, folds | same as `RFECV` with a converged SVM |

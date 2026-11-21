@@ -308,12 +308,12 @@ operating system killed the run with no message. Six mechanisms fix this.
 
 | Mechanism | What it does |
 |---|---|
-| **Memory cap per worker** | A limit on each worker's data memory. By default: the free RAM, less room for three prepared splits and 1 GB, shared among the workers. Past it, a selector or classifier gets a Python `MemoryError`; the runner skips that cell, lists it at the end, and goes on. |
+| **Memory cap per worker** | A limit on each worker's data memory. By default: the free RAM, less room for three prepared splits and 1 GB (both set by hand), shared among the workers. Past it, a selector or classifier gets a Python `MemoryError`; the runner skips that cell, lists it at the end, and goes on. |
 | **Restart with fewer workers** | Compiled code can abort a worker instead of raising. The runner then resumes with half the workers. Under the default cap each gets about twice the memory; a cap set by hand stays. |
 | **Resume** | Rows are written as they finish. `--resume` skips cells already in the CSV. |
 | **One GPU at a time** | A lock file makes GPU fits take turns. A GPU out-of-memory error becomes a `MemoryError`. |
 | **Skip a job that kills the runner** | With one worker, jobs run in the runner's own process, so an abort ends the run. The running job's name is kept in a file beside the CSV, which a crash leaves behind. The next run skips that job and lists it with the out-of-memory cells. A later `--resume` tries it again. |
-| **Restart after a crash** | `scripts/run_until_done.py` restarts the runner with `--resume` and the worker count it had fallen back to. It gives up after three restarts in a row with no new row and no new skipped job. It keeps the machine awake meanwhile. |
+| **Restart after a crash** | `scripts/run_until_done.py` restarts the runner with `--resume` and the worker count it had fallen back to. It gives up after three restarts in a row (a count set by hand) with no new row and no new skipped job. It keeps the machine awake meanwhile. |
 
 **The cap counts data memory, not address space.** PyTorch's GPU
 libraries reserve address space they never use. Under an address-space

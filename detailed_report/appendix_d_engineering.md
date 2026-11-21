@@ -59,15 +59,15 @@ SSNAL handles only the squared loss. Our PPDNA departs from the paper
 - The intercept is penalized like a weight, as liblinear penalizes it.
   This makes the problem the same as liblinear's.
 - Its proximal step size starts at 40 C and grows five-fold per outer
-  step, up to 10⁶ C. Beyond that, rounding loses the digits the weights
+  step (both set by hand), up to 10⁶ C. Beyond that, rounding loses the digits the weights
   are made of.
 - The Newton matrix is factored in 32-bit floats, where this GPU is fast.
   The solution is refined in 64 bits.
 - The inner loop also stops when full Newton steps no longer shrink the
   gradient. Below that floor of 64-bit rounding, more steps only add
   noise.
-- The outer loop also stops when three outer steps fail to halve the best
-  residual.
+- The outer loop also stops when three outer steps (a count set by
+  hand) fail to halve the best residual.
   On 28,552 genes, rounding sets a floor near 10⁻⁹, above the target of
   10⁻¹⁰. Without this rule, Basal ran all 1,000 outer steps in 43 s.
   With it, 0.73 s (single timings), and every task stopped within 7 to
