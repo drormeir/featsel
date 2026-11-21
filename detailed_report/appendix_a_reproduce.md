@@ -25,14 +25,8 @@ CSV with the exact versions, the machine and the git commit.
 
 ## A.2 The experiments
 
-Chapters 7 and 8 come from the current configs. The main SCAN-B runs
-were made on 2026-11-14 and 15; the later runs, from 2026-11-20 on,
-among them BreastMNIST without copies, carry their dates in their JSON files. Each result's JSON
-file records the commit, machine and settings. The HC2004 rows of
-`frontier_scanb70_gpu`, `frontier_breastmnist70_nocopies`, `aircraft70_gpu`
-and `rare_signal70` come from a run of HC2004 alone, on 2026-11-21, on
-the same splits and data; its record is `<run>_hc2004.json` beside each
-CSV.
+Chapters 7 and 8 come from the current configs. Each result's JSON
+file records the commit, machine and settings.
 
 | Result | Command | Output |
 |---|---|---|
