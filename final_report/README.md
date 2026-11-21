@@ -643,7 +643,7 @@ test AUC would use the test set twice (section 3).
 BreastMNIST holds 150 groups of copied images (section 2), which would
 leak between the training and the test set. The main BreastMNIST
 results of this report are without them: 585 images, 409 of them in each training
-set (D 8.8). Sequential selection has not yet run without them. Three
+set (D 8.1, 8.8). Sequential selection has not yet run without them. Three
 side studies (the classifier's C, RFE's C, the tree count) still include
 them. These runs are open work (D 10).
 

@@ -100,7 +100,8 @@ can narrow by at most 14% more. So 16 is not only what the laptop allowed: on
 any machine, it gives most of what
 more splits can give. A difference not established (p < 0.05 under the
 corrected test below) at 16 splits needs
-more patients, not more splits.
+more patients, not more splits. Each test is judged at p < 0.05, with no
+correction for the number of tests (section 9.6).
 
 We report the **mean over splits**, which estimates the score on new
 patients. The first and third quartiles show the spread without assuming
