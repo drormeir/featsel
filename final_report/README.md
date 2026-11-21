@@ -710,7 +710,9 @@ cannot be known in advance from these datasets; a safe default can.
   Every SCAN-B task predicts PAM50, a label computed from the genes; no
   measured target was run. The BreastMNIST results are without its
   copied images, but Sequential selection has not yet run without them, and
-  three side studies on it still include the copies (section 6.7). FGVC-Aircraft was checked the same
+  three side studies on it still include the copies (section 6.7). So do
+  the choice of the V2 weights, the shuffled-label demo and the BreastMNIST
+  data facts (sections 2.2, 2.3, 3). FGVC-Aircraft was checked the same
   way: no copied photos, but one group of three near-identical shots of
   one aircraft, with the same label, still in all its runs (D 2.3). Their
   reruns are open work (D 10).
@@ -890,8 +892,7 @@ Table 5 come from `scripts/plot_final_frontier.py`, `plot_curves.py` and
 One seed, 42, fixes every random step; split `s` uses 42 + `s`. A rerun
 gives the same features and scores, for any number of workers. The tests
 run with `.venv/bin/python -m pytest`; GPU tests are skipped without a
-GPU. On 2026-11-21, on the laptop of section 7.4 with its GPU, all 413
-tests passed in 23 minutes (`results/test_run.md`).
+GPU.
 
 ## Appendix B. Engineering notes
 

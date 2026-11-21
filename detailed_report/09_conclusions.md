@@ -211,8 +211,11 @@ described in the section given.
   measured (section 2.1). No measured target was run (section 10.1).
 - The project's rule is to use only data without duplicates. The BreastMNIST results
   of chapter 8 are without the copied images (section 8.8). Sequential
-  selection and the side studies on the image data (RFE's C, the
-  classifier's C, the tree count) still use the copies (section 10.1).
+  selection has not yet run without them. The side studies on the image
+  data (RFE's C, the classifier's C, the tree count) still use the copies
+  (section 10.1). So do the choice of the V2 weights (section 2.2), the
+  shuffled-label demo (section 3.2) and the BreastMNIST data facts
+  (section 2.2).
 - FGVC-Aircraft holds one group of three near-identical photos, one
   aircraft shot seconds apart, with the same label (section 2.3). All its
   runs include them.
