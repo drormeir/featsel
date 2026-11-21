@@ -306,7 +306,8 @@ described in the section given.
 - Every time comes from one laptop with a 4 GB consumer GPU (chapter 6).
   A time is meaningful only on that machine.
 - The CPU methods (tree importance, RFE, RFECV) ran two fits at a time,
-  which slows each fit (section 7.11).
+  which slows each fit. The count of two comes from section 6.1; three
+  workers were not tested again after later changes (section 7.11).
 - Peak memory counts no GPU memory (sections 3.7, 7.12).
 - The runner's speed-up over scikit-learn comes from three runs of one
   small grid, with one fit per selection, not the 10 of the experiments

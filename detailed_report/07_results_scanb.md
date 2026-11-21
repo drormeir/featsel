@@ -473,9 +473,10 @@ chapter 6:
 | Sequential, `k` = 10 | 588 | none |
 
 The GPU methods ran one fit at a time; the CPU methods (tree importance,
-RFE, RFECV) ran two workers at once, which slows each fit. More workers
-add little: in section 6.1, 2 workers gave a speed-up of 1.61, 3 gave
-1.80, and more gave no further gain. Tree
+RFE, RFECV) ran two workers at once, which slows each fit. The count of
+two was chosen from the scaling table of section 6.1 (a speed-up of 1.61
+at 2 workers, 1.80 at 3, no further gain). Three workers were not tested
+again after later changes to the runner. Tree
 importance, with 4 threads per fit on Basal's 2,083 training patients,
 takes 9.6 s alone and 13.4 s with two fits at once (medians;
 [`results/tree_timing.csv`](../results/tree_timing.csv)). In the runs,
