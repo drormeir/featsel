@@ -25,8 +25,13 @@ CSV with the exact versions, the machine and the git commit.
 
 ## A.2 The experiments
 
-Chapters 7 and 8 come from the current configs. Each result's JSON
-file records the commit, machine and settings.
+Chapters 7 and 8 come from the current configs, with six exceptions.
+These configs now drop the copied images, ready for the rerun of section
+10.1, but their saved results still use all the images: on FGVC-Aircraft
+`aircraft70_gpu`, `chain_size_aircraft70`, `rfe_c_aircraft70` and
+`clf_c_aircraft70`; on BreastMNIST `rfe_c_breastmnist70` and
+`clf_c_breastmnist70`. Each result's JSON file records the commit,
+machine and settings it ran with.
 
 | Result | Command | Output |
 |---|---|---|

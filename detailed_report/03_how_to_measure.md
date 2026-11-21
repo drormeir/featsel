@@ -254,7 +254,9 @@ trees. For methods that depend on scale, such as k-nearest neighbours
 (L1 or L2), it is worse: one outlier sets the range and squeezes every
 other sample.
 
-**A quantile transform was not tested.** 98.1% of genes reject
+**A quantile transform was compared once, but its results were not
+kept, so the report makes no claim from them** (`docs/DECISIONS.md`,
+2026-10-05). 98.1% of genes reject
 normality. A quantile transform maps each feature to a normal
 distribution through its ranks, but discards the size of a fold change.
 Shrinkage linear discriminant analysis (LDA), which assumes normal classes, and k-NN, which suffers from
@@ -306,7 +308,7 @@ sets:
 3. For each `k`, logistic regression is fit on the top `k` features and
    scored by AUC on the validation set.
 4. The `k` with the best mean validation AUC wins; a tie goes to the
-   smaller `k`.
+   smaller `k`, a rule set by hand.
 5. That `k`'s classifier, fit on the whole training set, gives the
    method's test score. (The test set is scored at every `k`, for the
    curves, but only the chosen `k`'s score is the method's result.)
@@ -315,7 +317,9 @@ A method that ranks once fits once per fold and cuts every `k` from that
 fit: 5 extra fits, against the 10 timed fits of each selection (3 on FGVC-Aircraft).
 
 **Sequential selection runs only at `k` = 5 and 10, and does not search.**
-Its cost grows at least linearly with `k` (section 4.2).
+Its cost grows at least linearly with `k` (section 4.2): one fit at
+`k` = 10 takes 588 s on SCAN-B (section 7.11). The two values were set
+by hand: 10 is the smallest `k` of the list, and 5 is below it.
 
 Standardization is fit on the whole training set, so the validation sets
 helped set its means and spreads. That uses no labels, and the test set

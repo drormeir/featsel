@@ -348,7 +348,7 @@ solver comes as close to its solution.
 
 The shared checks use one balanced binary dataset, but our real tasks are
 imbalanced. So two paths are also tested at positive fractions of 50%,
-20%, 10% and 5%: Lasso's PPDNA solver, and mutual information on the
+20%, 10% and 5% (set by hand): Lasso's PPDNA solver, and mutual information on the
 GPU. The runner has its own tests; one checks that a parallel run gives
 the same results as a sequential one.
 

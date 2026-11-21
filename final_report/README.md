@@ -629,7 +629,7 @@ Her2 and Normal only over RFE alone, and on Basal over none (D 7.9, 7.10).
 A chain's first count was set by hand. The chain's `k` values stay below
 it, so on the image data the 500 also caps `k` at 250, and RFE and tree
 importance chose that cap as a median over splits. A side
-study kept 250 or 1,000 instead, on the same splits. At 1,000, every
+study kept 250 or 1,000 instead (half and twice 500, set by hand), on the same splits. At 1,000, every
 chain gained 0.012 to 0.025 AUC on BreastMNIST and FGVC-Aircraft. Only
 RFE's gain on FGVC-Aircraft is established (p = 0.025; D 8.7). The main results keep 500: choosing the count by
 test AUC would reuse the test set.

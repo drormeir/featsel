@@ -77,8 +77,9 @@ run.
 ### Parallel work at full size
 
 The same grid ran on all 28,552 genes and all five tasks: 50 jobs. Each
-worker count ran 3 times, for a median and a range, each in a fresh process. The runs varied by
-about 2%.
+worker count, 1 to 6 (a range set by hand), ran 3 times, for a median and a range, each in a fresh process. The runs varied by
+about 2%. At 6, every run fell back to 3 workers (section 5.5), so the
+table stops at 5 ([`figures/parallel_scaling.csv`](figures/parallel_scaling.csv)).
 
 | Workers | Seconds (median) | Speed-up | Efficiency (speed-up per worker) |
 |---|---|---|---|
@@ -124,7 +125,7 @@ the data in 32-bit floats (section 3.12).
 Each selector has a speed notebook,
 `featsel/selectors/<name>/demos/speed.ipynb`. It times the scikit-learn
 original and our versions on synthetic data shaped like SCAN-B: 3,000
-samples, 1,000 to 30,000 features, binary and imbalanced (80/20). It
+samples, 1,000 to 30,000 features, binary, with one sample in five positive (set by hand). It
 checks that every fit is reproducible and picks the original's features.
 Each time is the median of 2 timed fits, after one untimed warm-up fit.
 If the warm-up takes over a minute, one timed fit follows instead of two.
@@ -174,8 +175,8 @@ round. Every run uses step 0.1.
 ### Why some methods do not pick the same features
 
 **Lasso.** liblinear stops at a tolerance of 10⁻⁴, far from the exact
-solution. PPDNA reaches the solution, so it picks fewer, different genes.
-On all 2,976 patients (C = 1):
+solution. PPDNA comes far closer to it, so it picks fewer, different
+genes. On all 2,976 patients (C = 1, the default of both selectors):
 
 | Task | liblinear, default | PPDNA | Jaccard |
 |---|---|---|---|

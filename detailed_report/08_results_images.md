@@ -202,8 +202,8 @@ matters, since every method preferred larger `k`.
 
 **The size of the first step.** The 500 was set by hand, and no reason
 was recorded. A chain's `k` stops below its first step, so the 500 also
-caps `k` at 250. A side study kept 250 or 1,000 features in the first
-step instead, with the same splits and the same second steps, on
+caps `k` at 250. A side study kept 250 or 1,000 features (half and
+twice 500, set by hand) in the first step instead, with the same splits and the same second steps, on
 BreastMNIST and FGVC-Aircraft (section 8.9). Each size is compared with
 500 at the `k` chosen on validation sets, by the corrected test (section
 3.3). The time is the mean over splits of each split's median selection
