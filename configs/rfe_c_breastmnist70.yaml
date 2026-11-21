@@ -1,0 +1,46 @@
+# RFE's SVM penalty: C = 0.001, 0.1 and 1 against the 0.01 of the main
+# runs (frontier_breastmnist70_cpu.yaml, label RFE_newton, in results/local/frontier_breastmnist70_cpu.csv).
+# C = 0.01 was set by hand and not tuned; this run tests whether another
+# value would have scored differently. Same seed, splits, training fraction,
+# k list and k_validation as the main run, so each C is compared with 0.01
+# split by split (scripts/rfe_c_tests.py). The main results keep 0.01:
+# choosing C now by test AUC would use the test set twice.
+# One fit per selection: time is not the question here.
+# Run with: python -m featsel.run --config configs/rfe_c_breastmnist70.yaml --n-jobs 2
+#
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/local/rfe_c_breastmnist70.csv"
+
+seed: 42
+n_splits: 16
+train_sizes: [0.7]
+preprocess: ["standard"]
+k_validation:
+  cv: 5
+selection_repeats: 1
+
+metrics:
+  - roc_auc
+
+selectors:
+  - name: RFESelector
+    label: RFE_C0.001
+    k: [10, 50, 250, 500, 1000]
+    params: {C: 0.001, device: "cpu"}
+  - name: RFESelector
+    label: RFE_C0.1
+    k: [10, 50, 250, 500, 1000]
+    params: {C: 0.1, device: "cpu"}
+  - name: RFESelector
+    label: RFE_C1.0
+    k: [10, 50, 250, 500, 1000]
+    params: {C: 1.0, device: "cpu"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
