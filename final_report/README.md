@@ -95,6 +95,12 @@ shape our protocol (Table 1):
 
 ### 1.4 What this project adds
 
+This report keeps the main claims and their evidence. A detailed report
+in the repository holds every task, every `k`, every test and every
+design decision. A reference such as "D 7.2" points to its section 7.2,
+in the folder `detailed_report/` of the public repository
+[github.com/drormeir/featsel](https://github.com/drormeir/featsel).
+
 1. **A comparison at a cohort size earlier studies lacked.** 2,976
    patients give test sets of 893, and a paired test corrected for
    overlapping splits checks every difference (section 3).
@@ -113,12 +119,6 @@ shape our protocol (Table 1):
 5. **Checks of the data that change its use**: repeated patients and a
    computed label in SCAN-B, copied images in BreastMNIST (sections
    2.1, 2.2).
-
-This report keeps the main claims and their evidence. A detailed report
-in the repository holds every task, every `k`, every test and every
-design decision. A reference such as "D 7.2" points to its section 7.2,
-in the folder `detailed_report/` of the public repository
-[github.com/drormeir/featsel](https://github.com/drormeir/featsel).
 
 ## 2. Data
 
@@ -230,7 +230,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Classifier | logistic regression, L2 penalty, C (the inverse of the penalty's strength) fixed at 1, scikit-learn's default: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
-| Timing | each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation; Sequential selection, section 4, once on SCAN-B and BreastMNIST); the median is recorded |
+| Timing | each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation of section 6.4; Sequential selection, section 4, once on SCAN-B and BreastMNIST); the median is recorded |
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
@@ -310,7 +310,7 @@ filter (D 4.2).
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
 | Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
 | Tree importance | embedded | Rank by a random forest's impurity importance. |
-| RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step. |
+| RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step, set by hand. |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy (the only score its batched solver computes; D 4.2); repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
 | Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`; the filter helps it. The first count is fixed (section 6.6). |
@@ -374,7 +374,8 @@ simulated rare signal.
    replaces a scikit-learn selector in an existing pipeline with no other
    change, and works with `clone`, `cross_val_score` and `GridSearchCV`.
    Each selector that copies a scikit-learn method is tested to select the
-   same features and, except Lasso, to be at most 5% slower. Lasso has no
+   same features and, except Lasso, to be at most 5% slower, a limit above
+   the timing noise (D 5.6). Lasso has no
    speed test, because no scikit-learn solver reaches its exact solution
    (below). Each GPU path
    is tested to select the same features as the CPU path.
@@ -437,7 +438,7 @@ the samples' n × n kernel, so it pays when features outnumber samples.
 1/32 of its 32-bit speed, and RFE needs 64 bits: with 32 bits it
 selected different genes (D 6.2). Copying the data takes
 about half the time of a fast filter. Tree importance runs on the CPU,
-with 4 threads per fit in the experiments.
+with 4 threads per fit: no GPU forest we tried ran well on 4 GB (D D.5).
 
 ## 6. Results
 
