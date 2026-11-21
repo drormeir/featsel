@@ -39,14 +39,14 @@ methods and the main results in one page, read the
 | Question | Answer | Where |
 |---|---|---|
 | Does selection beat random genes? | Yes, most at small `k`. At 10 features, the filters, tree importance, the chains and Sequential beat random by 0.11 to 0.20 AUC on SCAN-B. On image data, the filters and tree importance beat it by 0.10 to 0.16. The gain shrinks as `k` grows. On LumA and LumB, about 0.02 remains at 2,000 genes. | [7.2](07_results_scanb.md#72-the-bar-random-genes-at-each-k), [8.2](08_results_images.md#82-the-bar-random-features-at-each-k) |
-| Which method selects best? | No single method. On SCAN-B eleven methods lie within 0.01 mean AUC, and none leads on every task. On image data RFE ties all features. Mann-Whitney is within 0.01 of the best everywhere and among the most stable. | [7.1](07_results_scanb.md#71-what-each-method-reaches), [7.4](07_results_scanb.md#74-stability), [8.1](08_results_images.md#81-breastmnist-what-each-method-reaches) |
+| Which method selects best? | No single method. On SCAN-B eleven methods lie within 0.01 mean AUC, and none leads on every task. On image data RFE ties all features. Mann-Whitney is within 0.012 of the best everywhere and among the most stable. | [7.1](07_results_scanb.md#71-what-each-method-reaches), [7.4](07_results_scanb.md#74-stability), [8.1](08_results_images.md#81-breastmnist-what-each-method-reaches) |
 | Which is the best value for time? | A GPU filter. On SCAN-B, HC2008 and Berk-Jones reach 0.970 mean AUC in 0.66 to 0.68 s per fit; the best, mutual information, reaches 0.971 in 3.6 s. | [7.11](07_results_scanb.md#711-cost) |
 | Can the best method for a budget be known in advance? | No. RFE leads at large `k` on image data and trails on SCAN-B; at 10 features filters and tree importance, alone or chained, lead on image data, Mann-Whitney then RFE on SCAN-B. | [9.4](09_conclusions.md#94-across-the-datasets) |
 | Does Higher Criticism pick its own count? | Not on the real data. On all three datasets HC2008 stopped at the edge of its search, 10% of the features: the signal is not rare. Berk-Jones stopped at or just before that edge. On simulated rare signal, HC2008 kept a median of 33.5 features for 40 informative ones, with the best mean AUC, but not established above Mann-Whitney. | [7.5](07_results_scanb.md#75-higher-criticism-and-berk-jones), [8.5](08_results_images.md#85-higher-criticism-and-berk-jones), [8.11](08_results_images.md#811-simulated-rare-signal) |
 | Do methods find the genes that define the label? | Rarely at small `k`: at most 12% of the 50 PAM50 genes in the top 50, on average. Yet they predict the label well, because correlated genes stand in for them. | [7.6](07_results_scanb.md#76-does-selection-find-the-pam50-genes) |
 | How much faster did we make it? | The runner: 4.3 to 10.6 times faster than plain scikit-learn on one core (6.8 times against it on 12 threads). GPU filters: 2.6 to 49 times faster than the originals. Sequential selection: 34 times. These select the same features as before. | [6](06_making_it_fast.md) |
 | Why did RFECV fail, and can it be fixed? | Its default validation score, accuracy, made it keep one gene on three imbalanced tasks. Scored by AUC, it recovers to 0.962 on SCAN-B, level with RFE but below a sub-second filter. | [7.8](07_results_scanb.md#78-rfecv-accuracy-against-auc) |
-| Does selection beat using every feature? | Not on image data: all 2,048 features score best (BreastMNIST 0.924, FGVC-Aircraft 0.862) and RFE ties them. On SCAN-B, ten methods beat all 28,541 genes on LumB by 0.014 to 0.023; on the other tasks no gain is established. | [7.3](07_results_scanb.md#73-selection-against-all-genes), [8.3](08_results_images.md#83-selection-against-all-features) |
+| Does selection beat using every feature? | Not on image data: all 2,048 features score best (BreastMNIST 0.895, FGVC-Aircraft 0.862) and RFE ties them. On SCAN-B, ten methods beat all 28,541 genes on LumB by 0.014 to 0.023; on the other tasks no gain is established. | [7.3](07_results_scanb.md#73-selection-against-all-genes), [8.3](08_results_images.md#83-selection-against-all-features) |
 | Does the pipeline work on unseen data? | Yes. It ran unchanged on aircraft photos, on the GPU except tree importance. At 10 features, Mann-Whitney beat random by 0.124 AUC and RFE by 0.103, on all 16 splits. | [8.9](08_results_images.md#89-an-unseen-dataset-fgvc-aircraft) |
 
 ## Table of contents
@@ -76,8 +76,9 @@ methods and the main results in one page, read the
 Every number comes from a file in the repository, and each table names its
 source. The method comparisons follow one protocol (chapter 3): 16
 random splits, 70% of the samples in the training set, `k` chosen on
-validation sets, ROC AUC, and timing. The main SCAN-B and BreastMNIST
-runs were made on 2026-11-14 and 15; later runs, from 2026-11-20 on, carry
+validation sets, ROC AUC, and timing. The main SCAN-B runs were made on
+2026-11-14 and 15; later runs, from 2026-11-20 on, among them BreastMNIST
+without copies, carry
 their dates in their JSON files. A few side studies keep their own
 settings, stated where they appear: the PAM50 recovery (section 7.6), the
 classifier study (section 7.7) and the speed benchmarks (chapter 6). Section 9.6 gives the limits that

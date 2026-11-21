@@ -17,7 +17,7 @@ corrected for the overlap between splits. We made the slow methods faster,
 with exact solvers and GPU paths. The main dataset is breast cancer gene
 expression (SCAN-B: 2,976 patients, 28,541 genes, five PAM50 subtype
 tasks). The second is ResNet-50 embeddings of breast ultrasound images
-(BreastMNIST: 780 images, 2,048 features). A third, aircraft photos
+(BreastMNIST: 585 images without copies, 2,048 features). A third, aircraft photos
 (FGVC-Aircraft), was not seen during the design. It tested the finished
 pipeline.
 
@@ -28,7 +28,7 @@ grows, random features catch up, because thousands of correlated genes
 carry the signal. At the number of features that each method chose, the
 top methods cannot be told apart: on SCAN-B, eleven lie within 0.01 mean
 AUC. The Mann-Whitney U test, which scores one feature at a time, is
-within 0.01 AUC of the best on all three datasets, and on a GPU it takes
+within 0.012 AUC of the best on all three datasets, and on a GPU it takes
 less than a second per fit. Selection rarely beats all the features: never
 on the image data, and on one SCAN-B task of five. The GPU filters ran 2.6
 to 49 times faster than the originals they replace. Data checks found repeated patients in

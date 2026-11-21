@@ -202,6 +202,8 @@ and cached.
 
 The U-test ranges are over the training sets of 16 random splits with 70%
 of the images, as in the main runs (section 3.3), drawn by `scripts/data_facts.py`.
+These facts describe all 780 images, as published, copies included; the
+results of chapter 8 use the 585 without copies (below).
 
 As in SCAN-B, the signal is widespread: about a third of the features
 separate the classes. Unlike SCAN-B, pairs of features are only weakly
@@ -210,8 +212,8 @@ correlated. Yet 150 principal components hold 90% of the variance of
 is spread thinly across many features, not concentrated in strongly
 correlated pairs.
 
-We use all 780 images and draw our own random splits, as for SCAN-B. We
-ignore MedMNIST's fixed split. So our scores are not directly comparable
+We use the 585 images left without the copies (below) and draw our own
+random splits, as for SCAN-B. We ignore MedMNIST's fixed split. So our scores are not directly comparable
 with its published test-set results, where ResNet-18 trained end to end
 reached AUC 0.891 to 0.901.
 
@@ -314,7 +316,7 @@ Analysis: [`demos/research.ipynb`](../featsel_datasets/fgvc_aircraft/demos/resea
 | | SCAN-B | BreastMNIST | FGVC-Aircraft |
 |---|---|---|---|
 | Domain | gene expression (RNA sequencing) | ultrasound images, ResNet-50 embeddings | aircraft photos, ResNet-50 embeddings |
-| Samples | 2,976 patients | 780 images | 1,200 photos |
+| Samples | 2,976 patients | 585 images (780 with copies) | 1,200 photos |
 | Features | 28,541 genes | 2,048 embedding dimensions | 2,048 embedding dimensions |
 | Tasks | 5 (each PAM50 subtype vs rest) | 1 (malignant vs rest) | 1 (Boeing 737 vs Airbus A320 family) |
 | Label | computed from 50 known genes | assigned by the image source | the aircraft model, from the dataset |

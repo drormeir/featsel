@@ -49,7 +49,7 @@ given.
 | A t-test corrected for overlapping splits | Random splits share most of their training samples, so a plain paired t-test is overconfident | Established differences from all genes fell from 52 to 20 of 70 comparisons; 10 of the 20 are gains (sections 3.3, 7.3, 9.3 item 9) |
 | The public GSE96058 data, one sample per patient, not the course copies | The course copies keep 93 repeated patients, and `scanb_small` lacks 11 of the 50 PAM50 genes | It removed a leak, and made the PAM50 recovery test possible (sections 2.1, 7.6) |
 | The U test, not the F-test, for every filter | About half the gene values sit at a floor (in the first 200 genes), and only their order is meaningful | One valid test for all filters, so the comparison is between selection rules, not tests (section 4.3) |
-| Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | Scores fell by 0.016 to 0.042 AUC without the copies, except HC2004's; the conclusions held (section 8.8) |
+| Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | A leak removed: every BreastMNIST result in chapter 8 is without the copies (sections 2.2, 8.8) |
 | Exact solvers, not liblinear, for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became faster and repeatable; in one 5-split run with no test, its AUC changed by at most 0.004 (section 6.2) |
 | RFECV scored by AUC, not accuracy | Accuracy rewards the majority class on imbalanced tasks | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (sections 7.1, 7.8) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | HC's behaviour on widespread signal is reported as it is (sections 4.4, 7.5) |
@@ -83,7 +83,7 @@ settings stated in their sections.
    random ones by 0.11 to 0.20 AUC on SCAN-B. On the image data, the
    filters and tree importance beat them by 0.10 to 0.16. The gain shrinks
    as `k` grows. On Basal it is gone by 250 genes, and on BreastMNIST by
-   1,000 features. On LumA and LumB about 0.02 remains at 2,000 genes
+   500 features. On LumA and LumB about 0.02 remains at 2,000 genes
    (sections 7.2, 8.2 and 8.9).
 5. **The signal is widespread.** Thousands of genes carry it, and they
    move together. So random genes catch up as `k` grows, and many
@@ -98,13 +98,13 @@ settings stated in their sections.
    had a Jaccard index of only 0.19 to 0.71 against C = 0.01, with no
    established change in AUC (section 7.9). So report stability next to accuracy (section 7.4).
 7. **Simple is enough.** Mann-Whitney, one gene at a time, is within 0.002
-   AUC of the best mean on SCAN-B, and within 0.01 of the best on both
+   AUC of the best mean on SCAN-B, and within 0.012 of the best on both
    image datasets. It is among the most stable, and on a GPU it takes under
    a second per fit.
 8. **The top methods cannot be told apart.** On SCAN-B, eleven methods lie
    within 0.01 mean AUC at their chosen `k`, and no method leads on every
    task. On the image data, RFE ties all features and Mann-Whitney is
-   within 0.01.
+   within 0.012.
 9. **Test with the splits' overlap in mind.** Random splits share most of
    their training patients, so their results are not independent. On
    SCAN-B, an uncorrected paired t-test passed 233 of 290 comparisons; the
@@ -120,8 +120,8 @@ settings stated in their sections.
     AUC, 0.858. Mann-Whitney with a validated `k` came within 0.015
     (p = 0.62).
 11. **Wrappers pay only in some places, and only with care.** RFE was the
-    best method on both image datasets at large `k`, tied with all
-    features. On SCAN-B it was below the filters, and weak at 10 genes. A
+    best method on both image datasets, tied with all features; at large
+    `k` it led the filters, established on FGVC-Aircraft. On SCAN-B it was below the filters, and weak at 10 genes. A
     Mann-Whitney filter first raised RFE's mean AUC at 10 genes from 0.78
     to 0.95 (section 7.9). RFECV needs AUC as its inner score
     on imbalanced tasks (section 7.8). Sequential selection beat random but took 10 minutes
@@ -134,7 +134,7 @@ settings stated in their sections.
     information at 0.971, takes 3.6 s; tree importance takes 17.5 s for
     0.969. On the image data every method except Sequential runs in about
     a second per fit or less (tree importance 1.1 s on FGVC-Aircraft,
-    Appendix C.4), so
+    Appendix C.3), so
     cost does not decide the choice there.
 13. **Choosing `k` costs more than selecting.** Choosing `k` on 5
     validation sets took Mann-Whitney 28 s per split on SCAN-B, against
@@ -151,7 +151,7 @@ settings stated in their sections.
     solvers scored within 0.004 AUC, and Lasso's within 0.014 (section 6.2). So RFE, RFECV and Lasso now
     run only their exact solvers (section 6.2).
 16. **Selection buys a smaller model more often than a better one.** On
-    BreastMNIST all 2,048 features scored 0.924 and on FGVC-Aircraft
+    BreastMNIST all 2,048 features scored 0.895 and on FGVC-Aircraft
     0.862: no selected set beat them. On SCAN-B, selection beat all 28,541
     genes by 0.014 to 0.023 on LumB, with ten methods, on all 16 splits.
     On the other four tasks no gain is established. So decide first
@@ -162,14 +162,15 @@ settings stated in their sections.
 Each dataset has its own frontier. What do they share?
 
 - **What holds everywhere.** Selection beats random most at small `k`.
-  Mann-Whitney on a GPU is within 0.01 AUC of the best, at the cheap end
+  Mann-Whitney on a GPU is within 0.012 AUC of the best, at the cheap end
   of the cost axis. HC2008 stops at the edge
   of its search. Wherever RFECV ran with both inner scores, scoring by
   AUC gave a higher mean than scoring by accuracy. The gain is
   established only on Her2, LumB and Normal of SCAN-B, where accuracy
   kept one gene (sections 7.8, 8.6).
 - **What changes.** The best method for a given budget. At large `k`, RFE
-  leads on both image datasets but trails the filters on SCAN-B. At 10
+  leads on the image data (established on FGVC-Aircraft) but trails the
+  filters on SCAN-B. At 10
   features, the filters and tree importance, alone or chained, lead on the
   image data, and Mann-Whitney then RFE
   leads on SCAN-B. Whether selection beats all features also changes:
@@ -192,7 +193,7 @@ random.
 
 At the `k` each method chose, the top methods cannot be told apart. On
 SCAN-B, eleven lie within 0.01 mean AUC; on the image data, RFE and
-Mann-Whitney lie within 0.01 of all features.
+Mann-Whitney lie within 0.012 of all features.
 
 If time also counts, a GPU filter is the practical choice. On SCAN-B,
 HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
@@ -209,17 +210,10 @@ described in the section given.
   ResNet-50 (chapter 2). The results may not hold on other data.
 - Every SCAN-B task predicts PAM50, a label computed from the genes, not
   measured (section 2.1). No measured target was run (section 10.1).
-- The BreastMNIST results in sections 8.1 to 8.7 and 8.10 include copied
-  images.
-  Without them, the scores fall by 0.016 to 0.042 AUC, except HC2004's,
-  and the
-  conclusions hold (section 8.8). About half of the fall comes from that
-  run's smaller training set, 409 images against 546, not from the
-  copies (section 8.8).
-- The project's rule is now to use only data without duplicates. The
-  main BreastMNIST tables, Sequential selection, and the side studies on
-  the image data (RFE's C, the classifier's C, the tree count) still use
-  the copies (section 10.1).
+- The project uses only data without duplicates. The BreastMNIST results
+  of chapter 8 are without the copied images (section 8.8). Sequential
+  selection and the side studies on the image data (RFE's C, the
+  classifier's C, the tree count) still use the copies (section 10.1).
 - FGVC-Aircraft holds one group of three near-identical photos, one
   aircraft shot seconds apart, with the same label (section 2.3). All its
   runs include them.

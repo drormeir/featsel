@@ -11,7 +11,7 @@ and better than a point on it.
 Usage:
     python scripts/plot_final_frontier.py --out final_report/figures/frontier.png \
         "SCAN-B, mean of 5 tasks=detailed_report/figures/frontier_scanb70_roc_auc.csv" \
-        "BreastMNIST=detailed_report/figures/frontier_breastmnist70_roc_auc.csv" \
+        "BreastMNIST=detailed_report/figures/frontier_breastmnist70_nocopies_roc_auc.csv" \
         "FGVC-Aircraft=detailed_report/figures/frontier_aircraft70_roc_auc.csv"
 """
 

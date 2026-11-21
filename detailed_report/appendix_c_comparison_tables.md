@@ -191,43 +191,10 @@ curve tables it is the last column of the random row.
 
 ## C.2 BreastMNIST
 
+Without the copied images (section 8.8). Sequential selection has not
+yet run on them (section 10.1).
+
 ### C.2.1 BreastMNIST, test AUC at every `k`
-
-| Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 2,048 |
-|---|---|---|---|---|---|---|---|
-| Correlation (Spearman) | — | 0.829 | 0.846 | 0.874 | 0.894 | 0.907 | — |
-| Mann-Whitney | — | 0.829 | 0.846 | 0.874 | 0.894 | 0.918 | — |
-| Mann-Whitney 500, then RFE | — | 0.811 | 0.850 | 0.889 | — | — | — |
-| Mann-Whitney 500, then tree importance | — | 0.816 | 0.874 | 0.883 | — | — | — |
-| Mutual information | — | 0.817 | 0.869 | 0.884 | 0.897 | 0.917 | — |
-| RFE | — | 0.764 | 0.829 | 0.902 | 0.917 | 0.923 | — |
-| Random | — | 0.674 | 0.764 | 0.842 | 0.877 | 0.908 | 0.924 |
-| Sequential | 0.798 | 0.803 | — | — | — | — | — |
-| Tree importance | — | 0.816 | 0.871 | 0.876 | 0.900 | 0.910 | — |
-
-### C.2.2 BreastMNIST, at the chosen `k`
-
-| Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
-|---|---|---|---|---|---|
-| All features | 0.924 [0.912, 0.936] | 2,048 | 0.00 | — | — |
-| RFE | 0.923 [0.906, 0.938] | 1,000 | 0.18 | 0.89 | 0.30 |
-| Mann-Whitney | 0.918 [0.906, 0.924] | 1,000 | 0.01 | 0.49 | 0.69 |
-| Mutual information | 0.916 [0.908, 0.925] | 1,000 (500 to 1,000) | 0.08 | 0.84 | 0.22 |
-| RFECV, by AUC | 0.912 [0.898, 0.926] | 416 (212 to 1,844) | 0.21 | 1.58 | 0.19 |
-| Tree importance | 0.906 [0.895, 0.921] | 1,000 (500 to 1,000) | 0.76 | 3.64 | 0.32 |
-| Correlation (Spearman) | 0.905 [0.893, 0.915] | 696.5 (500 to 742) | 0.02 | 0.53 | 0.71 |
-| Lasso | 0.898 [0.879, 0.917] | 116 (101 to 239) | 0.09 | 2.13 | 0.34 |
-| RFECV, by accuracy | 0.889 [0.881, 0.905] | 212 (8 to 212) | 0.19 | 1.10 | 0.31 |
-| Mann-Whitney 500, then RFE | 0.889 [0.870, 0.902] | 250 | 0.18 | 0.80 | 0.44 |
-| Mann-Whitney 500, then tree importance | 0.879 [0.861, 0.891] | 250 (50 to 250) | 0.40 | 2.05 | 0.46 |
-| Mann-Whitney 500, then Lasso | 0.878 [0.862, 0.894] | 79.5 (72 to 192) | 0.08 | 2.17 | 0.36 |
-| HC2008 | 0.868 [0.859, 0.884] | 204 | 0.01 | — | 0.76 |
-| Berk-Jones | 0.867 [0.857, 0.884] | 204 (189 to 204) | 0.01 | — | 0.76 |
-| HC2004 | 0.758 [0.739, 0.777] | 1 (1 to 3) | 0.01 | — | 0.60 |
-
-## C.3 BreastMNIST without the copied images
-
-### C.3.1 BreastMNIST without copies, test AUC at every `k`
 
 | Method | 10 | 50 | 250 | 500 | 1,000 | 2,048 |
 |---|---|---|---|---|---|---|
@@ -240,7 +207,7 @@ curve tables it is the last column of the random row.
 | Random | 0.675 | 0.772 | 0.808 | 0.853 | 0.876 | 0.895 |
 | Tree importance | 0.835 | 0.862 | 0.855 | 0.877 | 0.887 | — |
 
-### C.3.2 BreastMNIST without copies, at the chosen `k`
+### C.2.2 BreastMNIST, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|
@@ -260,9 +227,9 @@ curve tables it is the last column of the random row.
 | Berk-Jones | 0.847 [0.839, 0.866] | 203 (175 to 204) | 0.01 | — | 0.77 |
 | HC2004 | 0.771 [0.752, 0.790] | 1 (1 to 2) | 0.01 | — | 0.85 |
 
-## C.4 FGVC-Aircraft
+## C.3 FGVC-Aircraft
 
-### C.4.1 FGVC-Aircraft, test AUC at every `k`
+### C.3.1 FGVC-Aircraft, test AUC at every `k`
 
 | Method | 5 | 10 | 50 | 250 | 500 | 1,000 | 2,048 |
 |---|---|---|---|---|---|---|---|
@@ -276,7 +243,7 @@ curve tables it is the last column of the random row.
 | Sequential | 0.700 | 0.703 | — | — | — | — | — |
 | Tree importance | — | 0.739 | 0.778 | 0.806 | 0.826 | 0.851 | — |
 
-### C.4.2 FGVC-Aircraft, at the chosen `k`
+### C.3.2 FGVC-Aircraft, at the chosen `k`
 
 | Method | Test AUC [Q1, Q3] | Kept: median (min to max) | Selection, s | Search or validation, s | Stability |
 |---|---|---|---|---|---|

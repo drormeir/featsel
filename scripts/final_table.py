@@ -12,8 +12,7 @@ its tasks), for the caption.
 Usage:
     python scripts/final_table.py --out final_report/figures/table5 \
         --scanb detailed_report/figures/summary_scanb70_chosen.csv \
-        --breastmnist detailed_report/figures/summary_breastmnist70_chosen.csv \
-        --breastmnist-nocopies detailed_report/figures/summary_breastmnist70_nocopies_chosen.csv \
+        --breastmnist detailed_report/figures/summary_breastmnist70_nocopies_chosen.csv \
         --aircraft detailed_report/figures/summary_aircraft70_chosen.csv
 """
 
@@ -65,8 +64,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--scanb', required=True)
-    parser.add_argument('--breastmnist', required=True)
-    parser.add_argument('--breastmnist-nocopies', required=True,
+    parser.add_argument('--breastmnist', required=True,
                         help='BreastMNIST without the copied images')
     parser.add_argument('--aircraft', required=True)
     parser.add_argument('--out', required=True, type=Path,
@@ -75,18 +73,15 @@ def main():
 
     scanb = per_method(args.scanb)
     breastmnist = per_method(args.breastmnist)
-    nocopies = per_method(args.breastmnist_nocopies)
     aircraft = per_method(args.aircraft)
     table = pd.DataFrame({
         'SCAN-B AUC': scanb.roc_auc,
         'BreastMNIST AUC': breastmnist.roc_auc,
-        'BreastMNIST without copies AUC': nocopies.roc_auc,
         'FGVC-Aircraft AUC': aircraft.roc_auc,
         'SCAN-B selection, s per fit': scanb.selection_time_s,
         'SCAN-B stability': scanb.stability,
         'SCAN-B AUC IQR': scanb.roc_auc_iqr,
         'BreastMNIST AUC IQR': breastmnist.roc_auc_iqr,
-        'BreastMNIST without copies AUC IQR': nocopies.roc_auc_iqr,
         'FGVC-Aircraft AUC IQR': aircraft.roc_auc_iqr,
     }).sort_values('SCAN-B AUC', ascending=False)
     # All features selects nothing: no selection time, no stability.
@@ -105,9 +100,9 @@ def main():
             shown[column] = shown[column].map(
                 lambda v, d=digits: f'{v:.{d}f}' if pd.notna(v) else '—')
     # Short headers, broken into lines, leave the method column room; the
-    # caption says the first four are test AUC.
-    shown.columns = ['SCAN-B', 'BreastMNIST', 'BreastMNIST,<br>no copies',
-                     'FGVC-<br>Aircraft', 'SCAN-B,<br>s per fit', 'SCAN-B<br>stability']
+    # caption says the first three are test AUC.
+    shown.columns = ['SCAN-B', 'BreastMNIST', 'FGVC-<br>Aircraft', 'SCAN-B,<br>s per fit',
+                     'SCAN-B<br>stability']
     lines = ['| Method | ' + ' | '.join(shown.columns) + ' |',
              '|---' * (len(shown.columns) + 1) + '|']
     lines += [f'| {method} | ' + ' | '.join(row) + ' |' for method, row in shown.iterrows()]

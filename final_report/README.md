@@ -19,7 +19,7 @@ exact solvers make them repeatable.
 
 **Data.** Breast cancer gene expression (SCAN-B: 2,976 patients, 28,541
 genes, five PAM50 subtype tasks), ResNet-50 embeddings of breast
-ultrasound images (BreastMNIST: 780 images, 2,048 features), and aircraft
+ultrasound images (BreastMNIST: 585 images without copies, 2,048 features), and aircraft
 photos (FGVC-Aircraft: 1,200 photos), a dataset not seen during the
 design.
 
@@ -29,7 +29,7 @@ to 0.19 AUC (area under the ROC curve: 0.5 is chance, 1 is perfect) on SCAN-B an
 features catch up, because thousands of correlated features carry the
 signal. At the number each method chose, the top methods cannot be told
 apart: on SCAN-B, eleven lie within 0.01 mean AUC. The Mann-Whitney U
-test, which scores one feature at a time, is within 0.01 AUC of the best
+test, which scores one feature at a time, is within 0.012 AUC of the best
 on all three datasets, in under a second per fit on a GPU. Selection
 rarely beats all the features: never on the image data, and on one SCAN-B
 task of five. Data checks found repeated patients in SCAN-B and copied
@@ -136,9 +136,9 @@ The facts below are in `results/data_facts.csv` (D 2).
 | | SCAN-B | BreastMNIST | FGVC-Aircraft |
 |---|---|---|---|
 | Domain | breast tumour RNA sequencing | breast ultrasound images | aircraft photos |
-| Samples | 2,976 patients | 780 images | 1,200 photos |
+| Samples | 2,976 patients | 585 images (780 with copies) | 1,200 photos |
 | Features | 28,541 genes | 2,048 ResNet-50 embedding dimensions | 2,048 ResNet-50 embedding dimensions |
-| Tasks | 5: each PAM50 subtype against the rest | 1: malignant (210) against benign or normal (570) | 1: Boeing 737 (800) against the Airbus A320 family (400) |
+| Tasks | 5: each PAM50 subtype against the rest | 1: malignant (180) against benign or normal (405) | 1: Boeing 737 (800) against the Airbus A320 family (400) |
 | Label | computed from 50 known genes | from the image source | the aircraft model |
 
 ### 2.1 SCAN-B
@@ -186,7 +186,7 @@ BreastMNIST (Yang et al. 2023) holds 780 breast ultrasound images
 et al. 2024). Each image goes through ResNet-50
 (He et al. 2016), trained on ImageNet, with its last layer removed. The
 result is 2,048 numbers per image: more features than images. The signal
-is again widespread: over 16 splits, 27% to 35% of the features pass the
+is again widespread: over 16 splits of all 780 images, 27% to 35% of the features pass the
 U test (section 4) at a 5% false discovery rate: the expected share of false features
 among those that pass is at most 5%. Unlike genes, features are only weakly
 correlated (median absolute correlation 0.056).
@@ -198,7 +198,8 @@ SCAN-B's repeated patients, a copy can fall in the training set and its
 twin in the test set. Our loader finds them among BreastMNIST's own
 images, by the letter's method: 150 groups of 339 images. A run without
 them keeps one image per group, drops the 6 groups whose labels disagree,
-and so keeps 585 images (section 6.7).
+and so keeps 585 images. Every BreastMNIST result here uses these 585
+(section 6.7).
 
 ### 2.3 FGVC-Aircraft
 
@@ -226,7 +227,7 @@ samples it has not seen. Every method comparison follows one protocol
 
 | Part | Choice |
 |---|---|
-| Splits | 16 random stratified splits; 70% of the samples in the training set, closer to real use than 50%, and 90% would leave 78 BreastMNIST test images |
+| Splits | 16 random stratified splits; 70% of the samples in the training set, closer to real use than 50%, and 90% would leave 59 BreastMNIST test images |
 | Selection | inside each split, on the training set only |
 | Main score | ROC AUC on the test set, mean over the splits |
 | Control | random features at every `k` |
@@ -485,10 +486,10 @@ Sources: D 7.2, 8.2.*
 ### 6.2 Selection against all features
 
 On the image data, no method beats all 2,048 features. RFE ties them:
-−0.001 AUC on BreastMNIST (p = 0.85) and −0.0003 on FGVC-Aircraft
-(p = 0.92). On both, Lasso, correlation, the three chains, HC2008,
-Berk-Jones and HC2004 lose to all
-features (D 8.3, 8.7, 8.9).
+−0.003 AUC on BreastMNIST (p = 0.59) and −0.0003 on FGVC-Aircraft
+(p = 0.92). On both, the three chains, HC2008, Berk-Jones and HC2004
+lose to all features; Lasso and correlation lose only on FGVC-Aircraft
+(D 8.3, 8.7, 8.9).
 
 On SCAN-B, 20 of the 70 comparisons with all 28,541 genes are
 established: 10 gains and 10 losses. All 10 gains are on one task, LumB:
@@ -504,14 +505,15 @@ So here, selection buys a smaller model more often than a better one.
 At the `k` each method chose, the top methods cannot be told apart. On
 SCAN-B, eleven methods lie within 0.01 of each other in mean AUC
 (Table 5), and no one method leads on every task (D 7.1). On the
-image data, RFE ties all features, and Mann-Whitney is within 0.01 of them
-on both datasets.
+image data, RFE ties all features, and Mann-Whitney is within 0.012 of
+them on both datasets.
 
-The best method also changes with `k`. On BreastMNIST, Mann-Whitney beats
-RFE by 0.066 at 10 features (p = 0.04), and RFE beats Mann-Whitney at 250
-and 500 features (p = 0.049 and 0.006); at 1,000 they tie (p = 0.39).
-On FGVC-Aircraft only the second half is established: RFE leads at 250
-and 500 (p = 0.047 and 0.041; D 8.9). A filter scores each feature alone; RFE looks
+The best method may also change with `k`. On FGVC-Aircraft, RFE leads
+Mann-Whitney at 250 and 500 features (p = 0.047 and 0.041), and
+Mann-Whitney leads at 10, not established (p = 0.43; D 8.9). On
+BreastMNIST the same pattern appears, Mann-Whitney ahead by 0.055 at 10
+and RFE ahead by 0.028 and 0.023 at 250 and 500, but no step is
+established (p = 0.07 to 0.19; D 8.2). A filter scores each feature alone; RFE looks
 at the features together, and that pays only once many are kept.
 
 Stability separates methods that AUC does not. Tree importance reaches
@@ -538,26 +540,27 @@ for mutual information at 10,000 features (D 6.2). Over
 the 16 splits, the interquartile range of a method's AUC is 0.006 to
 0.010 on SCAN-B, as a mean over its tasks (HC2004 0.018, RFECV scored by accuracy 0.044)
 and 0.017 to 0.069 on the image data. The tests are paired, so a smaller
-difference can still be established. Without copies: section 6.7.
+difference can still be established. BreastMNIST is without its copied
+images, and Sequential selection has not yet run there (section 6.7).
 Source: `final_report/figures/table5.csv`.*
 
-| Method | SCAN-B | BreastMNIST | BreastMNIST,<br>no copies | FGVC-<br>Aircraft | SCAN-B,<br>s per fit | SCAN-B<br>stability |
-|---|---|---|---|---|---|---|
-| Mutual information | 0.971 | 0.916 | 0.887 | 0.847 | 3.6 | 0.70 |
-| Berk-Jones | 0.970 | 0.867 | 0.847 | 0.815 | 0.66 | 0.92 |
-| HC2008 | 0.970 | 0.868 | 0.848 | 0.817 | 0.68 | 0.92 |
-| Correlation (Spearman) | 0.969 | 0.905 | 0.866 | 0.824 | 3.6 | 0.78 |
-| Mann-Whitney | 0.969 | 0.918 | 0.883 | 0.854 | 0.67 | 0.76 |
-| Tree importance | 0.969 | 0.906 | 0.885 | 0.851 | 17 | 0.27 |
-| Mann-Whitney, then Lasso | 0.968 | 0.878 | 0.858 | 0.828 | 0.79 | 0.46 |
-| Mann-Whitney, then tree importance | 0.965 | 0.879 | 0.855 | 0.814 | 2.8 | 0.51 |
-| Lasso | 0.964 | 0.898 | 0.882 | 0.846 | 0.59 | 0.36 |
-| All features (no selection) | 0.963 | 0.924 | 0.895 | 0.862 | — | — |
-| Mann-Whitney, then RFE | 0.962 | 0.889 | 0.860 | 0.829 | 3.0 | 0.42 |
-| RFECV, scored by AUC | 0.962 | 0.912 | 0.884 | 0.858 | 5.7 | 0.23 |
-| RFE | 0.961 | 0.923 | 0.891 | 0.862 | 6.9 | 0.33 |
-| HC2004 | 0.874 | 0.758 | 0.771 | 0.674 | 0.68 | 0.67 |
-| RFECV, scored by accuracy | 0.720 | 0.889 | 0.847 | 0.854 | 6.3 | 0.20 |
+| Method | SCAN-B | BreastMNIST | FGVC-<br>Aircraft | SCAN-B,<br>s per fit | SCAN-B<br>stability |
+|---|---|---|---|---|---|
+| Mutual information | 0.971 | 0.887 | 0.847 | 3.6 | 0.70 |
+| Berk-Jones | 0.970 | 0.847 | 0.815 | 0.66 | 0.92 |
+| HC2008 | 0.970 | 0.848 | 0.817 | 0.68 | 0.92 |
+| Correlation (Spearman) | 0.969 | 0.866 | 0.824 | 3.6 | 0.78 |
+| Mann-Whitney | 0.969 | 0.883 | 0.854 | 0.67 | 0.76 |
+| Tree importance | 0.969 | 0.885 | 0.851 | 17 | 0.27 |
+| Mann-Whitney, then Lasso | 0.968 | 0.858 | 0.828 | 0.79 | 0.46 |
+| Mann-Whitney, then tree importance | 0.965 | 0.855 | 0.814 | 2.8 | 0.51 |
+| Lasso | 0.964 | 0.882 | 0.846 | 0.59 | 0.36 |
+| All features (no selection) | 0.963 | 0.895 | 0.862 | — | — |
+| Mann-Whitney, then RFE | 0.962 | 0.860 | 0.829 | 3.0 | 0.42 |
+| RFECV, scored by AUC | 0.962 | 0.884 | 0.858 | 5.7 | 0.23 |
+| RFE | 0.961 | 0.891 | 0.862 | 6.9 | 0.33 |
+| HC2004 | 0.874 | 0.771 | 0.674 | 0.68 | 0.67 |
+| RFECV, scored by accuracy | 0.720 | 0.847 | 0.854 | 6.3 | 0.20 |
 
 ### 6.4 Higher Criticism and Berk-Jones
 
@@ -570,8 +573,8 @@ top-10% filter.
 
 As such a filter, HC2008 is good on SCAN-B: 0.970 mean AUC, 0.001 below
 the best, with the highest stability (0.92) and no `k` to choose. On
-BreastMNIST, 204 features are too few: HC2008 loses 0.056 AUC to all
-features (p < 0.001). HC2004 keeps one to three features. It is the
+BreastMNIST, 204 features are too few: HC2008 loses 0.047 AUC to all
+features (p = 0.02). HC2004 keeps one or two features. It is the
 weakest on both image datasets; on SCAN-B only RFECV by accuracy is
 weaker.
 
@@ -622,23 +625,18 @@ A chain's first count was set by hand. The chain's `k` values stay below
 it, so on the image data the 500 also caps `k` at 250, and RFE and tree
 importance chose that cap as a median over splits. A side
 study kept 250 or 1,000 instead, on the same splits. At 1,000, every
-chain gained 0.012 to 0.025 AUC on BreastMNIST, with and without the
-copies, and on FGVC-Aircraft. Only RFE's gains on BreastMNIST and
-FGVC-Aircraft are established (p = 0.047 and 0.025); without the copies,
-no gain is (D 8.7). The main results keep 500: choosing the count now by
+chain gained 0.012 to 0.025 AUC on BreastMNIST and FGVC-Aircraft. Only
+RFE's gain on FGVC-Aircraft is established (p = 0.025; D 8.7). The main results keep 500: choosing the count now by
 test AUC would use the test set twice (section 3).
 
-### 6.7 Without the copied images
+### 6.7 The copied images
 
-BreastMNIST holds 150 groups of copied images (section 2). Without them,
-585 images remain, and every method of Table 5 ran again. All features
-fall from 0.924 to 0.895 AUC, and every method but HC2004 by 0.016 to
-0.042; HC2004 rises by 0.013. The
-leaders change places within 0.009 AUC. RFE still ties all
-features, and the chains, HC2008, Berk-Jones and HC2004 still lose
-(D 8.8). The conclusions hold. That run also trains on 25% fewer
-images, and about half of the fall comes from that, not from the copies
-(D 8.8).
+BreastMNIST holds 150 groups of copied images (section 2), which would
+leak between the training and the test set. Every BreastMNIST result in
+this report is without them: 585 images, 409 of them in each training
+set (D 8.8). Sequential selection and three side studies (the
+classifier's C, RFE's C, the tree count) still include them; their
+reruns are open work (D 10).
 
 ### 6.8 Cost
 
@@ -679,13 +677,13 @@ per fit, 0.001 to 0.002 below the best.
 ### 7.2 What holds on every dataset, and what changes
 
 On all three datasets, selection beats random features most at small `k`;
-Mann-Whitney is within 0.01 AUC of the best, at the cheap end of the
+Mann-Whitney is within 0.012 AUC of the best, at the cheap end of the
 frontier; and HC2008 stops at the edge of its search. Wherever RFECV ran
 with both inner scores, scoring by AUC gave a higher mean than scoring by
 accuracy; the gain is established only on three SCAN-B tasks, where
 accuracy kept one gene (D 7.8, 8.6). What changes is the best method for a given budget. At
-large `k`, RFE leads on both image datasets but trails the filters on
-SCAN-B (Figure 1). Whether selection beats all features also changes: never on the
+large `k`, RFE leads on the image data (established on FGVC-Aircraft)
+but trails the filters on SCAN-B (Figure 1). Whether selection beats all features also changes: never on the
 image data, on one SCAN-B task of five. So the best method for a budget
 cannot be known in advance from these datasets; a safe default can.
 
@@ -700,7 +698,7 @@ cannot be known in advance from these datasets; a safe default can.
 | A test corrected for overlapping splits | Random splits share most of their training samples | Established differences from all genes fell from 52 to 20 of 70 comparisons (section 6.2; D 9.3) |
 | GSE96058, one sample per patient, not the course copies | The copies kept 93 repeated patients, and the smaller one lacked 11 of the 50 PAM50 genes | It removed a leak and made the PAM50 test possible (sections 2.1, 6.5) |
 | The U test for every filter | Only the order of gene values is meaningful, and many sit at a floor | One valid test, so filters differ only in their selection rule (sections 2.1, 4) |
-| Find the copied images | Copies fall on both sides of a split | Scores fell by 0.016 to 0.042 AUC, except HC2004's; the conclusions held (section 6.7) |
+| Find the copied images | Copies fall on both sides of a split | A leak removed: every BreastMNIST result is without the 150 groups of copies (sections 2.2, 6.7) |
 | Exact solvers for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded keeps different genes on each run | Repeatable selection, at the exact solution (section 5) |
 | RFECV scored by AUC | Accuracy rewards the larger class | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (Table 5, section 6.6) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | Its behaviour on widespread signal is reported as it is (section 6.4) |
@@ -710,16 +708,12 @@ cannot be known in advance from these datasets; a safe default can.
 
 - **Data.** Three datasets, two of them embeddings from the same network.
   Every SCAN-B task predicts PAM50, a label computed from the genes; no
-  measured target was run. The main BreastMNIST results include the
-  copied images; a run without them gives the same conclusions, except
-  that Mann-Whitney falls 0.012 below all features (section 6.7). About
-  half of the fall in scores comes from that run's smaller training set,
-  not from the copies. The rule is now to use only data without
-  duplicates; the main BreastMNIST tables, Sequential selection and the
-  side studies on the image data have not yet been run that way (D 10).
-  FGVC-Aircraft was checked the same way: no copied photos, but one group
-  of three near-identical shots of one aircraft, with the same label,
-  still in all its runs (D 2.3).
+  measured target was run. The BreastMNIST results are without its
+  copied images, but Sequential selection and three side studies on it
+  still include them (section 6.7). FGVC-Aircraft was checked the same
+  way: no copied photos, but one group of three near-identical shots of
+  one aircraft, with the same label, still in all its runs (D 2.3). Their
+  reruns are open work (D 10).
 - **Protocol.** One classifier in the main runs, logistic regression with
   C fixed at 1; for Mann-Whitney and all features, C = 0.01 to 100 gave
   no established AUC difference on the image data, and

@@ -13,12 +13,12 @@ over its tasks.
 Usage:
     python scripts/plot_curves.py --mean --width 7.2 --out final_report/figures/curves.png \
         "SCAN-B=detailed_report/figures/summary_scanb70_curve.csv" \
-        "BreastMNIST=detailed_report/figures/summary_breastmnist70_curve.csv" \
+        "BreastMNIST=detailed_report/figures/summary_breastmnist70_nocopies_curve.csv" \
         "FGVC-Aircraft=detailed_report/figures/summary_aircraft70_curve.csv"
     python scripts/plot_curves.py --out detailed_report/figures/curves_scanb70.png \
         "SCAN-B=detailed_report/figures/summary_scanb70_curve.csv"
     python scripts/plot_curves.py --out detailed_report/figures/curves_images70.png \
-        "BreastMNIST=detailed_report/figures/summary_breastmnist70_curve.csv" \
+        "BreastMNIST=detailed_report/figures/summary_breastmnist70_nocopies_curve.csv" \
         "FGVC-Aircraft=detailed_report/figures/summary_aircraft70_curve.csv"
 """
 

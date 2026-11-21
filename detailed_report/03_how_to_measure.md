@@ -82,7 +82,7 @@ same patients.
 method comparison now uses 16 splits with 70% of
 samples in the training set: 50% trains on fewer samples than a model
 in real use would have, and 90% leaves too few to test: on BreastMNIST,
-78 images, 21 of them malignant. Sixteen or more values support quartiles; five do not.
+59 images, 18 of them malignant. Sixteen or more values support quartiles; five do not.
 
 **More splits help less than they seem.** The corrected test below
 multiplies the variance by 1/J + n_test/n_train, for J splits. The second
@@ -271,7 +271,7 @@ rises a little at 2,000 (mutual information, section 4.2: 0.958 to 0.960 and 0.9
 BreastMNIST and
 FGVC-Aircraft (2,048 features), `k` is 10, 50, 250, 500 and 1000; random
 selection also runs at 2,048. The largest `k`, 1,000, is more than the
-number of training images (546 and 840), because the goal is the best
+number of training images (409 and 840), because the goal is the best
 AUC, not a small set. A two-stage chain (a filter, then a slower method;
 section 5.4) uses the same list, cut below the size its first step keeps:
 1,000 genes on SCAN-B and 500 features on the image data, set by hand
