@@ -42,7 +42,7 @@ The setting, chosen to see the whole flow in about a minute:
 
 The runner solves Lasso by PPDNA and RFE by Newton's method (section
 6.2). scikit-learn runs liblinear to a tight tolerance, so that both
-sides reach the same solution. The script ran three times, with the
+sides reach the same solution. The script ran three times, the fewest that give a median and a range, with the
 laptop otherwise idle. The table gives the median
 seconds and the speed-up of the medians. Over the three runs, the
 runner's speed-up was 3.9 to 4.5 on one core and 10.1 to 10.8 on 12
@@ -76,7 +76,7 @@ run.
 ### Parallel work at full size
 
 The same grid ran on all 28,552 genes and all five tasks: 50 jobs. Each
-worker count ran 3 times, each in a fresh process. The runs varied by
+worker count ran 3 times, for a median and a range, each in a fresh process. The runs varied by
 about 2%.
 
 | Workers | Seconds (median) | Speed-up | Efficiency (speed-up per worker) |
@@ -127,7 +127,7 @@ samples, 1,000 to 30,000 features, binary and imbalanced (80/20). It
 checks that every fit is reproducible and picks the original's features.
 Each time is the median of 2 timed fits, after one untimed warm-up fit.
 If the warm-up takes over a minute, one timed fit follows and the variant
-stops growing. Two fits show a gap of several times, not of a few
+stops growing; the minute keeps each notebook to minutes. Two fits show a gap of several times, not of a few
 percent.
 
 Results at the largest size both sides reached (30,000 features unless

@@ -352,7 +352,7 @@ gives what a method needs beyond it.
 | Mann-Whitney (U test) | O(p · n log n): one sort per feature | up to O(np) for the ranks |
 | HC2004, HC2008 | the U test, plus O(p log p) to sort the p-values | as the U test |
 | Berk-Jones | as HC, plus a log Beta CDF at each of the 0.1 · p searched ranks | as the U test |
-| Correlation (Spearman) | O(p · n log n) for the ranks, plus O(n m²) for the pairs among the candidates | O(nm) for the candidates, plus one block of 1,024 × m correlations |
+| Correlation (Spearman) | O(p · n log n) for the ranks, plus O(n m²) for the pairs among the candidates | O(nm) for the candidates, plus one block of 1,024 × m correlations (a power of two that keeps a block near 80 MB at 10,000 candidates) |
 | Mutual information | O(p · n log n): per feature, one sort per class and one binary search per sample | O(n) per feature |
 | Lasso (PPDNA) | per Newton step, O(np) for the products with X, plus O(n r² + min(n, r)³) for its linear system | O(n r + min(n, r)²) |
 | Tree importance | O(T · √p · n log² n), if each tree has depth O(log n) | O(T n) for the trees |

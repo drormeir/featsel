@@ -313,7 +313,8 @@ evidence for using logistic regression in every other run.
 
 It keeps its own settings, chosen before the protocol of chapter 3: 12
 splits, half the patients in the training set (1,488 each side), macro-F1,
-and `k` = 10, 25, 50, 100, 250, 500 and 1000 with no choice of `k`. So its
+and `k` = 10, 25, 50, 100, 250, 500 and 1000 with no choice of `k`
+(50 is PAM50's size; the others span small to large budgets). So its
 numbers are not comparable with the rest of this chapter.
 
 Mean macro-F1 over the 12 splits and five tasks:

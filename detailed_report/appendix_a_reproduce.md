@@ -61,7 +61,7 @@ file records the commit, machine and settings.
 | Mann-Whitney 1000 then RFE against every method at 10 genes (section 7.9) | `.venv/bin/python scripts/k10_tests.py results/local/frontier_scanb70_{gpu,cpu,chains,seq}.csv --out detailed_report/figures/scanb70_k10_tests.csv` | [`figures/scanb70_k10_tests.csv`](figures/scanb70_k10_tests.csv) |
 | RFECV by AUC against by accuracy (sections 7.8, 8.6) | `.venv/bin/python scripts/rfecv_scoring_tests.py scanb=results/local/frontier_scanb70_cpu.csv,results/local/frontier_scanb70_rfecv_auc.csv breastmnist=results/local/frontier_breastmnist70_cpu.csv,results/local/frontier_breastmnist70_rfecv_auc.csv breastmnist_nocopies=results/local/frontier_breastmnist70_nocopies.csv aircraft=results/aircraft70_gpu.csv --out detailed_report/figures/rfecv_scoring_tests.csv` | [`figures/rfecv_scoring_tests.csv`](figures/rfecv_scoring_tests.csv) |
 | PAM50 gene recovery (section 7.6) | `.venv/bin/python scripts/pam50_recovery.py --n-splits 10 --out results/pam50_recovery.md` | [`results/pam50_recovery.md`](../results/pam50_recovery.md), the tables of section 7.6 (the script overwrites its output file) |
-| Classifier study (section 7.7) | `.venv/bin/python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs 4 --max-worker-memory-gb 3` | `results/experiment_classifiers.csv` |
+| Classifier study (section 7.7) | `.venv/bin/python -m featsel.run --config configs/experiment_classifiers.yaml --n-jobs 4 --max-worker-memory-gb 3`; more workers run out of memory on 16 GB, and with the data in 32 bits, 4 fit under a 3 GB cap | `results/experiment_classifiers.csv` |
 
 Add `--resume` to any runner command, or to
 `scripts/parallel_scaling.py`, to continue a stopped run. For a long

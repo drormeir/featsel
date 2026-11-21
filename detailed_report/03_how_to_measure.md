@@ -14,7 +14,7 @@ where they appear.
 | Side scores | Macro-F1, balanced accuracy | 3.5 |
 | Baseline | Random features at each `k`: a method has value at `k` only above them | 3.4 |
 | `k` | Chosen on validation sets: 5 folds of the training set, best mean AUC, tie to the smaller `k` | 3.11 |
-| Classifier | Logistic regression, C fixed at 1 | 3.8 |
+| Classifier | Logistic regression, C fixed at 1, at most 1,000 iterations (scikit-learn's default of 100 can stop before it converges on thousands of features) | 3.8 |
 | Lasso's C (its penalty, section 4.2) | Chosen on validation sets | 3.11 |
 | Timing | Each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation of section 8.11, which reports no times; Sequential once on SCAN-B and BreastMNIST); a searching method searches once, then is timed | 3.7, 3.11 |
 
@@ -44,7 +44,7 @@ only the classifier. The error is large. Ambroise and McLachlan (2002)
 showed it on real microarray data. On BreastMNIST with shuffled labels,
 where nothing can be learned and the true AUC is 0.5, the F-test (section
 4.3) picking
-50 embedding dimensions (50 and the 20 splits set by hand) gives a median AUC over 20 splits of 0.465 inside
+50 embedding dimensions (50 set by hand; 20 splits give a median and quartiles while the demo stays fast) gives a median AUC over 20 splits of 0.465 inside
 each split, and 0.645 when selected on all 780 images first
 ([`selection.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/selection.ipynb)).
 
@@ -299,7 +299,8 @@ fraction, `k` is given directly.
 test set twice. So each method with a `k` list chooses it on validation
 sets:
 
-1. The training set is cut into 5 folds, a common count set by hand.
+1. The training set is cut into 5 folds, scikit-learn's default, which
+   Lasso's search for C and RFECV also use.
    Each fold in turn is the validation set.
 2. The selector is fit on the other four folds.
 3. For each `k`, logistic regression is fit on the top `k` features and

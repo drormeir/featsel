@@ -245,7 +245,7 @@ these choices; a method's result is its test score at the chosen `k` (D 3.1).
 Selecting features on all the data first is a known error (Ambroise and
 McLachlan 2002): the test samples then help choose the features. On
 BreastMNIST with shuffled labels, where nothing can be learned, it raises
-the median AUC over 20 splits, a count set by hand, from 0.465 to 0.645 (D 3.2).
+the median AUC over 20 splits, enough for a median, from 0.465 to 0.645 (D 3.2).
 
 **Random splits, not k-fold.** In 5-fold cross-validation, any two
 training sets share three quarters of their samples, so the five scores
@@ -281,7 +281,7 @@ accuracy (the mean of the classes' recall) were also recorded; they rank
 methods almost alike (D 7.12, 8.10).
 
 **Choosing `k`.** Choosing `k` by test AUC would reuse the test set.
-So the training set is cut into 5 folds, a common count set by hand. Each fold in turn is the
+So the training set is cut into 5 folds, scikit-learn's default. Each fold in turn is the
 validation set: the selector is fit on the other four, and for each
 `k` the classifier is scored on it. The `k` with the best
 mean validation AUC wins. Lasso chooses its penalty the same way, and

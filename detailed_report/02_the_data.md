@@ -59,7 +59,8 @@ facts follow.
 - **Only the order of the values is meaningful.** Their size depends on an
   arbitrary transform.
 - **Many values sit at a floor.** An undetected gene gets log2(0.1). In
-  the first 200 genes, over the 3,069 HiSeq samples, 51% of values are at
+  the first 200 genes, enough to estimate the share without scanning
+  every gene, over the 3,069 HiSeq samples, 51% of values are at
   the floor. Over the 2,976 kept patients, 98.1% of genes fail a normality
   test (D'Agostino-Pearson, p < 0.05). The median excess kurtosis is
   1.44. Within a class, a gene is a heap at the floor plus a spread of
