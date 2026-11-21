@@ -104,11 +104,11 @@ shape our protocol (Table 1):
    top-10% filters; HC2004 kept one to three features. On simulated rare
    signal, HC2008 chose a good count (sections 4, 6.4).
 3. **A cost-quality frontier**: selection time against AUC for every
-   method and setting, on each dataset (Figure 2, section 6.8).
+   method and setting, on each dataset (section 6.8).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method select the same features, on the CPU and on a
    GPU. RFE, RFECV and Lasso reach the exact solution that scikit-learn's
-   default solver stops short of (section 5).
+   default solver stops short of (sections 4, 5).
 5. **Checks of the data that change its use**: repeated patients and a
    computed label in SCAN-B, and copied images in BreastMNIST (sections
    2.1, 2.2).
@@ -149,8 +149,8 @@ a tumour sequenced twice, and split between the training and the test
 set, such a pair tests a model on a patient it has seen. We drop genes
 with a single value and 11 nearly flat genes. This leaves 2,976 patients
 and 28,541 genes. The course's copies of the data kept the repeated
-patients, and the smaller copy lacked 11 of the 50 PAM50 genes (D 2.1), so
-we load GSE96058 directly.
+patients, and the smaller copy lacked 11 of the 50 genes that the label
+is computed from (below; D 2.1), so we load GSE96058 directly.
 
 **The values.** Each value is log2(FPKM + 0.1), a transform of a read
 count. Any other increasing transform would be equally valid, so only the
@@ -174,7 +174,7 @@ of the time, so plain accuracy is not the main score (section 3).
 
 **The signal.** Genes work in groups, so many genes can carry the same
 signal, and different gene sets can predict equally well. Sections 6.1,
-6.4 and 6.5 show the effects.
+6.3, 6.4 and 6.5 show the effects.
 
 ### 2.2 BreastMNIST
 
@@ -204,7 +204,8 @@ that look alike. Each photo becomes 2,048 numbers through ResNet-50, as
 for BreastMNIST, but with torchvision's older ImageNet weights, V1. With
 the V2 weights used for BreastMNIST, 80% of the features were exactly zero
 and all the features reached only 0.742 AUC (the score of section 3); V1 gave 0.1% zeros and 0.862
-(`results/aircraft_weights.csv`). The photos are for non-commercial
+(`results/aircraft_weights.csv`). As in the other two datasets, the
+signal is widespread (D 2.4). The photos are for non-commercial
 research only and are not stored in the repository.
 
 ## 3. Protocol
@@ -225,7 +226,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Classifier | logistic regression, L2 penalty, C fixed at 1 |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
-| Timing | each selection fit 10 times (3 on FGVC-Aircraft; Sequential once on the other two); the median is recorded |
+| Timing | each selection fit 10 times (3 on FGVC-Aircraft; Sequential selection, section 4, once on the other two); the median is recorded |
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
@@ -269,8 +270,8 @@ almost the same order of methods (D 7.12, 8.10).
 So the training set is cut into 5 folds. Each fold in turn is the
 validation set: the selector is fit on the other four folds, and for each
 `k` the classifier is scored on the held-out fold. The `k` with the best
-mean validation AUC wins. Lasso chooses its penalty the same way. Higher Criticism and
-Berk-Jones choose their own count (section 4).
+mean validation AUC wins. Lasso chooses its penalty the same way, and
+Higher Criticism and Berk-Jones choose their own count (section 4).
 
 **Stability.** A method can score well and pick different features on
 each split; its list is then an accident of the split. Nogueira's measure
@@ -311,8 +312,8 @@ values. Gene values are not normal, and only their order is meaningful
 (section 2.1). The Mann-Whitney U test (Mann and Whitney 1947) uses only
 the order. For a binary task, U divided by n₁n₂ is the AUC of the feature
 used alone (Hanley and McNeil 1982), so ranking by the U test ranks
-features by how well each alone separates the classes. Every filter that
-runs a test uses the U test, so the experiments compare selection rules,
+features by how well each alone separates the classes. Every filter of
+Table 4 that runs a test uses the U test, so the experiments compare selection rules,
 not tests. Many genes have p-values below 10⁻³⁰⁸, where a 64-bit float
 rounds to zero. We compute the logarithm of the p-value directly, so
 Higher Criticism can still tell them apart (D 4.3).
@@ -365,7 +366,9 @@ simulated rare signal.
    replaces a scikit-learn selector in an existing pipeline with no other
    change, and works with `clone`, `cross_val_score` and `GridSearchCV`.
    Each selector that copies a scikit-learn method is tested to select the
-   same features and, except Lasso, to be at most 5% slower. Each GPU path
+   same features and, except Lasso, to be at most 5% slower. Lasso has no
+   speed test, because no scikit-learn solver reaches its exact solution
+   (below). Each GPU path
    is tested to select the same features as the CPU path.
 2. **A config-driven runner.** One YAML file names the dataset, the
    selectors, the values of `k` and the classifier. One command runs the
@@ -421,7 +424,8 @@ randomness, a refit gives the same genes. Newton's method works through
 the samples' n × n kernel, so it pays when features outnumber samples.
 
 **Where a GPU does not help.** The GTX 1650 runs 64-bit arithmetic at
-1/32 of its 32-bit speed, and RFE needs 64 bits. Copying the data takes
+1/32 of its 32-bit speed, and RFE needs 64 bits: with 32 bits it
+selected different genes (D 6.2). Copying the data takes
 about half the time of a fast filter. Tree importance runs on the CPU,
 with all threads.
 
@@ -551,9 +555,9 @@ by accuracy is weaker.
 of them moved by 0.4 standard deviations in the positive class. HC2008
 kept a median of 34 features and had the best mean AUC, 0.858. Mann-Whitney
 with a validated `k` reached 0.843; the difference is not established
-(p = 0.62). Berk-Jones (0.813, 12 features) and an FDR filter (the
-F-test, keeping the features that pass at a 5% false discovery rate,
-section 2.2) were stricter, and
+(p = 0.62). Berk-Jones (0.813, 12 features) and an FDR filter, run only
+here (the features that pass the F-test at a 5% false discovery rate,
+section 2.2), were stricter, and
 HC2004 kept one or two. All features gave 0.629.
 
 ### 6.5 Does selection find the PAM50 genes?
@@ -643,7 +647,7 @@ Mann-Whitney is within 0.01 AUC of the best, at the cheap end of the
 frontier; and HC2008 stops at the edge of its search. Wherever RFECV ran
 with both inner scores, AUC did better than accuracy. What changes is the best method for a given budget. At
 large `k`, RFE leads on both image datasets but trails the filters on
-SCAN-B. Whether selection beats all features also changes: never on the
+SCAN-B (Figure 1). Whether selection beats all features also changes: never on the
 image data, on one SCAN-B task of five. So the best method for a budget
 cannot be known in advance from these datasets. What can be known is a
 safe default.
@@ -656,14 +660,14 @@ safe default.
 |---|---|---|
 | Select inside every split | Selection on all the data lets the test samples choose the features | With shuffled labels on BreastMNIST, the error raised AUC from 0.465 to 0.645 (section 3) |
 | A random control at every `k` | A method has found something only if it beats random features of the same number | It showed where selection pays: at small `k` (section 6.1) |
-| A test corrected for overlapping splits | Random splits share most of their training samples | 20 of 70 comparisons with all genes are established, not more (section 6.2) |
+| A test corrected for overlapping splits | Random splits share most of their training samples | Established differences from all genes fell from 52 to 20 of 70 comparisons (section 6.2; D 9.3) |
 | GSE96058, one sample per patient, not the course copies | The copies kept 93 repeated patients, and the smaller one lacked 11 of the 50 PAM50 genes | It removed a leak and made the PAM50 test possible (sections 2.1, 6.5) |
-| The U test for every filter | Only the order of gene values is meaningful, and half sit at a floor | One valid test, so filters differ only in their selection rule (section 4) |
+| The U test for every filter | Only the order of gene values is meaningful, and many sit at a floor | One valid test, so filters differ only in their selection rule (sections 2.1, 4) |
 | Find the copied images | Copies fall on both sides of a split | Scores fell by 0.016 to 0.042 AUC, except HC2004's; the conclusions held (section 6.7) |
 | Exact solvers for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded keeps different genes on each run | Repeatable selection, at the exact solution (section 5) |
-| RFECV scored by AUC | Accuracy rewards the larger class | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (section 6.6) |
+| RFECV scored by AUC | Accuracy rewards the larger class | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (Table 5, section 6.6) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | Its behaviour on widespread signal is reported as it is (section 6.4) |
-| A third dataset, unseen during the design | Two datasets shaped the design, so they cannot test it | The pipeline ran unchanged on FGVC-Aircraft (section 2.3) |
+| A third dataset, unseen during the design | Two datasets shaped the design, so they cannot test it | The pipeline ran unchanged on FGVC-Aircraft (section 6; D 8.9) |
 
 ### 7.4 Limits
 
