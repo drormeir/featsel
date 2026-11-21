@@ -16,15 +16,15 @@ class HigherCriticismSelector(FeatureSelector):
     Computes one p-value per feature with the two-sided Mann-Whitney U test,
     sorts them,
     p(1) <= ... <= p(N), and scores each rank i by how far p(i) falls below
-    its expected value under the null:
+    its expected value under the null, mu(i) = i / (N + 1), the mean of
+    Beta(i, N-i+1):
 
-        '2004': HC(i) = sqrt(N) (i/N - p(i)) / sqrt(p(i) (1 - p(i)))
-                Donoho and Jin (2004), Annals of Statistics, section 1.2.
-        '2008': HC(i) = sqrt(N) (mu(i) - p(i)) / sqrt(mu(i) (1 - mu(i))),
-                mu(i) = i / (N + 1)
+        '2004': HC(i) = sqrt(N) (mu(i) - p(i)) / sqrt(p(i) (1 - p(i)))
+                Donoho and Jin (2004), Annals of Statistics, section 1.2,
+                with mu(i) in place of the paper's i/N.
+        '2008': HC(i) = sqrt(N) (mu(i) - p(i)) / sqrt(mu(i) (1 - mu(i)))
                 The HC thresholding of Donoho and Jin (2008), with each
-                ordered p-value centred and scaled by its exact null mean,
-                i/(N+1), the mean of Beta(i, N-i+1), in place of the
+                ordered p-value centred and scaled by mu(i) in place of the
                 approximation i/N of eq. 1.1 (Definition 1.2) in Donoho and Jin (2009).
 
     The maximum is taken over 1 <= i <= alpha0 N. Every feature with a p-value
@@ -119,11 +119,10 @@ class HigherCriticismSelector(FeatureSelector):
         log_p_sorted = self.log_pvalues_[order[:len(i)]]
         p_sorted = np.exp(log_p_sorted)
 
+        center = i / (n + 1)
         if self.variant == '2004':
-            center = i / n
             log_var = log_p_sorted + np.log1p(-p_sorted)
         else:
-            center = i / (n + 1)
             log_var = np.log(center) + np.log1p(-center)
 
         # Compared as logs, since the 2004 objective overflows when p(i) is tiny.

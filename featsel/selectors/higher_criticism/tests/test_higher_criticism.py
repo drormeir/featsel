@@ -20,10 +20,10 @@ def _direct(X, y, variant, alpha0=0.1):
     order = np.argsort(p, kind='stable')
     i = np.arange(1, int(alpha0 * n) + 1)
     p_i = p[order[:len(i)]]
+    mu = i / (n + 1)
     if variant == '2004':
-        hc = np.sqrt(n) * (i / n - p_i) / np.sqrt(p_i * (1 - p_i))
+        hc = np.sqrt(n) * (mu - p_i) / np.sqrt(p_i * (1 - p_i))
     else:
-        mu = i / (n + 1)
         hc = np.sqrt(n) * (mu - p_i) / np.sqrt(mu * (1 - mu))
     return p <= p_i[np.argmax(hc)]
 
