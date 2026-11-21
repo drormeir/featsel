@@ -1,11 +1,10 @@
 """
-Does HC2004 centred at i/(N+1) select what the saved runs, centred at i/N, did?
+Does HC2004 centred at mu_i select what the saved runs, which predate it, did?
 
-The HC2004 rows of the reports' runs come from the version that centred the
-i-th sorted p-value at i/N. Commit 5facf3e, made after those runs, centres
-it at i/(N+1). HC2004 alone was rerun on the same splits, one config per saved run
-(`results/local/hc2004_rerun/*_hc.yaml`: the saved run's config with only
-HC2004 left). This compares each task and split with the saved row: the
+Commit 5facf3e, made after the reports' runs, centres HC2004's i-th sorted
+p-value at mu_i = i/(N+1), as HC2008. HC2004 alone was rerun on the same
+splits, one config per saved run (`results/local/hc2004_rerun/*_hc.yaml`:
+the saved run's config with only HC2004 left). This compares each task and split with the saved row: the
 selected features and the test AUC.
 
 Usage:
