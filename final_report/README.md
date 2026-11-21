@@ -553,7 +553,9 @@ by accuracy is weaker.
 of them moved by 0.4 standard deviations in the positive class. HC2008
 kept a median of 34 features and had the best mean AUC, 0.858. Mann-Whitney
 with a validated `k` reached 0.843; the difference is not established
-(p = 0.62). Berk-Jones (0.813, 12 features) and FDR were stricter, and
+(p = 0.62). Berk-Jones (0.813, 12 features) and an FDR filter (the
+F-test, keeping the features that pass at a 5% false discovery rate,
+section 2.2) were stricter, and
 HC2004 kept one or two. All features gave 0.629.
 
 ### 6.5 Does selection find the PAM50 genes?
