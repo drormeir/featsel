@@ -223,7 +223,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Main score | ROC AUC on the test set, mean over the splits |
 | Control | random features at every `k` |
 | `k` | 10, 50, 250, 500, 1,000 (and 1,500, 2,000 on SCAN-B), chosen on validation sets |
-| Classifier | logistic regression, L2 penalty, C fixed at 1 |
+| Classifier | logistic regression, L2 penalty, C fixed at 1: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
 | Timing | each selection fit 10 times (3 on FGVC-Aircraft; Sequential selection, section 4, once on the other two); the median is recorded |
@@ -591,14 +591,15 @@ methods at 10 genes on four tasks of five. Sequential selection beat
 random genes on every task at 10 genes, but this chain beat it on all
 five tasks, in 3 s per fit instead of 10 minutes (D 7.9, 7.10).
 
-A chain's first count was set by hand. On the image data, its 500 also
-caps `k` at 250, and RFE and tree importance chose that cap. A side
+A chain's first count was set by hand. The chain's `k` values stay below
+it, so on the image data the 500 also caps `k` at 250, and RFE and tree
+importance chose that cap. A side
 study kept 250 or 1,000 instead, on the same splits. At 1,000, every
 chain gained 0.012 to 0.025 AUC on BreastMNIST, with and without the
 copies, and on FGVC-Aircraft. Only RFE's gains on BreastMNIST and
 FGVC-Aircraft are established (p = 0.047 and 0.025); without the copies,
 no gain is (D 8.7). The main results keep 500: choosing the count now by
-test AUC would use the test set twice.
+test AUC would use the test set twice (section 3).
 
 ### 6.7 Without the copied images
 
