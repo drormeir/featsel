@@ -216,6 +216,10 @@ in the papers. We have not measured how much it moves the selected count.
 HC2004 keeps i/N. Its formula is already exact as written: it
 standardizes the share of p-values below the threshold t = p₍ᵢ₎, and
 under the null that share has mean t and variance t(1 − t)/N.
+Its denominator is the p-value itself. At the smallest p-value, far below
+1/N, HC(1) ≈ 1/√(N · p₍₁₎), which is very large. So HC2004 can peak at
+the single strongest p-value. HC2008 divides by μᵢ, the expected
+position, and does not.
 
 HC2008 could also use the exact variance of the sorted p-value,
 μᵢ(1 − μᵢ)/(N + 2). That would only multiply every HC(i) by the same
