@@ -297,8 +297,9 @@ The pattern of BreastMNIST holds:
 
 - All features score best; RFE ties them.
 - At small `k`, selection beats random clearly: at `k` = 10, tree
-  importance by 0.127, Mann-Whitney by 0.124 and RFE by 0.103, on all 16
-  splits.
+  importance by 0.127, Mann-Whitney and correlation by 0.124, RFE by
+  0.103 and mutual information by 0.102, on all 16 splits
+  ([`figures/paired_tests_aircraft70.csv`](figures/paired_tests_aircraft70.csv)).
 - From `k` = 250, RFE leads the filters (by 0.029 over Mann-Whitney at
   250, p = 0.047).
 - Correlation's redundancy filter costs AUC: it kept at most 465 features
