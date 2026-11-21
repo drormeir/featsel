@@ -126,11 +126,10 @@ in the folder `detailed_report/` of the public repository
 ## 2. Data
 
 Three datasets have more features than samples (Table 2). SCAN-B is the
-main dataset. BreastMNIST answers task 4 with another domain. FGVC-Aircraft
-was added after the design was fixed, to test the pipeline on data it was
-not built for. Each dataset has a loader that downloads the published
-files once, checks them, and records every choice made on them (D 2.2,
-2.3, 5.3).
+main dataset. BreastMNIST answers task 4 with another domain. FGVC-Aircraft,
+added after the design was fixed, tests the pipeline on data it was not
+built for. Each dataset has a loader that downloads the published
+files once, checks them, and records every choice on them (D 5.3).
 The facts below are in `results/data_facts.csv` (D 2).
 
 *Table 2. The three datasets.*
@@ -141,7 +140,7 @@ The facts below are in `results/data_facts.csv` (D 2).
 | Samples | 2,976 patients | 585 images (780 with copies) | 1,200 photos |
 | Features | 28,541 genes | 2,048 ResNet-50 embedding dimensions | 2,048 ResNet-50 embedding dimensions |
 | Tasks | 5: each PAM50 subtype against the rest | 1: malignant (180) against benign or normal (405) | 1: Boeing 737 (800) against the Airbus A320 family (400) |
-| Label | computed from 50 known genes | from the image source | the aircraft model |
+| Label | computed from 50 genes | from the image source | the aircraft model |
 
 ### 2.1 SCAN-B
 
@@ -162,8 +161,7 @@ count. Any other increasing transform would be equally valid, so only the
 order of a gene's values is meaningful. An undetected gene sits at a
 floor, log2(0.1): in the first 200 genes, 51% of the values are at it,
 and 98.1% of all genes fail a test of normality. So we score genes with
-the Mann-Whitney U test, which uses only the order, not with the F-test
-(section 4).
+the Mann-Whitney U test, which uses only order (section 4).
 
 **The label.** PAM50 (Parker et al. 2009) assigns each tumour one of five
 subtypes: Basal, Her2, LumA, LumB or Normal. It gives the subtype of the
@@ -211,13 +209,13 @@ that look alike. Each photo becomes 2,048 numbers through ResNet-50, as
 for BreastMNIST, but with torchvision's older ImageNet weights, V1. With
 the newer V2 weights used for BreastMNIST (better there with the copies, D 2.2), 80% of the features were exactly zero
 and all the features reached only 0.742 AUC (the score of section 3); V1 gave 0.1% zeros and 0.862
-(`results/aircraft_weights.csv`). These are test AUCs, but the choice
-does not depend on them: by validation AUC inside each training set, V1
+(`results/aircraft_weights.csv`). The choice does not rest on these
+test AUCs: by validation AUC inside each training set, V1
 wins on all 16 splits, 0.852 against 0.754
 (`results/aircraft_weights_validation.csv`). As on BreastMNIST, the signal is
 widespread: 25% to 31% of the features pass the U test at a 5% false
-discovery rate (D 2.3). The photos are for non-commercial
-research only, so the repository holds none.
+discovery rate (D 2.3). The photos are licensed for
+non-commercial research only; the repository holds none.
 
 ## 3. Protocol
 
@@ -252,7 +250,7 @@ the median AUC over 20 splits from 0.465 to 0.645 (D 3.2).
 training sets share three quarters of their samples, so the five scores
 understate the real variation (Bengio and Grandvalet 2004). Each of our
 splits draws a fresh stratified training set. On SCAN-B one split serves
-all five tasks, so they are scored on the same patients.
+all five tasks.
 
 **Why 16 splits.** Random splits still overlap, so we use the corrected
 resampled t-test of Nadeau and Bengio (2003). Let d be the mean of the
@@ -277,14 +275,14 @@ datasets (Neekhra et al. 2025).
 
 **ROC AUC.** The chance that a random positive sample scores above a
 random negative one. Most tasks are imbalanced, and AUC needs no decision
-threshold. Macro-F1 (the mean of the two classes' F1 scores) and balanced
-accuracy (the mean of the two classes' recall) were also recorded; they give
-almost the same order of methods (D 7.12, 8.10).
+threshold. Macro-F1 (the mean of the classes' F1 scores) and balanced
+accuracy (the mean of the classes' recall) were also recorded; they rank
+methods almost alike (D 7.12, 8.10).
 
-**Choosing `k`.** Choosing `k` by test AUC would use the test set twice.
+**Choosing `k`.** Choosing `k` by test AUC would reuse the test set.
 So the training set is cut into 5 folds, a common count set by hand. Each fold in turn is the
-validation set: the selector is fit on the other four folds, and for each
-`k` the classifier is scored on the held-out fold. The `k` with the best
+validation set: the selector is fit on the other four, and for each
+`k` the classifier is scored on it. The `k` with the best
 mean validation AUC wins. Lasso chooses its penalty the same way, and
 Higher Criticism and Berk-Jones choose their own count (section 4).
 
@@ -302,10 +300,8 @@ the number of features:
 Feature selection methods fall into three families (Guyon and Elisseeff
 2003): filters score each feature alone, embedded methods select while
 fitting a model, and wrappers search subsets by refitting a model. We add two filters that choose their own count,
-and the random control. Table 4 lists the methods the experiments on
-real data used;
-`featsel` also holds the F-test selectors of scikit-learn and a variance
-filter (D 4.2).
+and the random control. Table 4 lists the methods the experiments used;
+`featsel` also holds scikit-learn's F-test selectors and a variance filter (D 4.2).
 
 *Table 4. The methods in the experiments.*
 
@@ -444,10 +440,10 @@ the samples' n × n kernel (the inner products of every pair of samples),
 so it pays when features outnumber samples.
 
 **Where a GPU does not help.** The GTX 1650 runs 64-bit arithmetic at
-1/32 of its 32-bit speed, and RFE needs 64 bits: with 32 bits it
-selected different genes (D 6.2). Copying the data takes
-about half the time of a fast filter. Tree importance runs on the CPU,
-with 4 threads per fit, set by hand: no GPU forest we tried ran well on 4 GB (D D.5).
+1/32 of its 32-bit speed, and RFE needs 64 bits: 32 bits selected
+different genes (D 6.2). Copying the data takes
+about half the time of a fast filter. Tree importance runs on 4 CPU
+threads per fit, set by hand: no GPU forest ran well on 4 GB (D D.5).
 
 ## 6. Results
 
@@ -471,8 +467,8 @@ As `k` grows, random features catch up. On Basal, no method beats random
 genes from 250 genes on. On BreastMNIST, no gain is established from 500
 features. At 2,000 genes a gain of about 0.02 remains on LumA, LumB and,
 for mutual information, Normal, and about 0.01 on Her2.
-The reason is in the data: thousands of genes carry the signal, and they
-move together (section 2). A large random set holds enough of them.
+The reason is in the data: many features carry the signal (section 2), so
+a large random set holds enough of them.
 
 RFE alone is the exception at small `k` on SCAN-B. At 10 genes it scored
 below random on LumA and Normal, neither loss established (p = 0.30
@@ -488,7 +484,7 @@ Sources: D 7.2, 8.2.*
 ### 6.2 Selection against all features
 
 On the image data, no method beats all 2,048 features. RFE comes
-closest, with no established difference: −0.003 AUC on BreastMNIST (p = 0.59) and −0.0003 on FGVC-Aircraft
+closest, not established: −0.003 on BreastMNIST (p = 0.59) and −0.0003 on FGVC-Aircraft
 (p = 0.92). On both, the three chains, HC2008, Berk-Jones and HC2004
 lose to all features; Lasso and correlation lose only on FGVC-Aircraft
 (D 8.3, 8.7, 8.9).
@@ -497,7 +493,7 @@ On SCAN-B, 20 of the 70 comparisons with all 28,541 genes are
 established: 10 gains and 10 losses. All 10 gains are on one task, LumB:
 ten methods gain 0.014 to 0.023 AUC, each on all 16 splits. On the other
 four tasks no gain is established. HC2004 loses on four tasks and RFECV
-scored by accuracy on three. Lasso and two chains lose on one task each.
+by accuracy on three. Lasso and two chains lose on one task each.
 The other filters and tree importance show no established loss (D 7.3).
 
 So here, selection buys a smaller model more often than a better one.
@@ -550,8 +546,8 @@ the splits) of a method's AUC is 0.006 to
 0.010 on SCAN-B, as a mean over its tasks (HC2004 0.018, RFECV scored by accuracy 0.044)
 and 0.017 to 0.069 on the image data. The tests are paired, so a smaller
 difference can still be established. BreastMNIST is without its copied
-images, and Sequential selection has not yet run there (section 6.7).
-Source: `final_report/figures/table5.csv`.*
+images; Sequential selection has not yet run there (section 6.7).
+Source: `table5.csv` in `final_report/figures/`.*
 
 | Method | SCAN-B | BreastMNIST | FGVC-<br>Aircraft | SCAN-B,<br>s per fit | SCAN-B<br>stability |
 |---|---|---|---|---|---|
@@ -594,8 +590,7 @@ weak alone for a Bonferroni test (each feature tested at 5% divided by
 kept a median of 33.5 features and the best mean AUC, 0.858. Mann-Whitney
 reached 0.843; the difference is not established
 (p = 0.62). Berk-Jones (0.813, 12 features) and an F-test filter at a
-5% false discovery rate, run only here (F-test: section 4; false
-discovery rate: section 2.2), were stricter;
+5% false discovery rate, run only here (sections 2.2, 4), were stricter;
 HC2004 kept 1 to 9 (median 1.5). All features gave 0.629.
 
 ### 6.5 Does selection find the PAM50 genes?
@@ -626,8 +621,7 @@ RFE alone is weak at 10 genes on SCAN-B: 0.78 mean AUC. A Mann-Whitney
 filter first, keeping 1,000 genes, raised it to 0.95, the highest mean
 of all methods at 10 genes on four tasks of five. Sequential selection
 beat random genes on every task at 10 genes. This chain scored above it
-on all five tasks, with no difference established, in 3 s per fit instead
-of 10 minutes. Over the other methods, the chain's lead is established
+on all five tasks, not established, in 3 s per fit instead of 10 minutes. Over the other methods, the chain's lead is established
 on LumA over every method but Sequential, on LumB over two filters, on
 Her2 and Normal only over RFE alone, and on Basal over none (D 7.9, 7.10).
 
@@ -637,7 +631,7 @@ importance chose that cap as a median over splits. A side
 study kept 250 or 1,000 instead, on the same splits. At 1,000, every
 chain gained 0.012 to 0.025 AUC on BreastMNIST and FGVC-Aircraft. Only
 RFE's gain on FGVC-Aircraft is established (p = 0.025; D 8.7). The main results keep 500: choosing the count now by
-test AUC would use the test set twice (section 3).
+test AUC would reuse the test set.
 
 ### 6.7 The copied images
 
@@ -665,9 +659,9 @@ skips it.
 ![Figure 2](figures/frontier.png)
 
 *Figure 2. Cost against quality. Each point is one method at one `k`:
-its selection time per fit, timed as in Table 5, and its mean test AUC.
+selection time per fit, as in Table 5, and mean test AUC.
 The dark line is the frontier: no point is both faster and better than a
-point on it. SCAN-B is the mean of its five tasks. The time leaves out
+point on it. SCAN-B: the mean of its five tasks. The time leaves out
 the search for `k`, which costs more (section 6.8). Sources: D 7.1, 8.1, 8.9.*
 
 ## 7. Discussion
@@ -696,7 +690,7 @@ accuracy kept one gene (D 7.8, 8.6). What changes is the best method for a given
 it on FGVC-Aircraft (p = 0.047; section 6.3). Whether selection beats all features also changes: never on the
 image data, on one SCAN-B task of five. So the best method for a budget
 can change between datasets, though on FGVC-Aircraft this rests on one
-test near 0.05; a safe default can still be named.
+test near 0.05.
 
 ### 7.3 Limits
 
@@ -739,7 +733,7 @@ test near 0.05; a safe default can still be named.
 ### 7.4 Open research questions
 
 - **A real dataset with rare signal**, and simulations with other
-  rarities, strengths and correlated features, would test further whether
+  rarities, strengths and correlated features, would test whether
   Higher Criticism and Berk-Jones choose a good count.
 - **An exact test for floor-heavy genes.** A test that separates how often
   a gene is detected from how high it is when detected would fit these
@@ -759,11 +753,11 @@ test near 0.05; a safe default can still be named.
 
 Al-Dhabyani, W., Gomaa, M., Khaled, H. and Fahmy, A. (2020). Dataset of
 breast ultrasound images. *Data in Brief* 28, 104863.
-https://doi.org/10.1016/j.dib.2019.104863
+doi:10.1016/j.dib.2019.104863
 
 Ambroise, C. and McLachlan, G. J. (2002). Selection bias in gene extraction
 on the basis of microarray gene-expression data. *PNAS* 99(10), 6562-6566.
-https://doi.org/10.1073/pnas.102102699
+doi:10.1073/pnas.102102699
 
 Bengio, Y. and Grandvalet, Y. (2004). No unbiased estimator of the variance
 of K-fold cross-validation. *Journal of Machine Learning Research* 5,
@@ -772,72 +766,72 @@ of K-fold cross-validation. *Journal of Machine Learning Research* 5,
 Berk, R. H. and Jones, D. H. (1979). Goodness-of-fit test statistics that
 dominate the Kolmogorov statistics. *Zeitschrift für
 Wahrscheinlichkeitstheorie und verwandte Gebiete* 47, 47-59.
-https://doi.org/10.1007/BF00533250
+doi:10.1007/BF00533250
 
 Bolón-Canedo, V., Sánchez-Maroño, N., Alonso-Betanzos, A., et al. (2014). A
 review of microarray datasets and applied feature selection methods.
 *Information Sciences* 282, 111-135.
-https://doi.org/10.1016/j.ins.2014.05.042
+doi:10.1016/j.ins.2014.05.042
 
 Brueffer, C., Vallon-Christersson, J., Grabau, D., et al. (2018). Clinical
 value of RNA sequencing-based classifiers for prediction of the five
 conventional breast cancer biomarkers. *JCO Precision Oncology* 2, 1-18.
-https://doi.org/10.1200/PO.17.00135. Data: GEO accession GSE96058.
+doi:10.1200/PO.17.00135. Data: GEO accession GSE96058.
 
 Chapelle, O. (2007). Training a support vector machine in the primal.
 *Neural Computation* 19(5), 1155-1178.
-https://doi.org/10.1162/neco.2007.19.5.1155
+doi:10.1162/neco.2007.19.5.1155
 
 Donoho, D. and Jin, J. (2004). Higher criticism for detecting sparse
 heterogeneous mixtures. *Annals of Statistics* 32(3), 962-994.
-https://doi.org/10.1214/009053604000000265
+doi:10.1214/009053604000000265
 
 Donoho, D. and Jin, J. (2008). Higher criticism thresholding: optimal
 feature selection when useful features are rare and weak. *PNAS* 105(39),
-14790-14795. https://doi.org/10.1073/pnas.0807471105
+14790-14795. doi:10.1073/pnas.0807471105
 
 Dudoit, S., Fridlyand, J. and Speed, T. P. (2002). Comparison of
 discrimination methods for the classification of tumors using gene
 expression data. *Journal of the American Statistical Association*
-97(457), 77-87. https://doi.org/10.1198/016214502753479248
+97(457), 77-87. doi:10.1198/016214502753479248
 
 Guyon, I. and Elisseeff, A. (2003). An introduction to variable and feature
 selection. *Journal of Machine Learning Research* 3, 1157-1182.
 
 Guyon, I., Weston, J., Barnhill, S. and Vapnik, V. (2002). Gene selection
 for cancer classification using support vector machines. *Machine Learning*
-46(1-3), 389-422. https://doi.org/10.1023/A:1012487302797
+46(1-3), 389-422. doi:10.1023/A:1012487302797
 
 Hanley, J. A. and McNeil, B. J. (1982). The meaning and use of the area
 under a receiver operating characteristic (ROC) curve. *Radiology* 143(1),
-29-36. https://doi.org/10.1148/radiology.143.1.7063747
+29-36. doi:10.1148/radiology.143.1.7063747
 
 He, K., Zhang, X., Ren, S. and Sun, J. (2016). Deep residual learning for
-image recognition. *CVPR*, 770-778. https://doi.org/10.1109/CVPR.2016.90
+image recognition. *CVPR*, 770-778. doi:10.1109/CVPR.2016.90
 
 Liu, Y.-J. and Zhou, W. (2023). Dual Newton proximal point algorithm for
 solution paths of the ℓ1-regularized logistic regression. Preprint.
-https://arxiv.org/abs/2310.19353
+arXiv:2310.19353
 
 Maji, S., Rahtu, E., Kannala, J., Blaschko, M. and Vedaldi, A. (2013).
 Fine-grained visual classification of aircraft. Preprint.
-https://arxiv.org/abs/1306.5151
+arXiv:1306.5151
 
 Mann, H. B. and Whitney, D. R. (1947). On a test of whether one of two
 random variables is stochastically larger than the other. *Annals of
 Mathematical Statistics* 18(1), 50-60.
-https://doi.org/10.1214/aoms/1177730491
+doi:10.1214/aoms/1177730491
 
 Moscovich, A., Nadler, B. and Spiegelman, C. (2016). On the exact
 Berk-Jones statistics and their p-value calculation. *Electronic Journal of
-Statistics* 10(2), 2329-2354. https://doi.org/10.1214/16-EJS1172
+Statistics* 10(2), 2329-2354. doi:10.1214/16-EJS1172
 
 Nadeau, C. and Bengio, Y. (2003). Inference for the generalization error.
-*Machine Learning* 52(3), 239-281. https://doi.org/10.1023/A:1024068626366
+*Machine Learning* 52(3), 239-281. doi:10.1023/A:1024068626366
 
 Neekhra, B., Gupta, D. and Chakrabarti, P. P. (2025). On the
 (in)significance of feature selection in high-dimensional datasets.
-Preprint. https://arxiv.org/abs/2508.03593
+Preprint. arXiv:2508.03593
 
 Nogueira, S., Sechidis, K. and Brown, G. (2018). On the stability of
 feature selection algorithms. *Journal of Machine Learning Research*
@@ -845,34 +839,34 @@ feature selection algorithms. *Journal of Machine Learning Research*
 
 Parker, J. S., Mullins, M., Cheang, M. C. U., et al. (2009). Supervised risk
 predictor of breast cancer based on intrinsic subtypes. *Journal of Clinical
-Oncology* 27(8), 1160-1167. https://doi.org/10.1200/JCO.2008.18.1370
+Oncology* 27(8), 1160-1167. doi:10.1200/JCO.2008.18.1370
 
 Pawłowska, A., Karwat, P. and Żołek, N. (2023). Letter to the Editor. Re:
 "Dataset of breast ultrasound images". *Data in Brief* 48, 109247.
-https://doi.org/10.1016/j.dib.2023.109247
+doi:10.1016/j.dib.2023.109247
 
 Saeys, Y., Inza, I. and Larrañaga, P. (2007). A review of feature selection
 techniques in bioinformatics. *Bioinformatics* 23(19), 2507-2517.
-https://doi.org/10.1093/bioinformatics/btm344
+doi:10.1093/bioinformatics/btm344
 
 Statnikov, A., Aliferis, C. F., Tsamardinos, I., et al. (2005). A
 comprehensive evaluation of multicategory classification methods for
 microarray gene expression cancer diagnosis. *Bioinformatics* 21(5),
-631-643. https://doi.org/10.1093/bioinformatics/bti033
+631-643. doi:10.1093/bioinformatics/bti033
 
 Yang, J., Shi, R., Wei, D., et al. (2023). MedMNIST v2 - a large-scale
 lightweight benchmark for 2D and 3D biomedical image classification.
-*Scientific Data* 10, 41. https://doi.org/10.1038/s41597-022-01721-8
+*Scientific Data* 10, 41. doi:10.1038/s41597-022-01721-8
 
 Yang, J., Shi, R., Wei, D., et al. (2024). MedMNIST+: 18x standardized
 datasets for 2D and 3D biomedical image classification with multiple size
 options: 28 (MNIST-like), 64, 128, and 224. Zenodo, version 3.0.
-https://doi.org/10.5281/zenodo.10519652
+doi:10.5281/zenodo.10519652
 
 ## Appendix A. How to reproduce
 
-From the repository root: setup, then one experiment. Each loader
-downloads its data once and caches it: GSE96058 (592 MB), BreastMNIST
+From the repository root: setup, then one experiment. Loaders
+download the data once: GSE96058 (592 MB), BreastMNIST
 (31 MB), FGVC-Aircraft (2.75 GB).
 
 ```bash
@@ -884,9 +878,8 @@ python3.13 -m venv .venv
 ```
 
 `--resume` continues a stopped run. Each run writes a CSV, and a JSON
-file with the machine, library versions and git commit. D A lists every
-config and the command behind every table. This report's figures and
-Table 5 come from `scripts/plot_final_frontier.py`, `plot_curves.py` and
+file of machine, versions and commit. D A gives the command behind
+every table. The figures and Table 5 come from `scripts/plot_final_frontier.py`, `plot_curves.py` and
 `final_table.py`, each with its command in its docstring.
 
 One seed, 42, an arbitrary choice, fixes every random step; split `s` uses 42 + `s`. A rerun
@@ -903,10 +896,10 @@ GPU to one fit at a time. The experiments set `'cuda'`, and each result
 records its device.
 
 **Identical scores on any device.** For the U test, one sort per gene
-gives its ranks and ties; PyTorch sorts thousands of genes at once and sums
+gives its ranks and ties; PyTorch sorts many genes at once and sums
 the ranks exactly in 64 bits, and the p-value is finished on the CPU. For
 mutual information, a sort per class replaces scikit-learn's
-nearest-neighbour tree, with its own random noise and order of sums.
+nearest-neighbour tree, keeping scikit-learn's noise and sum order.
 
 **Lasso's solver.** PPDNA (Liu and Zhou 2023), a semismooth Newton method,
 needed five changes on SCAN-B-shaped data (D D.3), among them a
