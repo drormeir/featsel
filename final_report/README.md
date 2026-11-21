@@ -208,7 +208,10 @@ that look alike. Each photo becomes 2,048 numbers through ResNet-50, as
 for BreastMNIST, but with torchvision's older ImageNet weights, V1. With
 the newer V2 weights used for BreastMNIST (better there with the copies, D 2.2), 80% of the features were exactly zero
 and all the features reached only 0.742 AUC (the score of section 3); V1 gave 0.1% zeros and 0.862
-(`results/aircraft_weights.csv`). As on BreastMNIST, the signal is
+(`results/aircraft_weights.csv`). These are test AUCs, but the choice
+does not depend on them: by validation AUC inside each training set, V1
+wins on all 16 splits, 0.852 against 0.754
+(`results/aircraft_weights_validation.csv`). As on BreastMNIST, the signal is
 widespread: 25% to 31% of the features pass the U test at a 5% false
 discovery rate (D 2.3). The photos are for non-commercial
 research only, so the repository holds none.
@@ -710,9 +713,7 @@ cannot be known in advance from these datasets; a safe default can.
   copied images; a run without them gives the same conclusions, except
   that Mann-Whitney falls 0.012 below all features (section 6.7). That
   run also trains on 25% fewer images (409 against 546), so the fall in
-  scores is not due to the copies alone. FGVC-Aircraft's weights, V1,
-  were chosen by the AUC of all features on the same 16 splits that test
-  the methods (section 2.3).
+  scores is not due to the copies alone.
 - **Protocol.** One classifier in the main runs, logistic regression with
   C fixed at 1; for Mann-Whitney and all features, C = 0.01 to 100 gave
   no established AUC difference on the image data, and

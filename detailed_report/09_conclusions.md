@@ -215,9 +215,6 @@ described in the section given.
   and the
   conclusions hold (section 8.8). That run also trains on 25% fewer
   images, so the fall is not due to the copies alone.
-- FGVC-Aircraft's ResNet weights, V1, were chosen by the AUC of all
-  features on the same 16 splits that test the methods (section 2.3).
-  V1 scored higher on all 16, and V2's features were 80% zeros.
 
 **The protocol.**
 

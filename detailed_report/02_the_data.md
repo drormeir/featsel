@@ -278,6 +278,12 @@ torchvision's `IMAGENET1K_V1`, not V2. On this task, V2's features were
 80% exact zeros and gave AUC 0.742 with all features. V1's were 0.1%
 zeros and gave 0.862 (16 splits, as in chapter 8;
 [`results/aircraft_weights.csv`](../results/aircraft_weights.csv)).
+These are test AUCs, on the splits that later test the methods. The
+choice does not depend on them. Made on validation sets instead, as `k`
+is chosen (5 folds of each training set, section 3.11), it picks V1 on
+all 16 splits: 0.852 against 0.754 mean validation AUC
+([`results/aircraft_weights_validation.csv`](../results/aircraft_weights_validation.csv),
+from [`scripts/aircraft_weights_validation.py`](../scripts/aircraft_weights_validation.py)).
 Features with a single value across the 1,200 photos are dropped.
 
 **The signal.** As in BreastMNIST, the signal is widespread: 25% to 31%
