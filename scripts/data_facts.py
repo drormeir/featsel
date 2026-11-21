@@ -144,12 +144,12 @@ def abs_correlations(X):
 
 def u_test_shares(X, positive):
     """
-    Per training half of 5 random splits, half the samples in each: the share
-    of features passing the U test at a 5% false discovery rate
-    (Benjamini-Hochberg), and at p < 0.05.
+    Per training set of 16 random splits with 70% of the samples, as in the
+    main runs: the share of features passing the U test at a 5% false
+    discovery rate (Benjamini-Hochberg), and at p < 0.05.
     """
     bh, raw = [], []
-    for train, _ in StratifiedShuffleSplit(5, train_size=0.5, random_state=SEED).split(X, positive):
+    for train, _ in StratifiedShuffleSplit(16, train_size=0.7, random_state=SEED).split(X, positive):
         pos = X[train][positive[train]]
         neg = X[train][~positive[train]]
         pu = np.sort(mannwhitneyu(pos, neg, axis=0).pvalue)

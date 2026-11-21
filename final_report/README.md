@@ -183,7 +183,7 @@ BreastMNIST (Yang et al. 2023) holds 780 breast ultrasound images
 et al. 2024). Each image goes through ResNet-50
 (He et al. 2016), trained on ImageNet, with its last layer removed. The
 result is 2,048 numbers per image: more features than images. The signal
-is again widespread: 24% to 28% of the features pass the U test (section
+is again widespread: 27% to 35% of the features pass the U test (section
 4) at a 5% false discovery rate: the expected share of false features
 among those that pass is at most 5%. Unlike genes, pairs of features are only weakly
 correlated (median absolute correlation 0.056).
@@ -205,7 +205,7 @@ for BreastMNIST, but with torchvision's older ImageNet weights, V1. With
 the V2 weights used for BreastMNIST (better there, D 2.2), 80% of the features were exactly zero
 and all the features reached only 0.742 AUC (the score of section 3); V1 gave 0.1% zeros and 0.862
 (`results/aircraft_weights.csv`). As on BreastMNIST, the signal is
-widespread: 17% to 23% of the features pass the U test at a 5% false
+widespread: 25% to 31% of the features pass the U test at a 5% false
 discovery rate (D 2.3). The photos are for non-commercial
 research only and are not stored in the repository.
 

@@ -44,10 +44,10 @@ bm_pc_50,12
 bm_pc_90,150
 bm_pc_99,462
 bm_f_bonferroni,223
-bm_bh_share_min,24%
-bm_bh_share_max,28%
-bm_p05_share_min,36%
-bm_p05_share_max,39%
+bm_bh_share_min,27%
+bm_bh_share_max,35%
+bm_p05_share_min,38%
+bm_p05_share_max,45%
 scanb_flat_genes,11
 scanb_hiseq_repeats,100
 scanb_kept_single_value_genes,"2,313"
@@ -61,7 +61,7 @@ scanb_lumb_patients,669
 ac_photos,"1,200"
 ac_features,"2,048"
 ac_median_abs_r,0.111
-ac_bh_share_min,17%
-ac_bh_share_max,23%
-ac_p05_share_min,30%
-ac_p05_share_max,35%
+ac_bh_share_min,25%
+ac_bh_share_max,31%
+ac_p05_share_min,36%
+ac_p05_share_max,41%

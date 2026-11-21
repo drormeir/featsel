@@ -155,7 +155,7 @@ HC2004 kept 1 to 3 features. It scored 0.758, the lowest of all. Its
 statistic peaks at the single strongest p-value (section 4.4).
 
 As on SCAN-B (section 7.5), neither variant found the point where the
-signal ends: 24% to 28% of the dimensions pass the Benjamini-Hochberg test
+signal ends: 27% to 35% of the dimensions pass the Benjamini-Hochberg test
 (chapter 2).
 
 ## 8.6 RFECV: accuracy against AUC
