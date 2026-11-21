@@ -143,7 +143,7 @@ the "Original" column is our own NumPy U test, the CPU version.
 | Mann-Whitney and Higher Criticism (our NumPy U test) | 3.76 s | — | 0.49 s (7.7×) | yes | [mann_whitney](../featsel/selectors/mann_whitney/demos/speed.ipynb) |
 | Berk-Jones (our NumPy U test) | 3.88 s | — | 0.46 s (8.4×) | yes | [berk_jones](../featsel/selectors/berk_jones/demos/speed.ipynb) |
 | Mutual information, 10,000 features | 78.3 s | 18.4 s (4.2×) | 1.60 s (49×) | yes, bit for bit | [mutual_info](../featsel/selectors/mutual_info/demos/speed.ipynb) |
-| Lasso (liblinear → PPDNA solver) | 5.78 s | 25.4 s (4.4× slower) | 1.01 s (5.7×) | 91% overlap (see below) | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
+| Lasso (liblinear → PPDNA solver) | 5.78 s | 25.4 s (4.4× slower) | 1.01 s (5.7×) | no: Jaccard 0.91 with liblinear's features at 30,000 (`results/local/speed/LassoSelector.csv`); on SCAN-B, see below | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
 | Tree importance, 10,000 features (1 thread → 12) | 103.7 s | 18.8 s (5.5×) | no GPU path | yes | [tree_importance](../featsel/selectors/tree_importance/demos/speed.ipynb) |
 | RFE (liblinear → exact Newton solver) | 26.2 s | 12.9 s (2.0×) | 15.6 s (1.7×) | not at every size (see below) | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
 | RFECV, 10,000 features | 70.1 s | 49.9 s (1.4×) | 42.2 s (1.7×) | not at every size | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |

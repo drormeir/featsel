@@ -144,7 +144,8 @@ settings stated in their sections.
 15. **Exactness has a price in agreement.** Faster exact solvers can pick
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
     does on some synthetic data. The reason is that the default stops before it
-    reaches the solution. AUC did not change. So RFE, RFECV and Lasso now
+    reaches the solution. AUC changed little: RFE's two solvers scored
+    the same, and Lasso's differed by at most 0.014 (section 6.2). So RFE, RFECV and Lasso now
     run only their exact solvers (section 6.2).
 16. **Selection buys a smaller model more often than a better one.** On
     BreastMNIST all 2,048 features scored 0.924 and on FGVC-Aircraft
@@ -233,9 +234,9 @@ described in the section given.
 
 - Every time comes from one laptop with a 4 GB consumer GPU (chapter 6).
   A time is meaningful only on that machine.
-- The runner's speed-up over scikit-learn was measured before liblinear
-  was dropped, and before each selection was fit 10 times. A rerun today
-  would not match it (section 6.1, Appendix A).
+- The runner's speed-up over scikit-learn comes from three runs of one
+  small grid, with one fit per selection, not the 10 of the experiments
+  (section 6.1).
 
 **Higher Criticism.** No real dataset here has rare signal. One
 simulation tests HC in the setting it was built for (section 8.11): one
