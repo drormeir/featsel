@@ -688,10 +688,11 @@ with both inner scores, scoring by AUC gave a higher mean than scoring by
 accuracy; the gain is established only on three SCAN-B tasks, where
 accuracy kept one gene (D 7.8, 8.6). What changes is the best method for a given budget. At
 250 features, RFE trails Mann-Whitney on SCAN-B (p = 0.0003) but leads
-it on FGVC-Aircraft (p = 0.047; section 6.3). Whether selection beats all features also changes: never on the
+it on FGVC-Aircraft (p = 0.047; section 6.3). Against tree importance
+the change is clearer: RFE trails on SCAN-B (p = 3 × 10⁻⁶) and leads on
+FGVC-Aircraft (p = 0.003), each on all 16 splits (D 7.9, 8.9). Whether selection beats all features also changes: never on the
 image data, on one SCAN-B task of five. So the best method for a budget
-can change between datasets, though on FGVC-Aircraft this rests on one
-test near 0.05.
+can change between datasets.
 
 ### 7.3 Limits
 

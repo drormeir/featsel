@@ -180,6 +180,11 @@ Each dataset has its own frontier. What do they share?
 - **What changes.** The best method for a given budget. At 250 features,
   RFE trails Mann-Whitney on SCAN-B by 0.020 AUC (p = 0.0003; section
   7.9) but leads it on FGVC-Aircraft by 0.029 (p = 0.047; section 8.9).
+  Against tree importance the change is clearer: RFE trails by 0.026 on
+  SCAN-B (p = 3 × 10⁻⁶) and leads by 0.036 on FGVC-Aircraft (p = 0.003),
+  each on all 16 splits
+  ([`figures/paired_tests_scanb70.csv`](figures/paired_tests_scanb70.csv),
+  [`figures/paired_tests_aircraft70.csv`](figures/paired_tests_aircraft70.csv)).
   At 10
   features, the filters and tree importance, alone or chained, have the
   highest means on the image data, and Mann-Whitney then RFE on four
@@ -187,8 +192,7 @@ Each dataset has its own frontier. What do they share?
   methods (section 7.9). Whether selection beats all features also changes:
   never on the image data, on one SCAN-B task of five.
 
-So the best method for a budget can change from one dataset to another,
-though on FGVC-Aircraft this rests on one test near 0.05. What can be
+So the best method for a budget can change from one dataset to another. What can be
 known is a safe default: Mann-Whitney on a GPU is never far from the
 best, and costs least.
 
