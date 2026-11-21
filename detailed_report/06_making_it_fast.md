@@ -145,10 +145,10 @@ the "Original" column is our own NumPy U test, the CPU version.
 | Mann-Whitney and Higher Criticism (our NumPy U test) | 3.76 s | — | 0.49 s (7.7×) | yes | [mann_whitney](../featsel/selectors/mann_whitney/demos/speed.ipynb) |
 | Berk-Jones (our NumPy U test) | 3.88 s | — | 0.46 s (8.4×) | yes | [berk_jones](../featsel/selectors/berk_jones/demos/speed.ipynb) |
 | Mutual information, 10,000 features | 78.3 s | 18.4 s (4.2×) | 1.60 s (49×) | yes, bit for bit | [mutual_info](../featsel/selectors/mutual_info/demos/speed.ipynb) |
-| Lasso (liblinear → PPDNA solver) | 5.78 s | 25.4 s (4.4× slower) | 1.01 s (5.7×) | no: Jaccard 0.91 (shared features over all features chosen by either) with liblinear's features at 30,000 (`results/local/speed/LassoSelector.csv`); on SCAN-B, see below | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
+| Lasso (liblinear → PPDNA solver) | 5.78 s | 25.4 s (4.4× slower) | 1.01 s (5.7×) | no: Jaccard 0.91 (shared features over all features chosen by either) with liblinear's features at 30,000; on SCAN-B, see below | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1), [`LassoSelector.csv`](../results/speed/LassoSelector.csv) |
 | Tree importance, 10,000 features (1 thread → 12) | 103.7 s | 18.8 s (5.5×) | no GPU path | yes | [tree_importance](../featsel/selectors/tree_importance/demos/speed.ipynb) |
-| RFE (liblinear → exact Newton solver) | 26.2 s | 12.9 s (2.0×) | 15.6 s (1.7×) | not at every size (see below) | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
-| RFECV, 10,000 features | 70.1 s | 49.9 s (1.4×) | 42.2 s (1.7×) | not at every size | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1) |
+| RFE (liblinear → exact Newton solver) | 26.2 s | 12.9 s (2.0×) | 15.6 s (1.7×) | not at every size (see below) | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1), [`RFESelector.csv`](../results/speed/RFESelector.csv) |
+| RFECV, 10,000 features | 70.1 s | 49.9 s (1.4×) | 42.2 s (1.7×) | not at every size | [script](../scripts/benchmark_speed_selectors.py) (Appendix D.1), [`RFECVSelector.csv`](../results/speed/RFECVSelector.csv) |
 | Sequential forward, 1,000 features | 163.8 s | 22.5 s (7.3×) | 4.9 s (34×) | yes | [sequential](../featsel/selectors/sequential/demos/speed.ipynb) |
 | Random | — | 0.02 s | — | — | [random_selection](../featsel/selectors/random_selection/demos/speed.ipynb) |
 
@@ -160,7 +160,9 @@ A second series ran on real SCAN-B: the training set of one split, Basal
 vs rest (1,488 patients, half of them), median of 5 fits. The three
 Sequential times are single fits. Script:
 [`scripts/benchmark_selectors.py`](../scripts/benchmark_selectors.py);
-its output in `results/local/benchmark_selectors/` is not tracked. At all
+output:
+[`results/speed/scanb_basal_2026-11-07.csv`](../results/speed/scanb_basal_2026-11-07.csv).
+At all
 28,552 genes, unless noted:
 
 | Method | scikit-learn's solver | Exact Newton solver, CPU | Exact Newton solver, GPU |
@@ -204,7 +206,7 @@ On all 2,976 patients (C = 1):
 
 PPDNA is reproducible. These counts are from the GPU. On the CPU, PPDNA
 keeps 1 to 3 genes fewer on LumA and LumB (906 and 730). Source:
-`results/local/speed/LassoSelector_scanb.csv` (not tracked in git).
+[`results/speed/LassoSelector_scanb.csv`](../results/speed/LassoSelector_scanb.csv).
 
 **RFE.** The cause is the same as for Lasso: liblinear's tolerance. When
 genes are strongly correlated,

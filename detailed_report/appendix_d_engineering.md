@@ -31,7 +31,8 @@ clock and temperature.
 ## D.2 Lasso on real SCAN-B
 
 The script of Appendix D.1 also times Lasso on the five tasks of real
-SCAN-B (2,976 patients, 28,552 genes):
+SCAN-B (2,976 patients, 28,552 genes;
+[`results/speed/LassoSelector_scanb.csv`](../results/speed/LassoSelector_scanb.csv)):
 
 | One Lasso fit per task | Seconds | Against liblinear |
 |---|---|---|
@@ -91,7 +92,7 @@ solution. scikit-learn's Newton solvers refuse the L1 penalty. liblinear and sag
 accept it but stop at a tolerance: less work, a different answer. On
 synthetic data of 3,000 samples, PPDNA on the CPU was 1.6 to 7.1 times
 slower than liblinear at its defaults, at 1,000 to 30,000 features
-(`results/local/speed/LassoSelector.csv`). So Lasso's speed comparison is the SCAN-B one
+([`results/speed/LassoSelector.csv`](../results/speed/LassoSelector.csv)). So Lasso's speed comparison is the SCAN-B one
 of Appendix D.2.
 
 ## D.5 The random forest on a GPU

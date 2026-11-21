@@ -1,0 +1,29 @@
+{
+  "written": "2026-11-14T02:02:49+02:00",
+  "selector": "LassoSelector",
+  "params": {
+    "C": 1.0
+  },
+  "n_patients": 2976,
+  "dataset": "SCAN-B GSE96058, PAM50 one-vs-rest, standardized",
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "cpu_count": 12,
+    "ram_gb": 15.5,
+    "packages": {
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "torch": "2.14.1",
+      "xgboost": "3.4.1"
+    },
+    "git_commit": "8d615287057df86725d91788223e66f9684779d2",
+    "git_dirty": true,
+    "gpu": "NVIDIA GeForce GTX 1650",
+    "gpu_memory_gb": 4.0
+  }
+}
