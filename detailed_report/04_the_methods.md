@@ -63,7 +63,8 @@ dataset. They were set by hand and not tuned:
 
 - RFE and RFECV: the SVM's C = 0.01, a step of 0.1.
 - Tree importance: 200 trees.
-- Correlation: Spearman (the selector's default is Pearson), and the
+- Correlation: Spearman (the selector's default is Pearson; section 4.6
+  gives the reason), and the
   default thresholds. A feature must have a target correlation of at
   least 0.1, and of a pair above 0.95, one is dropped.
 
@@ -310,7 +311,7 @@ assumptions are those of HC: rare, weak and independent signal.
 |---|---|
 | The frontier (chapters 7 and 8) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE. The first frontier run had two solvers each for Lasso (liblinear and PPDNA) and RFE (liblinear and Newton); the configurations now run only PPDNA and Newton. |
 | The classifier study (section 7.7) | Random and Mann-Whitney, with five classifiers |
-| The unseen dataset (section 8.9) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso (PPDNA), tree importance, RFE (Newton), RFECV (Newton, scored by accuracy and by AUC), Sequential (a batched Newton solver, section 6.2); chains of Mann-Whitney then Lasso, tree importance or RFE |
+| The unseen dataset (section 8.9) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso (PPDNA), tree importance, RFE (Newton), RFECV (Newton, scored by accuracy and by AUC, section 7.8), Sequential (a batched Newton solver, section 6.2); chains of Mann-Whitney then Lasso, tree importance or RFE |
 | Simulated rare signal (section 8.11) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, FDR, Lasso (PPDNA) |
 | The chains' first step (section 8.7) | the three chains, with Mann-Whitney keeping 250 or 1,000 features, on the image data |
 
@@ -353,7 +354,7 @@ gives what a method needs beyond it.
 | Mutual information | O(p · n log n): per feature, one sort per class and one binary search per sample | O(n) per feature |
 | Lasso (PPDNA) | per Newton step, O(np) for the products with X, plus O(n r² + min(n, r)³) for its linear system | O(n r + min(n, r)²) |
 | Tree importance | O(T · √p · n log² n), if each tree has depth O(log n) | O(T n) for the trees |
-| RFE (Newton) | O(n² p) for the n × n kernel and its updates, plus O(t n³) per round, R rounds | O(n²) |
+| RFE (Newton) | O(n² p) for the n × n kernel X Xᵀ (below) and its updates, plus O(t n³) per round, R rounds | O(n²) |
 | RFECV | about F + 1 times RFE | O(n²) |
 | Sequential (Newton) | k steps. Step j fits about p · F models on j features, so O(t · F · p · n · k³) in total | O(p k²) for the Hessian blocks of all candidates |
 

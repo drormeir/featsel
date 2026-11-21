@@ -11,8 +11,8 @@ features.
 **Methods.** We built `featsel`, a Python package of 16 feature selection
 methods that plug into scikit-learn pipelines. A runner compares the
 methods under one protocol: 16 random splits, selection inside each split,
-the number of features chosen on validation sets, and ROC AUC on the test
-set. A random control runs at every number of features. Paired tests are
+the number of features chosen on validation sets, and ROC AUC (area under
+the ROC curve: 0.5 is chance, 1 is perfect) on the test set. A random control runs at every number of features. Paired tests are
 corrected for the overlap between splits. We made the slow methods faster,
 with exact solvers and GPU paths. The main dataset is breast cancer gene
 expression (SCAN-B: 2,976 patients, 28,541 genes, five PAM50 subtype

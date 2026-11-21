@@ -116,7 +116,7 @@ those datasets have tens to a few hundred samples.
 | Ignoring which features are chosen | Nogueira et al. (2018) | Nogueira's stability measure for every method (3.6) |
 
 **Where this project stands.** It compares filters, embedded methods,
-wrappers and Higher Criticism under one protocol. Running on a gene
+wrappers (section 4.1) and Higher Criticism under one protocol. Running on a gene
 expression cohort and an image dataset tests whether the ranking of
 methods carries over between domains. A second image dataset, unseen
 during the design, then tests the finished pipeline (section 8.9).
@@ -130,14 +130,16 @@ during the design, then tests the finished pipeline (section 8.9).
    thresholds were built for rare, independent signal. On our widespread
    signal, HC2008 and Berk-Jones stopped at or near the edge of their search and
    acted as top-10% filters (sections 7.5 and 8.5).
-3. **A cost-quality frontier.** One plot of selection time against AUC,
+3. **A cost-quality frontier.** One plot of selection time against AUC
+   (section 3.5),
    for every method and setting. It shows which method fits a time budget
    (sections 7.1 and 8.1).
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method pick the same features, on the CPU and on a GPU;
    Lasso alone differs by 1 to 3 genes on two PAM50 subtypes, LumA and
    LumB (chapter 2; section 6.2).
-   Exact solvers make RFE, RFECV and Sequential selection faster, and
+   Exact solvers make RFE, RFECV and Sequential selection (section 4.2)
+   faster, and
    Lasso faster on a GPU. For
    Lasso, RFE and RFECV they also reach the solution that scikit-learn's default
    solver stops short of (chapters 5 and 6).

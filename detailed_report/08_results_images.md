@@ -368,7 +368,8 @@ informative feature gives z ≈ 3.4 on average. A Bonferroni test at 5%
 needs about 4.6 at 10,000 features.
 
 **The protocol** is that of chapter 3: 16 splits, 70% for training, `k`
-chosen on validation sets. The runner also records the share of the 40
+chosen on validation sets from 10, 20, 40, 80 and 160 (Mann-Whitney also
+500; random also all 10,000). The runner also records the share of the 40
 features each selection found (recall) and the share of the selection that
 is informative (precision). One method appears only here: FDR, the
 F-test with Benjamini-Hochberg control at 5% (section 4.2), the usual
