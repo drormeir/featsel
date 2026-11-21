@@ -45,7 +45,8 @@ sides reach the same solution. The script ran three times, on 2026-11-20
 and 21, with the laptop otherwise idle. The table gives the median
 seconds and the speed-up of the medians. Over the three runs, the
 runner's speed-up was 3.9 to 4.5 on one core and 10.1 to 10.8 on 12
-threads. An earlier run, with other programs running, gave 4.3 and 10.1.
+threads. Against scikit-learn on 12 threads, the runner on 12 threads is
+6.8 times faster (32.8 s against 4.8 s). An earlier run, with other programs running, gave 4.3 and 10.1.
 
 | Run | Seconds (median of 3) | Speed-up over scikit-learn on 1 core |
 |---|---|---|

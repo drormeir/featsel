@@ -100,7 +100,7 @@ shape our protocol (Table 1):
    overlapping splits checks every difference (section 3).
 2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
    thresholds were built for rare signal. On widespread signal, HC2008
-   and Berk-Jones stopped at the edge of their search and acted as
+   and Berk-Jones stopped at or just before the edge of their search and acted as
    top-10% filters; HC2004 kept one to three features. On simulated rare
    signal, HC2008 chose a good count (sections 4, 6.4).
 3. **A cost-quality frontier**: selection time against AUC for every
@@ -126,7 +126,8 @@ Three datasets have more features than samples (Table 2). SCAN-B is the
 main dataset. BreastMNIST answers task 4 with another domain. FGVC-Aircraft
 was added after the design was fixed, to test the pipeline on data it was
 not built for. Each dataset has a loader that downloads the published
-files once, checks them, and records every choice made on them (D 5.3).
+files once, checks them, and records every choice made on them (D 2.2,
+2.3, 5.3).
 The facts below are in `results/data_facts.csv` (D 2).
 
 *Table 2. The three datasets.*

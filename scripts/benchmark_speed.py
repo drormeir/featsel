@@ -119,12 +119,12 @@ def main():
     genes = np.sort(np.random.default_rng(SEED).choice(n_total, args.n_genes, replace=False))
     X = X.values[:, genes].astype(np.float32)  # the runner's dtype, on both sides
     y = np.where(y.values == TASK, TASK, 'rest')
-    cores = os.cpu_count()
+    threads = os.cpu_count()  # logical CPUs: 12 threads on 6 cores here
 
     times, scores = {}, {}
     with tempfile.TemporaryDirectory() as folder:
-        for n_jobs in (1, cores):
-            cpus = '1 core' if n_jobs == 1 else f'{n_jobs} cores'
+        for n_jobs in (1, threads):
+            cpus = '1 core' if n_jobs == 1 else f'{n_jobs} threads'
             scores[f'scikit-learn, {cpus}'], times[f'scikit-learn, {cpus}'] = \
                 run_sklearn(X, y, n_jobs)
             scores[f'runner, {cpus}'], times[f'runner, {cpus}'] = \
@@ -145,7 +145,7 @@ def main():
     setting = (f'SCAN-B, {TASK} vs rest, {args.n_genes} random genes of {n_total}, '
                f'{len(y)} patients. {N_SPLITS} splits at train fraction 0.5. Lasso and RFE '
                f'(step 0.5) at k = {", ".join(map(str, K_VALUES))}, logistic regression with '
-               f'fixed C. {cores} cores. All {len(reference)} test macro-F1 scores are equal '
+               f'fixed C. {threads} threads. All {len(reference)} test macro-F1 scores are equal '
                f'on every run.')
     table.assign(setting=setting).to_csv(args.csv, index=False)
     lines = ['| ' + ' | '.join(table.columns) + ' |', '|---|---|---|',
