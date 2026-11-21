@@ -367,7 +367,10 @@ needs about 4.6 at 10,000 features.
 **The protocol** is that of chapter 3: 16 splits, 70% for training, `k`
 chosen on validation sets. The runner also records the share of the 40
 features each selection found (recall) and the share of the selection that
-is informative (precision). Config:
+is informative (precision). One method appears only here: FDR, the
+F-test with Benjamini-Hochberg control at 5% (section 4.2), the usual
+filter that chooses its own count. Here the features are normal, so the
+F-test's assumption holds (section 4.3). Config:
 [`configs/rare_signal70.yaml`](../configs/rare_signal70.yaml). The run took
 5 minutes.
 

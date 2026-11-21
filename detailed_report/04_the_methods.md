@@ -156,8 +156,9 @@ still assumes normal values. A permutation test assumes nothing, but its
 smallest p-value is about 1 over the number of shuffles, far too coarse
 for Higher Criticism.
 
-So every filter in the experiments that runs a statistical test uses the
-U test. Correlation and mutual information, used in the frontier, run no
+So every filter in the experiments on real data that runs a statistical
+test uses the U test. The one exception is FDR in the simulation of
+section 8.11, whose features are normal. Correlation and mutual information, used in the frontier, run no
 test. With one test for all filters, the experiments compare selection
 rules, not tests. The F-test selectors stay in the package as drop-in
 replacements for scikit-learn's, but the experiments do not use them.
@@ -287,11 +288,14 @@ assumptions are those of HC: rare, weak and independent signal.
 |---|---|
 | The frontier (chapters 7 and 8) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso, tree importance, RFE, RFECV, Sequential; chains of Mann-Whitney then Lasso, tree importance or RFE. The first frontier run had two solvers each for Lasso (liblinear and PPDNA) and RFE (liblinear and Newton); the configurations now run only PPDNA and Newton. |
 | The classifier study (section 7.7) | Random and Mann-Whitney, with five classifiers |
-| The unseen dataset (section 8.9) | Random, Mann-Whitney, HC2004, HC2008, correlation (Spearman), mutual information, Lasso (PPDNA), RFE (Newton), RFECV (Newton, scored by AUC), Sequential (Newton) |
+| The unseen dataset (section 8.9) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, correlation (Spearman), mutual information, Lasso (PPDNA), tree importance, RFE (Newton), RFECV (Newton, scored by accuracy and by AUC), Sequential (Newton); chains of Mann-Whitney then Lasso, tree importance or RFE |
+| Simulated rare signal (section 8.11) | Random, Mann-Whitney, HC2004, HC2008, Berk-Jones, FDR, Lasso (PPDNA) |
+| The chains' first step (section 8.7) | the three chains, with Mann-Whitney keeping 250 or 1,000 features, on the image data |
 
-Variance threshold, ANOVA, Percentile, FDR and FWE are in the package and
-tested, but not in the experiments. The last four use the F-test, which
-the U test replaces (section 4.3). Variance threshold uses no label at
+Variance threshold, ANOVA, Percentile and FWE are in the package and
+tested, but not in the experiments; FDR only in the simulation. ANOVA,
+Percentile, FWE and FDR use the F-test, which the U test replaces on real
+data (section 4.3). Variance threshold uses no label at
 all.
 
 ## 4.7 Cost in time and memory
