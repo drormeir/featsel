@@ -77,8 +77,8 @@ question: **which methods give the best quality for their time?**
 ### 1.3 Earlier work
 
 Comparative studies on gene expression found that simple classifiers did
-as well as complex ones (Dudoit et al. 2002), or that multiclass SVMs
-were the most accurate (Statnikov et al. 2005). Two reviews survey the
+as well as complex ones (Dudoit et al. 2002), or that multiclass support
+vector machines (SVMs) were the most accurate (Statnikov et al. 2005). Two reviews survey the
 selection methods used in bioinformatics (Saeys et al. 2007) and on
 microarray data (Bolón-Canedo et al. 2014). Most of their datasets
 had tens to a few hundred samples. Four known pitfalls
@@ -149,7 +149,7 @@ one sequencer, the HiSeq 2000, because two sequencers can differ for
 technical reasons alone. We keep one sample per patient: 93 patients have
 a tumour sequenced twice, and split between the training and the test
 set, such a pair tests a model on a patient it has seen. We drop genes
-with a single value and 11 nearly flat genes. This leaves 2,976 patients
+with a single value and 11 nearly flat genes (D 2.1). This leaves 2,976 patients
 and 28,541 genes. The two copies of SCAN-B handed out in the course kept
 the repeated patients, and the smaller copy lacked 11 of the 50 genes that the label
 is computed from (below; D 2.1), so we load GSE96058 directly.
@@ -185,8 +185,8 @@ BreastMNIST (Yang et al. 2023) holds 780 breast ultrasound images
 et al. 2024). Each image goes through ResNet-50
 (He et al. 2016), trained on ImageNet, with its last layer removed. The
 result is 2,048 numbers per image: more features than images. The signal
-is again widespread: 27% to 35% of the features pass the U test (section
-4) at a 5% false discovery rate: the expected share of false features
+is again widespread: over 16 splits, 27% to 35% of the features pass the
+U test (section 4) at a 5% false discovery rate: the expected share of false features
 among those that pass is at most 5%. Unlike genes, features are only weakly
 correlated (median absolute correlation 0.056).
 
@@ -196,7 +196,8 @@ affine transform). Like
 SCAN-B's repeated patients, a copy can fall in the training set and its
 twin in the test set. Our loader finds them among BreastMNIST's own
 images, by the letter's method: 150 groups of 339 images. A run without
-them keeps 585 images (section 6.7).
+them keeps one image per group, drops the 6 groups whose labels disagree,
+and so keeps 585 images (section 6.7).
 
 ### 2.3 FGVC-Aircraft
 
@@ -226,7 +227,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Main score | ROC AUC on the test set, mean over the splits |
 | Control | random features at every `k` |
 | `k` | 10, 50, 250, 500, 1,000 (and 1,500, 2,000 on SCAN-B, where 2,000 already reaches the AUC of all genes; D 3.11), chosen on validation sets |
-| Classifier | logistic regression, L2 penalty, C fixed at 1, scikit-learn's default: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
+| Classifier | logistic regression, L2 penalty, C (the inverse of the penalty's strength) fixed at 1, scikit-learn's default: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
 | Timing | each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation; Sequential selection, section 4, once on SCAN-B and BreastMNIST); the median is recorded |
@@ -290,7 +291,8 @@ the number of features:
 ## 4. Methods
 
 Feature selection methods fall into three families (Guyon and Elisseeff
-2003). We add two filters that choose their own count,
+2003): filters score each feature alone, embedded methods select while
+fitting a model, and wrappers search subsets by refitting a model. We add two filters that choose their own count,
 and the random control. Table 4 lists the methods the experiments on
 real data used;
 `featsel` also holds the F-test selectors of scikit-learn and a variance
@@ -310,7 +312,7 @@ filter (D 4.2).
 | Tree importance | embedded | Rank by a random forest's impurity importance. |
 | RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step. |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
-| Sequential | wrapper | Add the feature that most improves cross-validated accuracy; repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
+| Sequential | wrapper | Add the feature that most improves cross-validated accuracy (the only score its batched solver computes; D 4.2); repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
 | Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`; the filter helps it. The first count is fixed (section 6.6). |
 
 **Why the U test.** The F-test compares class means and assumes normal
@@ -392,7 +394,7 @@ scores = cross_val_score(pipe, X, y, cv=5, scoring='roc_auc')
 **The runner.** A method that ranks all features in one fit, such as
 Mann-Whitney, is fitted once per split, and every `k` is cut from its
 ranking. Each split is prepared once and shared by all workers in memory.
-Long runs on a 16 GB laptop crashed at first, so the runner caps each
+Long runs on a 16 GB laptop (section 7.4) crashed at first, so the runner caps each
 worker's memory, skips a cell (one task, split, method and `k`) that
 does not fit, restarts with fewer
 workers when one dies, writes each row as it finishes, and resumes a
@@ -427,7 +429,7 @@ model, liblinear, stops at a tolerance of 10⁻⁴, before the exact solution.
 With correlated genes, this changes which genes are kept. Unless its seed
 is fixed, liblinear also shuffles the data differently on each fit and
 keeps different genes (D 6.2). RFE and RFECV
-now solve each SVM exactly by Newton's method (Chapelle 2007), and Lasso by PPDNA (Liu and Zhou 2023). With no
+now solve each SVM exactly by Newton's method (Chapelle 2007), and Lasso by PPDNA (Liu and Zhou 2023; Appendix B). With no
 randomness, a refit gives the same genes. Newton's method works through
 the samples' n × n kernel, so it pays when features outnumber samples.
 
