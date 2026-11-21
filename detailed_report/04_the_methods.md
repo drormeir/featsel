@@ -121,14 +121,18 @@ linear SVM (`LinearSVC`). Sequential scores candidates with logistic
 regression. Every method is then judged by logistic regression. Part of a
 gap between RFE and Sequential may come from this difference.
 
-**Correlation: a known defect.** Of each highly correlated pair,
-CorrelationSelector drops the gene less correlated with the label. It does
-so even when the other gene of the pair is itself dropped. Take genes A, B
-and C, in falling order of correlation with the label. A–B and B–C
-correlate above the threshold, A–C does not. Then B is dropped for A, and
-C for B. Only A remains, though C was redundant only with a gene that is
-gone. The frontier, the main comparison of chapters 7 and 8 (section
-4.6), uses this selector as it is.
+**Correlation: a defect, fixed after the runs.** Of each highly
+correlated pair, CorrelationSelector dropped the gene less correlated with
+the label, even when the other gene of the pair was itself dropped. Take
+genes A, B and C, in falling order of correlation with the label. A–B and
+B–C correlate above the threshold, A–C does not. Then B was dropped for
+A, and C for B. Only A remained, though C was redundant only with a gene
+that was gone. The selector now walks the genes from the largest
+correlation with the label down, and drops a gene only when it is
+redundant with a gene already kept, so A and C stay. A test checks this
+example. Every correlation result in this report comes from the old
+version: the frontier, the main comparison of chapters 7 and 8 (section
+4.6), ran before the fix, and its rerun is open work (section 10.1).
 
 ### One ranking for every `k`
 

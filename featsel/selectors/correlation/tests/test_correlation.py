@@ -37,6 +37,21 @@ class TestCorrelationSelector:
         # Should remove one of the redundant features
         assert selector.get_support().sum() < 6
 
+    def test_keeps_a_feature_redundant_only_with_a_dropped_one(self):
+        """Test the chain A-B-C: B is dropped for A, and C, redundant only with B, stays."""
+        rng = np.random.default_rng(0)
+        u, v = rng.normal(size=(2, 2000))
+        angle = np.deg2rad(20)       # A-B and B-C correlate at cos 20° = 0.94, A-C at cos 40° = 0.77
+        X = pd.DataFrame({'A': u,
+                          'B': np.cos(angle) * u + np.sin(angle) * v,
+                          'C': np.cos(2 * angle) * u + np.sin(2 * angle) * v})
+        y = u + rng.normal(size=2000) * 0.1
+
+        selector = CorrelationSelector(target_threshold=0.0, inter_feature_threshold=0.9,
+                                       device='cpu').fit(X, y)
+
+        assert list(selector.get_feature_names_out()) == ['A', 'C']
+
     def test_text_labels_code_as_zero_and_one(self):
         """Test that two text classes select as their 0/1 codes do."""
         rng = np.random.default_rng(0)

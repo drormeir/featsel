@@ -737,8 +737,9 @@ test near 0.05; a safe default can still be named.
   patients, so they are not independent. Each selector's own settings are
   fixed, except Lasso's penalty; so is a chain's first count, and other
   counts were tested only on the image data (section 6.6). Whether more trees would change tree importance's AUC was not
-  tested (D 7.4). The correlation selector drops a gene
-  whose only redundant partner was itself dropped (D 4.2).
+  tested (D 7.4). The correlation results come from a
+  version that dropped a gene whose only redundant partner was itself
+  dropped; the code is fixed, but not yet rerun (D 4.2).
 - **Many tests.** Each test is judged at p < 0.05, with no correction for
   the number of tests, more than a hundred per dataset. So some
   established differences may be chance, most likely those with p between

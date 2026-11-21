@@ -34,7 +34,8 @@ class CorrelationSelector(FeatureSelector):
     Strategy:
     1. Compute correlation of each feature with target
     2. Keep features above target_threshold
-    3. Among highly correlated feature pairs, keep the one with higher target correlation
+    3. From the largest target correlation down, keep each feature unless
+       it correlates above inter_feature_threshold with a feature already kept
     4. Select top n_features by target correlation (if specified)
 
     Parameters
@@ -137,22 +138,21 @@ class CorrelationSelector(FeatureSelector):
             lambda X: self._on_cpu(X, y, names),
             lambda X, device: self._on_device(X, y, device))
         self.target_corr_ = pd.Series(target_corr, index=names)
-        candidates = [names[i] for i in candidate_indices]
 
-        # Of each redundant pair, drop the feature with the lower target correlation
-        to_drop = set()
+        # Walk the candidates from the largest target correlation down. Keep
+        # each one unless it is redundant with a feature already kept, so a
+        # feature redundant only with a dropped one stays.
+        partners = [[] for _ in candidate_indices]
         for i, j in pairs:
-            # Drop feature with lower target correlation
-            feat_i, feat_j = candidates[i], candidates[j]
-            if self.target_corr_[feat_i] > self.target_corr_[feat_j]:
-                to_drop.add(feat_j)
-            else:
-                to_drop.add(feat_i)
-
-        kept = [i for i, f in zip(candidate_indices, candidates) if f not in to_drop]
-
-        if len(kept) == 0:
-            raise ValueError("All features were removed due to inter-feature correlation threshold")
+            partners[i].append(j)
+            partners[j].append(i)
+        dropped = set()
+        kept_positions = []
+        for c in np.argsort(-target_corr[candidate_indices], kind='stable'):
+            if c not in dropped:
+                kept_positions.append(c)
+                dropped.update(partners[c])
+        kept = candidate_indices[np.sort(kept_positions)]
 
         # 4. Select top n_features by target correlation
         self.ranking_ = pd.Series(target_corr[kept], index=kept).nlargest(len(kept)).index.to_numpy()
