@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Read `docs/SCOPE.md` first, if present.** It is local and not tracked in git. It defines what is allowed to be built. It overrides anything here that looks like an invitation to expand the project (PyPI publishing, future phases, PyTorch integration).
+**Read `references/local/SCOPE.md` first, if present.** It is local and not tracked in git. It defines what is allowed to be built. It overrides anything here that looks like an invitation to expand the project (PyPI publishing, future phases, PyTorch integration).
 
 ## Project Overview
 
