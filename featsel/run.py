@@ -1058,4 +1058,7 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-    main()
+    # Run the imported module, not this __main__ copy: a worker process finds
+    # each function of a job by its module's name, and __main__ there is loky's.
+    from featsel.run import main as module_main
+    module_main()

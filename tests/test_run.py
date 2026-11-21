@@ -10,6 +10,8 @@ work.
 import itertools
 import json
 import resource
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -263,6 +265,21 @@ def test_parallel_run_matches_sequential(experiment, tmp_path):
               if c.endswith(('_time_s', '_peak_mb')) or c == 'selection_device']
     pd.testing.assert_frame_equal(sequential.drop(columns=timing),
                                   parallel.drop(columns=timing))
+
+
+def test_command_line_runs_with_two_workers(experiment, tmp_path):
+    """
+    Test that `python -m featsel.run` works with two workers. Run that way,
+    the module is __main__, and a worker process must still find every
+    function a job uses, by name.
+    """
+    out = tmp_path / 'cli.csv'
+    subprocess.run([sys.executable, '-m', 'featsel.run', '--config',
+                    str(tmp_path / 'experiment.yaml'), '--n-jobs', '2', '--out', str(out)],
+                   cwd=Path(__file__).resolve().parent.parent, check=True,
+                   capture_output=True)
+
+    assert len(pd.read_csv(out)) == len(pd.read_csv(run_config(experiment)))
 
 
 def test_truth_records_feature_recovery(experiment):
