@@ -262,8 +262,9 @@ sample variance. Then
 t = d / √((1/J + n~test~/n~train~) s²), with J − 1 degrees of freedom.
 
 A difference is *established* when this test gives p < 0.05, with no
-correction for the number of tests (section 7.4). The plain paired t-test has 1/J alone. The second term does not shrink
-with J. From 5 to 16 splits,
+correction for the number of tests (section 7.3). The plain paired t-test has 1/J alone; against all
+genes on SCAN-B, it established 52 of 70 differences, and the corrected
+test 20 (D 9.3). The second term does not shrink with J. From 5 to 16 splits,
 the 95% interval narrows by about a third; beyond 16 it can narrow by at
 most 14% more. A difference not established at 16 splits needs more
 samples.
@@ -402,7 +403,7 @@ scores = cross_val_score(pipe, X, y, cv=5, scoring='roc_auc')
 **The runner.** A method that ranks all features in one fit, such as
 Mann-Whitney, is fitted once per split, and every `k` is cut from its
 ranking. Each split is prepared once and shared by all workers in memory.
-Long runs on a 16 GB laptop (section 7.4) crashed at first, so the runner caps each
+Long runs on a 16 GB laptop (section 7.3) crashed at first, so the runner caps each
 worker's memory, skips a cell (one task, split, method and `k`) that
 does not fit, restarts with fewer
 workers when one dies, writes each row as it finishes, and resumes a
@@ -696,24 +697,7 @@ image data, on one SCAN-B task of five. So the best method for a budget
 can change between datasets, though on FGVC-Aircraft this rests on one
 test near 0.05; a safe default can still be named.
 
-### 7.3 Key decisions
-
-*Table 6. The decisions that shaped the results (D 9.2).*
-
-| Decision | Why | Effect |
-|---|---|---|
-| Select inside every split | Selection on all the data lets the test samples choose the features | With shuffled labels on BreastMNIST, the error raised AUC from 0.465 to 0.645 (section 3) |
-| A random control at every `k` | A method has found something only if it beats random features of the same number | It showed where selection pays: at small `k` (section 6.1) |
-| A test corrected for overlapping splits | Random splits share most of their training samples | Established differences from all genes fell from 52 to 20 of 70 comparisons (section 6.2; D 9.3) |
-| GSE96058, one sample per patient, not the course copies | The copies kept 93 repeated patients, and the smaller one lacked 11 of the 50 PAM50 genes | It removed a leak and made the PAM50 test possible (sections 2.1, 6.5) |
-| The U test for every filter | Only the order of gene values is meaningful, and many sit at a floor | One valid test, so filters differ only in their selection rule (sections 2.1, 4) |
-| Find the copied images | Copies fall on both sides of a split | A leak removed: the main BreastMNIST results are without the 150 groups of copies (sections 2.2, 6.7) |
-| Exact solvers for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded keeps different genes on each run | Repeatable selection, at the exact solution (section 5) |
-| RFECV scored by AUC | Accuracy rewards the larger class | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (Table 5, section 6.6) |
-| Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | Its behaviour on widespread signal is reported as it is (section 6.4) |
-| A third dataset, unseen during the design | Two datasets shaped the design, so they cannot test it | The pipeline ran unchanged on FGVC-Aircraft (section 6; D 8.9) |
-
-### 7.4 Limits
+### 7.3 Limits
 
 - **Data.** Three datasets, two of them embeddings from the same network.
   Every SCAN-B task predicts PAM50, a label computed from the genes; no
@@ -751,7 +735,7 @@ test near 0.05; a safe default can still be named.
 - **Higher Criticism.** No real dataset here has rare signal. One
   simulation, with independent features, tests it in that setting.
 
-### 7.5 Open research questions
+### 7.4 Open research questions
 
 - **A real dataset with rare signal**, and simulations with other
   rarities, strengths and correlated features, would test further whether
