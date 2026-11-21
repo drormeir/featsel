@@ -1,0 +1,77 @@
+# How many features should Mann-Whitney keep before a chain's second step?
+# frontier_breastmnist70_chains.yaml keeps 500, a count set by hand. This run
+# keeps 250 and 1,000, with the same splits (same seed, splits and training
+# fraction), so each chain is compared with its 500 version split by split.
+# The second steps and their settings are those of the 500 run.
+# Each chain's k list stops below its first step's count, as at 500.
+# Timing is not the aim, so each selection is fitted once.
+# Run with: python -m featsel.run --config configs/chain_size_breastmnist70.yaml --n-jobs 1
+#
+# One worker: the first step uses the GPU.
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/local/chain_size_breastmnist70.csv"
+
+seed: 42
+n_splits: 16
+train_sizes: [0.7]
+preprocess: ["standard"]
+k_validation:
+  cv: 5
+selection_repeats: 1
+
+metrics:
+  - roc_auc
+  - macro_f1
+  - balanced_accuracy
+
+selectors:
+  # No k: Lasso's C, chosen from Cs by validation AUC, sets the count.
+  - label: MW250+Lasso_ppdna
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 250, device: "cuda"}
+      - name: LassoSelector
+        params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
+  - label: MW250+TreeImportance
+    k: [10, 50]
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 250, device: "cuda"}
+      - name: TreeImportanceSelector
+        params: {n_estimators: 200, n_jobs: 4}
+  - label: MW250+RFE_newton
+    k: [10, 50]
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 250, device: "cuda"}
+      - name: RFESelector
+        params: {C: 0.01, device: "cpu"}
+  - label: MW1000+Lasso_ppdna
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 1000, device: "cuda"}
+      - name: LassoSelector
+        params: {Cs: [0.01, 0.1, 1.0, 10.0], cv: 5, device: "cuda"}
+  - label: MW1000+TreeImportance
+    k: [10, 50, 250, 500]
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 1000, device: "cuda"}
+      - name: TreeImportanceSelector
+        params: {n_estimators: 200, n_jobs: 4}
+  - label: MW1000+RFE_newton
+    k: [10, 50, 250, 500]
+    steps:
+      - name: MannWhitneySelector
+        params: {n_features: 1000, device: "cuda"}
+      - name: RFESelector
+        params: {C: 0.01, device: "cpu"}
+
+models:
+  - name: logistic_regression
+    params:
+      max_iter: 1000
