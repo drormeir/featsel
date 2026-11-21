@@ -87,7 +87,15 @@ quartiles), the genes kept, the times and the stability.
 What it shows:
 
 - **The top is flat.** Eleven methods lie within 0.01 of each other in
-  mean AUC. No method leads on every task.
+  mean AUC. No method leads on every task. Tested pair by pair on each
+  task (the corrected test, section 3.3), 51 of their 275 pairs give
+  p < 0.05, and 7 pass a Bonferroni correction over the 275. In 49 of the
+  51 the loser is Lasso, a chain or RFECV scored by AUC; 36 are on LumA
+  and LumB. Among the top six, mutual information to tree importance,
+  2 of 75 pairs give p < 0.05, fewer than the 3.75 that chance alone gives
+  on average. Table:
+  [`figures/chosen_pairs_scanb70.csv`](figures/chosen_pairs_scanb70.csv),
+  from [`scripts/chosen_pair_tests.py`](../scripts/chosen_pair_tests.py).
 - **Most methods chose large `k`.** The filters mostly chose 1,000 to
   2,000 genes, tree importance 1,000 to 1,500. On Basal some splits chose
   10: that task is nearly solved by a few genes.
@@ -363,6 +371,13 @@ per round, with a strongly penalized SVM (C = 0.01). A likely reason: the
 last 10 genes are what is left after a long chain of removals, and small
 changes early in the chain change the end.
 
+RFE also trails at large `k`. Tested at the same `k`, on the mean over
+the five tasks per split, Mann-Whitney, mutual information and tree
+importance beat RFE at every `k` from 10 to 2,000 (p ≤ 0.042). At 250
+genes, Mann-Whitney leads by 0.020 (p = 0.0003, on all 16 splits).
+Table: [`figures/paired_tests_scanb70.csv`](figures/paired_tests_scanb70.csv),
+from [`scripts/paired_tests.py`](../scripts/paired_tests.py).
+
 **No other C changes RFE's AUC by an established amount.** C = 0.01 was
 set by hand (section
 4.2). A side study ran RFE at C = 0.001, 0.1 and 1 on the same splits
@@ -403,9 +418,12 @@ p = 0.0002). On Her2 and Normal it leads only RFE alone (p = 0.003 and
 [`figures/scanb70_k10_tests.csv`](figures/scanb70_k10_tests.csv), from
 [`scripts/k10_tests.py`](../scripts/k10_tests.py).
 
-At the chosen `k`, in mean AUC over tasks, Mann-Whitney then Lasso beats
-Lasso alone by 0.004, and Mann-Whitney then RFE beats RFE alone by 0.001.
-Mann-Whitney then tree importance loses 0.004 to tree importance alone.
+At the chosen `k`, in mean AUC over tasks, Mann-Whitney then Lasso is
+0.004 above Lasso alone, and Mann-Whitney then RFE 0.001 above RFE alone.
+Mann-Whitney then tree importance is 0.004 below tree importance alone.
+Tested per task, two of these 15 differences are established: the RFE
+chain gains 0.021 on LumB (p = 0.0004), and the tree chain loses 0.010 on
+LumA (p = 0.013; [`figures/chosen_pairs_scanb70.csv`](figures/chosen_pairs_scanb70.csv)).
 The chains keep at most 500 genes, by design: their `k` list stops below
 the 1,000 of the first step (section 3.11). Their selection is faster:
 6 times for tree importance, about 2.3 times for RFE.

@@ -24,10 +24,12 @@ pipeline.
 **Results.** Selection helps most when few features are allowed. At 10
 features, the best methods beat random features by 0.11 to 0.20 AUC on
 SCAN-B, and by 0.10 to 0.16 on the image data. As the number of features
-grows, random features catch up, because thousands of correlated genes
-carry the signal. At the number of features that each method chose, the
-top methods cannot be told apart: on SCAN-B, eleven lie within 0.01 mean
-AUC. The Mann-Whitney U test, which scores one feature at a time, is
+grows, random features catch up, because many features carry the signal:
+thousands of correlated genes on SCAN-B, a quarter or more of the features
+on the image data. At the number of features that each method chose, the
+top methods are close: on SCAN-B, eleven lie within 0.01 mean AUC, and
+among the top six, 2 of 75 task-by-task comparisons give p < 0.05, no
+more than chance. The Mann-Whitney U test, which scores one feature at a time, is
 within 0.012 AUC of the best on all three datasets, and on a GPU it takes
 less than a second per fit. Selection rarely beats all the features: never
 on the image data, and on one SCAN-B task of five. The GPU filters ran 2.6
@@ -37,8 +39,8 @@ training set and the test set.
 
 **Conclusions.** On data like these, a simple test of one feature at a
 time, run on a GPU, is almost as good as the complex methods, and it costs
-far less. The best method for a given time budget cannot be known in
-advance, but Mann-Whitney is a safe default. Many different gene sets
+far less. The best method for a given budget can change from one dataset
+to another, but Mann-Whitney is a safe default. Many different gene sets
 predict with no established difference in AUC, so stability must be
 reported next to accuracy.
 These results come from three datasets, one classifier and one laptop.

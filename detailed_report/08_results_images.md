@@ -56,6 +56,11 @@ What it shows:
 - **Every method with a `k` list chose the largest `k` it was offered, or
   close to it, in most splits.** Validation AUC kept rising with `k`.
 - **No method beat all features.** RFE came closest, 0.003 below.
+- **No established difference among the top methods.** Among the six methods
+  within 0.01 of RFE, no pair gives p < 0.05 (the corrected test, section
+  3.3). Table:
+  [`figures/chosen_pairs_breastmnist70_nocopies.csv`](figures/chosen_pairs_breastmnist70_nocopies.csv),
+  from [`scripts/chosen_pair_tests.py`](../scripts/chosen_pair_tests.py).
 - **The GPU filters are the cheap choice.** Mann-Whitney reached 0.883 in
   0.008 s per fit. RFE gained 0.009 more for 15 times the time.
 - **Correlation equals Mann-Whitney up to `k` = 500.** Spearman correlation
@@ -93,10 +98,11 @@ established. Tables:
 The order between methods may turn with `k`, but here no step of it is
 established. At `k` = 10 the filters lead RFE (Mann-Whitney by 0.055,
 p = 0.15). At `k` = 250 and 500, RFE leads Mann-Whitney and correlation
-(by 0.028, p = 0.19, and by 0.023, p = 0.07). At 1,000 they tie (p = 0.33).
-On FGVC-Aircraft the lead of RFE at large `k` is established (section
-8.9). A filter scores each feature alone. RFE removes features while it
-looks at all of them together, and that pays only once many are kept.
+(by 0.028, p = 0.19, and by 0.023, p = 0.07). At 1,000 no difference is
+established (p = 0.33). On FGVC-Aircraft the lead of RFE at 250 and 500
+features is established, at p = 0.047 and 0.041 (section 8.9). On SCAN-B,
+RFE trails the filters at every `k` (section 7.9). Why RFE's place
+changes was not tested.
 
 ## 8.3 Selection against all features
 
@@ -122,10 +128,11 @@ splits:
 
 Table: [`figures/summary_breastmnist70_nocopies_tests.csv`](figures/summary_breastmnist70_nocopies_tests.csv).
 
-The best methods tie all features. The chains, HC2008, Berk-Jones and
-HC2004 lose (p < 0.05). On these embeddings, selection buys a smaller
-model, not a better one. A model on 1,000 features scores the same as one
-on 2,048.
+The best methods show no established difference from all features. The
+chains, HC2008, Berk-Jones and HC2004 lose (p < 0.05). On these
+embeddings, selection buys a smaller model, not a better one. A model on
+1,000 features scores within 0.01 of one on 2,048, with no established
+difference.
 
 ## 8.4 Stability
 
@@ -163,7 +170,8 @@ statistic peaks at the single strongest p-value (section 4.4).
 
 As on SCAN-B (section 7.5), neither variant found the point where the
 signal ends: 27% to 35% of the dimensions pass the Benjamini-Hochberg test
-(chapter 2, on all 780 images).
+(chapter 2). This share comes from all 780 images, copies included; it
+was not computed without them.
 
 ## 8.6 RFECV: accuracy against AUC
 
@@ -225,7 +233,8 @@ the chains at 1,000 still lose to all features was not tested.
 
 BreastMNIST holds 150 groups of copied images (section 2.2). A copy on
 both sides of a split tests the model on an image it has seen, so every
-BreastMNIST result in this chapter is without them: of each group whose
+BreastMNIST result in this chapter is without them, except the share of
+features quoted from chapter 2 in section 8.5: of each group whose
 labels agree, the first image is kept, and groups whose labels conflict
 are dropped. Config:
 [`configs/frontier_breastmnist70_nocopies.yaml`](../configs/frontier_breastmnist70_nocopies.yaml).
@@ -271,15 +280,21 @@ Tables:
 
 The pattern of BreastMNIST holds:
 
-- All features score best; RFE ties them.
+- All features score best; RFE reaches the same mean AUC, with no
+  established difference. Among the four methods within 0.01 of the
+  best, no pair gives p < 0.05
+  ([`figures/chosen_pairs_aircraft70.csv`](figures/chosen_pairs_aircraft70.csv)).
 - At small `k`, selection beats random clearly: at `k` = 10, tree
   importance by 0.127, Mann-Whitney and correlation by 0.124, RFE by
   0.103 and mutual information by 0.102, on all 16 splits
   ([`figures/paired_tests_aircraft70.csv`](figures/paired_tests_aircraft70.csv)).
 - From `k` = 250, RFE leads the filters (by 0.029 over Mann-Whitney at
-  250, p = 0.047, and by 0.021 at 500, p = 0.041). On BreastMNIST the
-  same lead is not established (section 8.2). At `k` = 10, Mann-Whitney
-  leads RFE by 0.021, not established (p = 0.43).
+  250, p = 0.047, and by 0.021 at 500, p = 0.041). At 250 it also leads
+  correlation, mutual information and tree importance (p = 0.003 to
+  0.047). At 1,000, RFE and Mann-Whitney show no established difference
+  (p = 0.31). On BreastMNIST the lead is not established (section 8.2),
+  and on SCAN-B RFE trails the filters (section 7.9). At `k` = 10,
+  Mann-Whitney leads RFE by 0.021, not established (p = 0.43).
 - Correlation's redundancy filter costs AUC: it kept at most 465 features
   and lost 0.038 (p = 0.009). On BreastMNIST it lost 0.028, not
   established (p = 0.07).
@@ -315,7 +330,8 @@ The chains and RFECV scored by accuracy are in the tables only:
 [`figures/summary_aircraft70_side.csv`](figures/summary_aircraft70_side.csv),
 from [`scripts/summarize_side_metrics.py`](../scripts/summarize_side_metrics.py).
 
-The picture of AUC holds. RFE ties all features. Mann-Whitney and mutual
+The picture of AUC holds, though these scores were not tested. RFE is
+within 0.002 macro-F1 of all features. Mann-Whitney and mutual
 information come within 0.011 of them. The methods that choose a smaller
 count of their own (Lasso, HC, Berk-Jones) lose more. No selected set beats all
 features by more than 0.003 macro-F1.

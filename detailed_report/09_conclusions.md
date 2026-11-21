@@ -84,14 +84,17 @@ settings stated in their sections.
    as `k` grows. On Basal it is gone by 250 genes, and on BreastMNIST by
    500 features. On LumA and LumB about 0.02 remains at 2,000 genes
    (sections 7.2, 8.2 and 8.9).
-5. **The signal is widespread.** Thousands of genes carry it, and they
-   move together. So random genes catch up as `k` grows, and many
-   different gene sets predict about equally well.
+5. **The signal is widespread.** On SCAN-B, thousands of genes carry it,
+   and they move together. On the image data, features are only weakly
+   correlated, but a quarter or more of them pass the U test (sections
+   2.2, 2.3). So random features catch up as `k` grows, and many
+   different feature sets predict about equally well.
 6. **A gene list is therefore not a unique answer.** PAM50 is defined by
    50 genes. In their top 50, the methods found on average at most 12% of
    them (26% on the best task), yet they predicted the subtypes well
-   (section 7.6). On SCAN-B, tree importance scored as well as
-   Mann-Whitney (0.969 mean AUC) but kept a different set on each split:
+   (section 7.6). On SCAN-B, tree importance reached the same mean AUC as
+   Mann-Whitney, 0.969, with no established difference on any task
+   (p ≥ 0.07; section 7.1), but kept a different set on each split:
    stability 0.27 against 0.76, partly from its forest's own randomness
    (section 7.4). RFE has none, yet at other values of its C its genes
    had a Jaccard index of only 0.19 to 0.71 against C = 0.01, with no
@@ -100,10 +103,13 @@ settings stated in their sections.
    AUC of the best mean on SCAN-B, and within 0.012 of the best on both
    image datasets. It is among the most stable, and on a GPU it takes under
    a second per fit.
-8. **The top methods cannot be told apart.** On SCAN-B, eleven methods lie
-   within 0.01 mean AUC at their chosen `k`, and no method leads on every
-   task. On the image data, RFE ties all features and Mann-Whitney is
-   within 0.012.
+8. **The top methods are close.** On SCAN-B, eleven methods lie within
+   0.01 mean AUC at their chosen `k`, and no method leads on every task.
+   Of their 275 pairs on the five tasks, 51 give p < 0.05, 49 of them
+   against Lasso, a chain or RFECV; among the top six, 2 of 75, no more
+   than chance (section 7.1). On the image data, no pair of the methods
+   within 0.01 of the best differs, and neither RFE nor Mann-Whitney has
+   an established difference from all features (sections 8.1, 8.3, 8.9).
 9. **Test with the splits' overlap in mind.** Random splits share most of
    their training patients, so their results are not independent. On
    SCAN-B, an uncorrected paired t-test passed 233 of 290 comparisons; the
@@ -118,9 +124,13 @@ settings stated in their sections.
     a median of 33.5 features for 40 informative ones and had the best mean
     AUC, 0.858. Mann-Whitney with a validated `k` came within 0.015
     (p = 0.62).
-11. **Wrappers pay only in some places, and only with care.** RFE was the
-    best method on both image datasets, tied with all features; at large
-    `k` it led the filters, established on FGVC-Aircraft. On SCAN-B it was below the filters, and weak at 10 genes. A
+11. **Wrappers pay only in some places, and only with care.** RFE had the
+    highest mean AUC on both image datasets, with no established
+    difference from all features or from the next methods (sections 8.1,
+    8.9). At 250 features on FGVC-Aircraft it led the filters and tree
+    importance (p = 0.003 to 0.047). On SCAN-B it trailed Mann-Whitney,
+    mutual information and tree importance at every `k` (p ≤ 0.042;
+    section 7.9), and was weak at 10 genes. A
     Mann-Whitney filter first raised RFE's mean AUC at 10 genes from 0.78
     to 0.95 (section 7.9). RFECV needs AUC as its inner score
     on imbalanced tasks (section 7.8). Sequential selection beat random but took 10 minutes
@@ -167,17 +177,19 @@ Each dataset has its own frontier. What do they share?
   AUC gave a higher mean than scoring by accuracy. The gain is
   established only on Her2, LumB and Normal of SCAN-B, where accuracy
   kept one gene (sections 7.8, 8.6).
-- **What changes.** The best method for a given budget. At large `k`, RFE
-  leads on the image data (established on FGVC-Aircraft) but trails the
-  filters on SCAN-B. At 10
+- **What changes.** The best method for a given budget. At 250 features,
+  RFE trails Mann-Whitney on SCAN-B by 0.020 AUC (p = 0.0003; section
+  7.9) but leads it on FGVC-Aircraft by 0.029 (p = 0.047; section 8.9).
+  At 10
   features, the filters and tree importance, alone or chained, lead on the
   image data, and Mann-Whitney then RFE
   leads on SCAN-B. Whether selection beats all features also changes:
   never on the image data, on one SCAN-B task of five.
 
-So the best method for a budget cannot be known in advance from these
-three datasets. What can be known is a safe default: Mann-Whitney on a GPU
-is never far from the best, and costs least.
+So the best method for a budget can change from one dataset to another,
+though on FGVC-Aircraft this rests on one test near 0.05. What can be
+known is a safe default: Mann-Whitney on a GPU is never far from the
+best, and costs least.
 
 ## 9.5 Answer to the main question
 
@@ -190,9 +202,11 @@ tree importance beat random genes by 0.12 to 0.19 AUC. At 10 features on the ima
 filters and tree importance, alone or chained, lead, by 0.10 to 0.16 over
 random.
 
-At the `k` each method chose, the top methods cannot be told apart. On
-SCAN-B, eleven lie within 0.01 mean AUC; on the image data, RFE and
-Mann-Whitney lie within 0.012 of all features.
+At the `k` each method chose, the top methods are close. On SCAN-B,
+eleven lie within 0.01 mean AUC, and among the top six no pair differs
+more often than chance; on the image data, RFE and Mann-Whitney lie
+within 0.012 of all features, with no established difference (section
+9.3, item 8).
 
 If time also counts, a GPU filter is the practical choice. On SCAN-B,
 HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
@@ -240,6 +254,12 @@ described in the section given.
   seed; whether more trees change its AUC was not tested (section 7.4).
 - The decision threshold is fixed at 0.5 on the predicted probability.
   Macro-F1 and balanced accuracy depend on it; AUC does not.
+- Each test is judged at p < 0.05, with no correction for the number of
+  tests, more than a hundred per dataset (section 3.3). Some established
+  differences may be chance, most likely those with p between 0.01 and
+  0.05, such as RFE ahead of Mann-Whitney on FGVC-Aircraft (p = 0.047).
+  Where a count of tests matters, section 7.1 also gives it with a
+  Bonferroni correction.
 - The runner stores each cell's metrics, not each test patient's score, so
   a new metric needs a new run (section 10.1).
 - Side studies keep their own protocols: the PAM50 recovery uses 10

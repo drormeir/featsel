@@ -26,9 +26,11 @@ design.
 **Results.** Selection helps most when few features are allowed: at 10
 features, the filters and tree importance beat random features by 0.12
 to 0.19 AUC (area under the ROC curve: 0.5 is chance, 1 is perfect) on SCAN-B and by 0.10 to 0.16 on the image data. As the number grows, random
-features catch up, because thousands of correlated features carry the
-signal. At the number each method chose, the top methods cannot be told
-apart: on SCAN-B, eleven lie within 0.01 mean AUC. The Mann-Whitney U
+features catch up, because many features carry the signal: thousands of
+correlated genes on SCAN-B, a quarter or more of the features on the image
+data. At the number each method chose, the top methods are close: on
+SCAN-B, eleven lie within 0.01 mean AUC, and among the top six, 2 of 75
+task-by-task comparisons give p < 0.05, no more than chance. The Mann-Whitney U
 test, which scores one feature at a time, is within 0.012 AUC of the best
 on all three datasets, in under a second per fit on a GPU. Selection
 rarely beats all the features: never on the image data, and on one SCAN-B
@@ -38,8 +40,8 @@ set.
 
 **Conclusions.** On data like these, a simple test of one feature at a
 time is almost as good as the complex methods, at a fraction of the cost.
-The best method for a given budget cannot be known in advance, but
-Mann-Whitney is a safe default. Many different feature sets predict
+The best method for a given budget can change from one dataset to
+another, but Mann-Whitney is a safe default. Many different feature sets predict
 with no established difference in AUC, so stability must be reported next
 to accuracy.
 
@@ -259,8 +261,8 @@ sample variance. Then
 
 t = d / √((1/J + n~test~/n~train~) s²), with J − 1 degrees of freedom.
 
-A difference is *established* when this test gives p < 0.05.
-The plain paired t-test has 1/J alone. The second term does not shrink
+A difference is *established* when this test gives p < 0.05, with no
+correction for the number of tests (section 7.4). The plain paired t-test has 1/J alone. The second term does not shrink
 with J. From 5 to 16 splits,
 the 95% interval narrows by about a third; beyond 16 it can narrow by at
 most 14% more. A difference not established at 16 splits needs more
@@ -485,8 +487,8 @@ Sources: D 7.2, 8.2.*
 
 ### 6.2 Selection against all features
 
-On the image data, no method beats all 2,048 features. RFE ties them:
-−0.003 AUC on BreastMNIST (p = 0.59) and −0.0003 on FGVC-Aircraft
+On the image data, no method beats all 2,048 features. RFE comes
+closest, with no established difference: −0.003 AUC on BreastMNIST (p = 0.59) and −0.0003 on FGVC-Aircraft
 (p = 0.92). On both, the three chains, HC2008, Berk-Jones and HC2004
 lose to all features; Lasso and correlation lose only on FGVC-Aircraft
 (D 8.3, 8.7, 8.9).
@@ -502,19 +504,24 @@ So here, selection buys a smaller model more often than a better one.
 
 ### 6.3 No single best method
 
-At the `k` each method chose, the top methods cannot be told apart. On
-SCAN-B, eleven methods lie within 0.01 of each other in mean AUC
-(Table 5), and no one method leads on every task (D 7.1). On the
-image data, RFE ties all features, and Mann-Whitney is within 0.012 of
-them on both datasets.
+At the `k` each method chose, the top methods are close. On SCAN-B,
+eleven methods lie within 0.01 of each other in mean AUC (Table 5), and
+no one method leads on every task (D 7.1). Tested pair by pair on each
+task, 51 of the 275 comparisons give p < 0.05; in 49 of them the loser is
+Lasso, a chain or RFECV, mostly on LumA and LumB. Among the top six, the
+filters and tree importance, 2 of 75 give p < 0.05, no more than chance.
+On the image data, no pair of the methods within 0.01 of the best differs
+(D 7.1, 8.1, 8.9).
 
-The best method may also change with `k`. On FGVC-Aircraft, RFE leads
-Mann-Whitney at 250 and 500 features (p = 0.047 and 0.041), and
-Mann-Whitney leads at 10, not established (p = 0.43; D 8.9). On
-BreastMNIST the same pattern appears, Mann-Whitney ahead by 0.055 at 10
-and RFE ahead by 0.028 and 0.023 at 250 and 500, but no step is
-established (p = 0.07 to 0.19; D 8.2). A filter scores each feature alone; RFE looks
-at the features together, and that pays only once many are kept.
+The best method may also change with the dataset. At 250 features, RFE
+trails Mann-Whitney on SCAN-B by 0.020 AUC (p = 0.0003, on all 16
+splits; D 7.9), but leads it on FGVC-Aircraft by 0.029 (p = 0.047),
+where it also leads correlation, mutual information and tree importance
+(p = 0.003 to 0.047). At 1,000 features on FGVC-Aircraft, the two show no
+established difference (p = 0.31; D 8.9). On BreastMNIST, Mann-Whitney
+is ahead by 0.055 at 10 and RFE by 0.028 and 0.023 at 250 and 500, but no
+step is established (p = 0.07 to 0.19; D 8.2). Why RFE's place changes
+was not tested.
 
 Stability separates methods that AUC does not. Tree importance reaches
 the same mean AUC as Mann-Whitney on SCAN-B, 0.969, but its stability is
@@ -643,7 +650,7 @@ them. These runs are open work (D 10).
 The cheap end of Figure 2 wins. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
-importance takes 17 s for 0.969 (Table 5). On the image data, all methods
+importance takes 17.5 s for 0.969 (Table 5). On the image data, all methods
 but Sequential selection take about a second per fit or less, so cost
 decides nothing there.
 
@@ -669,8 +676,8 @@ by how much over random? At small `k`, the answer depends on the dataset.
 At 10 genes on SCAN-B, Mann-Whitney then RFE has the highest mean on
 four tasks of five, and the filters and tree importance beat random genes by 0.12 to
 0.19 AUC. On the image data they lead at 10 features, alone or chained,
-by 0.10 to 0.16. At the `k` each method chose, the top methods cannot
-be told apart. If time counts, a GPU filter is practical: on SCAN-B,
+by 0.10 to 0.16. At the `k` each method chose, the top methods are
+close (section 6.3). If time counts, a GPU filter is practical: on SCAN-B,
 HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
 per fit, 0.001 to 0.002 below the best.
 
@@ -682,10 +689,11 @@ frontier; and HC2008 stops at the edge of its search. Wherever RFECV ran
 with both inner scores, scoring by AUC gave a higher mean than scoring by
 accuracy; the gain is established only on three SCAN-B tasks, where
 accuracy kept one gene (D 7.8, 8.6). What changes is the best method for a given budget. At
-large `k`, RFE leads on the image data (established on FGVC-Aircraft)
-but trails the filters on SCAN-B (Figure 1). Whether selection beats all features also changes: never on the
+250 features, RFE trails Mann-Whitney on SCAN-B (p = 0.0003) but leads
+it on FGVC-Aircraft (p = 0.047; section 6.3). Whether selection beats all features also changes: never on the
 image data, on one SCAN-B task of five. So the best method for a budget
-cannot be known in advance from these datasets; a safe default can.
+can change between datasets, though on FGVC-Aircraft this rests on one
+test near 0.05; a safe default can still be named.
 
 ### 7.3 Key decisions
 
@@ -729,6 +737,11 @@ cannot be known in advance from these datasets; a safe default can.
   counts were tested only on the image data (section 6.6). Whether more trees would change tree importance's AUC was not
   tested (D 7.4). The correlation selector drops a gene
   whose only redundant partner was itself dropped (D 4.2).
+- **Many tests.** Each test is judged at p < 0.05, with no correction for
+  the number of tests, more than a hundred per dataset. So some
+  established differences may be chance, most likely those with p between
+  0.01 and 0.05, such as RFE ahead of Mann-Whitney on FGVC-Aircraft
+  (p = 0.047). D 9.6 lists further limits.
 - **Cost.** Every time comes from one laptop: Intel i7-9750H, 16 GB of
   memory, and an NVIDIA GTX 1650 with 4 GB. A time is meaningful only on
   that machine. The runner's speed-up comes from three runs of one small
