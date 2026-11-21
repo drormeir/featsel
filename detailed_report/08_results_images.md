@@ -408,7 +408,7 @@ What the run shows:
   two. Lasso keeps the most and finds the most, at low precision.
 - **Here selection is needed.** All features give 0.629: 9,960 null
   features drown the signal. On the three real datasets, all features
-  were at most 0.008 below the best method (Table 5 of the final report).
+  were at most 0.008 below the best method (sections 7.1, 8.1 and 8.9).
 
 **Limits.** One setting: 40 of 10,000 features, one shift, one simulated
 dataset. The features are independent and normal, which real data are

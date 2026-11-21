@@ -372,7 +372,7 @@ one fit per split. The other methods use the median of 10 fits
 ## 7.11 Cost
 
 Time per fit and per split: each task's median over its 16 splits, then
-the mean over the five tasks, as in the final report. On the laptop of
+the mean over the five tasks. On the laptop of
 chapter 6:
 
 | Method | Selection, s per fit | Search or validation, s per split |
