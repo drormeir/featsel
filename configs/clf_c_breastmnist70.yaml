@@ -1,0 +1,53 @@
+# The classifier's L2 penalty: logistic regression at C = 0.01, 0.1, 10 and
+# 100 against the C = 1 of the main runs (scikit-learn's default, not
+# tuned). Every C scores the same selections on the same splits as the main
+# runs (seed, splits and training fraction), and each C chooses its own k
+# on validation sets. Mann-Whitney stands for the filters; random selection
+# of all 2048 features is the classifier without selection.
+# scripts/clf_c_tests.py compares each C with 1, split by split. The main
+# results keep C = 1: choosing it now by test AUC would use the test set
+# twice. One fit per selection: time is not the question here.
+# Run with: python -m featsel.run --config configs/clf_c_breastmnist70.yaml --n-jobs 1
+#
+# Output goes to results/local/, which git ignores.
+
+dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+target: "label"
+
+output: "../results/local/clf_c_breastmnist70.csv"
+
+seed: 42
+n_splits: 16
+train_sizes: [0.7]
+preprocess: ["standard"]
+k_validation:
+  cv: 5
+selection_repeats: 1
+
+metrics:
+  - roc_auc
+
+selectors:
+  - name: MannWhitneySelector
+    k: [10, 50, 250, 500, 1000]
+    params: {device: "cuda"}
+  - name: RandomSelector
+    label: all_features
+    k: [2048]
+
+models:
+  - name: logistic_regression
+    label: lr_C0.01
+    params: {C: 0.01, max_iter: 1000}
+  - name: logistic_regression
+    label: lr_C0.1
+    params: {C: 0.1, max_iter: 1000}
+  - name: logistic_regression
+    label: lr_C1.0
+    params: {C: 1.0, max_iter: 1000}
+  - name: logistic_regression
+    label: lr_C10.0
+    params: {C: 10.0, max_iter: 1000}
+  - name: logistic_regression
+    label: lr_C100.0
+    params: {C: 100.0, max_iter: 1000}
