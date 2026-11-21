@@ -64,9 +64,8 @@ Source: [`scripts/benchmark_speed.py`](../scripts/benchmark_speed.py),
 - It prepares each split (imputation, scaling) once for every task,
   selector and classifier.
 - It fits each rank-once selector once per split and cuts the ranking at
-  every `k` (chapter 5). scikit-learn refits it for every `k`. For Lasso
-  and tree importance on GSE96058, this cut selection from about 245 s to
-  39 s per split (single timings), with identical genes.
+  every `k` (chapter 5). scikit-learn refits it for every `k`. The genes
+  are identical either way.
 - It runs jobs in parallel, with the data in shared memory.
 
 Parallel work added less than the 12 threads suggest. scikit-learn
@@ -104,8 +103,9 @@ shared by all cores, as the limit. We did not measure the bandwidth
 itself.
 
 This run also predates dropping liblinear. With 6 workers, the memory cap
-gave each worker 1.26 GB. liblinear needed about 1.45 GB for one fit (a
-single measurement), so it aborted. Every 6-worker run fell back to 3 workers (section 5.5). So
+per worker was too small for a liblinear fit, so it aborted. Every
+6-worker run fell back to 3 workers (section 5.5;
+`ended_with_workers` in the table). So
 on this 16 GB laptop, more than 3 workers gained almost nothing for this
 grid: the median time was 138.7 s with 3 workers and 137.6 s with 4.
 
@@ -117,10 +117,8 @@ and [`figures/parallel_scaling_jobs_3_workers.csv`](figures/parallel_scaling_job
 
 ### Where the time goes
 
-An early SCAN-B run showed where the time goes. Selection took 82%, and
-tree importance alone half. The classifiers, with their tuning of C, took
-the rest. Memory, not cores, limited the run to 2 workers. So the runs now
-hold the data in 32-bit floats (section 3.12).
+The time per method is in section 7.11. To save memory, the runs hold
+the data in 32-bit floats (section 3.12).
 
 ## 6.2 Each method, faster
 
@@ -213,10 +211,7 @@ keeps 1 to 3 genes fewer on LumA and LumB (906 and 730). Source:
 genes are strongly correlated,
 liblinear's tolerance changes which genes are removed. On the synthetic
 data at 3,000 features, the Jaccard index between the two gene sets was
-only 0.28. On synthetic SCAN-B-shaped data with correlated genes,
-liblinear at its default tolerance (10⁻⁴) shared 32 of 50 genes with the
-exact answer. At 10⁻⁸ it shared all 50. So liblinear's default stops
-early. The two differ by tolerance; neither has a bug.
+only 0.28. The two differ by tolerance; neither has a bug.
 
 **Newton's answer is the exact one.** liblinear's tolerance is a stopping
 rule, not part of the method. Its coordinate descent nears the solution
@@ -238,7 +233,8 @@ and have no `solver` parameter. Each runs only its exact solver: Newton
 for RFE and RFECV, PPDNA for Lasso. The reasons:
 
 - **Speed.** In an earlier SCAN-B frontier run (5 splits, since
-  replaced), liblinear RFE took 57 s per fit, Newton 6.0 s. RFE with liblinear was the largest single
+  replaced), liblinear RFE took 57 s per fit, Newton 6.0 s, in the median.
+  RFE with liblinear was the largest single
   cost of the frontier runs.
 - **Exactness.** Newton reaches the solution that liblinear only
   approaches.
@@ -249,12 +245,16 @@ for RFE and RFECV, PPDNA for Lasso. The reasons:
   solvers scored within 0.004 AUC at every `k`: 0.811
   and 0.807 at k = 10, 0.959 and 0.959 at k = 1000. The two Lasso solvers
   differed a little. At k = 10, PPDNA scored higher on all 5 splits
-  (0.948 against 0.934); at k = 1000, liblinear scored higher on all 5
-  (0.964 against 0.962).
+  (0.947 against 0.934); at k = 1000, liblinear scored higher on all 5
+  (0.964 against 0.962). Table:
+  [`figures/liblinear_vs_exact.csv`](figures/liblinear_vs_exact.csv), from
+  [`scripts/liblinear_vs_exact.py`](../scripts/liblinear_vs_exact.py),
+  which reads the archived run; it cannot be made again, since liblinear
+  is gone.
 
-For Lasso the speed argument is weaker. On the CPU the two solvers took
-the same total time; only on a GPU was PPDNA clearly faster
-(Appendix D.4).
+For Lasso the speed argument is weaker. On the CPU, a single PPDNA fit
+was faster than liblinear on some tasks and slower on others; only on a
+GPU was PPDNA clearly faster (Appendix D.2, D.4).
 
 The cost is the drop-in promise. These three selectors now select what
 scikit-learn selects with liblinear run to a tight tolerance, not with

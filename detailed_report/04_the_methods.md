@@ -127,7 +127,8 @@ so even when the other gene of the pair is itself dropped. Take genes A, B
 and C, in falling order of correlation with the label. A–B and B–C
 correlate above the threshold, A–C does not. Then B is dropped for A, and
 C for B. Only A remains, though C was redundant only with a gene that is
-gone. The frontier uses this selector as it is.
+gone. The frontier, the main comparison of chapters 7 and 8 (section
+4.6), uses this selector as it is.
 
 ### One ranking for every `k`
 

@@ -77,13 +77,11 @@ SSNAL handles only the squared loss. Our PPDNA departs from the paper
 ## D.4 Lasso: speed against liblinear
 
 For Lasso the speed argument for dropping liblinear is weaker than for
-RFE. On the CPU, with C chosen from four values by 5-fold validation AUC,
-both solvers took the same total time over the five SCAN-B tasks: 379 s
-for liblinear, 381 s for PPDNA (single fits, on data standardized in 64
-bits). PPDNA was faster on Basal, Her2 and Normal and slower on LumA and
-LumB. Its cost grows with the number of genes the model keeps, and the
-luminal tasks keep the most. Both chose C = 0.1 on every task. Their
-validation AUCs agreed to the fourth digit. Only on a GPU, which
+RFE. On the CPU, a single PPDNA fit was faster than liblinear on Basal
+and Normal, and up to 5.9 times slower on LumB (Appendix D.2). Its cost
+grows with the number of genes the model keeps, and the luminal tasks
+keep the most (section 6.2). A timing with C chosen by validation was
+also made, but not saved, so it is not given here. Only on a GPU, which
 liblinear cannot use, was PPDNA clearly faster (Appendix D.2).
 
 Unlike every other wrapped selector, Lasso has no test that it is at most

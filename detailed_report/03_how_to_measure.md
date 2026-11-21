@@ -65,8 +65,9 @@ cross-validation:
 - Five numbers are too few to describe a distribution. Random splits can be
   drawn as often as time allows.
 - Leave-one-out was rejected. A one-patient test set has no AUC or
-  macro-F1, so only one pooled number remains, with no spread. Training
-  sets differ by one patient, so stability reads near 1.0 for every
+  macro-F1 (section 3.5), so only one pooled number remains, with no
+  spread. Training sets differ by one patient, so stability (section 3.6)
+  reads near 1.0 for every
   method. And it costs one model per patient: 2,976 models per method and
   `k` on SCAN-B.
 
@@ -329,13 +330,11 @@ The data are held as 32-bit floats, which halves their memory
 (section 5.5 gives the effect on a run). SCAN-B's values have at most 7 measured digits, so 32 bits lose
 nothing measured.
 
-The U test (section 4.3) sums its ranks in 64 bits. An earlier run, scored by macro-F1,
-showed why. In 32 bits, the tie correction of
-near-constant genes went wrong: Mann-Whitney chose different genes in
-every SCAN-B cell, and macro-F1 moved by up to 0.55. After the fix, a
-one-split check against 64-bit data moved Mann-Whitney's macro-F1 by at
-most 0.007. Lasso, RFE and the forest moved by about 0.01 on average,
-because their solvers are sensitive to rounding.
+The U test (section 4.3) sums its ranks in 64 bits. An earlier run
+showed why: in 32 bits, the tie correction of near-constant genes went
+wrong, and Mann-Whitney chose different genes in every SCAN-B cell. That
+run and the check after the fix were not kept, so their scores are not
+given here.
 
 ## 3.13 Scores we considered and did not use
 

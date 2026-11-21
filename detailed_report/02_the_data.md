@@ -40,8 +40,7 @@ of the 93 pairs share the PAM50 subtype.
 
 **The course's copies.** The course provided `scanb_small` and
 `scanb_full`. Both hold exactly the 3,069 HiSeq samples, with GSE96058's
-PAM50 labels. We compared values only on 7 genes of `scanb_full`. They
-matched to rounding (about 10⁻¹⁶). Both copies keep the repeat samples,
+PAM50 labels. Both copies keep the repeat samples,
 so every result on them carries the leak above. Its size was not
 measured. `scanb_small` also keeps only 9,264 genes, by an unrecorded
 rule. It lacks 11 of the 50 PAM50 genes: ANLN, BAG1, CDC6, CXXC5, FOXA1,
@@ -148,7 +147,7 @@ strongly as ESR1 does.
 
 As a result, the signal is not rare. On every task and split, HC2008
 kept the full 10% of the genes its search allows, 2,854 or 2,855
-(section 7.5). This explains two other results:
+(section 7.5; HC2008 and its search are explained in section 4.4). This explains two other results:
 
 - Few PAM50 genes are recovered (7.6).
 - Random genes catch up fast (7.2).
@@ -179,7 +178,8 @@ last layer removed. ResNet-50 is a convolutional network trained on the
 ImageNet photo collection. We use torchvision's `IMAGENET1K_V2` weights,
 its default and its more accurate set on ImageNet. A later check found
 V2 better than V1 here with the copies (0.924 against 0.898 AUC,
-p = 0.039), but not established without them (0.895 against 0.876,
+p = 0.039), but not established (p ≥ 0.05 in the corrected test of
+section 3.3) without them (0.895 against 0.876,
 p = 0.36;
 [`demos/weights.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/weights.ipynb)).
 On FGVC-Aircraft, V1 was better (section 2.3).

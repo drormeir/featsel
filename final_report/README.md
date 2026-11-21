@@ -317,7 +317,7 @@ filter (D 4.2).
 | HC2004, HC2008 | filter, own count | Keep the features below the Higher Criticism threshold. |
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
 | Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
-| Tree importance | embedded | Rank by a random forest's impurity importance; 200 trees, set by hand (D 7.4). |
+| Tree importance | embedded | Rank by a random forest's impurity importance: how much a feature's splits separate the classes, summed over the trees; 200 trees, set by hand (D 7.4). |
 | RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step and use C = 0.01, both set by hand; C = 0.001 to 1 gave no established AUC difference (D 7.9). |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy (the only score its solver computes; it fits all candidates of a step at once, section 5; D 4.2); repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
@@ -544,7 +544,8 @@ the GPU. On the
 CPU, on SCAN-B-shaped synthetic data, a fit takes 3.8 to 3.9 s for the U-test
 methods, 6.9 s for correlation, 25 s for Lasso at one penalty and 18 s
 for mutual information at 10,000 features (D 6.2). Over
-the 16 splits, the interquartile range of a method's AUC is 0.006 to
+the 16 splits, the interquartile range (the spread of the middle half of
+the splits) of a method's AUC is 0.006 to
 0.010 on SCAN-B, as a mean over its tasks (HC2004 0.018, RFECV scored by accuracy 0.044)
 and 0.017 to 0.069 on the image data. The tests are paired, so a smaller
 difference can still be established. BreastMNIST is without its copied
@@ -592,7 +593,8 @@ weak alone for a Bonferroni test (each feature tested at 5% divided by
 kept a median of 33.5 features and the best mean AUC, 0.858. Mann-Whitney
 reached 0.843; the difference is not established
 (p = 0.62). Berk-Jones (0.813, 12 features) and an F-test filter at a
-5% false discovery rate, run only here (section 2.2), were stricter;
+5% false discovery rate, run only here (F-test: section 4; false
+discovery rate: section 2.2), were stricter;
 HC2004 kept 1 to 9 (median 1.5). All features gave 0.629.
 
 ### 6.5 Does selection find the PAM50 genes?

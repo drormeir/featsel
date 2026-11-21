@@ -157,7 +157,7 @@ settings stated in their sections.
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
     does on some synthetic data. The reason is that the default stops before it
     reaches the solution. In one 5-split run with no test, RFE's two
-    solvers scored within 0.004 AUC, and Lasso's within 0.014 (section 6.2). So RFE, RFECV and Lasso now
+    solvers scored within 0.004 AUC, and Lasso's within 0.013 (section 6.2). So RFE, RFECV and Lasso now
     run only their exact solvers (section 6.2).
 16. **Selection buys a smaller model more often than a better one.** On
     BreastMNIST all 2,048 features scored 0.895 and on FGVC-Aircraft
