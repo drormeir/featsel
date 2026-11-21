@@ -24,9 +24,9 @@ pipeline.
 **Results.** Selection helps most when few features are allowed. At 10
 features, the best methods beat random features by 0.11 to 0.20 AUC on
 SCAN-B, and by 0.10 to 0.16 on the image data. As the number of features
-grows, random features catch up, because many features carry the signal:
-thousands of correlated genes on SCAN-B, a quarter or more of the features
-on the image data. At the number of features that each method chose, the
+grows, random features catch up, likely because many features carry the
+signal (not tested): thousands of genes on SCAN-B, a quarter or more of
+the features on the image data. At the number of features that each method chose, the
 top methods are close: on SCAN-B, eleven lie within 0.01 mean AUC, and
 among the top six, 2 of 75 task-by-task comparisons give p < 0.05, no
 more than chance. The Mann-Whitney U test, which scores one feature at a time, is

@@ -24,7 +24,7 @@ remain.
 | Keep only HiSeq 2000 samples: 3,069 of 3,409. The other 340 are NextSeq 500. | Two machines can differ for technical reasons alone. The NextSeq samples add 297 patients not in the HiSeq set. They are left out. |
 | Keep one sample per patient, the first in file order: 2,976 patients. | 93 of them have a HiSeq sample and its repeat. Split between the training set and the test set, they would test the model on a patient it has seen. |
 | Drop 2,313 genes with a single value across the kept patients. | They carry no information. |
-| Drop 11 flat genes: their range is under 1% of their largest absolute value. | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32 (sections 3.1, 3.12), they become noise. On LumB vs rest (a task of section 2.1), that noise made Lasso's solver (section 4.2) slower on the CPU (a single trial, not saved). |
+| Drop 11 flat genes: their range is under 1% of their largest absolute value. The 1% cutoff is ours; it falls in a gap, since the next gene is at 5.7% ([`results/data_facts.csv`](../results/data_facts.csv)). | Their largest change is 0.007 log2 units, a fold change of about 0.5%. Standardized in float32 (sections 3.1, 3.12), they become noise. On LumB vs rest (a task of section 2.1), that noise made Lasso's solver (section 4.2) slower on the CPU (a single trial, not saved). |
 
 **The repeat samples.** Brueffer et al. sequenced 136 tumours twice, to
 test their classifiers' reproducibility. GSE96058 lists each repeat as
@@ -59,9 +59,8 @@ facts follow.
 - **Only the order of the values is meaningful.** Their size depends on an
   arbitrary transform.
 - **Many values sit at a floor.** An undetected gene gets log2(0.1). In
-  the first 200 genes, enough to estimate the share without scanning
-  every gene, over the 3,069 HiSeq samples, 51% of values are at
-  the floor. Over the 2,976 kept patients, 98.1% of genes fail a normality
+  the first 200 genes, over the 3,069 HiSeq samples, 51% of values are at
+  the floor. The share over all genes was not measured. Over the 2,976 kept patients, 98.1% of genes fail a normality
   test (D'Agostino-Pearson, p < 0.05). The median excess kurtosis is
   1.44. Within a class, a gene is a heap at the floor plus a spread of
   detected values, not a normal curve.
@@ -138,17 +137,18 @@ always answers "rest" is right 93% of the time. So plain accuracy is not
 the main score ([chapter 3](03_how_to_measure.md)). A single five-class
 task was rejected: its classes are too imbalanced to report as one number.
 
-### Signal is everywhere, and genes move together
+### Signal is everywhere
 
-Each of the 50 PAM50 genes rises and falls with hundreds of others across
-patients. ESR1 moves with the estrogen-response genes. The proliferation
-genes move with the cell-cycle genes. The U test scores each gene alone.
-So a gene that moves with ESR1 separates Basal from the rest about as
-strongly as ESR1 does.
+We expect each PAM50 gene to rise and fall with many others across
+patients: ESR1 with the estrogen-response genes, the proliferation genes
+with the cell-cycle genes. We did not measure this. The U test scores
+each gene alone, so a gene that moves with ESR1 would separate Basal from
+the rest almost as well as ESR1 does.
 
-As a result, the signal is not rare. On every task and split, HC2008
+The signal is not rare. On every task and split, HC2008
 kept the full 10% of the genes its search allows, 2,854 or 2,855
-(section 7.5; HC2008 and its search are explained in section 4.4). This explains two other results:
+(section 7.5; HC2008 and its search are explained in section 4.4). This
+likely explains two other results (not tested):
 
 - Few PAM50 genes are recovered (7.6).
 - Random genes catch up fast (7.2).
@@ -204,7 +204,7 @@ and cached.
 The U-test ranges are over the training sets of 16 random splits with 70%
 of the images, as in the main runs (section 3.3), drawn by `scripts/data_facts.py`.
 These facts describe all 780 images, as published, copies included; the
-results of chapter 8 use the 585 without copies (below).
+BreastMNIST results of chapter 8 use the 585 without copies (below), except three side studies and one quoted share (section 8.8).
 
 As in SCAN-B, the signal is widespread: about a third of the features
 separate the classes. Unlike SCAN-B, pairs of features are only weakly
@@ -246,7 +246,7 @@ a report beside the loader:
 
 The run without copies keeps one image per group and drops the 6 groups
 with conflicting labels. 585 images remain: 180 malignant and 405 benign
-or normal. Every result of chapter 8 uses these 585 (section 8.8); what
+or normal. Every BreastMNIST result of chapter 8 uses these 585, except three side studies and one quoted share (section 8.8); what
 the copies would change is in
 [`demos/copies.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/copies.ipynb).
 

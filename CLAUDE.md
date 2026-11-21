@@ -362,7 +362,7 @@ A CSV dataset switches targets with `DataLoader.set_target()`.
 - Downloaded data is not tracked in git: `.gitignore` ignores `*.gz`, `*.npz`, `*.part` and `*.txt` anywhere, and a file that must be tracked is named as an exception (e.g. `!requirements.txt`); the loader code is tracked
 - Results in `results/` and the report tables in `detailed_report/figures/` are tracked
 - `results/local/` is gitignored: the per-split CSVs of the main runs (`frontier_*`), benchmark series and exploratory runs, each a CSV plus a JSON of its settings and environment. They are intermediate: Appendix A of the detailed report gives the commands to make them again. Selections come out the same, except Lasso on LumA and LumB, where the CPU and the GPU differ by 1 to 3 genes (section A.3); times do not
-- GSE96058's gene expression file is 592 MB. The first load downloads and parses it (about 85 s, report section 5.3); later loads read the local cache and are much faster
+- GSE96058's gene expression file is 592 MB. The first load downloads and parses it; later loads read the local cache and are much faster
 - BreastMNIST's images are 31 MB; its cached embeddings 4 MB
 - When working with data loading, test on a subset first to avoid long load times
 

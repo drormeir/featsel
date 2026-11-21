@@ -276,8 +276,9 @@ splits:
 Random selection would find half by rank 14,271. Lasso ranks only genes
 with a non-zero weight, so it never reaches half.
 
-- **Every method finds PAM50 genes faster than chance.** Mann-Whitney finds
-  half in its top 1,031 genes.
+- **Every method finds PAM50 genes faster than chance up to 2,500 genes.**
+  Mann-Whitney finds half in its top 1,031 genes. From 5,000 genes, Lasso
+  is below random (12% against 18%), because it stops at 12%.
 - **Tree importance matches Mann-Whitney at 100 genes and leads from 250
   to 1,000**, then falls behind: its last PAM50 genes lie deep.
 - **RFE finds few**: 3% in its top 50. Its AUC at small `k` was also the
@@ -291,10 +292,10 @@ with a non-zero weight, so it never reaches half.
   by ranking each gene alone, by a t-test per subtype (chapter 2), as
   Mann-Whitney ranks them.
 
-**Good prediction does not need the genes that define the label.** Each
-PAM50 gene moves with hundreds of others, which carry much of the same
-signal. Each task also needs only part of the 50. So a low share here does
-not mean poor selection: the methods still predicted the subtypes well
+**Good prediction does not need the genes that define the label.** A
+likely reason, not tested: genes that move with the PAM50 genes carry
+much of the same signal (section 2.1), and each task needs only part of
+the 50. If so, a low share here does not mean poor selection: the methods still predicted the subtypes well
 (section 7.1). It does mean that a method's gene list is one of many
 possible answers.
 
@@ -308,8 +309,10 @@ Results: [`results/pam50_recovery.md`](../results/pam50_recovery.md).
 A side study runs Mann-Whitney and random selection with five classifiers:
 logistic regression, linear SVM, random forest (200 trees, set by hand),
 k-nearest neighbours (k = 5, scikit-learn's default) and shrinkage LDA. It asks how much a separate selection
-step adds on top of each classifier's own regularization. It is the
-evidence for using logistic regression in every other run.
+step adds on top of each classifier's own regularization. It does not
+show that logistic regression is the best classifier: no classifier
+was tested against another, and at 250 genes the random forest has the
+higher mean (0.861 against 0.855).
 
 It keeps its own settings, chosen before the protocol of chapter 3: 12
 splits, half the patients in the training set (1,488 each side), macro-F1,
@@ -361,8 +364,11 @@ AUC, level with RFE. The gain over accuracy is established on Her2, LumB
 and Normal (+0.38 to +0.43, p ≤ 0.0006), not on Basal and LumA (+0.007
 and +0.0003, p = 0.76 and 0.72). Table:
 [`figures/rfecv_scoring_tests.csv`](figures/rfecv_scoring_tests.csv), from
-[`scripts/rfecv_scoring_tests.py`](../scripts/rfecv_scoring_tests.py). AUC does not reward the majority class, so it is the
-right inner score for imbalanced tasks. It is still slower and no better
+[`scripts/rfecv_scoring_tests.py`](../scripts/rfecv_scoring_tests.py). AUC does not reward the majority class, so it
+helped where accuracy kept one gene. It is no rule for imbalanced tasks:
+Basal is imbalanced too (308 against 2,668), and there the gain is not
+established; nor on the image data (p = 0.34 and 0.61, section 8.6).
+Scored by AUC, RFECV is still slower and no better
 than a filter: about 40 s of search per split and 6 s per fit, against
 Mann-Whitney's 28 s to choose `k` and 0.67 s per fit.
 
@@ -472,10 +478,9 @@ importance, with 4 threads per fit on Basal's 2,083 training patients,
 takes 9.6 s alone and 13.4 s with two fits at once (medians;
 [`results/tree_timing.csv`](../results/tree_timing.csv)). In the runs,
 the median on Basal was 15 s; the mean of 17.5 s includes Her2 and Normal,
-at 20 to 21 s (Appendix C.1). The series of section 6.2 used 1,488
-patients, so its times are lower. That holds for RFE too: its Newton
-solver works on the patients' n × n kernel, which grows with the square
-of the patients.
+at 20 to 21 s (Appendix C.1). The series of section 6.2 used synthetic
+data (3,000 samples, other feature counts and other thread counts), so
+its times do not compare with these.
 
 Choosing `k` costs more than one selection: 5 fits on validation sets, and
 a classifier for each `k` on each. For a filter, that dominates.

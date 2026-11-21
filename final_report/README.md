@@ -58,7 +58,7 @@ for four reasons. With more features than samples, a linear classifier can
 separate any labelling of the training set, even a random one. If no gene
 were related to the label, testing 28,541 genes at the 5% level would
 still flag about 1,400 by chance. Genes work in groups, so many different
-gene sets predict about equally well. And methods that train a classifier per
+gene sets can predict with no established difference in AUC (section 6.3). And methods that train a classifier per
 candidate feature can take hours.
 
 Feature selection gives the classifier only the features that carry
@@ -84,8 +84,7 @@ Comparative studies on gene expression found that simple classifiers did
 as well as complex ones (Dudoit et al. 2002), or that multiclass support
 vector machines (SVMs) were the most accurate (Statnikov et al. 2005). Two reviews survey the
 selection methods used in bioinformatics (Saeys et al. 2007) and on
-microarray data (Bolón-Canedo et al. 2014). Most of their datasets
-had tens to a few hundred samples. Four known pitfalls
+microarray data (Bolón-Canedo et al. 2014). Four known pitfalls
 shape our protocol (Table 1):
 
 *Table 1. Known pitfalls and our answers.*
@@ -310,11 +309,11 @@ and the random control. Table 4 lists the methods the experiments used;
 |---|---|---|
 | Random | control | Pick `k` features at random. |
 | Mann-Whitney | filter | Rank features by the U test (below). |
-| Correlation | filter | Rank by Spearman correlation with the label; skip a feature highly correlated with one already kept. |
+| Correlation | filter | Rank by Spearman correlation with the label; require at least 0.1; skip a feature correlated above 0.95 with one kept (defaults, set by hand). |
 | Mutual information | filter | Rank by mutual information, which sees any dependence. |
 | HC2004, HC2008 | filter, own count | Keep the features below the Higher Criticism threshold. |
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
-| Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
+| Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights; C from 0.01, 0.1, 1, 10 (set by hand), chosen on validation sets. |
 | Tree importance | embedded | Rank by a random forest's impurity importance: how much a feature's splits separate the classes, averaged over the trees; 200 trees, set by hand (D 7.4). |
 | RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step and use C = 0.01, both set by hand; C = 0.001 to 1 gave no established AUC difference (D 7.9). |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
@@ -341,12 +340,12 @@ count from the p-values of all the features, so they skip that search.
 feature carried signal, p~(i)~ would sit near its mean,
 μ~i~ = i/(N + 1) (Moscovich et al. 2016). Higher Criticism measures, at each i, how far
 p~(i)~ falls below that line, in standard deviations, and keeps every
-feature up to the largest gap (Donoho and Jin 2004, 2008). HC2004 is the
-2004 paper's form:
+feature up to the largest gap (Donoho and Jin 2004, 2008). HC2004 takes
+the 2004 paper's denominator:
 
 HC(i) = √N (μ~i~ − p~(i)~) / √(p~(i)~ (1 − p~(i)~)).
 
-HC2008 is the 2008 paper's form:
+HC2008 takes the 2008 paper's denominator:
 
 HC(i) = √N (μ~i~ − p~(i)~) / √(μ~i~ (1 − μ~i~)).
 
@@ -393,7 +392,7 @@ simulated rare signal.
 ```python
 pipe = make_pipeline(StandardScaler(),
                      MannWhitneySelector(n_features=50),
-                     LogisticRegression(max_iter=1000))
+                     LogisticRegression(max_iter=1000))  # 100 may not converge
 scores = cross_val_score(pipe, X, y, cv=5, scoring='roc_auc')
 ```
 
@@ -410,7 +409,7 @@ scores, for any number of workers.
 **Faster than plain scikit-learn (task 3).** One small grid ran with
 scikit-learn's `cross_validate` and with the runner: SCAN-B's Basal task
 on 3,000 random genes, 5 splits, and Lasso and RFE at three values of
-`k`, set by hand so that the grid runs in about a minute (D 6.1). In the median of three runs, against scikit-learn on one core, the
+`k`, set by hand so that the grid runs in about a minute (D 6.1). In the median of three runs (the fewest that give a median and a range), against scikit-learn on one core, the
 runner was 4.3 times faster on one core and 10.6 times on 12 threads (3.9
 to 4.5 and 10.1 to 10.8 over the runs); against scikit-learn on 12
 threads, 6.8 times (D 6.1), with identical test scores (`results/speed_benchmark.csv`). It
@@ -435,15 +434,14 @@ model, liblinear, stops at a tolerance of 10⁻⁴, before the exact solution.
 With correlated genes, this changes which genes are kept. Unless its seed
 is fixed, liblinear also shuffles the data differently on each fit and
 keeps different genes (D 6.2). RFE and RFECV
-solve each SVM exactly by Newton's method (Chapelle 2007). Lasso uses PPDNA (Liu and Zhou 2023; Appendix B), which stops at a residual of 10⁻¹⁰, not proven exact but far tighter than 10⁻⁴. With no
+solve each SVM exactly by Newton's method (Chapelle 2007). Lasso uses PPDNA (Liu and Zhou 2023; Appendix B), which stops at a residual of 10⁻¹⁰, set by hand, not proven exact but far tighter than 10⁻⁴. With no
 randomness, a refit gives the same genes. Newton's method works through
 the samples' n × n kernel (the inner products of every pair of samples),
 so it pays when features outnumber samples.
 
 **Where a GPU does not help.** The GTX 1650 runs 64-bit arithmetic at
-1/32 of its 32-bit speed, and RFE needs 64 bits: 32 bits selected
-different genes (D 6.2). Copying the data takes
-about half the time of a fast filter. Tree importance runs on 4 CPU
+1/32 of its 32-bit speed, and RFE's solver runs in 64 bits (D 6.2).
+The data must also be copied to the GPU. Tree importance runs on 4 CPU
 threads per fit, set by hand: no GPU forest ran well on 4 GB (D D.5).
 
 ## 6. Results
@@ -579,8 +577,8 @@ top-10% filter.
 
 As such a filter, HC2008 is good on SCAN-B: 0.970 mean AUC, 0.001 below
 the best, with the highest stability (0.92) and no `k` to choose. On
-BreastMNIST, 204 features are too few: HC2008 loses 0.047 AUC to all
-features (p = 0.02). HC2004 keeps one or two features. It is the
+BreastMNIST, HC2008 keeps 204 features and loses 0.047 AUC to all
+features (p = 0.02); whether the count is the cause was not tested. HC2004 keeps one or two features. It is the
 weakest on both image datasets; on SCAN-B only RFECV by accuracy is
 weaker.
 
@@ -607,8 +605,8 @@ would need rank 14,271.
 
 Yet at 50 genes, Mann-Whitney and tree importance predict the subtypes
 well (Figure 1). A likely reason is that genes which move with the PAM50
-genes carry the same signal. So a low share of PAM50 genes is not poor
-selection. Mann-Whitney's lead here is
+genes carry the same signal. If so, a low share of PAM50 genes is not
+poor selection. Mann-Whitney's lead here is
 partly built in: Parker et al. (2009) chose the 50 genes by ranking each
 gene alone, by a t-test for each subtype.
 
@@ -650,7 +648,9 @@ them. These runs are open work (D 10).
 The cheap end of Figure 2 comes close to the best mean AUC. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
-importance takes 17 s for 0.969 (Table 5). On the image data, all methods
+importance takes 17 s for 0.969 (Table 5). The CPU methods ran two fits
+at a time, which slows each: tree importance takes 9.6 s alone, 13.4 s
+two at once (D 7.11). On the image data, all methods
 but Sequential selection take about a second per fit or less, so cost
 decides nothing there.
 
@@ -672,11 +672,12 @@ the search for `k`, which costs more (section 6.8). Sources: D 7.1, 8.1, 8.9.*
 ### 7.1 The answer
 
 For a budget of `k` features, which method gives the best classifier, and
-by how much over random? At small `k`, the answer depends on the dataset.
-At 10 genes on SCAN-B, Mann-Whitney then RFE has the highest mean on
-four tasks of five, and the filters and tree importance beat random genes by 0.12 to
-0.19 AUC. On the image data they lead at 10 features, alone or chained,
-by 0.10 to 0.16 over random. At the `k` each method chose, the top methods are
+by how much over random? At 10 genes on SCAN-B, Mann-Whitney then RFE has
+the highest mean on four tasks of five, and the filters and tree
+importance beat random genes by 0.12 to 0.19 AUC. At 10 features on the
+image data, the filters and tree importance, alone or chained, beat
+random by 0.10 to 0.16. The established change of order between datasets
+is at 250 features (section 7.2). At the `k` each method chose, the top methods are
 close (section 6.3). If time counts, a GPU filter is practical: on SCAN-B,
 HC2008 or Mann-Whitney reaches 0.970 or 0.969 mean AUC in under a second
 per fit, 0.001 to 0.002 below the best.
@@ -684,8 +685,7 @@ per fit, 0.001 to 0.002 below the best.
 ### 7.2 What holds on every dataset, and what changes
 
 On all three datasets, selection beats random features most at small `k`;
-Mann-Whitney is within 0.012 AUC of the best, at the cheap end of the
-cost axis; and HC2008 stops at the edge of its search. Wherever RFECV ran
+Mann-Whitney is within 0.012 AUC of the best; and HC2008 stops at the edge of its search. Wherever RFECV ran
 with both inner scores, scoring by AUC gave a higher mean than scoring by
 accuracy; the gain is established only on three SCAN-B tasks, where
 accuracy kept one gene (D 7.8, 8.6). What changes is the best method for a given budget. At
@@ -723,6 +723,9 @@ can change between datasets.
   tested (D 7.4). The correlation results come from a
   previous redundancy rule; at each `k`, the current rule changes at most one gene
   of a selection; the chosen `k` and the AUC were not recomputed (D 4.2).
+- **Methods.** The U test's p-value is inexact in HC2004's far tail;
+  Sequential scores by accuracy; the `k` list stops while AUC still
+  rises on two SCAN-B tasks (D 9.6 lists more).
 - **Many tests.** Each test is judged at p < 0.05, with no correction for
   the number of tests, more than a hundred per dataset. So some
   established differences may be chance, most likely those with p between
@@ -906,7 +909,4 @@ the ranks exactly in 64 bits, and the p-value is finished on the CPU. For
 mutual information, a sort per class replaces scikit-learn's
 nearest-neighbour tree, keeping scikit-learn's noise and sum order.
 
-**Lasso's solver.** PPDNA (Liu and Zhou 2023), a semismooth Newton method,
-needed five changes on SCAN-B-shaped data (D D.3), among them a
-penalized intercept, as in liblinear, and a Newton matrix factored in
-32 bits, refined in 64.
+**Lasso's solver.** PPDNA needed five changes on SCAN-B-shaped data (D D.3).

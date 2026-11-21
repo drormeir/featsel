@@ -45,8 +45,9 @@ SSNAL handles only the squared loss. Our PPDNA departs from the paper
 
 - The intercept is penalized like a weight, as liblinear penalizes it.
   This makes the problem the same as liblinear's.
-- Its proximal step size starts at 40 C and grows five-fold per outer
-  step (both set by hand), up to 10⁶ C. Beyond that, rounding loses the digits the weights
+- Its proximal step size starts at 40 C, the paper's start (σ₀ = 40/λ,
+  section 4.1.2, with λ = 1/C), and grows five-fold per outer step (set
+  by hand), up to 10⁶ C. Beyond that, rounding loses the digits the weights
   are made of.
 - The Newton matrix is factored in 32-bit floats, where this GPU is fast.
   The solution is refined in 64 bits.
@@ -55,9 +56,8 @@ SSNAL handles only the squared loss. Our PPDNA departs from the paper
   noise.
 - The outer loop also stops when three outer steps (a count set by
   hand) fail to halve the best residual.
-  On 28,552 genes, rounding can set a floor near 10⁻⁹, above the target
-  of 10⁻¹⁰; without this rule the solver would then run all 1,000 outer
-  steps.
+  Rounding can set a floor above the target of 10⁻¹⁰; without this rule
+  the solver would then run all 1,000 outer steps.
 
 ## D.4 Lasso: speed against liblinear
 

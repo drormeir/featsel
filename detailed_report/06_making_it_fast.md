@@ -127,8 +127,9 @@ original and our versions on synthetic data shaped like SCAN-B: 3,000
 samples, 1,000 to 30,000 features, binary and imbalanced (80/20). It
 checks that every fit is reproducible and picks the original's features.
 Each time is the median of 2 timed fits, after one untimed warm-up fit.
-If the warm-up takes over a minute, one timed fit follows and the variant
-stops growing; the minute keeps each notebook to minutes. Two fits show a gap of several times, not of a few
+If the warm-up takes over a minute, one timed fit follows instead of two.
+When the median of the timed fits exceeds a minute, the variant stops
+growing; the minute keeps each notebook to minutes. Two fits show a gap of several times, not of a few
 percent.
 
 Results at the largest size both sides reached (30,000 features unless
@@ -246,12 +247,12 @@ used.
 ### Why the GPU does not always win
 
 - **64-bit arithmetic.** The GTX 1650 is a consumer card. It runs 64-bit
-  floating point at 1/32 of its 32-bit speed. RFE's solver needs 64 bits:
-  with 32 bits, it selected different genes. So at 30,000 genes RFE is
+  floating point at 1/32 of its 32-bit speed. RFE's solver runs in 64
+  bits; no comparison with 32 bits was saved. So at 30,000 genes RFE is
   slower on this GPU than on the CPU. At 1,000 to 10,000 genes the GPU is
   still faster.
-- **Copying.** For the fast filters, copying the data to the GPU takes
-  about half the time.
+- **Copying.** The data must be copied to the GPU. For the fast filters,
+  this is part of each timed fit; its share was not measured.
 - **Memory.** 4 GB is small. XGBoost ran out of memory on SCAN-B-sized
   data. cuML fit smaller data but was slower than scikit-learn on
   12 threads. So tree importance stays on the CPU (Appendix D.5).

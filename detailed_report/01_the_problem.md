@@ -102,8 +102,7 @@ well as complex ones. Statnikov et al. (2005) compared classifiers and
 gene selection methods on many multiclass cancer datasets. Multiclass
 support vector machines (SVMs) were the most accurate classifiers. Bolón-Canedo et al. (2014) review
 common microarray datasets and the selection methods applied to them.
-Saeys et al. (2007) review selection methods for bioinformatics. Most of
-those datasets have tens to a few hundred samples.
+Saeys et al. (2007) review selection methods for bioinformatics.
 
 **Four known pitfalls.** Chapter 3 shows how this project avoids each.
 

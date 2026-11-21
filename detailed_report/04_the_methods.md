@@ -232,7 +232,7 @@ point.
 We implement two forms, HC2004 from the 2004 paper and HC2008 from the
 2008 paper. The two papers divide by different terms:
 
-| Variant | Statistic | Reference |
+| Variant | Statistic | Denominator from |
 |---|---|---|
 | HC2004 | HC(i) = √N · (μᵢ − p₍ᵢ₎) / √(p₍ᵢ₎(1 − p₍ᵢ₎)) | Donoho and Jin (2004), section 1.2 |
 | HC2008 | HC(i) = √N · (μᵢ − p₍ᵢ₎) / √(μᵢ(1 − μᵢ)) | HC thresholding, Donoho and Jin (2008, 2009) |

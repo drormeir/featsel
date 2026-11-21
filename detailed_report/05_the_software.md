@@ -231,7 +231,7 @@ follows one fixed convention (`NAME`, `TARGET`, `load_xy`), with no
 registry. A `.yaml` or `.yml` ending marks a CSV config instead.
 `featsel_datasets` is not installed with the package, so code run outside
 the repository root must put the root on Python's path. The first SCAN-B
-load downloads 592 MB and takes about 85 s.
+load downloads 592 MB.
 
 ## 5.4 The runner
 
@@ -295,7 +295,7 @@ in the runner only.
 One split serves all five SCAN-B tasks (section 3.3). Each split is
 prepared once and written to `/dev/shm`, and every
 worker maps it read-only. Otherwise each worker would prepare its own
-copy for each task, 2 to 3 GB each. Sharing saves that memory and
+copy for each task. Sharing saves that memory and
 preprocesses once instead of five times.
 
 ## 5.5 Running for hours without supervision
@@ -313,9 +313,9 @@ system then kills it with no message. Six mechanisms prevent this.
 | **Restart after a crash** | `scripts/run_until_done.py` restarts the runner with `--resume` and the worker count it had fallen back to. It gives up after three restarts in a row (a count set by hand) with no new row and no new skipped job. It keeps the machine awake meanwhile. |
 
 **The cap counts data memory, not address space.** PyTorch's GPU
-libraries reserve address space they never use. Under an address-space
-cap below about 5 GB, they could not even load. After a GPU call, a
-worker releases its cached GPU memory and keeps about 64 MB.
+libraries reserve address space they never use, so an address-space cap
+would count memory that is not there. After a GPU call, a worker
+releases its cached GPU memory.
 
 Many runs in one process leave memory behind. So the scaling script of
 section 6.1 runs each measurement in a fresh process, saves it as it
@@ -337,8 +337,7 @@ scikit-learn method:
   time is the median of 50 fits: with 10, two equal versions drifted 5%
   apart (`docs/DECISIONS.md`, 2026-09-29). The fast filters are timed on larger
   data (1,000 × 4,000), so timing noise stays below 5%. ANOVA is timed on
-  1,000 × 10,000: on 1,000 × 4,000 it was about 16% slower than
-  scikit-learn in every run, for a reason not found;
+  1,000 × 10,000, a size set by hand;
 - its GPU path selects the same features as its CPU path.
 
 RFE and RFECV reach the exact solution, and Lasso comes far closer to it

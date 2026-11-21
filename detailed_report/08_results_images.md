@@ -43,7 +43,7 @@ Each method at the `k` it chose on validation sets:
 | HC2008 | 0.848 [0.839, 0.867] | 204 | 0.008 | none |
 | RFECV, scored by accuracy | 0.847 [0.816, 0.885] | 8 to 416 | 0.11 | 0.8 |
 | Berk-Jones | 0.847 [0.839, 0.866] | 175 to 204 | 0.007 | none |
-| HC2004 | 0.771 [0.752, 0.790] | 1 to 2 | 0.008 | none |
+| HC2004 | 0.771 [0.752, 0.790] | 1 to 2 | 0.006 | none |
 
 Search is the time to choose `k` on validation sets, or Lasso's C and
 RFECV's count. Sequential selection has not yet run on the images without
@@ -102,7 +102,7 @@ p = 0.15). At `k` = 250 and 500, RFE leads Mann-Whitney and correlation
 (by 0.028, p = 0.19, and by 0.023, p = 0.07). At 1,000 no difference is
 established (p = 0.33). On FGVC-Aircraft the lead of RFE at 250 and 500
 features is established, at p = 0.047 and 0.041 (section 8.9). On SCAN-B,
-RFE trails the filters at every `k` (section 7.9). Why RFE's place
+RFE trails Mann-Whitney, mutual information and tree importance at every `k` (section 7.9). Why RFE's place
 changes was not tested.
 
 ## 8.3 Selection against all features
@@ -164,8 +164,8 @@ score about as well.
 HC2008 kept 204 features on every split. That is the edge of its search,
 0.1 × 2,048. Berk-Jones kept 175 to 204, so it behaves like HC2008:
 0.847 AUC against 0.848, and the same stability, 0.77 (Appendix C.2.2).
-They lose to Mann-Whitney at 250 features (0.851) by 0.004 and 0.003, and
-to all features by 0.048 and 0.047.
+Their means are 0.004 and 0.003 below Mann-Whitney at 250 features
+(0.851), a difference not tested, and 0.048 and 0.047 below all features.
 
 HC2004 kept 1 or 2 features. It scored 0.771, the lowest of all. Its
 statistic peaks at the single strongest p-value (section 4.4).
@@ -295,7 +295,7 @@ The pattern of BreastMNIST holds:
   correlation, mutual information and tree importance (p = 0.003 to
   0.047). At 1,000, RFE and Mann-Whitney show no established difference
   (p = 0.31). On BreastMNIST the lead is not established (section 8.2),
-  and on SCAN-B RFE trails the filters (section 7.9). At `k` = 10,
+  and on SCAN-B RFE trails Mann-Whitney, mutual information and tree importance (section 7.9). At `k` = 10,
   Mann-Whitney leads RFE by 0.021, not established (p = 0.43).
 - Correlation's redundancy filter costs AUC: it kept at most 465 features
   and lost 0.038 (p = 0.009). On BreastMNIST it lost 0.028, not
@@ -314,15 +314,15 @@ threshold of 0.5 (section 3.5), on both image datasets:
 
 | Method | BreastMNIST macro-F1 [Q1, Q3] | Balanced accuracy | FGVC-Aircraft macro-F1 [Q1, Q3] | Balanced accuracy |
 |---|---|---|---|---|
-| All features | 0.816 [0.792, 0.835] | 0.809 | **0.794** [0.788, 0.811] | 0.788 |
+| All features | 0.816 [0.792, 0.834] | 0.809 | **0.794** [0.788, 0.811] | 0.788 |
 | RFE | **0.818** [0.803, 0.838] | 0.813 | 0.793 [0.783, 0.809] | 0.788 |
 | Mann-Whitney | 0.810 [0.794, 0.825] | 0.804 | 0.783 [0.777, 0.799] | 0.779 |
 | Mutual information | 0.812 [0.798, 0.833] | 0.806 | 0.786 [0.776, 0.797] | 0.781 |
-| Tree importance | 0.806 [0.791, 0.826] | 0.799 | 0.781 [0.774, 0.793] | 0.776 |
+| Tree importance | 0.806 [0.791, 0.825] | 0.799 | 0.781 [0.774, 0.793] | 0.776 |
 | Correlation (Spearman) | 0.796 [0.772, 0.814] | 0.791 | 0.755 [0.739, 0.773] | 0.753 |
 | RFECV, scored by AUC | 0.802 [0.788, 0.819] | 0.798 | 0.789 [0.779, 0.802] | 0.785 |
 | Lasso | 0.799 [0.787, 0.817] | 0.795 | 0.782 [0.765, 0.796] | 0.777 |
-| HC2008 | 0.773 [0.751, 0.796] | 0.772 | 0.741 [0.732, 0.757] | 0.738 |
+| HC2008 | 0.772 [0.751, 0.796] | 0.772 | 0.741 [0.732, 0.757] | 0.738 |
 | Berk-Jones | 0.770 [0.751, 0.794] | 0.769 | 0.743 [0.732, 0.763] | 0.741 |
 | Sequential, `k` = 10 | not yet run | — | 0.620 [0.601, 0.638] | 0.617 |
 | HC2004 | 0.663 [0.642, 0.678] | 0.651 | 0.553 [0.542, 0.563] | 0.564 |
@@ -414,8 +414,8 @@ What the run shows:
   features, with high precision and low recall. HC2004 keeps 1 to 9
   (median 1.5). Lasso keeps the most and finds the most, at low precision.
 - **Here selection is needed.** All features give 0.629: 9,960 null
-  features drown the signal. On the image data, all features were the
-  best; on SCAN-B, at most 0.008 below the best in the mean over tasks,
+  features drown the signal. On the image data, all features had the
+  highest mean, with no established difference from the top methods; on SCAN-B, at most 0.008 below the best in the mean over tasks,
   though 0.023 below on LumB (sections 7.1, 8.1 and 8.9).
 
 **Limits.** One setting: 40 of 10,000 features, one shift, one simulated

@@ -81,7 +81,9 @@ validation sets, ROC AUC, and timing. Each run's JSON file, beside its
 CSV, records its commit, machine and settings; most of these files are in
 `results/local/`, which is not tracked (Appendix A). A few side studies keep their own
 settings, stated where they appear: the PAM50 recovery (section 7.6), the
-classifier study (section 7.7) and the speed benchmarks (chapter 6). Section 9.6 gives the limits that
+classifier study (section 7.7), the tree count (section 7.4), RFE's C on
+SCAN-B (section 7.9), the chain size (section 8.7), the simulation
+(section 8.11) and the speed benchmarks (chapter 6). Section 9.6 gives the limits that
 follow.
 
 Times are from one laptop: Intel i7-9750H (6 cores, 12 threads), 16 GB

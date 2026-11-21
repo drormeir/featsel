@@ -187,7 +187,8 @@ For every fit we record:
   simulation of section 8.11), and the median is
   recorded. Sequential selection takes minutes per fit on SCAN-B, and 10
   fits would take about a week (the SCAN-B run with one fit took 18 hours,
-  section 7.11), so there and on BreastMNIST it is fit once;
+  section 7.11), so there and on BreastMNIST it is fit once (on
+  BreastMNIST it has so far run only with the copies, section 8.1);
   on FGVC-Aircraft it is fit 3 times, like every method there. On
   FGVC-Aircraft every fit chose the same features, so the count changes
   only how precise the time is, not the AUC.
@@ -267,8 +268,7 @@ A method with its own preprocessing mixes the method with its transform.
 
 On SCAN-B, `k` is 10, 50, 250, 500, 1000, 1500 and 2000; random selection
 also runs at 28,541, every gene. The values were set by hand; the reasons
-for the largest follow. A first run stopped at 1,000, where AUC
-was still rising for every method with a `k` list. The list stops at
+for the largest follow. The list stops at
 2,000 because there the best method already reaches or passes the AUC of
 all genes on every task (Appendix C.1). On LumA and Normal, AUC still
 rises a little at 2,000 (mutual information, section 4.2: 0.958 to 0.960 and 0.945 to
@@ -330,8 +330,9 @@ same features as the search.
 
 ## 3.12 Data precision
 
-The data are held as 32-bit floats, which halves their memory. SCAN-B's
-values have at most 7 measured digits, so 32 bits lose nothing measured.
+The data are held as 32-bit floats, which halves their memory. A 32-bit
+float keeps about 7 significant digits. Whether this changes any
+selection against 64 bits was not measured.
 
 The U test (section 4.3) sums its ranks and its tie term in 64 bits. For
 a near-constant gene, the tie term Σ(t³ − t) reaches about 10¹⁰ on
