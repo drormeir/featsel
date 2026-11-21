@@ -611,7 +611,9 @@ filter first, keeping 1,000 genes, raised it to 0.95, the highest mean
 of all methods at 10 genes on four tasks of five. Sequential selection
 beat random genes on every task at 10 genes. This chain scored above it
 on all five tasks, with no difference established, in 3 s per fit instead
-of 10 minutes (D 7.9, 7.10).
+of 10 minutes. Over the other methods, the chain's lead is established
+on LumA over every method but Sequential, on LumB over two filters, and
+elsewhere only over RFE alone (D 7.9, 7.10).
 
 A chain's first count was set by hand. The chain's `k` values stay below
 it, so on the image data the 500 also caps `k` at 250, and RFE and tree
@@ -676,7 +678,8 @@ On all three datasets, selection beats random features most at small `k`;
 Mann-Whitney is within 0.01 AUC of the best, at the cheap end of the
 frontier; and HC2008 stops at the edge of its search. Wherever RFECV ran
 with both inner scores, scoring by AUC gave a higher mean than scoring by
-accuracy. What changes is the best method for a given budget. At
+accuracy; the gain is established only on three SCAN-B tasks, where
+accuracy kept one gene (D 7.8, 8.6). What changes is the best method for a given budget. At
 large `k`, RFE leads on both image datasets but trails the filters on
 SCAN-B (Figure 1). Whether selection beats all features also changes: never on the
 image data, on one SCAN-B task of five. So the best method for a budget

@@ -343,7 +343,11 @@ imbalanced: Normal is 200 patients against 2,776. Accuracy rewards
 predicting the majority class, so one gene scores as well as many.
 
 Scored by AUC, RFECV kept 2,855 to 28,541 genes and reached 0.962 mean
-AUC, level with RFE. AUC does not reward the majority class, so it is the
+AUC, level with RFE. The gain over accuracy is established on Her2, LumB
+and Normal (+0.38 to +0.43, p ≤ 0.0005), not on Basal and LumA (+0.007
+and +0.0003, p = 0.76 and 0.72). Table:
+[`figures/rfecv_scoring_tests.csv`](figures/rfecv_scoring_tests.csv), from
+[`scripts/rfecv_scoring_tests.py`](../scripts/rfecv_scoring_tests.py). AUC does not reward the majority class, so it is the
 right inner score for imbalanced tasks. It is still slower and no better
 than a filter: about 40 s of search per split and 6 s per fit, against
 Mann-Whitney's 28 s to choose `k` and 0.67 s per fit.
@@ -387,6 +391,15 @@ on four tasks of five:
 | Mann-Whitney 1000, then RFE | 0.990 | **0.959** | **0.927** | **0.954** | **0.916** |
 | Sequential | 0.989 | 0.944 | 0.919 | 0.950 | 0.895 |
 
+Random genes aside, few of these leads are established. On LumA the chain
+leads every method but Sequential (p ≤ 0.006; against Sequential
+p = 0.48). On LumB it leads Mann-Whitney and correlation (+0.043,
+p = 0.0002). On Her2 and Normal it leads only RFE alone (p = 0.003 and
+0.002). No other difference is established, on any task (p = 0.07 to
+0.96). Table:
+[`figures/scanb70_k10_tests.csv`](figures/scanb70_k10_tests.csv), from
+[`scripts/k10_tests.py`](../scripts/k10_tests.py).
+
 At the chosen `k`, in mean AUC over tasks, Mann-Whitney then Lasso beats
 Lasso alone by 0.004, and Mann-Whitney then RFE beats RFE alone by 0.001.
 Mann-Whitney then tree importance loses 0.004 to tree importance alone.
@@ -400,8 +413,9 @@ Sequential selection ran at `k` = 5 and 10 only (section 3.11). Its time
 per fit (by the rule of section 7.11) was 274 s at `k` = 5 and 588 s at
 `k` = 10: the cost grows in
 step with `k`. At 10 genes it beat random on every task, and scored above
-Mann-Whitney on Her2, LumA and LumB. But Mann-Whitney then RFE scored above
-it on all five tasks, in 3 s instead of 10 minutes. Sequential was timed on
+Mann-Whitney on Her2, LumA and LumB. Mann-Whitney then RFE scored above
+it on all five tasks, with no difference established (p = 0.22 to 0.96;
+section 7.9), in 3 s instead of 10 minutes. Sequential was timed on
 one fit per split, because that run already took 18 hours (section 7.11). The other methods
 use the median of 10 fits (section 3.7).
 

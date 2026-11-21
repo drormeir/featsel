@@ -162,8 +162,11 @@ signal ends: 27% to 35% of the dimensions pass the Benjamini-Hochberg test
 ## 8.6 RFECV: accuracy against AUC
 
 Scored by accuracy, RFECV kept 8 to 212 features and reached 0.889.
-Scored by AUC, it kept 212 to 1,844 and reached 0.912. As on SCAN-B
-(section 7.8), AUC is the better inner score.
+Scored by AUC, it kept 212 to 1,844 and reached 0.912. The difference,
+0.023, is not established (p = 0.40); without the copies it is 0.037
+(p = 0.34; [`figures/rfecv_scoring_tests.csv`](figures/rfecv_scoring_tests.csv)).
+AUC is the safer inner score, as on SCAN-B (section 7.8), but here the
+data do not show that it is better.
 
 ## 8.7 Two-stage selection
 
@@ -316,7 +319,7 @@ The pattern of BreastMNIST holds:
 - Every chain loses to all features (p ≤ 0.013) and scores below its
   second method run alone.
 - RFECV scores a little higher with AUC as its inner score than with
-  accuracy (0.858 against 0.854).
+  accuracy (0.858 against 0.854), not established (p = 0.61).
 
 ## 8.10 Side scores and memory
 

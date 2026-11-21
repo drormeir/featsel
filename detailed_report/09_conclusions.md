@@ -124,7 +124,7 @@ settings stated in their sections.
     features. On SCAN-B it was below the filters, and weak at 10 genes. A
     Mann-Whitney filter first raised RFE's mean AUC at 10 genes from 0.78
     to 0.95 (section 7.9). RFECV needs AUC as its inner score
-    (section 7.8). Sequential selection beat random but took 10 minutes
+    on imbalanced tasks (section 7.8). Sequential selection beat random but took 10 minutes
     per fit for 10 genes (section 7.10).
 
 **About cost.**
@@ -165,7 +165,9 @@ Each dataset has its own frontier. What do they share?
   Mann-Whitney on a GPU is within 0.01 AUC of the best, at the cheap end
   of the cost axis. HC2008 stops at the edge
   of its search. Wherever RFECV ran with both inner scores, scoring by
-  AUC gave a higher mean than scoring by accuracy.
+  AUC gave a higher mean than scoring by accuracy. The gain is
+  established only on Her2, LumB and Normal of SCAN-B, where accuracy
+  kept one gene (sections 7.8, 8.6).
 - **What changes.** The best method for a given budget. At large `k`, RFE
   leads on both image datasets but trails the filters on SCAN-B. At 10
   features, the filters and tree importance, alone or chained, lead on the
