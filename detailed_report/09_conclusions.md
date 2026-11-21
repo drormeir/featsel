@@ -50,7 +50,7 @@ given.
 | The public GSE96058 data, one sample per patient, not the course copies | The course copies keep 93 repeated patients, and `scanb_small` lacks 11 of the 50 PAM50 genes | It removed a leak, and made the PAM50 recovery test possible (sections 2.1, 7.6) |
 | The U test, not the F-test, for every filter | About half the gene values sit at a floor (in the first 200 genes), and only their order is meaningful | One valid test for all filters, so the comparison is between selection rules, not tests (section 4.3) |
 | Find the copied images in BreastMNIST | A quarter of the images repeat another, and copies fall on both sides of a split | A leak removed: every BreastMNIST result in chapter 8 is without the copies (sections 2.2, 8.8) |
-| Exact solvers, not liblinear, for RFE and RFECV, and a far tighter one (PPDNA) for Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became faster and repeatable; in one 5-split run with no test, its AUC changed by at most 0.004 (section 6.2) |
+| Exact solvers, not liblinear, for RFE and RFECV, and a far tighter one (PPDNA) for Lasso | liblinear stops before the solution, and unless seeded it keeps different genes on each run | RFE became faster on data shaped like SCAN-B, and repeatable (section 6.2) |
 | RFECV scored by AUC, not accuracy | Accuracy rewards the majority class on imbalanced tasks | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (sections 7.1, 7.8) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | HC's behaviour on widespread signal is reported as it is (sections 4.4, 7.5) |
 | A third dataset, unseen during the design | Two datasets shaped the design, so they cannot test it | The pipeline ran unchanged on FGVC-Aircraft (section 8.9) |
@@ -156,9 +156,8 @@ settings stated in their sections.
 15. **Exactness has a price in agreement.** Faster, tighter solvers can pick
     different genes than scikit-learn's default. Lasso does on SCAN-B. RFE
     does on some synthetic data. The reason is that the default stops before it
-    reaches the solution. In one 5-split run with no test, RFE's two
-    solvers scored within 0.004 AUC, and Lasso's within 0.014 (section 6.2). So RFE, RFECV and Lasso now
-    run only their exact solvers (section 6.2).
+    reaches the solution. So RFE, RFECV and Lasso now run only their
+    exact solvers (section 6.2).
 16. **Selection buys a smaller model more often than a better one.** On
     BreastMNIST all 2,048 features scored 0.895 and on FGVC-Aircraft
     0.862: no selected set beat them. On SCAN-B, selection beat all 28,541

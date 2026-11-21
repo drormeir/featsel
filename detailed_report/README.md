@@ -20,8 +20,8 @@ methods and the main results in one page, read the
   selection 34 times (chapter 6).
 - **Exact solvers** for RFE and RFECV, which reach the solution
   that scikit-learn's default solver stops short of, and for Lasso a
-  solver that comes far closer to it. On SCAN-B, one RFE
-  fit became 8 times faster, 23.1 s against 2.8 s (chapter 6).
+  solver that comes far closer to it. On synthetic data shaped like
+  SCAN-B, one RFE fit on the CPU became 2.0 times faster (chapter 6).
 - **An experiment runner driven by one YAML file.** It selects inside
   every split, runs a random control at every `k`, and chooses `k` on
   validation sets. It runs jobs in parallel, survives running out of

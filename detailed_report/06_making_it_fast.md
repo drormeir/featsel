@@ -155,21 +155,6 @@ Appendix D.1 tells how these timings were checked. On real SCAN-B, one
 Lasso fit took 0.71 to 1.36 s with PPDNA on the GPU, 3.9 to 7.0 times
 faster than liblinear (Appendix D.2).
 
-A second series ran on real SCAN-B: the training set of one split, Basal
-vs rest (1,488 patients, half of them), median of 5 fits. The three
-Sequential times are single fits. Script:
-[`scripts/benchmark_selectors.py`](../scripts/benchmark_selectors.py);
-output:
-[`results/speed/scanb_basal_2026-11-07.csv`](../results/speed/scanb_basal_2026-11-07.csv).
-At all
-28,552 genes, unless noted:
-
-| Method | scikit-learn's solver | Exact Newton solver, CPU | Exact Newton solver, GPU |
-|---|---|---|---|
-| RFE | 23.1 s | 2.8 s | 3.4 s |
-| RFECV | 111 s | 18.1 s | 17.3 s |
-| Sequential | 324 s at only 1,000 genes | 186 s at 10,000 genes | 146 s at 28,552 genes |
-
 ### Where the speed comes from
 
 | Method | What changed |
@@ -181,13 +166,10 @@ At all
 | Lasso | PPDNA (Liu and Zhou 2023), a semismooth Newton method, solves the same L1 problem to a tight tolerance on the GPU. |
 | RFE, RFECV | An exact Newton solver for the linear SVM (Chapelle 2007). With fewer samples than genes, it works through the samples' n × n kernel matrix (3,000 × 3,000, not 30,000 genes wide). The matrix is kept between rounds. |
 | Sequential | Each step solves all candidate features at once: one batched Newton problem on the logistic regressions, in PyTorch, in 64 bits. The candidates share the features already chosen, so every Hessian block is one product over all candidates and no design matrix is built. Each fit starts from that candidate's solution at the previous step. It selects what scikit-learn does with a converged logistic regression. It covers two classes, forward search and accuracy, and raises an error otherwise. The GPU wins here: the work is wide elementwise passes and large products. |
-| Tree importance | scikit-learn's own forest on several threads (`n_jobs`). scikit-learn's default is one thread. On real SCAN-B (1,488 samples × 28,552 genes, the series above), one fit took 17.4 s on one thread and 3.0 s on 12. On the runs' 70% training set (2,083 patients), one thread takes 30.2 s and 4 threads 9.6 s ([`results/tree_timing.csv`](../results/tree_timing.csv); section 7.11). In the runner, threads per worker times workers should not exceed the 12 hardware threads; the experiments use 4 threads per fit (`n_jobs=4`), a count set by hand within that limit. |
+| Tree importance | scikit-learn's own forest on several threads (`n_jobs`). scikit-learn's default is one thread. On the runs' 70% training set (2,083 patients), one thread takes 30.2 s and 4 threads 9.6 s ([`results/tree_timing.csv`](../results/tree_timing.csv); section 7.11). In the runner, threads per worker times workers should not exceed the 12 hardware threads; the experiments use 4 threads per fit (`n_jobs=4`), a count set by hand within that limit. |
 
 **RFE's step.** RFE removes a fixed share of the starting genes each
-round. A
-retired comparison used step 0.5 for speed, with liblinear. Every run now
-uses step 0.1. With the exact Newton solver, one fit at step 0.1 on
-SCAN-B takes 2.8 s on the CPU (the series above).
+round. Every run uses step 0.1.
 
 ### Why some methods do not pick the same features
 
@@ -233,25 +215,13 @@ from its paper to work on SCAN-B-shaped data (Appendix D.3).
 and have no `solver` parameter. Each runs only its exact solver: Newton
 for RFE and RFECV, PPDNA for Lasso. The reasons:
 
-- **Speed.** In an earlier SCAN-B frontier run (5 splits, since
-  replaced), liblinear RFE took 57 s per fit, Newton 6.0 s, in the median.
-  RFE with liblinear was the largest single
-  cost of the frontier runs.
+- **Speed.** On the synthetic data of the first table, Newton RFE was
+  2.0 times faster than liblinear on the CPU at 30,000 features.
 - **Exactness.** Newton reaches the solution that liblinear only
   approaches.
 - **Repeatability.** Unless its seed is fixed, liblinear shuffles the
   data differently on each fit and keeps different genes. Newton and
   PPDNA use no randomness, so the selectors lost `random_state` too.
-- **AUC.** One frontier run of 5 splits, with no test. The two RFE
-  solvers scored within 0.004 AUC at every `k`: 0.811
-  and 0.807 at k = 10, 0.959 and 0.959 at k = 1000. The two Lasso solvers
-  differed a little. At k = 10, PPDNA scored higher on all 5 splits
-  (0.947 against 0.934); at k = 1000, liblinear scored higher on all 5
-  (0.964 against 0.962). Table:
-  [`figures/liblinear_vs_exact.csv`](figures/liblinear_vs_exact.csv), from
-  [`scripts/liblinear_vs_exact.py`](../scripts/liblinear_vs_exact.py),
-  which reads the archived run; it cannot be made again, since liblinear
-  is gone.
 
 For Lasso the speed argument is weaker. On the CPU, a single PPDNA fit
 was faster than liblinear on some tasks and slower on others; only on a
