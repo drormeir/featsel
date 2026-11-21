@@ -144,3 +144,6 @@ blockquote {
   margin: 0.6em 1.5em;
   font-size: 11pt;
 }
+
+/* References in both reports: one size below the body. */
+#references, #chap-references { font-size: 11pt; }
