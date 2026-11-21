@@ -1,11 +1,11 @@
 /* Style of the PDF report, for WeasyPrint (scripts/build_report_pdf.py).
-   A4, 2.5 cm margins, Times New Roman 12 pt, single spacing.
+   A4, 2 cm margins, Times New Roman 12 pt, line spacing 1.25.
    No page number before the abstract, Roman numerals on the abstract,
    1, 2, 3 from chapter 1 on. */
 
 @page {
   size: A4;
-  margin: 2.5cm;
+  margin: 2cm;
   @bottom-center {
     content: counter(page);
     font-family: "Times New Roman", "Liberation Serif", serif;
@@ -30,7 +30,7 @@
 html {
   font-family: "Times New Roman", "Liberation Serif", serif;
   font-size: 12pt;
-  line-height: 1.15;
+  line-height: 1.25;
   text-align: justify;
   hyphens: auto;
 }
