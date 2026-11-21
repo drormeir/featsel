@@ -89,9 +89,9 @@ shape our protocol (Table 1):
 | Pitfall | Source | Our answer |
 |---|---|---|
 | Selecting genes on all the data, then cross-validating | Ambroise and McLachlan (2002) | Selection inside every split (section 3) |
-| No random control | Neekhra et al. (2025) | Random features at every `k` |
-| Trusting the spread of k-fold scores | Bengio and Grandvalet (2004) | Repeated random splits and a corrected test |
-| Ignoring which features are chosen | Nogueira et al. (2018) | Stability for every method |
+| No random control | Neekhra et al. (2025) | Random features at every `k` (section 3) |
+| Trusting the spread of k-fold scores | Bengio and Grandvalet (2004) | Repeated random splits and a corrected test (section 3) |
+| Ignoring which features are chosen | Nogueira et al. (2018) | Stability for every method (section 3) |
 
 ### 1.4 What this project adds
 
@@ -413,7 +413,9 @@ runs 34 times faster.
 
 **Exact solvers.** scikit-learn's default solver for an L1 or linear-SVM
 model, liblinear, stops at a tolerance of 10⁻⁴, before the exact solution.
-With correlated genes, this changes which genes are kept. RFE and RFECV
+With correlated genes, this changes which genes are kept. Unless its seed
+is fixed, liblinear also shuffles the data differently on each fit and
+keeps different genes (D 6.2). RFE and RFECV
 now solve each SVM exactly by Newton's method (Chapelle 2007), and Lasso by PPDNA (Liu and Zhou 2023). With no
 randomness, a refit gives the same genes. Newton's method works through
 the samples' n × n kernel, so it pays when features outnumber samples.
