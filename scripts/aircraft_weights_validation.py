@@ -54,7 +54,7 @@ def main():
 
     data = {}
     for weights in WEIGHTS:
-        X, y = load_xy(FGVCAircraft(weights=weights))
+        X, y = load_xy(FGVCAircraft(weights=weights), drop_copies=True)
         data[weights] = (np.asarray(X, dtype=np.float32), y)
     labels = data['V1'][1]
     assert all(d[1].index.equals(labels.index) for d in data.values())

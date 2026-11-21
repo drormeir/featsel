@@ -1,5 +1,6 @@
 # RFE's SVM penalty: C = 0.001, 0.1 and 1 against the 0.01 of the main
-# runs (frontier_breastmnist70_cpu.yaml, label RFE_newton, in results/local/frontier_breastmnist70_cpu.csv).
+# run without copies (frontier_breastmnist70_nocopies.yaml, label RFE_newton,
+# in results/local/frontier_breastmnist70_nocopies.csv).
 # C = 0.01 was set by hand and not tuned; this run tests whether another
 # value would have scored differently. Same seed, splits, training fraction,
 # k list and k_validation as the main run, so each C is compared with 0.01
@@ -11,6 +12,9 @@
 # Output goes to results/local/, which git ignores.
 
 dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+# No duplicates (docs/DECISIONS.md, 2026-11-21).
+dataset_params:
+  drop_copies: true
 target: "label"
 
 output: "../results/local/rfe_c_breastmnist70.csv"

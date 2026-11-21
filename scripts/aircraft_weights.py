@@ -1,7 +1,7 @@
 """
 FGVC-Aircraft: ResNet-50's ImageNet weights V1 against V2, with all features.
 
-For each weights version, on the 1,200 photos of the task (Boeing 737
+For each weights version, on the 1,198 photos of the task (Boeing 737
 against the Airbus A320 family): the share of exact zeros in their
 embeddings, and the test AUC of logistic regression on every non-constant
 feature. The protocol is that of configs/aircraft70_gpu.yaml: 16 splits,
@@ -44,7 +44,7 @@ def main():
     frames = []
     for weights in WEIGHTS:
         data = FGVCAircraft(weights=weights)
-        X, y = load_xy(data)
+        X, y = load_xy(data, drop_copies=True)
         zero_share = (data.embeddings.loc[y.index].to_numpy() == 0).mean()
         # Random selection of every feature is the all-features reference.
         config = {**CONFIG,

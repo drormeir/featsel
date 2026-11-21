@@ -1,5 +1,6 @@
 # FGVC-Aircraft, Boeing 737 against the Airbus A320 family: an unseen
-# dataset run end to end on the GPU. 1,200 photos, each a 2,048-number
+# dataset run end to end on the GPU. 1,198 photos (two near-identical shots
+# dropped, demos/duplicates.ipynb), each a 2,048-number
 # ResNet-50 embedding (featsel_datasets/fgvc_aircraft/). Every selector
 # runs with device='cuda', except tree importance, which has no GPU path;
 # the embeddings are computed on the GPU too.
@@ -13,6 +14,9 @@
 # Three fits per selection, to time each one without a long run.
 
 dataset: "featsel_datasets.fgvc_aircraft.featsel_view"
+# No duplicates (docs/DECISIONS.md, 2026-11-21).
+dataset_params:
+  drop_copies: true
 target: "family"
 
 output: "../results/aircraft70_gpu.csv"

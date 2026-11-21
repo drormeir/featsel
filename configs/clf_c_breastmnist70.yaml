@@ -12,6 +12,9 @@
 # Output goes to results/local/, which git ignores.
 
 dataset: "featsel_datasets.medmnist_breastmnist.featsel_view"
+# No duplicates (docs/DECISIONS.md, 2026-11-21).
+dataset_params:
+  drop_copies: true
 target: "label"
 
 output: "../results/local/clf_c_breastmnist70.csv"

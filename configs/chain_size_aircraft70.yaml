@@ -12,6 +12,9 @@
 # Output goes to results/local/, which git ignores.
 
 dataset: "featsel_datasets.fgvc_aircraft.featsel_view"
+# No duplicates (docs/DECISIONS.md, 2026-11-21).
+dataset_params:
+  drop_copies: true
 target: "family"
 
 output: "../results/local/chain_size_aircraft70.csv"

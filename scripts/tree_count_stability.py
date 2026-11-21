@@ -12,8 +12,16 @@ test set is not used, so nothing here chooses a setting by test AUC.
 Training sets of 3 random stratified splits with 70% of the samples, seed
 42, as in the main runs. SCAN-B: the five subtype-vs-rest tasks, split on
 the five-class label; BreastMNIST: malignant; FGVC-Aircraft: Boeing 737.
+The image datasets are without their copies (docs/DECISIONS.md,
+2026-11-21).
 
     .venv/bin/python scripts/tree_count_stability.py --out results/tree_count_stability.csv
+
+--datasets reruns only the datasets named and keeps the other rows of an
+existing output file:
+
+    .venv/bin/python scripts/tree_count_stability.py --datasets BreastMNIST FGVC-Aircraft \
+        --out results/tree_count_stability.csv
 """
 
 import argparse
@@ -48,26 +56,38 @@ def jaccard(a, b):
     return len(a & b) / len(a | b)
 
 
-def datasets():
-    """(name, X, labels to split on, {task: positive mask}, top-k sizes)."""
+def scanb():
     X, y = scanb_xy()
-    yield 'SCAN-B', X.to_numpy(np.float32), y.to_numpy(), \
+    return X.to_numpy(np.float32), y.to_numpy(), \
         {f'{c} vs rest': (y == c).to_numpy() for c in sorted(y.unique())}, (10, 50, 250, 1000)
-    X, y = breastmnist_xy()
-    yield 'BreastMNIST', X.to_numpy(np.float32), y.to_numpy(), \
+
+
+def breastmnist():
+    X, y = breastmnist_xy(drop_copies=True)
+    return X.to_numpy(np.float32), y.to_numpy(), \
         {'malignant': (y == 'malignant').to_numpy()}, (10, 50, 250)
-    X, y = aircraft_xy()
-    yield 'FGVC-Aircraft', X.to_numpy(np.float32), y.to_numpy(), \
+
+
+def aircraft():
+    X, y = aircraft_xy(drop_copies=True)
+    return X.to_numpy(np.float32), y.to_numpy(), \
         {'Boeing 737': (y == 'Boeing 737').to_numpy()}, (10, 50, 250)
+
+
+# name: loader of (X, labels to split on, {task: positive mask}, top-k sizes)
+DATASETS = {'SCAN-B': scanb, 'BreastMNIST': breastmnist, 'FGVC-Aircraft': aircraft}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     parser.add_argument('--out', type=Path, required=True, help='Output CSV')
+    parser.add_argument('--datasets', nargs='+', choices=list(DATASETS), default=list(DATASETS),
+                        help='datasets to run; other rows of an existing --out are kept')
     args = parser.parse_args()
 
     rows = []
-    for name, X, strata, tasks, ks in datasets():
+    for name in args.datasets:
+        X, strata, tasks, ks = DATASETS[name]()
         splits = StratifiedShuffleSplit(SPLITS, train_size=0.7, random_state=SEED)
         for split, (train, _) in enumerate(splits.split(X, strata)):
             for task, positive in tasks.items():
@@ -79,6 +99,10 @@ def main():
                 print(name, task, split, flush=True)
 
     table = pd.DataFrame(rows)
+    if args.out.exists():
+        kept = pd.read_csv(args.out)
+        table = pd.concat([kept[~kept['dataset'].isin(args.datasets)], table],
+                          ignore_index=True)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(args.out, index=False)
     environment.write_json(args.out.with_suffix('.json'), seed=SEED, splits=SPLITS,
