@@ -1,5 +1,5 @@
 """
-Cost against quality, one panel per dataset: the final report's Figure 1.
+Cost against quality, one panel per dataset: the final report's Figure 2.
 
 Reads the frontier tables that plot_frontier.py writes (one row per method
 and k: mean test ROC AUC and median selection time per fit) and runs

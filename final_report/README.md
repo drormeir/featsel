@@ -97,18 +97,18 @@ shape our protocol (Table 1):
 
 1. **A comparison at a cohort size earlier studies lacked.** 2,976
    patients give test sets of 893, and a paired test corrected for
-   overlapping splits checks every difference.
+   overlapping splits checks every difference (section 3).
 2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
    thresholds were built for rare signal. On widespread signal, HC2008
    and Berk-Jones stopped at the edge of their search and acted as
    top-10% filters; HC2004 kept one to three features. On simulated rare
-   signal, HC2008 chose a good count.
+   signal, HC2008 chose a good count (sections 4, 6.4).
 3. **A cost-quality frontier**: selection time against AUC for every
    method and setting, on each dataset.
 4. **Drop-in selectors that are tested, fast and exact.** Those that copy
    a scikit-learn method select the same features, on the CPU and on a
    GPU. RFE, RFECV and Lasso reach the exact solution that scikit-learn's
-   default solver stops short of.
+   default solver stops short of (section 5).
 5. **Checks of the data that change its use**: repeated patients and a
    computed label in SCAN-B, and copied images in BreastMNIST.
 
@@ -246,6 +246,7 @@ sample variance. Then
 
 t = d / √((1/J + n~test~/n~train~) s²), with J − 1 degrees of freedom.
 
+A difference is *established* when this test gives p < 0.05.
 The plain paired t-test has 1/J alone. The second term does not shrink
 with J. From 5 to 16 splits,
 the 95% interval narrows by about a third; beyond 16 it can narrow by at
@@ -267,7 +268,7 @@ So the training set is cut into 5 folds. Each fold in turn is the
 validation set: the selector is fit on the other four folds, and for each
 `k` the classifier is scored on the held-out fold. The `k` with the best
 mean validation AUC wins. Lasso chooses its penalty the same way. Higher Criticism and
-Berk-Jones choose their own count.
+Berk-Jones choose their own count (section 4).
 
 **Stability.** A method can score well and pick different features on
 each split; its list is then an accident of the split. Nogueira's measure
@@ -424,13 +425,13 @@ with all threads.
 
 Every result follows the protocol of section 3: 16 splits, 70% of the
 samples in the training set, `k` chosen on validation sets, and ROC AUC on
-the test set, as a mean over the splits. A difference is called
-*established* when the corrected test gives p < 0.05. The detailed report
+the test set, as a mean over the splits. A difference is established
+when the corrected test gives p < 0.05. The detailed report
 gives every task, every `k` and every test (D 7, D 8, D C).
 
 ### 6.1 Selection against random features
 
-Selection matters most when few features are allowed (Figure 2). At 10
+Selection matters most when few features are allowed (Figure 1). At 10
 genes on SCAN-B, every filter and tree importance beat random genes by
 0.12 to 0.19 AUC, on every task. With the two-stage chains and Sequential
 selection, the range is 0.11 to 0.20. At 10 features on the image data,
@@ -448,16 +449,9 @@ RFE alone is the exception at small `k` on SCAN-B. At 10 genes it scored
 below random genes on LumA and Normal, though neither loss is
 established (p = 0.30 and 0.06).
 
-![Figure 1](figures/frontier.png)
+![Figure 1](figures/curves.png)
 
-*Figure 1. Cost against quality. Each point is one method at one `k`:
-its selection time per fit, timed as in Table 5, and its mean test AUC.
-The dark line is the frontier: no point is both faster and better than a
-point on it. SCAN-B is the mean of its five tasks. Sources: D 7.1, 8.1, 8.9.*
-
-![Figure 2](figures/curves.png)
-
-*Figure 2. Test AUC against the number of features kept, for one method
+*Figure 1. Test AUC against the number of features kept, for one method
 of each family and for random features. The gap to the gray dashed line
 is what selection adds at that `k`. The dotted line is all the features.
 Sources: D 7.2, 8.2.*
@@ -568,7 +562,7 @@ average 12% of them (Mann-Whitney), 11% (tree importance), 9% (Lasso) and
 would need rank 14,271.
 
 Yet at 50 genes, Mann-Whitney and tree importance predict the subtypes
-well (Figure 2). A likely reason is that genes which move with the PAM50
+well (Figure 1). A likely reason is that genes which move with the PAM50
 genes carry the same signal. So a low share of PAM50 genes is not poor
 selection. It shows again that a
 gene list is one of many equally good answers. Mann-Whitney's lead here is
@@ -602,7 +596,7 @@ conclusions.
 
 ### 6.8 Cost
 
-The cheap end of Figure 1 wins. On SCAN-B, HC2008, Berk-Jones and
+The cheap end of Figure 2 wins. On SCAN-B, HC2008, Berk-Jones and
 Mann-Whitney reach 0.969 to 0.970 mean AUC in under 0.7 s per fit on the
 GPU. The best mean, mutual information at 0.971, takes 3.6 s, and tree
 importance takes 17 s for 0.969 (Table 5). On the image data, every method
@@ -614,6 +608,13 @@ Choosing `k` costs more than selecting. For Mann-Whitney on SCAN-B, the
 search on 5 validation sets takes about 28 s per split, against 0.67 s for
 one fit (D C.1). A method
 that chooses its own count, such as HC2008, skips this search.
+
+![Figure 2](figures/frontier.png)
+
+*Figure 2. Cost against quality. Each point is one method at one `k`:
+its selection time per fit, timed as in Table 5, and its mean test AUC.
+The dark line is the frontier: no point is both faster and better than a
+point on it. SCAN-B is the mean of its five tasks. Sources: D 7.1, 8.1, 8.9.*
 
 ## 7. Discussion
 
