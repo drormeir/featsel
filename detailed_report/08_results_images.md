@@ -163,7 +163,7 @@ statistic peaks at the single strongest p-value (section 4.4).
 
 As on SCAN-B (section 7.5), neither variant found the point where the
 signal ends: 27% to 35% of the dimensions pass the Benjamini-Hochberg test
-(chapter 2).
+(chapter 2, on all 780 images).
 
 ## 8.6 RFECV: accuracy against AUC
 

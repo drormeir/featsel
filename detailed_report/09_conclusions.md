@@ -69,9 +69,8 @@ settings stated in their sections.
 2. Check for repeated samples. 93 patients appear twice in SCAN-B's HiSeq
    data (section 2.1). In BreastMNIST, a quarter of the images repeat
    another; even MedMNIST's fixed split puts copies on both sides, in 57
-   groups ([`copies_report.md`](../featsel_datasets/medmnist_breastmnist/copies_report.md)). Without the copies, all features fell by 0.029 AUC and the
-   methods but HC2004 by 0.016 to 0.042; the conclusions held (section
-   8.8).
+   groups ([`copies_report.md`](../featsel_datasets/medmnist_breastmnist/copies_report.md)). The main results are without the copies (section 8.8); their effect
+   is in [`demos/copies.ipynb`](../featsel_datasets/medmnist_breastmnist/demos/copies.ipynb).
 3. The gene values are on an arbitrary scale. In the first 200 genes,
    about half the values are tied at a floor. The F-test's assumptions do not hold for such values. A rank
    test (Mann-Whitney U) does not need them, so it fits this data.
@@ -114,7 +113,7 @@ settings stated in their sections.
 10. **Higher Criticism needs rare signal.** On all three datasets HC2008
     stopped at the edge of its search, 10% of the features. Berk-Jones
     stopped at or just before it (sections 7.5, 8.5, 8.9). As a top-10% filter, both are among the best on SCAN-B and
-    the most stable. HC2004 keeps one to three features and is the
+    the most stable. HC2004 keeps one or two features and is the
     weakest method, except RFECV scored by accuracy on SCAN-B. On simulated rare signal (section 8.11), HC2008 kept
     a median of 33.5 features for 40 informative ones and had the best mean
     AUC, 0.858. Mann-Whitney with a validated `k` came within 0.015
@@ -210,7 +209,7 @@ described in the section given.
   ResNet-50 (chapter 2). The results may not hold on other data.
 - Every SCAN-B task predicts PAM50, a label computed from the genes, not
   measured (section 2.1). No measured target was run (section 10.1).
-- The project uses only data without duplicates. The BreastMNIST results
+- The project's rule is to use only data without duplicates. The BreastMNIST results
   of chapter 8 are without the copied images (section 8.8). Sequential
   selection and the side studies on the image data (RFE's C, the
   classifier's C, the tree count) still use the copies (section 10.1).

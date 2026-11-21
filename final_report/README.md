@@ -108,7 +108,7 @@ in the folder `detailed_report/` of the public repository
 2. **Higher Criticism and Berk-Jones as selectors on real data.** Both
    thresholds were built for rare signal. On widespread signal, HC2008
    and Berk-Jones stopped at or just before the edge of their search and acted as
-   top-10% filters; HC2004 kept one to three features. On simulated rare
+   top-10% filters; HC2004 kept one or two features. On simulated rare
    signal, HC2008 chose a good count (sections 4, 6.4).
 3. **A cost-quality frontier**: selection time against AUC for every
    method and setting, on each dataset (section 6.8).
@@ -198,7 +198,7 @@ SCAN-B's repeated patients, a copy can fall in the training set and its
 twin in the test set. Our loader finds them among BreastMNIST's own
 images, by the letter's method: 150 groups of 339 images. A run without
 them keeps one image per group, drops the 6 groups whose labels disagree,
-and so keeps 585 images. Every BreastMNIST result here uses these 585
+and so keeps 585 images. The main BreastMNIST results use these 585
 (section 6.7).
 
 ### 2.3 FGVC-Aircraft
@@ -632,8 +632,8 @@ test AUC would use the test set twice (section 3).
 ### 6.7 The copied images
 
 BreastMNIST holds 150 groups of copied images (section 2), which would
-leak between the training and the test set. Every BreastMNIST result in
-this report is without them: 585 images, 409 of them in each training
+leak between the training and the test set. The main BreastMNIST
+results of this report are without them: 585 images, 409 of them in each training
 set (D 8.8). Sequential selection and three side studies (the
 classifier's C, RFE's C, the tree count) still include them; their
 reruns are open work (D 10).
@@ -698,7 +698,7 @@ cannot be known in advance from these datasets; a safe default can.
 | A test corrected for overlapping splits | Random splits share most of their training samples | Established differences from all genes fell from 52 to 20 of 70 comparisons (section 6.2; D 9.3) |
 | GSE96058, one sample per patient, not the course copies | The copies kept 93 repeated patients, and the smaller one lacked 11 of the 50 PAM50 genes | It removed a leak and made the PAM50 test possible (sections 2.1, 6.5) |
 | The U test for every filter | Only the order of gene values is meaningful, and many sit at a floor | One valid test, so filters differ only in their selection rule (sections 2.1, 4) |
-| Find the copied images | Copies fall on both sides of a split | A leak removed: every BreastMNIST result is without the 150 groups of copies (sections 2.2, 6.7) |
+| Find the copied images | Copies fall on both sides of a split | A leak removed: the main BreastMNIST results are without the 150 groups of copies (sections 2.2, 6.7) |
 | Exact solvers for RFE, RFECV and Lasso | liblinear stops before the solution, and unless seeded keeps different genes on each run | Repeatable selection, at the exact solution (section 5) |
 | RFECV scored by AUC | Accuracy rewards the larger class | RFECV rose from 0.720 to 0.962 mean AUC on SCAN-B (Table 5, section 6.6) |
 | Higher Criticism's search kept at 10% | Widening it to fit the data would tune the method to the answer | Its behaviour on widespread signal is reported as it is (section 6.4) |
