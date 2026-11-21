@@ -204,8 +204,9 @@ that look alike. Each photo becomes 2,048 numbers through ResNet-50, as
 for BreastMNIST, but with torchvision's older ImageNet weights, V1. With
 the V2 weights used for BreastMNIST, 80% of the features were exactly zero
 and all the features reached only 0.742 AUC (the score of section 3); V1 gave 0.1% zeros and 0.862
-(`results/aircraft_weights.csv`). As in the other two datasets, the
-signal is widespread (D 2.4). The photos are for non-commercial
+(`results/aircraft_weights.csv`). As on BreastMNIST, the signal is
+widespread: 17% to 23% of the features pass the U test at a 5% false
+discovery rate (D 2.3). The photos are for non-commercial
 research only and are not stored in the repository.
 
 ## 3. Protocol

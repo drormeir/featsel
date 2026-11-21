@@ -7,10 +7,11 @@ data numbers.
 
 Facts about the course's archived copies of SCAN-B need those copies,
 which are not in git. Pass their folder with --course. Without it, their
-committed values are kept.
+committed values are kept. --datasets recomputes only the datasets named;
+the others keep their committed values too.
 
 Usage:
-    python scripts/data_facts.py [--course DIR]
+    python scripts/data_facts.py [--course DIR] [--datasets scanb breastmnist aircraft]
 """
 
 import argparse
@@ -22,6 +23,7 @@ from scipy.stats import kurtosis, mannwhitneyu, normaltest
 from sklearn.feature_selection import f_classif
 from sklearn.model_selection import StratifiedShuffleSplit
 
+from featsel_datasets.fgvc_aircraft.featsel_view import load_xy as aircraft_xy
 from featsel_datasets.medmnist_breastmnist.breastmnist import BreastMNIST
 from featsel_datasets.scanb_gse96058.featsel_view import load_xy
 from featsel_datasets.scanb_gse96058.gse96058 import GSE96058
@@ -134,28 +136,40 @@ def course_facts(data, course):
     }
 
 
-def breastmnist_facts():
-    data = BreastMNIST()
-    X, samples = data.embeddings.values, data.samples
-    labels = samples['label'].to_numpy()
-
+def abs_correlations(X):
+    """Absolute correlation of every pair of features."""
     corr = np.corrcoef(X, rowvar=False)
-    pairs = np.abs(corr[np.triu_indices_from(corr, k=1)])
-    variance = np.linalg.svd(X - X.mean(axis=0), compute_uv=False) ** 2
-    explained = np.cumsum(variance) / variance.sum()
-    _, p = f_classif(X, labels)
+    return np.abs(corr[np.triu_indices_from(corr, k=1)])
 
-    # Per training half of 5 random splits, half the images in each: the share of features
-    # passing the U test at a 5% false discovery rate, and at p < 0.05.
+
+def u_test_shares(X, positive):
+    """
+    Per training half of 5 random splits, half the samples in each: the share
+    of features passing the U test at a 5% false discovery rate
+    (Benjamini-Hochberg), and at p < 0.05.
+    """
     bh, raw = [], []
-    for train, _ in StratifiedShuffleSplit(5, train_size=0.5, random_state=SEED).split(X, labels):
-        pos = X[train][labels[train] == 'malignant']
-        neg = X[train][labels[train] != 'malignant']
+    for train, _ in StratifiedShuffleSplit(5, train_size=0.5, random_state=SEED).split(X, positive):
+        pos = X[train][positive[train]]
+        neg = X[train][~positive[train]]
         pu = np.sort(mannwhitneyu(pos, neg, axis=0).pvalue)
         m = len(pu)
         passed = np.flatnonzero(pu <= 0.05 * np.arange(1, m + 1) / m)
         bh.append((passed[-1] + 1 if len(passed) else 0) / m)
         raw.append(np.mean(pu < 0.05))
+    return bh, raw
+
+
+def breastmnist_facts():
+    data = BreastMNIST()
+    X, samples = data.embeddings.values, data.samples
+    labels = samples['label'].to_numpy()
+
+    pairs = abs_correlations(X)
+    variance = np.linalg.svd(X - X.mean(axis=0), compute_uv=False) ** 2
+    explained = np.cumsum(variance) / variance.sum()
+    _, p = f_classif(X, labels)
+    bh, raw = u_test_shares(X, labels == 'malignant')
 
     sizes = samples['label'].value_counts()
     splits = samples['split'].value_counts()
@@ -181,12 +195,36 @@ def breastmnist_facts():
     }
 
 
+def aircraft_facts():
+    X, y = aircraft_xy()
+    X = X.to_numpy()
+    bh, raw = u_test_shares(X, (y == 'Boeing 737').to_numpy())
+    return {
+        'ac_photos': count(len(y)),
+        'ac_features': count(X.shape[1]),
+        'ac_median_abs_r': number(np.median(abs_correlations(X))),
+        'ac_bh_share_min': share(min(bh)),
+        'ac_bh_share_max': share(max(bh)),
+        'ac_p05_share_min': share(min(raw)),
+        'ac_p05_share_max': share(max(raw)),
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument('--course', type=Path, help="folder holding the course's scanb_full and scanb_small")
+    parser.add_argument('--datasets', nargs='+', choices=['scanb', 'breastmnist', 'aircraft'],
+                        default=['scanb', 'breastmnist', 'aircraft'],
+                        help='recompute only these; the others keep their committed values')
     args = parser.parse_args()
-    data = GSE96058()
-    facts = {**scanb_facts(data), **course_facts(data, args.course), **breastmnist_facts()}
+    facts = {}
+    if 'scanb' in args.datasets:
+        data = GSE96058()
+        facts |= {**scanb_facts(data), **course_facts(data, args.course)}
+    if 'breastmnist' in args.datasets:
+        facts |= breastmnist_facts()
+    if 'aircraft' in args.datasets:
+        facts |= aircraft_facts()
     if OUT.exists():  # keep committed facts this machine cannot recompute
         facts = {**pd.read_csv(OUT, index_col='name', keep_default_na=False).value.to_dict(),
                  **facts}

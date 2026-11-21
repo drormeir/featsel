@@ -273,6 +273,12 @@ zeros and gave 0.862 (16 splits, as in chapter 8;
 [`results/aircraft_weights.csv`](../results/aircraft_weights.csv)).
 Features with a single value across the 1,200 photos are dropped.
 
+**The signal.** As in BreastMNIST, the signal is widespread: 17% to 23%
+of the features pass the U test at a 5% false discovery rate, and 30% to
+35% have p < 0.05. The ranges come from the same 5 random splits as for
+BreastMNIST. Pairs of features are weakly correlated: the median absolute
+correlation is 0.111, against 0.056 on BreastMNIST.
+
 Loader: [`featsel_datasets/fgvc_aircraft/`](../featsel_datasets/fgvc_aircraft/).
 Analysis: [`demos/research.ipynb`](../featsel_datasets/fgvc_aircraft/demos/research.ipynb).
 

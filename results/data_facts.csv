@@ -58,3 +58,10 @@ scanb_basal_patients,308
 scanb_her2_patients,297
 scanb_luma_patients,"1,502"
 scanb_lumb_patients,669
+ac_photos,"1,200"
+ac_features,"2,048"
+ac_median_abs_r,0.111
+ac_bh_share_min,17%
+ac_bh_share_max,23%
+ac_p05_share_min,30%
+ac_p05_share_max,35%
