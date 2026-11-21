@@ -496,8 +496,9 @@ each dataset, then SCAN-B's selection time and stability. SCAN-B
 values are means over its five tasks; the time is the mean of each task's
 median time per fit. Tree importance, RFE and RFECV ran on the CPU, also
 as the second step of a chain; every other method ran on the GPU. On the
-CPU alone, on synthetic data shaped like SCAN-B, Mann-Whitney takes 3.8 s
-per fit, correlation 6.9 s, and mutual information 18 s on 10,000 of the
+CPU alone, on synthetic data shaped like SCAN-B, the U-test methods
+(Mann-Whitney, HC, Berk-Jones) take 3.8 to 3.9 s per fit, correlation
+6.9 s, Lasso 25 s at one C, and mutual information 18 s on 10,000 of the
 features (D 6.2). Over
 the 16 splits, the interquartile range of a method's AUC is 0.006 to
 0.010 on a SCAN-B task (HC2004 0.018, RFECV scored by accuracy 0.044)
