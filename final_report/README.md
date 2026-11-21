@@ -340,16 +340,15 @@ itself (section 6.8). Higher Criticism and Berk-Jones choose their own
 count from the p-values of all the features, so they skip that search.
 
 **Higher Criticism.** Sort the N p-values, p~(1)~ ≤ … ≤ p~(N)~. If no
-feature carried signal, p~(i)~ would sit near its mean, i/(N + 1)
-(Moscovich et al. 2016). Higher Criticism measures, at each i, how far
+feature carried signal, p~(i)~ would sit near its mean,
+μ~i~ = i/(N + 1) (Moscovich et al. 2016). Higher Criticism measures, at each i, how far
 p~(i)~ falls below that line, in standard deviations, and keeps every
 feature up to the largest gap (Donoho and Jin 2004, 2008). HC2004 is the
 2004 paper's form:
 
 HC(i) = √N (i/N − p~(i)~) / √(p~(i)~ (1 − p~(i)~)).
 
-HC2008 is the 2008 paper's form with one change: with μ~i~ = i/(N + 1)
-in place of i/N,
+HC2008 is the 2008 paper's form with one change, μ~i~ in place of i/N:
 
 HC(i) = √N (μ~i~ − p~(i)~) / √(μ~i~ (1 − μ~i~)).
 
