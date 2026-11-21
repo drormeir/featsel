@@ -7,6 +7,7 @@ import pytest
 from scipy.stats import mannwhitneyu
 
 from featsel.selectors import FeatureSelector, HigherCriticismSelector
+from featsel.selectors.higher_criticism import null_means
 
 
 def _direct(X, y, variant, alpha0=0.1):
@@ -18,9 +19,8 @@ def _direct(X, y, variant, alpha0=0.1):
     p = mannwhitneyu(X[y == 1], X[y == 0], method='asymptotic', axis=0).pvalue
     n = len(p)
     order = np.argsort(p, kind='stable')
-    i = np.arange(1, int(alpha0 * n) + 1)
-    p_i = p[order[:len(i)]]
-    mu = i / (n + 1)
+    mu = null_means(n, int(alpha0 * n))
+    p_i = p[order[:len(mu)]]
     if variant == '2004':
         hc = np.sqrt(n) * (mu - p_i) / np.sqrt(p_i * (1 - p_i))
     else:

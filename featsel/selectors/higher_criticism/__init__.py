@@ -9,6 +9,11 @@ from ..base import FeatureSelector
 from ..log_pvalue import log_mannwhitneyu
 
 
+def null_means(n, m):
+    """mu(i) = i / (n + 1) for i = 1..m: the mean of the i-th smallest of n uniform p-values."""
+    return np.arange(1, m + 1) / (n + 1)
+
+
 class HigherCriticismSelector(FeatureSelector):
     """
     Select features by Higher Criticism thresholding (Donoho and Jin).
@@ -115,11 +120,10 @@ class HigherCriticismSelector(FeatureSelector):
 
         n = self.n_features_in_
         order = np.argsort(self.log_pvalues_, kind='stable')
-        i = np.arange(1, max(1, int(self.alpha0 * n)) + 1)
-        log_p_sorted = self.log_pvalues_[order[:len(i)]]
+        center = null_means(n, max(1, int(self.alpha0 * n)))
+        log_p_sorted = self.log_pvalues_[order[:len(center)]]
         p_sorted = np.exp(log_p_sorted)
 
-        center = i / (n + 1)
         if self.variant == '2004':
             log_var = log_p_sorted + np.log1p(-p_sorted)
         else:
@@ -130,7 +134,7 @@ class HigherCriticismSelector(FeatureSelector):
         # when no rank scores above 0.
         above = center > p_sorted
         if above.any():
-            log_hc = np.full(len(i), -np.inf)
+            log_hc = np.full(len(center), -np.inf)
             log_hc[above] = np.log(center[above] - p_sorted[above]) - log_var[above] / 2
             best = np.argmax(log_hc)
         else:
