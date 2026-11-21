@@ -240,7 +240,12 @@ A method with its own preprocessing mixes the method with its transform.
 
 On SCAN-B, `k` is 10, 50, 250, 500, 1000, 1500 and 2000; random selection
 also runs at 28,541, every gene. A first run stopped at 1,000, where AUC
-was still rising for every method with a `k` list. On BreastMNIST and
+was still rising for every method with a `k` list. The list stops at
+2,000 because there the best method already reaches or passes the AUC of
+all genes on every task (Appendix C.1). On LumA and Normal, AUC still
+rises a little at 2,000 (mutual information: 0.958 to 0.960 and 0.945 to
+0.948 from 1,500), so a larger `k` could still add a little there. On
+BreastMNIST and
 FGVC-Aircraft (2,048 features), `k` is 10, 50, 250, 500 and 1000; random
 selection also runs at 2,048. The largest `k`, 1,000, is more than the
 number of training images (546 and 840), because the goal is the best

@@ -223,7 +223,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Selection | inside each split, on the training set only |
 | Main score | ROC AUC on the test set, mean over the splits |
 | Control | random features at every `k` |
-| `k` | 10, 50, 250, 500, 1,000 (and 1,500, 2,000 on SCAN-B), chosen on validation sets |
+| `k` | 10, 50, 250, 500, 1,000 (and 1,500, 2,000 on SCAN-B, where 2,000 already reaches the AUC of all genes; D 3.11), chosen on validation sets |
 | Classifier | logistic regression, L2 penalty, C fixed at 1: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
