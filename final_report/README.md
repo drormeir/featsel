@@ -15,7 +15,8 @@ under one protocol from one configuration file: 16 random splits,
 selection inside each split, the number of features chosen on validation
 sets, a random control at every number of features, and paired tests
 corrected for overlapping splits. GPU paths speed up the slow methods;
-exact solvers make them repeatable.
+solvers with no randomness, exact for RFE and RFECV and far
+tighter for Lasso, make them repeatable.
 
 **Data.** Breast cancer gene expression (SCAN-B: 2,976 patients, 28,541
 genes, five PAM50 subtype tasks), ResNet-50 embeddings of breast
