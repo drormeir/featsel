@@ -16,7 +16,7 @@ where they appear.
 | `k` | Chosen on validation sets: 5 folds of the training set, best mean AUC, tie to the smaller `k` | 3.11 |
 | Classifier | Logistic regression, C fixed at 1 | 3.8 |
 | Lasso's C | Chosen on validation sets | 3.11 |
-| Timing | Each selection fit 10 times (3 on FGVC-Aircraft; Sequential once on SCAN-B and BreastMNIST; once in the simulation, which reports no times); a searching method searches once, then is timed | 3.7, 3.11 |
+| Timing | Each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation, which reports no times; Sequential once on SCAN-B and BreastMNIST); a searching method searches once, then is timed | 3.7, 3.11 |
 
 ## 3.1 The basic flow
 
@@ -177,7 +177,8 @@ stability would be a meaningless 1.0.
 For every fit we record:
 
 - **Selection time**: the selector's `fit` alone. Each selection is fit 10
-  times by a fresh selector (3 times on FGVC-Aircraft), and the median is
+  times by a fresh selector (3 times on FGVC-Aircraft, once in the
+  simulation of section 8.11), and the median is
   recorded. Sequential selection takes minutes per fit on SCAN-B, and 10
   fits would take about a week (the SCAN-B run with one fit took 18 hours,
   section 7.11), so there and on BreastMNIST it is fit once;

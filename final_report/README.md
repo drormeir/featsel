@@ -229,7 +229,7 @@ samples it has not seen. Every method comparison follows one protocol
 | Classifier | logistic regression, L2 penalty, C fixed at 1: the runner can tune C inside each split (D 5.4), but not tuning it saves time |
 | Tests | the corrected resampled t-test, paired over splits |
 | Stability | Nogueira's measure over the 16 splits |
-| Timing | each selection fit 10 times (3 on FGVC-Aircraft; Sequential selection, section 4, once on the other two; once in the simulation); the median is recorded |
+| Timing | each selection fit 10 times (3 on FGVC-Aircraft, once in the simulation; Sequential selection, section 4, once on SCAN-B and BreastMNIST); the median is recorded |
 
 **Selection inside each split.** On each split, the runner standardizes
 the features on the training set, chooses `k`, fits the selector and then
