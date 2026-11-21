@@ -66,8 +66,9 @@ rest is a separate binary task here. Combining the five classifiers into
 one subtype prediction was set aside.
 
 **A forest built for the GPU.** A forest could be grown level by level,
-with all nodes of a level at once. Our analysis suggests this fits a
-GPU's parallelism. No library we tried does this well on a 4 GB card.
+with all nodes of a level at once, to use a GPU's parallelism. This is
+not tested. The libraries we tried did not run well on a 4 GB card
+(Appendix D.5).
 
 **The frontier as a product.** A cost-quality frontier per dataset tells
 a practitioner which selector fits their time budget. It could be
