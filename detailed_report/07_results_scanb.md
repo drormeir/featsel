@@ -355,7 +355,8 @@ per round, with a strongly penalized SVM (C = 0.01). A likely reason: the
 last 10 genes are what is left after a long chain of removals, and small
 changes early in the chain change the end.
 
-**RFE's C does not change its AUC.** C = 0.01 was set by hand (section
+**No other C changes RFE's AUC by an established amount.** C = 0.01 was
+set by hand (section
 4.2). A side study ran RFE at C = 0.001, 0.1 and 1 on the same splits
 (`configs/rfe_c_*.yaml`). On SCAN-B, without the `k` search, each C was
 compared with 0.01 at every `k` of every task: none of the 105 differences
@@ -369,7 +370,8 @@ predict, as expected when many gene sets predict equally well (sections
 7.4 and 7.6). Tables: `rfe_c_scanb70.csv`, `rfe_c_breastmnist70.csv` and
 `rfe_c_aircraft70.csv` in [`figures/`](figures/).
 
-A filter first fixes this. Mann-Whitney keeps 1,000 genes, a count set by
+A filter first fixes RFE's weakness at small `k`. Mann-Whitney keeps
+1,000 genes, a count set by
 hand and not tuned (on the image data, section 8.7 tests other counts);
 RFE then picks `k` of them. At 10 genes this chain is the best method on four tasks of
 five:

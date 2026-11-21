@@ -310,7 +310,7 @@ filter (D 4.2).
 | Berk-Jones | filter, own count | Keep the features below the Berk-Jones threshold. |
 | Lasso | embedded | L1-penalized logistic regression; keep the non-zero weights. |
 | Tree importance | embedded | Rank by a random forest's impurity importance. |
-| RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step and use C = 0.01, both set by hand; C = 0.001 to 1 changed no AUC (D 7.9). |
+| RFE | wrapper | Train a linear SVM, remove the weakest features, repeat (Guyon et al. 2002); we remove 10% per step and use C = 0.01, both set by hand; C = 0.001 to 1 gave no established AUC difference (D 7.9). |
 | RFECV | wrapper | RFE, with the count chosen by inner cross-validation, scored by accuracy (its default) or by AUC (section 6.6). |
 | Sequential | wrapper | Add the feature that most improves cross-validated accuracy (the only score its batched solver computes; D 4.2); repeat. Run at `k` = 5 and 10 only: one fit takes about 10 minutes on SCAN-B (section 6.6). |
 | Chains | two stages | Mann-Whitney keeps 1,000 genes (500 features on the image data); Lasso, tree importance or RFE picks from them. RFE alone is weak at small `k`; the filter helps it. The first count is fixed (section 6.6). |
@@ -511,9 +511,11 @@ Stability separates methods that AUC does not. Tree importance reaches
 the same mean AUC as Mann-Whitney on SCAN-B, 0.969, but its stability is
 0.27 against 0.76: it picks a different gene set on each split. Part of
 this is the forest's own randomness: at 200 trees, two seeds share only
-12% to 33% of their top genes on one training set (D 7.4). So many
-different gene sets predict equally well, and one split's gene list is
-not a finding by itself.
+12% to 33% of their top genes on one training set (D 7.4). But RFE,
+which has no randomness, also keeps different genes at other values of
+its C with no established change in AUC (D 7.9). So many different gene
+sets predict equally well, and one split's gene list is not a finding by
+itself.
 
 *Table 5. Each method at the `k` it chose on validation sets: test AUC on
 each dataset, then SCAN-B's selection time and stability. SCAN-B
@@ -694,7 +696,8 @@ cannot be known in advance from these datasets; a safe default can.
   copied images; a run without them gives the same conclusions (section
   6.7).
 - **Protocol.** One classifier in the main runs, logistic regression with
-  C fixed at 1; C = 0.01 to 100 changed no AUC on the image data, and
+  C fixed at 1; C = 0.01 to 100 gave no established AUC difference on
+  the image data, and
   SCAN-B was not tested (D 3.8). In a side study with four more classifiers and older
   settings (12 splits, 50% training, macro-F1), Mann-Whitney beat random
   genes at 10 genes with each of the five, by 0.20 to 0.23, on every

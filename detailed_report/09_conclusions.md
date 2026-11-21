@@ -93,8 +93,10 @@ settings stated in their sections.
    them (26% on the best task), yet they predicted the subtypes well
    (section 7.6). On SCAN-B, tree importance scored as well as
    Mann-Whitney (0.969 mean AUC) but kept a different set on each split:
-   stability 0.27 against 0.76. So report stability next to accuracy
-   (section 7.4).
+   stability 0.27 against 0.76, partly from its forest's own randomness
+   (section 7.4). RFE has none, yet at other values of its C it kept 19%
+   to 71% different genes with no established change in AUC (section
+   7.9). So report stability next to accuracy (section 7.4).
 7. **Simple is enough.** Mann-Whitney, one gene at a time, is within 0.002
    AUC of the best mean on SCAN-B, and within 0.01 of the best on both
    image datasets. It is among the most stable, and on a GPU it takes under
