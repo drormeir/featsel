@@ -719,8 +719,8 @@ cannot be known in advance from these datasets; a safe default can.
   SCAN-B task and split (D 7.7). One training fraction and 16 splits; the spread over splits is not a
   confidence interval for new patients. The five SCAN-B tasks share
   patients, so they are not independent. Each selector's own settings are
-  fixed, except Lasso's penalty; so is a chain's first count (section
-  6.6). Whether more trees would change tree importance's AUC was not
+  fixed, except Lasso's penalty; so is a chain's first count, and other
+  counts were tested only on the image data (section 6.6). Whether more trees would change tree importance's AUC was not
   tested (D 7.4). The correlation selector drops a gene
   whose only redundant partner was itself dropped (D 4.2).
 - **Cost.** Every time comes from one laptop: Intel i7-9750H, 16 GB of
